@@ -1,0 +1,7 @@
+Input: in1
+Input: in2
+
+out=Max16x4(in1,in2)
+
+Output: out
+

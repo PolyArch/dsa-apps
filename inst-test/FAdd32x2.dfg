@@ -1,0 +1,7 @@
+Input: in1
+Input: in2
+
+out=FAdd32x2(in1,in2)
+
+Output: out
+

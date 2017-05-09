@@ -1,0 +1,30 @@
+ifndef SBCONFIG
+$(warning SBCONFIG is undefined, using default)
+SBCONFIG=$(RISCV)/configs/diannao_simd64.sbmodel
+endif
+
+TESTC=$(wildcard *.c)
+TESTS=$(patsubst %.c,%,$(TESTC))
+
+all: $(TESTS)
+
+CPP=riscv64-unknown-elf-g++
+
+DFGS=$(wildcard *.dfg)
+DFG_HEADERS=$(DFGS:.dfg=.h)
+
+#${info $(DFGS)}
+#${info $(DFG_HEADERS)}
+
+$(DFG_HEADERS): %.h: %.dfg
+	$(RISCV)/bin/sb_sched $(SBCONFIG) $< sg
+
+OPT?=-O3
+CFLAGS=$(OPT) -g -ggdb -gdwarf-3 
+#--std=c++11 
+
+$(TESTS): % :%.c $(DFG_HEADERS)
+	 $(CPP) $< $(LIB) $(CFLAGS) -static -o $@
+
+clean:
+	rm -f $(TESTS) $(DFG_HEADERS) *.s *.o
