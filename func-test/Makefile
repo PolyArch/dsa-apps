@@ -1,6 +1,6 @@
 ifndef SBCONFIG
 $(warning SBCONFIG is undefined, using default)
-SBCONFIG=$(RISCV)/configs/diannao_simd64.sbmodel
+SBCONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 endif
 
 TESTC=$(wildcard *.c)
@@ -26,7 +26,7 @@ bin:
 	mkdir -p bin
 
 $(DFG_HEADERS): %.h: %.dfg
-	$(RISCV)/bin/sb_sched $(SBCONFIG) $< sg
+	$(SS_TOOLS)/bin/sb_sched $(SBCONFIG) $< sg
 
 OPT?=-O3
 CFLAGS=$(OPT) -g -ggdb -gdwarf-3 

@@ -1,12 +1,12 @@
 #!/bin/bash
 make -j8
 
-export SBCONFIG=$RISCV/configs/diannao_simd64.sbmodel
+export SBCONFIG=$SS_TOOLS/configs/diannao_simd64.sbmodel
 
 test_failed=0
 for i in *.c; do
   test=`basename $i .c`
-  SUPRESS_SB_STATS=1 spike --extension=softbrain $RISCV/riscv64-unknown-elf/bin/pk $test
+  SUPRESS_SB_STATS=1 spike --extension=softbrain $SS_TOOLS/riscv64-unknown-elf/bin/pk $test
   if [ "$?" != "0" ]; then
     echo $test FAILED
     test_failed=$((test_failed +1))
