@@ -1,0 +1,9 @@
+InputVec: Val [0]
+InputVec: Vec [0]
+Input: reset
+
+M0 = Mul64(Val0, Vec0)
+
+O0 = Acc64(M0, reset)
+
+OutputVec: O [0]
