@@ -1,5 +1,5 @@
-ifndef RISCV
-$(error RISCV is undefined)
+ifndef SS_TOOLS
+$(error SS_TOOLS is undefined)
 endif
 
 #CPP=/s/gcc-4.9.2/bin/g++ -fno-tree-vectorize -O3
@@ -58,12 +58,12 @@ DFG_HEADERS=$(sort $(CLASS_DFG_HEADERS) $(POOL_DFG_HEADERS) $(CONV_DFG_HEADERS))
 $(info $$DFG_HEADERS is [${DFG_HEADERS}])
 
 
-SB_CONFIG=$(RISCV)/configs/diannao_simd64.sbmodel
-#SB_CONFIG=$(RISCV)/../softbrain-compiler/softbrain-config/configs/diannao_simd64_half.sbmodel
+SB_CONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
+#SB_CONFIG=$(SS_TOOLS)/../softbrain-compiler/softbrain-config/configs/diannao_simd64_half.sbmodel
 
 
 $(DFG_HEADERS): %.h: %.dfg
-	$(RISCV)/bin/sb_sched $(SB_CONFIG) $< 
+	$(SS_TOOLS)/bin/sb_sched $(SB_CONFIG) $< 
 
 #conv1  Nx=500, Ny=375, Kx=9,  Ky=9,  Ni=32,  No=48,  priv=False
 #conv2  Nx=200, Ny=200, Kx=18, Ky=18, Ni=8,   No=8,   priv=True 

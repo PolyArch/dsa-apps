@@ -1,5 +1,5 @@
-ifndef RISCV
-$(error RISCV is undefined)
+ifndef SS_TOOLS
+$(error SS_TOOLS is undefined)
 endif
 
 RUN?=sim
@@ -20,9 +20,9 @@ SB_FILES=$(SB_SRCS) $(KERN).h ../../common/support.h
 
 SB_CPP=riscv64-unknown-elf-g++
 CPP=g++
-#SB_CONFIG=$(RISCV)/configs/diannao_simd64_half.sbmodel
-#SB_CONFIG=$(RISCV)/configs/diannao_simd64.sbmodel
-SB_CONFIG=$(RISCV)/configs/isca2017.sbmodel
+#SB_CONFIG=$(SS_TOOLS)/configs/diannao_simd64_half.sbmodel
+SB_CONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
+#SB_CONFIG=$(SS_TOOLS)/configs/isca2017.sbmodel
 
 DFGS=mm_sb.dfg
 DFG_HEADERS=$(DFGS:.dfg=.h)
@@ -32,9 +32,9 @@ all: $(RUN)
 
 $(DFG_HEADERS): %.h: %.dfg
 ifeq ($(RUN), sim)
-	$(RISCV)/bin/sb_sched $(SB_CONFIG) $<
+	$(SS_TOOLS)/bin/sb_sched $(SB_CONFIG) $<
 else
-	$(RISCV)/bin/sb_dfg_emu none.cfg $<
+	$(SS_TOOLS)/bin/sb_dfg_emu none.cfg $<
 endif
 
 $(KERN_SB): $(SB_FILES) ../../common/harness.c $(DFG_HEADERS) 
@@ -44,16 +44,16 @@ sim: $(SB_FILES) ../../common/harness.c $(DFG_HEADERS)
 	$(SB_CPP) $(CFLAGS) -I../../common -o $(KERN_SB) $(SB_SRCS) ../../common/harness.c -DSB -DRUN
 
 emu: $(SB_FILES) ../../common/harness.c $(DFG_HEADERS)
-	$(CPP) $(CFLAGS) -DSB $(SB_SRCS) ../../common/harness.c -I../../common -lsoftbrain-emu -I$(RISCV)/include/softbrain-lib -L$(RISCV)/lib -o $(KERN_SB) 
+	$(CPP) $(CFLAGS) -DSB $(SB_SRCS) ../../common/harness.c -I../../common -lsoftbrain-emu -I$(SS_TOOLS)/include/softbrain-lib -L$(SS_TOOLS)/lib -o $(KERN_SB) 
 
 run_sb: $(KERN_SB) input.data check.data
-	SBCONFIG=$(SB_CONFIG) spike  --ic=128:4:64 --dc=128:4:64 --l2=1024:8:64  --extension=softbrain $(RISCV)/riscv64-unknown-elf/bin/pk  ./$(KERN_SB) input.data check.data
+	SBCONFIG=$(SB_CONFIG) spike  --ic=128:4:64 --dc=128:4:64 --l2=1024:8:64  --extension=softbrain $(SS_TOOLS)/riscv64-unknown-elf/bin/pk  ./$(KERN_SB) input.data check.data
 
 run_emu_sb: $(KERN_SB) input.data check.data
 	./$(KERN_SB) input.data check.data
 
 run_r5: $(KERN_R5) input.data check.data
-	SBCONFIG=$(SB_CONFIG) spike  --ic=128:4:64 --dc=128:4:64 --l2=1024:8:64  --extension=softbrain $(RISCV)/riscv64-unknown-elf/bin/pk ./$(KERN_R5) input.data check.data
+	SBCONFIG=$(SB_CONFIG) spike  --ic=128:4:64 --dc=128:4:64 --l2=1024:8:64  --extension=softbrain $(SS_TOOLS)/riscv64-unknown-elf/bin/pk ./$(KERN_R5) input.data check.data
 
 
 $(KERN_R5): $(FILES) ../../common/harness.c
