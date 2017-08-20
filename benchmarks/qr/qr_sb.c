@@ -74,18 +74,25 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
   for (i = 0; i < N; ++i) {
     q[i * (N + 1)] = 1;
   }
-  for (i = 0; i < N * N; ++i) {
+  /*for (i = 0; i < N * N; ++i) {
     r[i] = a[i];
+  }*/
+  for (i = 0; i < N; ++i) {
+    for (j = 0; j < N; ++j) {
+      r[j * N + i] = a[i * N + j];
+    }
   }
   for (i = 0; i < N; ++i) {
     float dot = 0.;
 
     {
+      //r[i][i];
       DTYPE *rp = r + i * (N + 1), *vp = v;
       for (j = i; j < N; ++j) {
         *vp = *rp;
         dot += *vp * *vp;
-        rp += N;
+        //rp += N;
+        ++rp;
         ++vp;
       }
     }
@@ -147,11 +154,19 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
       DTYPE *vy = v, *vk, *rk, *head_rr;
       for (y = i; y < N; ++y) {
         for (x = i; x < N; ++x) {
-          for (k = i, vk = v, rk = r + i * N + x; k < N; ++k) {
-            tmp[y * N + x] += (*vk++) * (*rk);
-            rk += N;
+          if (((i + x * N) & 1) || N - i < 4) {
+            if (N - i >= 5) {
+              tmp[y * N + x] =
+                r[y + x * N] - 2 * (*vy) * (sb_dot(vv, r + i + x * N + 1, N - i - 1) + (*v) * r[i + x * N]);
+            } else {
+              for (k = i, vk = v, rk = r + i + x * N; k < N; ++k) {
+                tmp[y * N + x] += (*vk++) * (*rk++);
+              }
+              tmp[y * N + x] = r[y + x * N] - 2 * (*vy) * tmp[y * N + x];
+            }
+          } else {
+            tmp[y * N + x] = r[y + x * N] - 2 * (*vy) * sb_dot(v, r + i + x * N, N - i);
           }
-          tmp[y * N + x] = r[y * N + x] - 2 * (*vy) * tmp[y * N + x];
           /*
           Origin R=HR':
             for (k = i; k < N; ++k)
@@ -163,7 +178,7 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
     }
 
     for (y = i; y < N; ++y) for (x = i; x < N; ++x) {
-      r[y * N + x] = tmp[y * N + x];
+      r[x * N + y] = tmp[y * N + x];
 #ifdef DEBUG
       tmp[y * N + x] = 0;
 #endif
@@ -186,6 +201,12 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
 #endif
 
   }
+  for (i = 0; i < N; ++i)
+    for (j = 0; j < N; ++j)
+      tmp[i * N + j] = r[j * N + i];
+  for (i = 0; i < N; ++i)
+    for (j = 0; j < N; ++j)
+      r[i * N + j] = tmp[i * N + j];
   free(v);
   free(vv);
   free(rr);
