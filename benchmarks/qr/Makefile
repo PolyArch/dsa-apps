@@ -11,7 +11,7 @@ all: $(TESTS)
 #CPP=riscv32-unknown-elf-g++
 CPP=riscv64-unknown-elf-g++
 
-DFGS=norm.dfg
+DFGS=dot.dfg
 
 DFG_HEADERS=$(DFGS:.dfg=.h)
 
@@ -33,3 +33,4 @@ $(TESTS): % :%.c $(DFG_HEADERS) qr.o
 
 clean:
 	rm -f $(TESTS) $(DFG_HEADERS) *.s *.o
+	rm -rf viz stats verif gams

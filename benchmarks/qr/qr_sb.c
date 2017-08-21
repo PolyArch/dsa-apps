@@ -1,5 +1,5 @@
 #include "qr.h"
-#include "norm.h"
+#include "dot.h"
 #include "../../common/include/sb_insts.h"
 #include "../../common/include/sim_timing.h"
 
@@ -18,12 +18,12 @@ float sb_dot(float *a, float *b, int n) {
     return res;
   } else if (n >= 44) {
     float sum[22];
-    //SB_CONFIG(norm_config, norm_size);
-    SB_CONST(P_norm_carry, ri.b, 11);
-    SB_DMA_READ(a, 16, 16, n / 4, P_norm_A);
-    SB_DMA_READ(b, 16, 16, n / 4, P_norm_B);
-    SB_RECURRENCE(P_norm_R, P_norm_carry, n / 4 - 11);
-    SB_DMA_WRITE(P_norm_R, 8, 8, 11, sum);
+    //SB_CONFIG(dot_config, dot_size);
+    SB_CONST(P_dot_carry, ri.b, 11);
+    SB_DMA_READ(a, 16, 16, n / 4, P_dot_A);
+    SB_DMA_READ(b, 16, 16, n / 4, P_dot_B);
+    SB_RECURRENCE(P_dot_R, P_dot_carry, n / 4 - 11);
+    SB_DMA_WRITE(P_dot_R, 8, 8, 11, sum);
     SB_WAIT_ALL();
     {
       float *head = sum;
@@ -39,12 +39,12 @@ float sb_dot(float *a, float *b, int n) {
     }
   } else {
     float sum[2] = {0, 0};
-    //SB_CONFIG(norm_config, norm_size);
-    SB_CONST(P_norm_carry, ri.b, 1);
-    SB_DMA_READ(a, 16, 16, n / 4, P_norm_A);
-    SB_DMA_READ(b, 16, 16, n / 4, P_norm_B);
-    SB_RECURRENCE(P_norm_R, P_norm_carry, n / 4 - 1);
-    SB_DMA_WRITE(P_norm_R, 8, 8, 1, sum);
+    //SB_CONFIG(dot_config, dot_size);
+    SB_CONST(P_dot_carry, ri.b, 1);
+    SB_DMA_READ(a, 16, 16, n / 4, P_dot_A);
+    SB_DMA_READ(b, 16, 16, n / 4, P_dot_B);
+    SB_RECURRENCE(P_dot_R, P_dot_carry, n / 4 - 1);
+    SB_DMA_WRITE(P_dot_R, 8, 8, 1, sum);
     SB_WAIT_ALL();
     {
       /*float *head = b;
@@ -66,17 +66,13 @@ float sb_dot(float *a, float *b, int n) {
 
 #define h(x, y) (((x) >= i) && ((y) >= i) ? (((x) == (y)) - v[x] * v[y] * 2.) : (x) == (y))
 void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
-  SB_CONFIG(norm_config, norm_size);
+  SB_CONFIG(dot_config, dot_size);
   int i, j, k, x, y; DTYPE *tmp = (DTYPE *) malloc(N * N * sizeof(DTYPE));
   DTYPE *v = (DTYPE *) malloc(N * sizeof(DTYPE)),
-        *vv= (DTYPE *) malloc(N * sizeof(DTYPE)),
-        *rr= (DTYPE *) malloc(N * sizeof(DTYPE));
+        *vv= (DTYPE *) malloc(N * sizeof(DTYPE));
   for (i = 0; i < N; ++i) {
     q[i * (N + 1)] = 1;
   }
-  /*for (i = 0; i < N * N; ++i) {
-    r[i] = a[i];
-  }*/
   for (i = 0; i < N; ++i) {
     for (j = 0; j < N; ++j) {
       r[j * N + i] = a[i * N + j];
@@ -86,12 +82,10 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
     float dot = 0.;
 
     {
-      //r[i][i];
       DTYPE *rp = r + i * (N + 1), *vp = v;
       for (j = i; j < N; ++j) {
         *vp = *rp;
         dot += *vp * *vp;
-        //rp += N;
         ++rp;
         ++vp;
       }
@@ -99,11 +93,6 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
 
     *v += (r[i * (N + 1)] < -eps ? -1 : 1) * sqrt(dot);
 
-    /*
-    dot = 0.;
-    for (j = 0; j < N - i; ++j)
-      dot += v[j] * v[j];
-    */
     //begin_roi();
     dot = sb_dot(v, v, N - i);
     //end_roi();
@@ -148,7 +137,7 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
 
     {
       //begin_roi();
-      DTYPE *vy = v, *vk, *rk, *head_rr;
+      DTYPE *vy = v, *vk, *rk;
       for (y = i; y < N; ++y) {
         for (x = i; x < N; ++x) {
           if ((i + x * N) & 1) {
@@ -200,7 +189,6 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
       r[i * N + j] = tmp[i * N + j];
   free(v);
   free(vv);
-  free(rr);
 }
 #undef h
 
