@@ -104,7 +104,9 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
     for (j = 0; j < N - i; ++j)
       dot += v[j] * v[j];
     */
+    //begin_roi();
     dot = sb_dot(v, v, N - i);
+    //end_roi();
 
     dot = sqrt(dot);
     for (j = 0; j < N - i; ++j) {
@@ -117,21 +119,14 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
     for (y = 0; y < N; ++y) for (x = i; x < N; ++x) tmp[y * N + x] = 0;
 
     {
+      //begin_roi();
       DTYPE *vk, *vx, *qk, *qx;
       for (y = 0; y < N; ++y) {
         for (x = i, vx = v, qx = q + y * N + i; x < N; ++x) {
           //Sequential pattern:
-          if (((y * N + i) & 1) || N - i < 4) {
-            if (N - i >= 5) {
-              tmp[y * N + x] =
-                (q[y * N + i] * (*v) + sb_dot(q + y * N + i + 1, vv, N - i - 1)) * -2 * (*vx++) + (*qx++);
-            } else {
-              for (k = i, vk = v, qk = q + y * N + i; k < N; ++k) {
-                tmp[y * N + x] += (*qk++) * (*vk++);
-              }
-              tmp[y * N + x] *= -2 * (*vx++);
-              tmp[y * N + x] += *qx++;
-            }
+          if ((y * N + i) & 1) {
+            tmp[y * N + x] =
+              (q[y * N + i] * (*v) + sb_dot(q + y * N + i + 1, vv, N - i - 1)) * -2 * (*vx++) + (*qx++);
           } else {
             tmp[y * N + x] = sb_dot(q + y * N + i, v, N - i) * -2 * (*vx++) + (*qx++);
           }
@@ -143,6 +138,7 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
           */
         }
       }
+      //end_roi();
     }
 
     for (y = 0; y < N; ++y) for (x = i; x < N; ++x) {
@@ -151,19 +147,13 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
     }
 
     {
+      //begin_roi();
       DTYPE *vy = v, *vk, *rk, *head_rr;
       for (y = i; y < N; ++y) {
         for (x = i; x < N; ++x) {
-          if (((i + x * N) & 1) || N - i < 4) {
-            if (N - i >= 5) {
-              tmp[y * N + x] =
-                r[y + x * N] - 2 * (*vy) * (sb_dot(vv, r + i + x * N + 1, N - i - 1) + (*v) * r[i + x * N]);
-            } else {
-              for (k = i, vk = v, rk = r + i + x * N; k < N; ++k) {
-                tmp[y * N + x] += (*vk++) * (*rk++);
-              }
-              tmp[y * N + x] = r[y + x * N] - 2 * (*vy) * tmp[y * N + x];
-            }
+          if ((i + x * N) & 1) {
+            tmp[y * N + x] =
+              r[y + x * N] - 2 * (*vy) * (sb_dot(vv, r + i + x * N + 1, N - i - 1) + (*v) * r[i + x * N]);
           } else {
             tmp[y * N + x] = r[y + x * N] - 2 * (*vy) * sb_dot(v, r + i + x * N, N - i);
           }
@@ -175,6 +165,7 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
         }
         ++vy;
       }
+      //end_roi();
     }
 
     for (y = i; y < N; ++y) for (x = i; x < N; ++x) {
