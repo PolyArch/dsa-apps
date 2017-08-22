@@ -11,7 +11,7 @@ all: $(TESTS)
 #CPP=riscv32-unknown-elf-g++
 CPP=riscv64-unknown-elf-g++
 
-DFGS=dot.dfg 
+DFGS=dot.dfg dot_acc.dfg
 
 DFG_HEADERS=$(DFGS:.dfg=.h)
 
