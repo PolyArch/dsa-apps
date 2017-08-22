@@ -66,8 +66,7 @@ int garbage[1024];
   __asm__ __volatile__("sb_stride   %0, %1" : : "r"(stride), "r"(access_size)); \
   __asm__ __volatile__("sb_wr_dma   %0, %1, %2"   : : "r"(mem_addr),  "r"(num_strides), "i"(output_port|0x40)); 
 
-//Write to DMA, but throw away all but the last 16-bits from each word
-//WARNING -- (NOT IMPLEMENTED IN SIMULTOR YET)
+//Write to DMA, but throw away all but the last 32-bits from each word  (implemented, not tested yet)
 #define SB_DMA_WRITE_SHF32(output_port, stride, access_size, num_strides, mem_addr) \
   __asm__ __volatile__("sb_stride   %0, %1" : : "r"(stride), "r"(access_size)); \
   __asm__ __volatile__("sb_wr_dma   %0, %1, %2"   : : "r"(mem_addr),  "r"(num_stirides), "i"(output_port|0x80)); 
