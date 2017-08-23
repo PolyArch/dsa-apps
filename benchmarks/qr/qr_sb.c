@@ -12,15 +12,12 @@ ri_t zero = {0., 0.};
 bool active = false;
 
 //float sb_dot(float *a, float *b, int n) {
-void sb_dot(int src, float *b, int n, float _cons, float _coef, float *target) {
+void sb_dot(int src, float *b, int n, float *target) {
   if (!n) {
-    *target =  _cons;
+    *target = 0;
     //target[1] = 0;
   } else {
     int total = ((n - 1) >> 3) + 1;
-
-    ri_t coef = {_coef, _coef};
-    ri_t cons = {_cons, 0};
 
     //SB_DMA_READ(a, 8, 8, n / 2, P_dot_A);
     SB_SCRATCH_READ(src, sizeof(float) * n, P_dot_A);
@@ -31,11 +28,6 @@ void sb_dot(int src, float *b, int n, float _cons, float _coef, float *target) {
 
     SB_CONST(P_dot_reset, 0, total - 1);
     SB_CONST(P_dot_reset, 1, 1);
-
-    SB_CONST(P_dot_coef, coef.b, total);
-
-    SB_CONST(P_dot_cons, zero.b, total - 1);
-    SB_CONST(P_dot_cons, cons.b, 1);
 
     SB_GARBAGE(P_dot_R, total - 1);
     SB_DMA_WRITE(P_dot_R, 8, 8, 1, target);
@@ -58,7 +50,8 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
   int i, j, k, x, y;
   DTYPE *tmp = (DTYPE *) malloc(N * N * 2 * sizeof(DTYPE));
   DTYPE *v = (DTYPE *) malloc((N + 1) * sizeof(DTYPE)),
-        *vv= (DTYPE *) malloc((N + 1) * sizeof(DTYPE));
+        *vv= (DTYPE *) malloc((N + 1) * sizeof(DTYPE)),
+        *fly= (DTYPE *) malloc((N + 1) * sizeof(DTYPE));
 
   for (i = 0; i < N; ++i) {
     q[i * (N + 1)] = 1;
@@ -69,7 +62,7 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
     }
   }
 
-  for (i = 0; i < N; ++i) {
+  for (i = 0; i < N - 1; ++i) {
     //printf("%d\n", i);
     float dot = 0.;
     int n = N - i;
@@ -120,21 +113,20 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
       DTYPE *vk, *vx, *qk, *qx, *res;
       for (y = 0; y < N; ++y) {
         res = tmp + (y * N + i << 1);
+        fly[y] = q[y * N + i];
         int delta = (y * N + i) & 1;
         for (x = i, vx = v, qx = q + y * N + i; x < N; ++x) {
           //Sequential pattern:
-          float coef = -2 * (*vx++);
           sb_dot(
               delta ? _n * sizeof(float) : 0,
               q + y * N + i + delta,
               delta ? _nn :_n,
-              (*qx++) + (delta ? (*v * q[y * N + i] * coef) : 0),
-              coef,
               res
           );
+
           res += 2;
           /*
-          Origin Q=Q'H:
+          Origin_QQH:
             for (k = i; k < N; ++k) {
               tmp[y * N + x] += q[y * N + k] * ((k == x) - v[k] * v[x] * 2);
             }
@@ -148,8 +140,10 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
     {
       for (y = 0; y < N; ++y) {
         float *sum = tmp + (y * N + i << 1);
+        float *vx = v;
+        int delta = y * N + i & 1;
         for (x = i; x < N; ++x) {
-          q[y * N + x] = sum[0];
+          q[y * N + x] += (sum[0] + (delta ? fly[y] * *v : 0)) * -2 * *vx++;
           sum += 2;
         }
       }
@@ -160,15 +154,13 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
       DTYPE *vy = v, *vk, *rk, *head_rr;
       for (y = i; y < N; ++y) {
         float *res = tmp + (y * N + i << 1);
+        fly[y] = r[i + y * N];
         for (x = i; x < N; ++x) {
           int delta = (i + x * N) & 1;
-          float coef = -2 * *vy;
           sb_dot(
               delta ? _n * sizeof(float) : 0,
               r + i + x * N + delta,
               delta ? _nn :_n,
-              (delta ? *v * r[i + x * N] * coef : 0) + r[y + x * N],
-              coef,
               res
           );
           res += 2;
@@ -189,7 +181,8 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
       for (y = i; y < N; ++y) {
         sum = tmp + (y * N + i << 1);
         for (x = i; x < N; ++x) {
-          r[x * N + y] = sum[0];
+          int delta = i + x * N & 1;
+          r[x * N + y] += (sum[0] + (delta ? *v * fly[x] : 0)) * -2 * *vy;
           sum += 2;
         }
         ++vy;

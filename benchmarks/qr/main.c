@@ -33,7 +33,10 @@ int main(int argc, char **argv) {
       for (k = 0; k < N; ++k) {
         aa[i * N + j] += q[i * N + k] * r[k * N + j];
       }
-      assert(fabs(a[i * N + j] - aa[i * N + j]) < eps);
+      if (fabs(a[i * N + j] - aa[i * N + j]) > eps) {
+        printf("%f %f\n", a[i * N + j], aa[i * N + j]);
+        assert(false);
+      }
     }
   }
 
