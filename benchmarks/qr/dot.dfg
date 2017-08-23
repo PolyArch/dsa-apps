@@ -1,15 +1,22 @@
 #R = A . B + carry
 
-InputVec: A [0, 1]
-InputVec: B [0, 1]
-Input: carry
+InputVec: A [0, 1, 2, 3]
+InputVec: B [0, 1, 2, 3]
+Input: reset
 
 M0 = FMul32x2(A0, B0)
 M1 = FMul32x2(A1, B1)
+M2 = FMul32x2(A2, B2)
+M3 = FMul32x2(A3, B3)
 
-T = FAdd32x2(M0, M1)
+T0 = FAdd32x2(M0, M1)
+T1 = FAdd32x2(M2, M3)
 
-R = FRed32x2(T, carry)
+U = FAdd32x2(T0, T1)
+
+W = FAcc32x2(U, reset)
+
+R = FRed32x2(W, 0)
 
 Output: R
 

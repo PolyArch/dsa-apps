@@ -3,73 +3,63 @@
 #include "../../common/include/sb_insts.h"
 #include "../../common/include/sim_timing.h"
 
-union {
-  float a;
-  int b;
-} ri = {0.};
+typedef union {
+  float c[2];
+  double a;
+  int64_t b;
+} ri_t;
+ri_t zero = {0., 0.};
+bool active = false;
 
-float sb_dot(float *a, float *b, int n) {
-  float res = 0.;
-  int i;
-  if (n < 4) {
-    for (i = 0; i < n; ++i) {
-      res += (*a++) * (*b++);
-    }
-    return res;
-  } else if (n >= 44) {
-    float sum[22];
-    //SB_CONFIG(dot_config, dot_size);
-    SB_CONST(P_dot_carry, ri.b, 11);
-    SB_DMA_READ(a, 16, 16, n / 4, P_dot_A);
-    SB_DMA_READ(b, 16, 16, n / 4, P_dot_B);
-    SB_RECURRENCE(P_dot_R, P_dot_carry, n / 4 - 11);
-    SB_DMA_WRITE(P_dot_R, 8, 8, 11, sum);
-    SB_WAIT_ALL();
-    {
-      float *head = sum;
-      for (i = 0; i < 11; ++i) {
-        res += *head;
-        head += 2;
-      }
-      float *head_a = a + (n >> 2 << 2);
-      float *head_b = b + (n >> 2 << 2);
-      for (i = 0; i < (n & 3); ++i) {
-        res += (*head_a++) * (*head_b++);
-      }
-    }
+//float sb_dot(float *a, float *b, int n) {
+void sb_dot(int src, float *b, int n, float _cons, float _coef, float *target) {
+  if (!n) {
+    *target =  _cons;
+    //target[1] = 0;
   } else {
-    float sum[2] = {0, 0};
-    //SB_CONFIG(dot_config, dot_size);
-    SB_CONST(P_dot_carry, ri.b, 1);
-    SB_DMA_READ(a, 16, 16, n / 4, P_dot_A);
-    SB_DMA_READ(b, 16, 16, n / 4, P_dot_B);
-    SB_RECURRENCE(P_dot_R, P_dot_carry, n / 4 - 1);
-    SB_DMA_WRITE(P_dot_R, 8, 8, 1, sum);
-    SB_WAIT_ALL();
-    {
-      /*float *head = b;
-      for (i = 0; i < 11; ++i) {
-        res += *head;
-        head += 2;
-      }*/
-      res = *sum;
-      float *head_a = a + (n >> 2 << 2);
-      float *head_b = b + (n >> 2 << 2);
-      for (i = 0; i < (n & 3); ++i) {
-        res += (*head_a++) * (*head_b++);
-      }
-    }
+    int total = ((n - 1) >> 3) + 1;
+
+    ri_t coef = {_coef, _coef};
+    ri_t cons = {_cons, 0};
+
+    //SB_DMA_READ(a, 8, 8, n / 2, P_dot_A);
+    SB_SCRATCH_READ(src, sizeof(float) * n, P_dot_A);
+    SB_CONST(P_dot_A, 0, (total << 3) - n >> 1);
+
+    SB_DMA_READ(b, 8, 8, n / 2, P_dot_B);
+    SB_CONST(P_dot_B, 0, (total << 3) - n >> 1);
+
+    SB_CONST(P_dot_reset, 0, total - 1);
+    SB_CONST(P_dot_reset, 1, 1);
+
+    SB_CONST(P_dot_coef, coef.b, total);
+
+    SB_CONST(P_dot_cons, zero.b, total - 1);
+    SB_CONST(P_dot_cons, cons.b, 1);
+
+    SB_GARBAGE(P_dot_R, total - 1);
+    SB_DMA_WRITE(P_dot_R, 8, 8, 1, target);
+ 
+    //SB_WAIT_ALL();
+  }
+}
+
+float dot_prod(float *a, float *b, int n) {
+  float res = 0.;
+  while (n--) {
+    res += *a++ * *b++;
   }
   return res;
 }
 
-
 #define h(x, y) (((x) >= i) && ((y) >= i) ? (((x) == (y)) - v[x] * v[y] * 2.) : (x) == (y))
 void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
   SB_CONFIG(dot_config, dot_size);
-  int i, j, k, x, y; DTYPE *tmp = (DTYPE *) malloc(N * N * sizeof(DTYPE));
-  DTYPE *v = (DTYPE *) malloc(N * sizeof(DTYPE)),
-        *vv= (DTYPE *) malloc(N * sizeof(DTYPE));
+  int i, j, k, x, y;
+  DTYPE *tmp = (DTYPE *) malloc(N * N * 2 * sizeof(DTYPE));
+  DTYPE *v = (DTYPE *) malloc((N + 1) * sizeof(DTYPE)),
+        *vv= (DTYPE *) malloc((N + 1) * sizeof(DTYPE));
+
   for (i = 0; i < N; ++i) {
     q[i * (N + 1)] = 1;
   }
@@ -78,8 +68,14 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
       r[j * N + i] = a[i * N + j];
     }
   }
+
   for (i = 0; i < N; ++i) {
+    //printf("%d\n", i);
     float dot = 0.;
+    int n = N - i;
+    int nn = n - 1;
+    int _n = n + (n & 1);
+    int _nn = nn + (nn & 1);
 
     {
       DTYPE *rp = r + i * (N + 1), *vp = v;
@@ -93,32 +89,50 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
 
     *v += (r[i * (N + 1)] < -eps ? -1 : 1) * sqrt(dot);
 
-    //begin_roi();
-    dot = sb_dot(v, v, N - i);
-    //end_roi();
-
-    dot = sqrt(dot);
-    for (j = 0; j < N - i; ++j) {
-      v[j] /= dot;
-      if (j) {
-        vv[j - 1] = v[j];
+    {
+      dot = 0.;
+      float *vp = v, *vvp = vv;
+      for (j = 0; j < n; ++j) {
+        dot += *vp * *vp;
+        ++vp;
       }
+      dot = sqrt(dot);
+      vp = v;
+      for (j = 0; j < n; ++j) {
+        *vp /= dot;
+        if (j) {
+          *vvp++ = *vp;
+        }
+        //printf("%f ", *vp);
+        ++vp;
+      }
+      //puts("");
+      *vp = 0;
+      *vvp= 0;
+      SB_DMA_SCRATCH_LOAD(v, 8, 8, _n >> 1, 0);
+      SB_WAIT_SCR_WR();
+      SB_DMA_SCRATCH_LOAD(vv, 8, 8, _nn >> 1, _n * sizeof(float));
+      SB_WAIT_SCR_WR();
     }
-
-    for (y = 0; y < N; ++y) for (x = i; x < N; ++x) tmp[y * N + x] = 0;
 
     {
       //begin_roi();
-      DTYPE *vk, *vx, *qk, *qx;
+      DTYPE *vk, *vx, *qk, *qx, *res;
       for (y = 0; y < N; ++y) {
+        res = tmp + (y * N + i << 1);
+        int delta = (y * N + i) & 1;
         for (x = i, vx = v, qx = q + y * N + i; x < N; ++x) {
           //Sequential pattern:
-          if ((y * N + i) & 1) {
-            tmp[y * N + x] =
-              (q[y * N + i] * (*v) + sb_dot(q + y * N + i + 1, vv, N - i - 1)) * -2 * (*vx++) + (*qx++);
-          } else {
-            tmp[y * N + x] = sb_dot(q + y * N + i, v, N - i) * -2 * (*vx++) + (*qx++);
-          }
+          float coef = -2 * (*vx++);
+          sb_dot(
+              delta ? _n * sizeof(float) : 0,
+              q + y * N + i + delta,
+              delta ? _nn :_n,
+              (*qx++) + (delta ? (*v * q[y * N + i] * coef) : 0),
+              coef,
+              res
+          );
+          res += 2;
           /*
           Origin Q=Q'H:
             for (k = i; k < N; ++k) {
@@ -127,25 +141,37 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
           */
         }
       }
+      SB_WAIT_ALL();
       //end_roi();
     }
 
-    for (y = 0; y < N; ++y) for (x = i; x < N; ++x) {
-      q[y * N + x] = tmp[y * N + x];
-      tmp[y * N + x] = 0;
+    {
+      for (y = 0; y < N; ++y) {
+        float *sum = tmp + (y * N + i << 1);
+        for (x = i; x < N; ++x) {
+          q[y * N + x] = sum[0];
+          sum += 2;
+        }
+      }
     }
 
     {
       //begin_roi();
-      DTYPE *vy = v, *vk, *rk;
+      DTYPE *vy = v, *vk, *rk, *head_rr;
       for (y = i; y < N; ++y) {
+        float *res = tmp + (y * N + i << 1);
         for (x = i; x < N; ++x) {
-          if ((i + x * N) & 1) {
-            tmp[y * N + x] =
-              r[y + x * N] - 2 * (*vy) * (sb_dot(vv, r + i + x * N + 1, N - i - 1) + (*v) * r[i + x * N]);
-          } else {
-            tmp[y * N + x] = r[y + x * N] - 2 * (*vy) * sb_dot(v, r + i + x * N, N - i);
-          }
+          int delta = (i + x * N) & 1;
+          float coef = -2 * *vy;
+          sb_dot(
+              delta ? _n * sizeof(float) : 0,
+              r + i + x * N + delta,
+              delta ? _nn :_n,
+              (delta ? *v * r[i + x * N] * coef : 0) + r[y + x * N],
+              coef,
+              res
+          );
+          res += 2;
           /*
           Origin R=HR':
             for (k = i; k < N; ++k)
@@ -154,14 +180,20 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
         }
         ++vy;
       }
+      SB_WAIT_ALL();
       //end_roi();
     }
 
-    for (y = i; y < N; ++y) for (x = i; x < N; ++x) {
-      r[x * N + y] = tmp[y * N + x];
-#ifdef DEBUG
-      tmp[y * N + x] = 0;
-#endif
+    {
+      float *sum, *vy = v;
+      for (y = i; y < N; ++y) {
+        sum = tmp + (y * N + i << 1);
+        for (x = i; x < N; ++x) {
+          r[x * N + y] = sum[0];
+          sum += 2;
+        }
+        ++vy;
+      }
     }
 
 #ifdef DEBUG
@@ -185,10 +217,11 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
     for (j = 0; j < N; ++j)
       tmp[i * N + j] = r[j * N + i];
   for (i = 0; i < N; ++i)
-    for (j = 0; j < N; ++j)
+    for (j = 0; j < N; ++j) {
       r[i * N + j] = tmp[i * N + j];
-  free(v);
-  free(vv);
+    }
+  //free(v);
+  //free(vv);
 }
 #undef h
 
