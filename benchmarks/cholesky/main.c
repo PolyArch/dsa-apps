@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>
-#include <memory.h>
+#include "../../common/include/sim_timing.h"
 
 #define N 64
 #define eps 1e-4
 
-float a[N * N] = {6, 11, 11, 26}, L[N * N];
+float a[N * N], L[N * N];
 
 void cholesky(float *a, float *L) {
   float *A = (float *) malloc(N * N * sizeof(float));
@@ -17,28 +17,23 @@ void cholesky(float *a, float *L) {
     float div = sqrt(A[i * (N + 1)]);
     float *b = A + i * (N + 1);
     L[i * (N + 1)] = div;
-    for (int j = i + 1; j < N; ++j) {
-      L[j * N + i] = b[j - i] / div;
-    }
-    for (int j = i + 1; j < N; ++j) {
-      for (int k = i + 1; k < N; ++k) {
-        A[j * N + k] -= b[j - i] * b[k - i] / A[i * (N + 1)];
+    {
+      float *bj = b + 1;
+      for (int j = i + 1; j < N; ++j) {
+        L[j * N + i] = *bj++ / div;
       }
     }
-    for (int j = i + 1; j < N; ++j)
-      A[i * N + j] = A[j * N + i] = 0;
-    A[i * (N + 1)] = 1;
-    /*puts("A:");
-    for (int j = 0; j < N; ++j) {
-      for (int k = 0; k < N; ++k) {
-        printf("%f ", A[j * N + k]);
+    {
+      float *bj = b + 1, *bk;
+      float v = A[i * (N + 1)];
+      for (int j = i + 1; j < N; ++j) {
+        bk = b + j - i;
+        for (int k = j; k < N; ++k) {
+          A[j * N + k] -= *bj * (*bk++) / v;
+        }
+        ++bj;
       }
-      puts("");
     }
-    printf("L: ");
-    for (int j = i; j < N; ++j)
-      printf("%f ", L[j * N + i]);
-    puts("");*/
   }
 }
 
@@ -49,7 +44,9 @@ int main() {
       fscanf(input_data, "%f", a + i * N + j);
     }
   }
+  begin_roi();
   cholesky(a, L);
+  end_roi();
   for (int i = 0; i < N * N; ++i) {
     float value;
     fscanf(ref_data, "%f", &value);
