@@ -1,0 +1,12 @@
+Input: A
+Input: B
+Input: C
+Input: D
+
+E = FMul32x2(A, B)
+
+F = FMul32x2(E, C)
+
+G = FAdd32x2(D, F)
+
+Output: G
