@@ -1,5 +1,5 @@
 #include "qr.h"
-#include "dot.h"
+#include "compute.h"
 #include "../../common/include/sb_insts.h"
 #include "../../common/include/sim_timing.h"
 
@@ -13,24 +13,31 @@ bool active = false;
 
 //float sb_dot(float *a, float *b, int n) {
 void sb_dot(int src, float *b, int n, float *target) {
+  end_roi();
+  {
+    //Do some strange memory access to get rid of the bug of simulator!
+    uint64_t x = src + (uint64_t) b + n + (uint64_t) target;
+    --x;
+  }
+  begin_roi();
   if (!n) {
     *target = 0;
     //target[1] = 0;
   } else {
     int total = ((n - 1) >> 3) + 1;
 
-    //SB_DMA_READ(a, 8, 8, n / 2, P_dot_A);
-    SB_SCRATCH_READ(src, sizeof(float) * n, P_dot_A);
-    SB_CONST(P_dot_A, 0, (total << 3) - n >> 1);
+    //SB_DMA_READ(a, 8, 8, n / 2, P_compute_A);
+    SB_SCRATCH_READ(src, sizeof(float) * n, P_compute_A);
+    SB_CONST(P_compute_A, 0, (total << 3) - n >> 1);
 
-    SB_DMA_READ(b, 8, 8, n / 2, P_dot_B);
-    SB_CONST(P_dot_B, 0, (total << 3) - n >> 1);
+    SB_DMA_READ(b, 8, 8, n / 2, P_compute_B);
+    SB_CONST(P_compute_B, 0, (total << 3) - n >> 1);
 
-    SB_CONST(P_dot_reset, 0, total - 1);
-    SB_CONST(P_dot_reset, 1, 1);
+    SB_CONST(P_compute_reset, 0, total - 1);
+    SB_CONST(P_compute_reset, 1, 1);
 
-    SB_GARBAGE(P_dot_R, total - 1);
-    SB_DMA_WRITE(P_dot_R, 8, 8, 1, target);
+    SB_GARBAGE(P_compute_R, total - 1);
+    SB_DMA_WRITE(P_compute_R, 8, 8, 1, target);
  
     //SB_WAIT_ALL();
   }
@@ -46,7 +53,7 @@ float dot_prod(float *a, float *b, int n) {
 
 #define h(x, y) (((x) >= i) && ((y) >= i) ? (((x) == (y)) - v[x] * v[y] * 2.) : (x) == (y))
 void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
-  SB_CONFIG(dot_config, dot_size);
+  SB_CONFIG(compute_config, compute_size);
   int i, j, k, x, y;
   DTYPE *tmp = (DTYPE *) malloc(N * N * 2 * sizeof(DTYPE));
   DTYPE *v = (DTYPE *) malloc((N + 1) * sizeof(DTYPE)),
@@ -62,8 +69,7 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
     }
   }
 
-  for (i = 0; i < N - 1; ++i) {
-    //printf("%d\n", i);
+  for (i = 0; i < N; ++i) {
     float dot = 0.;
     int n = N - i;
     int nn = n - 1;
@@ -96,10 +102,8 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
         if (j) {
           *vvp++ = *vp;
         }
-        //printf("%f ", *vp);
         ++vp;
       }
-      //puts("");
       *vp = 0;
       *vvp= 0;
       SB_DMA_SCRATCH_LOAD(v, 8, 8, _n >> 1, 0);
@@ -125,6 +129,7 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
           );
 
           res += 2;
+
           /*
           Origin_QQH:
             for (k = i; k < N; ++k) {
@@ -188,22 +193,6 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
         ++vy;
       }
     }
-
-#ifdef DEBUG
-    for (y = i; y < N; ++y)
-      for (x = i; x < N; ++x)
-        for (k = i; k < N; ++k)
-          tmp[y * N + x] += h(y, k) * h(k, x);
-    puts("h:");
-    for (y = 0; y < N; ++y) { for (x = 0; x < N; ++x) printf("%f ", h(y, x)); puts(""); }
-    puts("r:");
-    for (y = 0; y < N; ++y) { for (x = 0; x < N; ++x) printf("%f ", r[y * N + x]); puts(""); }
-    puts("q:");
-    for (y = 0; y < N; ++y) { for (x = 0; x < N; ++x) printf("%f ", q[y * N + x]); puts(""); }
-    puts("hh:");
-    for (y = i; y < N; ++y) { for (x = i; x < N; ++x) printf("%f ", tmp[y * N + x]); puts(""); }
-    puts("");
-#endif
 
   }
   for (i = 0; i < N; ++i)

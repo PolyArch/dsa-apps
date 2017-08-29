@@ -2,9 +2,9 @@
 #include "../../common/include/sim_timing.h"
 
 #define h(x, y) (((x) >= i) && ((y) >= i) ? (((x) == (y)) - v[x] * v[y] * 2.) : (x) == (y))
-void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
-  int i, j, k, x, y; DTYPE *tmp = (DTYPE *) malloc(N * N * sizeof(DTYPE));
-  DTYPE *v = (DTYPE *) malloc(N * sizeof(DTYPE));
+void qr(float *a, float *q, float *r) {
+  int i, j, k, x, y; float *tmp = (float *) malloc(N * N * sizeof(float));
+  float *v = (float *) malloc(N * sizeof(float));
   for (i = 0; i < N; ++i) {
     q[i * (N + 1)] = 1;
   }
@@ -12,10 +12,10 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
     r[i] = a[i];
   }
   for (i = 0; i < N; ++i) {
-    DTYPE dot = 0.;
+    float dot = 0.;
 
     {
-      DTYPE *vp = v + i, *rp = r + (N + 1) * i;
+      float *vp = v + i, *rp = r + (N + 1) * i;
       for (j = i; j < N; ++j) {
         *vp = *rp;
         dot += *vp * *vp;
@@ -37,7 +37,7 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
     for (y = 0; y < N; ++y) for (x = i; x < N; ++x) tmp[y * N + x] = 0;
 
     {
-      DTYPE *vk, *vx, *qk, *qx;
+      float *vk, *vx, *qk, *qx;
       for (y = 0; y < N; ++y) {
         for (x = i, vx = v + i, qx = q + y * N + i; x < N; ++x) {
           //Sequential pattern:
@@ -59,7 +59,7 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
       tmp[y * N + x] = 0;
     }
     {
-      DTYPE *vy = v + i, *vk, *rk;
+      float *vy = v + i, *vk, *rk;
       for (y = i; y < N; ++y) {
         for (x = i; x < N; ++x) {
           rk = r + i * N + x;

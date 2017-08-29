@@ -7,9 +7,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define N 64
-#define BN 4
-#define eps 1e-3
+#define eps 1e-4
 
 #ifndef DTYPE
 #define DTYPE float

@@ -3,34 +3,62 @@ $(warning SBCONFIG is undefined, using default)
 SBCONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 endif
 
-TESTS=main
-TESTC=$(TESTS:=.c)
+WIDTHS=8
 
-all: $(TESTS)
+ifndef N
+N=32
+endif
 
-#CPP=riscv32-unknown-elf-g++
-CPP=riscv64-unknown-elf-g++
+ifndef VEC_WIDTH
+VEC_WIDTH=$(firstword $(WIDTHS))
+endif
 
-DFGS=dot.dfg
+ifeq ($(findstring $(VEC_WIDTH), $(WIDTHS)),)
+$(error Unsupported vectorization width! Abort!)
+endif
 
-DFG_HEADERS=$(DFGS:.dfg=.h)
+DFG_DIR=sb-$(VEC_WIDTH)-wide
 
-#${info $(DFGS)}
-#${info $(DFG_HEADERS)}
+DFG=$(DFG_DIR)/compute.dfg
+DFG_HEADERS=$(DFG:.dfg=.h)
 
 $(DFG_HEADERS): %.h: %.dfg
 	$(SS_TOOLS)/bin/sb_sched $(SBCONFIG) $< 
 
-OPT?=-O3
-CFLAGS=$(OPT) -g -ggdb -gdwarf-3 
-#--std=c++11 
+IFLAGS=-I../../common/include -I$(DFG_DIR)
 
-qr.o: qr_sb.c
-	$(CPP) $<  $(CFLAGS) -c -o $@
+CC=riscv64-unknown-elf-g++
 
-$(TESTS): % :%.c $(DFG_HEADERS) qr.o
-	 $(CPP) $< qr.o  $(LIB) $(CFLAGS) -static -o $@
+input.data ref.data:
+	python gen.py $(N)
 
-clean:
-	rm -f $(TESTS) $(DFG_HEADERS) *.s *.o
-	rm -rf viz stats verif gams
+BENCHMARKS=baseline optimized softbrain
+OBJS=$(BENCHMARKS:=.o)
+LOGS=$(BENCHMARKS:=.log)
+MACROS=-D N=$(N) -D VEC_WIDTH=$(VEC_WIDTH)
+
+$(OBJS): %.o: %.c $(DFG_HEADERS)
+	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS)
+
+$(LOGS): %.log: %
+	SBCONFIG=$(SBCONFIG) \
+	spike --ic=64:4:64 --dc=64:4:64 --l2=1024:8:64 --extension=softbrain $(SS_TOOLS)/riscv64-unknown-elf/bin/pk $< \
+	| tee $@
+	
+$(BENCHMARKS): %: input.data ref.data %.o main.c
+	$(CC) main.c $@.o -o $@ -lm -O3 $(MACROS) $(IFLAGS)
+
+$(BENCHMARKS:=clean):
+	cd $(@:clean=); make clean
+
+cleandata:
+	rm -f input.data ref.data
+
+cleandfg:
+	rm -rf sb-8-wide/compute.h sb-8-wide/verif sb-8-wide/viz
+
+clean: cleandfg
+	rm -f $(OBJS) $(BENCHMARKS) $(LOGS)
+	rm -rf stats gams viz
+
+ultraclean: clean cleandata
