@@ -26,6 +26,8 @@ $(DFG_HEADERS): %.h: %.dfg
 	$(SS_TOOLS)/bin/sb_sched $(SBCONFIG) $< 
 
 IFLAGS=-I../../common/include -I$(DFG_DIR)
+CFLAGS=-O3
+LFLAGS=-lm
 
 CC=riscv64-unknown-elf-g++
 
@@ -37,8 +39,11 @@ OBJS=$(BENCHMARKS:=.o)
 LOGS=$(BENCHMARKS:=.log)
 MACROS=-D N=$(N) -D VEC_WIDTH=$(VEC_WIDTH)
 
-$(OBJS): %.o: %.c $(DFG_HEADERS)
-	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS)
+softbrain.o: softbrain.c $(DFG_HEADERS)
+	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) $(CFLAGS) $(LFLAGS)
+
+$(OBJS): %.o: %.c
+	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) $(CFLAGS) $(LFLAGS)
 
 $(LOGS): %.log: %
 	SBCONFIG=$(SBCONFIG) \
@@ -46,7 +51,7 @@ $(LOGS): %.log: %
 	| tee $@
 	
 $(BENCHMARKS): %: input.data ref.data %.o main.c
-	$(CC) main.c $@.o -o $@ -lm -O3 $(MACROS) $(IFLAGS)
+	$(CC) main.c $@.o -o $@ $(CFLAGS) $(LFLAGS) $(MACROS) $(IFLAGS)
 
 $(BENCHMARKS:=clean):
 	cd $(@:clean=); make clean

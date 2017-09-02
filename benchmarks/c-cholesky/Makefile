@@ -2,9 +2,8 @@ ifndef SBCONFIG
 $(warning SBCONFIG is undefined, using default)
 SBCONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 endif
-
 ifndef N
-N=64
+N=16
 endif
 
 ifndef VEC_WIDTH
@@ -28,8 +27,6 @@ $(DFG_HEADERS): %.h: %.dfg
 	$(SS_TOOLS)/bin/sb_sched $(SBCONFIG) $< 
 
 IFLAGS=-I../../common/include -I$(DFG_DIR)
-CFLAGS=-O3
-LFLAGS=-lm
 
 CC=riscv64-unknown-elf-g++
 
@@ -41,19 +38,19 @@ OBJS=$(BENCHMARKS:=.o)
 LOGS=$(BENCHMARKS:=.log)
 MACROS=-D N=$(N) -D VEC_WIDTH=$(VEC_WIDTH)
 
-softbrain.o: softbrain.c $(DFG_HEADERS)
-	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) $(CFLAGS) $(LFLAGS)
+softbrain.o: softbrain.cc $(DFG_HEADERS)
+	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS)
 
-$(OBJS): %.o: %.c
-	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) $(CFLAGS) $(LFLAGS)
+$(OBJS): %.o: %.cc
+	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O2
 
 $(LOGS): %.log: %
 	SBCONFIG=$(SBCONFIG) \
 	spike --ic=64:4:64 --dc=64:4:64 --l2=1024:8:64 --extension=softbrain $(SS_TOOLS)/riscv64-unknown-elf/bin/pk $< \
 	| tee $@
 	
-$(BENCHMARKS): %: input.data ref.data %.o main.c
-	$(CC) main.c $@.o -o $@ $(CFLAGS) $(LFLAGS) $(MACROS) $(IFLAGS)
+$(BENCHMARKS): %: input.data ref.data %.o main.cc
+	$(CC) main.cc $@.o -o $@ -lm -O3 $(MACROS) $(IFLAGS)
 
 $(BENCHMARKS:=clean):
 	cd $(@:clean=); make clean
