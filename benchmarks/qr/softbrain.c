@@ -1,7 +1,7 @@
 #include "qr.h"
 #include "compute.h"
-#include "../../common/include/sb_insts.h"
-#include "../../common/include/sim_timing.h"
+#include "sb_insts.h"
+#include "sim_timing.h"
 
 typedef union {
   float c[2];

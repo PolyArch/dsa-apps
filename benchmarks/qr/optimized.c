@@ -1,5 +1,5 @@
 #include "qr.h"
-#include "../../common/include/sim_timing.h"
+#include "sim_timing.h"
 
 #define h(x, y) (((x) >= i) && ((y) >= i) ? (((x) == (y)) - v[x] * v[y] * 2.) : (x) == (y))
 void qr(float *a, float *q, float *r) {

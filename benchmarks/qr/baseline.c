@@ -1,10 +1,10 @@
 #include "qr.h"
-#include "../../common/include/sim_timing.h"
+#include "sim_timing.h"
 
 #define h(x, y) (((x) >= i) && ((y) >= i) ? (((x) == (y)) - v[x] * v[y] * 2.) : (x) == (y))
-void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
-  int i, j, k, x, y; DTYPE *tmp = (DTYPE *) malloc(N * N * sizeof(DTYPE));
-  DTYPE *v = (DTYPE *) malloc(N * sizeof(DTYPE));
+void qr(float *a, float *q, float *r) {
+  int i, j, k, x, y; float *tmp = (float *) malloc(N * N * sizeof(float));
+  float *v = (float *) malloc(N * sizeof(float));
   for (i = 0; i < N; ++i) {
     q[i * (N + 1)] = 1;
   }
@@ -12,15 +12,12 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
     r[i] = a[i];
   }
   for (i = 0; i < N; ++i) {
-    DTYPE dot = 0.;
+    float dot = 0.;
 
     {
-      DTYPE *vp = v + i, *rp = r + (N + 1) * i;
       for (j = i; j < N; ++j) {
-        *vp = *rp;
-        dot += *vp * *vp;
-        ++vp;
-        rp += N;
+        v[j] = r[j * N + i];
+        dot += v[j] * v[j];
       }
     }
 
@@ -39,7 +36,7 @@ void qr(DTYPE *a, DTYPE *q, DTYPE *r) {
         for (x = i; x < N; ++x) {
           tmp[y * N + x] = 0;
           for (k = i; k < N; ++k) {
-            tmp[y * N + x] += q[y * N + k] * ((k == x) - v[k] * v[x] * 2);
+            tmp[y * N + x] += q[y * N + k] * h(k, x);
           }
         }
       }
