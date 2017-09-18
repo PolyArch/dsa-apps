@@ -1,0 +1,16 @@
+Input: TMPJ
+Input: W
+Input: VJ
+Input: A
+
+VAL_REAL = FMul32x2(TMPJ, W)
+VAL_IMAG = FMulX32x2(TMPJ, W)
+VAL = FSubAdd32x2(VAL_REAL, VAL_IMAG)
+
+DEL_REAL = FMul32x2(VJ, VAL)
+DEL_IMAG = FMulX32x2(VJ, VAL)
+DEL = FAddSub32x2(DEL_REAL, DEL_IMAG)
+
+R = FAdd32x2(A, DEL)
+
+Output: R
