@@ -109,7 +109,9 @@ void cholesky(complex<float> *a, complex<float> *L) {
 */
         ++bj;
       }
-      SB_WAIT_ALL();
+      // Aggressive wait
+      if (N - i < 4)
+        SB_WAIT_ALL();
     }
   }
   delete []A;
