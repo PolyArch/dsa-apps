@@ -26,7 +26,7 @@ bin:
 	mkdir -p bin
 
 $(DFG_HEADERS): %.h: %.dfg
-	$(RISCV)/bin/sb_sched $(SBCONFIG) $< sg
+	$(RISCV)/bin/sb_sched $(SBCONFIG) $<
 
 OPT?=-O3
 CFLAGS=$(OPT) -g -ggdb -gdwarf-3 

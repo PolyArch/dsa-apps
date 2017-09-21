@@ -5,7 +5,7 @@
 #include "../common/include/sim_timing.h"
 #include <inttypes.h>
 
-//top level shoudl define ASIZE
+//top level shoudl define ASIZE -- number of 64-byte words
 
 #define DTYPE  uint16_t
 #define ABYTES (sizeof(DTYPE)*ASIZE)
