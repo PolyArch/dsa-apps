@@ -211,6 +211,7 @@ void qr_hessenberg(complex<float> *a, complex<float> *q, complex<float> *r) {
       q[i * NN + j] = i == j ? _one : _zero;
       r[i * NN + j] = a[i * NN + j];
     }
+  SB_CONFIG(hes_mul_config, hes_mul_size);
   for (int i = 0; i < N - 1; ++i) {
     complex<float> v[2], w, h0, h1, h2, h3;
     //household_vector(r, i, i, 2, v, w);
@@ -251,7 +252,6 @@ void qr_hessenberg(complex<float> *a, complex<float> *q, complex<float> *r) {
     complex<float> *r0 = r + i * NN + i;
     complex<float> *r1 = r + (i + 1) * NN + i;
 
-    SB_CONFIG(hes_mul_config, hes_mul_size);
     SB_CONST(P_hes_mul__H0, *((uint64_t *)(&h0)), N - i);
     SB_CONST(P_hes_mul__H1, *((uint64_t *)(&h1)), N - i);
     SB_CONST(P_hes_mul__H2, *((uint64_t *)(&h2)), N - i);
@@ -297,15 +297,22 @@ void qr_hessenberg(complex<float> *a, complex<float> *q, complex<float> *r) {
 }
 
 bool converged(complex<float> *a) {
+  static int last = -1, keep = 0;
   int cnt = 0;
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < N; ++j) {
-      if (fabs(a[i * NN + j].real()) + fabs(a[i * NN + j].imag()) < eps) {
+      if (fabs(a[i * NN + j].real()) > eps || fabs(a[i * NN + j].imag()) > eps) {
         ++cnt;
       }
     }
   }
-  return cnt == N * (N - 1);
+  if (last != cnt) {
+    last = cnt;
+    keep = 1;
+  } else
+    ++keep;
+
+  return cnt == N || keep > 50;
 }
 
 void svd(complex<float> *a, complex<float> *u, complex<float> *s, complex<float> *v) {

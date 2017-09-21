@@ -223,19 +223,26 @@ void qr_hessenberg(complex<float> *a, complex<float> *q, complex<float> *r) {
 }
 
 bool converged(complex<float> *a) {
+  static int last = -1, keep = 0;
   int cnt = 0;
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < N; ++j) {
-      if (fabs(a[i * NN + j].real()) + fabs(a[i * NN + j].imag()) < eps) {
+      if (fabs(a[i * NN + j].real()) > eps || fabs(a[i * NN + j].imag()) > eps) {
         ++cnt;
       }
     }
   }
-  return cnt == N * (N - 1);
+  if (last != cnt) {
+    last = cnt;
+    keep = 1;
+  } else
+    ++keep;
+
+  return cnt == N || keep > 50;
 }
 
 void svd(complex<float> *a, complex<float> *u, complex<float> *s, complex<float> *v) {
-  std::cout << std::setprecision(4);
+  std::cout << std::setprecision(6);
   std::cout << std::fixed;
 
   complex<float> *at_a = new complex<float>[NN * NN];
