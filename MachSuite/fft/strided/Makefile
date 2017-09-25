@@ -45,4 +45,4 @@ hls: $(KERN).c $(KERN).h
 	vivado_hls hls.tcl
 
 clean:
-	rm -f $(KERN) $(KERN_SB) generate output.data
+	rm -f $(KERN) $(KERN_SB) generate output.data $(DFG_HEADERS)

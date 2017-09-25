@@ -4,6 +4,7 @@ numpy.set_printoptions(suppress = True, precision = 4., linewidth = 180, thresho
 n = int(sys.argv[1])
 f = file('debug.data', 'w')
 _a = numpy.random.rand(n, n) + 1j * numpy.random.rand(n, n)
+_a = _a.astype('complex128')
 numpy.savetxt('input.data', _a.flatten())
 print 'Data generated!'
 #print numpy.linalg.svd(_a)
@@ -12,8 +13,8 @@ t = numpy.dot(numpy.conj(_a.transpose()), _a)
 h = t.copy()
 f.write('asta:\n' + str(t) + '\n')
 
-left = numpy.identity(n).astype('complex')
-right = numpy.identity(n).astype('complex')
+left = numpy.identity(n).astype('complex128')
+right = numpy.identity(n).astype('complex128')
 for i in xrange(n - 1):
     x = h[i + 1:, i].copy()
     v = x.copy()
@@ -39,7 +40,7 @@ cycles = 0
 while True:
     cycles += 1
     #numpy.testing.assert_allclose(numpy.conj(R.transpose()), R, atol = 1e-5);
-    Q = numpy.identity(n).astype('complex')
+    Q = numpy.identity(n).astype('complex128')
     d = (h[n - 2, n - 2] - h[n - 1, n - 1]) / 2.
     #mu = h[n - 1, n - 1] + d - d / abs(d) * cmath.sqrt(d * d + h[n - 2, n - 2] * h[n - 2, n - 2])
     mu = 0
