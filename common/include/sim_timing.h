@@ -3,13 +3,18 @@ __attribute__ ((noinline)) static void begin_roi() {
 }
 __attribute__ ((noinline)) static void end_roi()   {
 }
+__attribute__ ((noinline)) static void sb_stats()   {
+}
 
 #else
 __attribute__ ((noinline)) static void begin_roi() {
     __asm__ __volatile__("add x0, x0, 1"); \
 }
 __attribute__ ((noinline)) static void end_roi()   {
-     __asm__ __volatile__("add x0, x0, 2"); \
+    __asm__ __volatile__("add x0, x0, 2"); \
+}
+__attribute__ ((noinline)) static void sb_stats()   {
+    __asm__ __volatile__("add x0, x0, 3"); \
 }
 #endif
 
