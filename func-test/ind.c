@@ -8,7 +8,6 @@ int main(int argc, char* argv[]) {
   uint64_t data_array[AWORDS*2];
   uint64_t known[AWORDS],output[AWORDS];
 
-
   for(int i = 0; i<AWORDS; ++i) {
     ind_array[i]=i + i/2 + i/5 + i/10;
     //std::cout << i << "->" << ind_array[i] << "\n";
