@@ -3,30 +3,17 @@ $(warning SBCONFIG is undefined, using default)
 SBCONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 endif
 ifndef N
-N=16
+N=32
 endif
 
-ifndef VEC_WIDTH
-VEC_WIDTH=2
-endif
 
-ifeq ($(VEC_WIDTH), 2)
-DFG_DIR=sb-2-wide
-else
-ifeq ($(VEC_WIDTH), 4)
-DFG_DIR=sb-4-wide
-else
-$(error Unsupported vectorization width! Abort!)
-endif
-endif
-
-DFG=$(DFG_DIR)/compute.dfg
+DFG=compute.dfg writeback.dfg
 DFG_HEADERS=$(DFG:.dfg=.h)
 
 $(DFG_HEADERS): %.h: %.dfg
 	$(SS_TOOLS)/bin/sb_sched $(SBCONFIG) $< 
 
-IFLAGS=-I../../common/include -I$(DFG_DIR)
+IFLAGS=-I../../common/include
 
 CC=riscv64-unknown-elf-g++
 
@@ -59,8 +46,7 @@ cleandata:
 	rm -f input.data ref.data
 
 cleandfg:
-	rm -rf sb-2-wide/compute.h sb-2-wide/verif sb-2-wide/viz
-	rm -rf sb-4-wide/compute.h sb-4-wide/verif sb-4-wide/viz
+	rm -rf verif $(DFG_HEADERS)
 
 clean: cleandfg
 	rm -f $(OBJS) $(BENCHMARKS) $(LOGS)

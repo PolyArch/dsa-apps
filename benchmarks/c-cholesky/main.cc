@@ -19,6 +19,7 @@ int main() {
   begin_roi();
   cholesky(a, L);
   end_roi();
+  sb_stats();
   /*for (int i = 0; i < N; ++i) {
     for (int j = 0; j < N; ++j) {
       std::cout << L[i * N + j] << " ";
