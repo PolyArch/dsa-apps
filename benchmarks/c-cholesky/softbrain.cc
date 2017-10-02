@@ -86,17 +86,20 @@ void cholesky(complex<float> *a, complex<float> *L) {
       } ri_norm = {-norm, -norm}, ri_v = {v.real, v.imag};
       SB_WAIT_ALL();
       SB_CONFIG(compute_config, compute_size);
+
+      int times = N - i - 1;
+
+      SB_DMA_READ(A + (i + 1) * (N + 1), 8 * N, 8 * times, times, P_compute_Z);
+      SB_DMA_READ(b + 1, 0, 8 * times, times, P_compute__B);
+      SB_CONST(P_compute_NORM, ri_norm.v, times * times);
+      SB_CONST(P_compute__V, ri_v.v, times * times);
+      SB_DMA_WRITE(P_compute_O, 8 * N, 8 * times, times, A + (i + 1) * (N + 1));
+
       for (int j = i + 1; j < N; ++j) {
-        int times = N - i - 1;
         bk = b + 1;
         uint64_t ri_bj = *((uint64_t *) bj);
 
         SB_CONST(P_compute__A, ri_bj, times);
-        SB_DMA_READ(bk, 8, 8, times, P_compute__B);
-        SB_CONST(P_compute__V, ri_v.v, times);
-        SB_CONST(P_compute_NORM, ri_norm.v, times);
-        SB_DMA_READ(A + j * N + i + 1, 8, 8, times, P_compute_Z);
-        SB_DMA_WRITE(P_compute_O, 8, 8, times, A + j * N + i + 1);
 
 /*
         for (int k = i + 1; k < N; ++k) {
