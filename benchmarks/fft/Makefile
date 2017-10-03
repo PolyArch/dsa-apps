@@ -48,10 +48,10 @@ cleandata:
 	rm -f input.data ref.data
 
 cleandfg:
-	rm -rf sb-8-wide/compute.h sb-8-wide/verif sb-8-wide/viz
+	rm -rf $(DFG_HEADERS)
 
 clean: cleandfg
-	rm -f $(OBJS) $(BENCHMARKS) $(LOGS) $(DFG_HEADERS)
+	rm -f $(OBJS) $(BENCHMARKS) $(LOGS)
 	rm -rf stats gams viz verif
 
 ultraclean: clean cleandata
