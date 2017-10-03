@@ -23,6 +23,7 @@ int main() {
   begin_roi();
   qr(a, Q, R);
   end_roi();
+  sb_stats();
   for (int i = 0; i < N * N; ++i) {
     float real, imag;
     fscanf(ref_data, " (%f+%fj)", &real, &imag);

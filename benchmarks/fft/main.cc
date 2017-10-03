@@ -42,6 +42,7 @@ int main() {
   begin_roi();
   fft(a, w);
   end_roi();
+  sb_stats();
 
   if (!compare(a, N, ref_data)) {
     puts("Error result!");
