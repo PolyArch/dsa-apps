@@ -37,17 +37,14 @@ using std::complex;
 
 complex<float> _one = complex<float>(1, 0);
 
-void fft(complex<float> *_a, complex<float> *w, bool inverse, int n) {
+void fft(complex<float> *_a, complex<float> *w, int n) {
   complex<float> *_buffer = new complex<float>[n];
   complex<float> *from = _a, *to = _buffer;
   for (int blocks = n / 2; blocks; blocks >>= 1) {
     int span = n / blocks;
     for (int j = 0; j < span / 2 * blocks; j += blocks) {
       complex<float> coef = w[j];
-      if (inverse)
-        coef = _one / coef;
       for (int i = 0; i < blocks; ++i) {
-        //printf("%d %d %d\n", blocks, j, i);
         complex<float> &L = from[2 * j + i];
         complex<float> &R = from[2 * j + i + blocks];
         complex<float> tmp(complex_mul(coef, R));
@@ -73,6 +70,7 @@ void filter(complex<float> *_a, complex<float> *_b, complex<float> *c) {
   complex<float> *a = new complex<float>[n];
   complex<float> *b = new complex<float>[n];
   complex<float> *w = new complex<float>[n / 2];
+  complex<float> *_w = new complex<float>[n / 2];
   for (int i = 0; i < n; ++i) {
     a[i] = i < N ? _a[i] : _zero;
   }
@@ -82,17 +80,18 @@ void filter(complex<float> *_a, complex<float> *_b, complex<float> *c) {
   end_roi();
   for (int i = 0; i < n / 2; ++i) {
     w[i] = complex<float>(cos(2 * PI * i / n), sin(2 * PI * i / n));
+    _w[i] = std::conj(w[i]);
   }
   begin_roi();
-  fft(a, w, false, n);
-  fft(b, w, false, n);
+  fft(a, w, n);
+  fft(b, w, n);
   for (int i = 0; i < n; ++i) {
-    a[i] *= b[i];
+    a[i] = complex<float>(complex_mul(a[i], b[i]));
   }
-  fft(a, w, true, n);
-  //for (int i = 0; i < n; ++i) std::cout << a[i] / (float)n << " "; std::cout << "\n";
+  fft(a, _w, n);
+  float n1 = 1. / (float) n;
   for (int i = 0; i < N - FILTER + 1; ++i) {
-    c[i] = a[n - 1 - FILTER + i] / (float)(n);
+    c[i] = a[n - 1 - FILTER + i] * n1;
   }
 }
 

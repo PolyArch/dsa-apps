@@ -8,9 +8,8 @@ endif
 
 ifndef FILTER
 FILTER=512
-endif
-
-DFG=compute.dfg
+endif 
+DFG=compute.dfg mul.dfg
 DFG_HEADERS=$(DFG:.dfg=.h)
 
 $(DFG_HEADERS): %.h: %.dfg
@@ -49,11 +48,10 @@ cleandata:
 	rm -f input.data ref.data
 
 cleandfg:
-	rm -rf sb-2-wide/compute.h sb-2-wide/verif sb-2-wide/viz
-	rm -rf sb-4-wide/compute.h sb-4-wide/verif sb-4-wide/viz
+	rm -rf $(DFG_HEADERS)
 
 clean: cleandfg
 	rm -f $(OBJS) $(BENCHMARKS) $(LOGS)
-	rm -rf stats gams viz
+	rm -rf stats gams viz verif
 
 ultraclean: clean cleandata
