@@ -25,7 +25,7 @@ input.data ref.data:
 BENCHMARKS=baseline optimized softbrain
 OBJS=$(BENCHMARKS:=.o)
 LOGS=$(BENCHMARKS:=.log)
-MACROS=-D N=$(N) -D VEC_WIDTH=$(VEC_WIDTH)
+MACROS=-D N=$(N)
 
 softbrain.o: softbrain.cc $(DFG_HEADERS)
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) $(CFLAGS) $(LFLAGS)
