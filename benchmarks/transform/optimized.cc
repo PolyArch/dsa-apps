@@ -21,13 +21,17 @@ using std::complex;
 #define PI 3.14159265358979303
 
 void transform(int n, complex<int16_t> *a, complex<int16_t> *b, complex<int16_t> *c) {
-  for (int i = 0; i < n; ++i) {
+  for (int i = 0; i < n; i += 2) {
     c[i] = complex<int16_t>(0, 0);
-    complex<int16_t> sum(0, 0);
+    complex<int16_t> sum0(0, 0);
+    complex<int16_t> sum1(0, 0);
     for (int j = 0; j < n; ++j) {
-      complex<int16_t> tmp(complex_mul(a[i * N + j], b[j]));
-      sum = complex<int16_t>(complex_add(sum, tmp));
+      complex<int16_t> tmp0(complex_mul(a[i * N + j], b[j]));
+      sum0 = complex<int16_t>(complex_add(sum0, tmp0));
+      complex<int16_t> tmp1(complex_mul(a[(i + 1) * N + j], b[j]));
+      sum1 = complex<int16_t>(complex_add(sum1, tmp1));
     }
-    c[i] = sum;
+    c[i] = sum0;
+    c[i + 1] = sum1;
   }
 }

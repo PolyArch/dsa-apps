@@ -1,28 +1,25 @@
-InputVec: A [0, 1, 2, 3]
-InputVec: B [0, 1, 2, 3]
+Input: AE
+Input: AO
+Input: B
 Input: reset
 
-TMP0_REAL = FxMul16x4(A0, B0)
-TMP0_IMAG = FxMulX16x4(A0, B0)
-TMP0 = FxSubAdd16x4(TMP0_REAL, TMP0_IMAG)
+L = DupHigh32(B)
+R = DupLow32(B)
 
-TMP1_REAL = FxMul16x4(A1, B1)
-TMP1_IMAG = FxMulX16x4(A1, B1)
-TMP1 = FxSubAdd16x4(TMP1_REAL, TMP1_IMAG)
+TMP_REAL_AE = FxMul16x4(AE, L)
+TMP_IMAG_AE = FxMulX16x4(AE, L)
+TMP_AE = FxSubAdd16x4(TMP_REAL_AE, TMP_IMAG_AE)
 
-TMP2_REAL = FxMul16x4(A2, B2)
-TMP2_IMAG = FxMulX16x4(A2, B2)
-TMP2 = FxSubAdd16x4(TMP2_REAL, TMP2_IMAG)
+TMP_REAL_AO = FxMul16x4(AO, R)
+TMP_IMAG_AO = FxMulX16x4(AO, R)
+TMP_AO = FxSubAdd16x4(TMP_REAL_AO, TMP_IMAG_AO)
 
-TMP3_REAL = FxMul16x4(A3, B3)
-TMP3_IMAG = FxMulX16x4(A3, B3)
-TMP3 = FxSubAdd16x4(TMP3_REAL, TMP3_IMAG)
+AE_ACC = FxAcc16x4(TMP_AE, reset)
+AO_ACC = FxAcc16x4(TMP_AO, reset)
 
-SUM0 = FxAdd16x4(TMP0, TMP1)
-SUM1 = FxAdd16x4(TMP2, TMP3)
-SUM2 = FxAdd16x4(SUM0, SUM1)
+AE_RED = FxComRed32x2(AE_ACC)
+AO_RED = FxComRed32x2(AO_ACC)
 
-SUM = FxAcc16x4(SUM2, reset)
+O = ConcatLow32(AO_RED, AE_RED)
 
-Output: SUM
-
+Output: O
