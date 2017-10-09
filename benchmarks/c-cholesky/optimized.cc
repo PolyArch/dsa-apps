@@ -66,8 +66,8 @@ void cholesky(complex<float> *a, complex<float> *L) {
       complex_t *bj = b + 1, *bk, v = A[i * (N + 1)];
       float norm = 1 / (v.real * v.real + v.imag * v.imag);
       for (int j = i + 1; j < N; ++j) {
-        bk = b + 1;
-        for (int k = i + 1; k < N; ++k) {
+        bk = b + j - i;
+        for (int k = j; k < N; ++k) {
           //A[j * N + k] -= std::conj(b[j - i]) * b[k - i] / A[i * (N + 1)];
           //tmp = bj* x bk
           complex_t tmp;
