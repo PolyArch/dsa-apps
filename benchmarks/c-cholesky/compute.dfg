@@ -1,19 +1,13 @@
-Input: _A
-Input: _B
-Input: _V
+Input: A
+Input: B
+Input: V
 Input: NORM
 Input: Z
-
-A = _A
-B = _B
 
 C = FMul32x2(A, B)
 D = FMulX32x2(A, B)
 
-_E = FAddSub32x2(C, D)
-
-E = _E
-V = _V
+E = FAddSub32x2(C, D)
 
 F = FMul32x2(V, E)
 G = FMulX32x2(V, E)
