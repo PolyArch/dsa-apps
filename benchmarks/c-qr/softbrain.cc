@@ -85,15 +85,17 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
 
     {
       SB_CONFIG(mul_config, mul_size);
+      SB_DMA_READ(v, 0, 8 * (N - i), (N - i) * N, P_mul__A);
       for (y = 0; y < N; ++y) {
         complex_t *tmpx = tmp + y * N + i;
+        SB_DMA_READ(q + y * N + i, 0, 8 * (N - i), N - i, P_mul__B);
         for (x = i; x < N; ++x) {
-          SB_DMA_READ(v, 8, 8, N - i, P_mul__A);
-          SB_DMA_READ(q + y * N + i, 8, 8, N - i, P_mul__B);
           SB_CONST(P_mul_reset, 0, N - i - 1);
           SB_CONST(P_mul_reset, 1, 1);
+          /* SKIP and WRITE in STRIDE*/
           SB_GARBAGE(P_mul_O, N - i - 1);
           SB_DMA_WRITE(P_mul_O, 8, 8, 1, tmpx);
+          ++tmpx;
           /*
           tmpx->real = tmpx->imag = 0;
           complex_t *vk = v, *qk = q + y * N + i;
@@ -105,44 +107,26 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
             ++qk;
           }
           */
-          ++tmpx;
         }
       }
       SB_WAIT_ALL();
     }
 
     SB_CONFIG(fin1_config, fin1_size);
-    for (y = 0; y < N; ++y) {
-      complex_t *qx = q + y * N + i, *tmpx = tmp + y * N + i, *vx = v;
-      SB_DMA_READ(vx, 8, 8, N - i, P_fin1__A);
-      SB_DMA_READ(tmpx, 8, 8, N - i, P_fin1__B);
-      SB_CONST(P_fin1__W, *((uint64_t*)&w), N - i);
-      SB_DMA_READ(qx, 8, 8, N - i, P_fin1_Q);
-      SB_DMA_WRITE(P_fin1_O, 8, 8, N - i, qx);
-      /*for (x = i; x < N; ++x) {
-        complex_t val = {
-            vx->real * tmpx->real + vx->imag * tmpx->imag,
-            vx->real * tmpx->imag - vx->imag * tmpx->real};
-        complex_t delta = {
-            val.real * w.real - val.imag * w.imag,
-            val.real * w.imag + val.imag * w.real};
-        qx->real += delta.real;
-        qx->imag += delta.imag;
-        ++qx;
-        ++tmpx;
-        ++vx;
-        //q[y * N + x] -= tmp[y * N + x] * std::conj(v[x - i]) * w;
-      }*/
-    }
+    SB_DMA_READ(v, 0, 8 * (N - i), N, P_fin1__A);
+    SB_DMA_READ(tmp + i, N * 8, 8 * (N - i), N, P_fin1__B);
+    SB_CONST(P_fin1__W, *((uint64_t*)&w), (N - i) * N);
+    SB_DMA_READ(q + i, 8 * N, 8 * (N - i), N, P_fin1_Q);
+    SB_DMA_WRITE(P_fin1_O, 8 * N, 8 * (N - i), N, q + i);
     SB_WAIT_ALL();
 
     {
       SB_CONFIG(dot_config, dot_size);
+      SB_DMA_READ(v, 0, 8 * (N - i), (N - i) * (N - i), P_dot__A);
       for (y = i; y < N; ++y) {
         complex_t *tmpx = tmp + y * N + i;
         for (x = i; x < N; ++x) {
-          SB_DMA_READ(v, 8, 8, N - i, P_dot__A);
-          SB_DMA_READ(r + x * N + i, 8, 8, N - i, P_dot__B);
+          SB_DMA_READ(r + i + x * N, 0, 8 * (N - i), 1, P_dot__B);
           SB_CONST(P_dot_reset, 0, N - i - 1);
           SB_CONST(P_dot_reset, 1, 1);
           SB_GARBAGE(P_dot_O, N - i - 1);
@@ -168,10 +152,10 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
 
     SB_CONFIG(fin2_config, fin2_size);
     complex_t *vy = v;
+    SB_CONST(P_fin2__W, *((uint64_t*)&w), (N - i) * (N - i));
     for (y = i; y < N; ++y) {
       complex_t *tmpx = tmp + y * N + i;
-      SB_DMA_READ(tmpx, 8, 8, N - i, P_fin2__A);
-      SB_CONST(P_fin2__W, *((uint64_t*)&w), N - i);
+      SB_DMA_READ(tmpx, 0, 8 * (N - i), 1, P_fin2__A);
       SB_CONST(P_fin2__VY, *((uint64_t*)vy), N - i);
       SB_DMA_READ(r + i * N + y, 8 * N, 8, N - i, P_fin2_R);
       SB_DMA_WRITE(P_fin2_O, 8 * N, 8, N - i, r + i * N + y);
