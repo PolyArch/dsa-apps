@@ -2,8 +2,8 @@
 #include <stdint.h>
 #include <cmath>
 #include <algorithm>
-#include "compute.h"
 #include "softbrain-config/fixed_point.h"
+#include "compute.h"
 #include "sb_insts.h"
 
 #define complex_mul(a, b) \
@@ -22,25 +22,19 @@
 using std::complex;
 
 #define PI 3.14159265358979303
-
-const complex<int16_t> _zero(0, 0);
-union reinterprete_t {
-  complex<int16_t> a[2];
-  uint64_t v;
-} double_zero = {_zero, _zero};
+complex<int16_t> _zero(0, 0);
 
 void gemm(int n, complex<int16_t> *a, complex<int16_t> *b, complex<int16_t> *c) {
   SB_CONFIG(compute_config, compute_size);
-  SB_DMA_READ(b, 8, 8 * n * n / 2, n, P_compute_B);
   for (int i = 0; i < n; ++i) {
-    SB_CONST(P_compute_C, double_zero.v, n / 2);
-    SB_RECURRENCE(P_compute_O, P_compute_C, n * (n - 1) / 2);
-    for (int k = 0; k < n; ++k) {
-      complex<int16_t> tmp = a[i * n + k];
-      reinterprete_t dup = {tmp, tmp};
-      SB_CONST(P_compute_A, dup.v, n / 2);
+    SB_DMA_READ(b    , 8 * n, 4 * n, n / 2, P_compute_B0);
+    SB_DMA_READ(b + n, 8 * n, 4 * n, n / 2, P_compute_B1);
+    SB_CONST(P_compute_C, *((uint64_t*) &_zero), n / 2);
+    SB_RECURRENCE(P_compute_O, P_compute_C, (n / 2) * (n / 2 - 1));
+    SB_DMA_WRITE(P_compute_O, 8, 8, n / 2, c + i * N);
+    for (int k = 0; k < n; k += 2) {
+      SB_DMA_READ(a + i * n + k, 0, 8, n / 2, P_compute_A);
     }
-    SB_DMA_WRITE(P_compute_O, 8, 8, n / 2, c + i * n);
   }
   SB_WAIT_ALL();
 }
