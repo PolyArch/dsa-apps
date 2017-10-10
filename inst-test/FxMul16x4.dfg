@@ -1,0 +1,6 @@
+Input: A
+Input: B
+
+C = FxMul16x4(A, B)
+
+Output: C

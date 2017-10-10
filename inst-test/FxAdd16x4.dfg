@@ -1,0 +1,6 @@
+Input: A
+Input: B
+
+C = FxAdd16x4(A, B)
+
+Output: C

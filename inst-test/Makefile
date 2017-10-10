@@ -17,10 +17,10 @@ DFG_HEADERS=$(DFGS:.dfg=.h)
 #${info $(DFG_HEADERS)}
 
 $(DFG_HEADERS): %.h: %.dfg
-	$(SS_TOOLS)/bin/sb_sched $(SBCONFIG) $< sg
+	SBCONFIG=$(SBCONFIG) $(SS_TOOLS)/bin/sb_sched $(SBCONFIG) $<
 
 OPT?=-O3
-CFLAGS=$(OPT) -g -ggdb -gdwarf-3 
+CFLAGS=$(OPT) -g -ggdb -gdwarf-3  -I../common/include/ -I$(SS_TOOLS)/include/
 #--std=c++11 
 
 $(TESTS): % :%.c $(DFG_HEADERS)

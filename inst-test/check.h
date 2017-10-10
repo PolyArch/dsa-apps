@@ -2,7 +2,7 @@
 
 
 template <class T>
-void compare(char* test, T* array1, T* array2, int size) {
+void compare(const char* test, T* array1, T* array2, int size) {
   bool error=false;
   for(int i = 0; i < size; ++i) {
     if(array1[i] != array2[i]) {
