@@ -21,8 +21,8 @@ using std::complex;
 #define complex_norm(a) ((a).real() * (a).real() + (a).imag() * (a).imag())
 
 int main() {
-  complex<int16_t> a(DOUBLE_TO_FIX(1), DOUBLE_TO_FIX(2));
-  complex<int16_t> b(DOUBLE_TO_FIX(3), DOUBLE_TO_FIX(4));
+  complex<int16_t> a(DOUBLE_TO_FIX(-0.01), DOUBLE_TO_FIX(2));
+  complex<int16_t> b(DOUBLE_TO_FIX(-0.023), DOUBLE_TO_FIX(4));
 
   complex<int16_t> array1[] = {a, b};
   complex<int16_t> array2[] = {b, a};

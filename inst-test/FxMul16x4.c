@@ -21,14 +21,14 @@ using std::complex;
 #define complex_norm(a) ((a).real() * (a).real() + (a).imag() * (a).imag())
 
 int main() {
-  complex<int16_t> a(FIX_TO_DOUBLE(1), FIX_TO_DOUBLE(2));
-  complex<int16_t> b(FIX_TO_DOUBLE(3), FIX_TO_DOUBLE(4));
+  complex<int16_t> a(DOUBLE_TO_FIX(1), DOUBLE_TO_FIX(2));
+  complex<int16_t> b(DOUBLE_TO_FIX(-3), DOUBLE_TO_FIX(4));
 
   complex<int16_t> array1[] = {a, b};
   complex<int16_t> array2[] = {b, a};
 
-  complex<int16_t> res_a(complex_add(a, b));
-  complex<int16_t> ans[] = {res_a, res_a};
+  complex<int16_t> ans_a(DOUBLE_TO_FIX(-3), DOUBLE_TO_FIX(8));
+  complex<int16_t> ans[] = {ans_a, ans_a};
   complex<int16_t> res[2];
 
   SB_CONFIG(FxMul16x4_config, FxMul16x4_size);
@@ -36,6 +36,7 @@ int main() {
   SB_DMA_READ(array2, 8, 8, 1, P_FxMul16x4_B);
   SB_DMA_WRITE(P_FxMul16x4_C, 8, 8, 1, res);
   SB_WAIT_ALL();
+
   compare("FxMul16x4", res, ans, 2);
 
   return 0;

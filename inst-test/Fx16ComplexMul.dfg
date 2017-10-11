@@ -3,6 +3,6 @@ Input: B
 
 REAL = FxMul16x4(A, B)
 IMAG = FxMulX16x4(A, B)
-C = FxSubAdd16x4(REAL, IMAG)
+O = FxSubAdd16x4(REAL, IMAG)
 
-Output: C
+Output: O
