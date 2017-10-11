@@ -1,17 +1,17 @@
 Input: A
-Input: B0
-Input: B1
+Input: BE
+Input: BO
 Input: C
 
-L = DupHigh32(A)
-R = DupLow32(A)
+R = DupHigh32(A)
+L = DupLow32(A)
 
-TMP0_REAL = FxMul16x4(L, B0)
-TMP0_IMAG = FxMulX16x4(L, B0)
+TMP0_REAL = FxMul16x4(L, BE)
+TMP0_IMAG = FxMulX16x4(L, BE)
 TMP0 = FxSubAdd16x4(TMP0_REAL, TMP0_IMAG)
 
-TMP1_REAL = FxMul16x4(R, B1)
-TMP1_IMAG = FxMulX16x4(R, B1)
+TMP1_REAL = FxMul16x4(R, BO)
+TMP1_IMAG = FxMulX16x4(R, BO)
 TMP1 = FxSubAdd16x4(TMP1_REAL, TMP1_IMAG)
 
 SUM = FxAdd16x4(TMP0, TMP1)

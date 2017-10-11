@@ -9,5 +9,5 @@ numpy.savetxt('input.data', numpy.concatenate((a.flatten(), b.flatten())))
 print 'input generated'
 
 c = numpy.dot(a, b)
-numpy.savetxt('ref.data', c)
+numpy.savetxt('ref.data', c.flatten())
 print 'output generated!'
