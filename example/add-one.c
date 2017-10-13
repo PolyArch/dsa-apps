@@ -32,6 +32,8 @@ int main(int argc, char* argv[]) {
   }
   //end_roi(); 
 
+
+
   //Version 1:                                                                                                                      
   begin_roi();                                                                                                                      
   SB_CONFIG(dot_config,dot_size);                                                                                                   

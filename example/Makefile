@@ -3,7 +3,7 @@ $(warning SBCONFIG is undefined, using default)
 SBCONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 endif
 
-TESTS=dotp
+TESTS=dotp red
 TESTC=$(TESTS:=.c)
 
 all: $(TESTS)
@@ -11,7 +11,7 @@ all: $(TESTS)
 #CPP=riscv32-unknown-elf-g++
 CPP=riscv64-unknown-elf-g++
 
-DFGS=dot.dfg dot_acc.dfg
+DFGS=dot.dfg dot_acc.dfg red.dfg
 
 DFG_HEADERS=$(DFGS:.dfg=.h)
 

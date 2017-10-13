@@ -28,7 +28,8 @@ function run_test {
   tests_total=$((tests_total+1))
 }
 
-for i in `ls ind*.c | grep -v none | grep -v unalign`; do
+#for i in `ls ind*.c | grep -v none | grep -v unalign`; do
+for i in `ls *.c | grep -v none | grep -v unalign`; do
   for l in 4 12 32 36 2048; do
     test=bin/`basename $i .c`_$l
     run_test $test

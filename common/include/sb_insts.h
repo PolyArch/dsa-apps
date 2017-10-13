@@ -17,6 +17,14 @@ int garbage[1024];
   __asm__ __volatile__("sb_dma_addr  %0, %1" : : "r"(mem_addr), "r"(mem_addr)); \
   __asm__ __volatile__("sb_dma_scr   %0, %1, 0" : : "r"(num_strides), "r"(scratch_addr));
 
+//Fill the scratchpad from DMA (from memory or cache)
+//Note that mem_addr will be written linearly
+#define SB_SCRATCH_DMA_STORE(scr_addr, stride, access_size, num_strides, mem_addr) \
+  __asm__ __volatile__("sb_stride    %0, %1" : : "r"(stride), "r"(access_size)); \
+  __asm__ __volatile__("sb_dma_addr  %0, %1" : : "r"(mem_addr), "r"(mem_addr)); \
+  __asm__ __volatile__("sb_scr_dma   %0, %1, 0" : : "r"(num_strides), "r"(scr_addr));
+
+
 //Read from scratch into a cgra port
 #define SB_SCR_PORT_STREAM(scr_addr, stride, access_size, num_strides, port ) \
   __asm__ __volatile__("sb_stride   %0, %1" : : "r"(stride), "r"(access_size)); \
@@ -45,7 +53,13 @@ int garbage[1024];
   __asm__ __volatile__("sb_wr_dma   %0, %1, %2"   : : "r"(&garbage), "r"(num_elem), "i"(output_port|0x100)); 
 
 
-//Write to DMA.
+// Memory Oriented Instructions
+
+// Set this back to zero if you need different kinds of writes later in the same code!!!
+#define SB_GARBAGE_BEFORE_STRIDE(num_garb) \
+  __asm__ __volatile__("sb_garb   %0, %1, 0" : : "r"(num_garb), "r"(num_garb)); \
+
+// Plain Write to Memory
 #define SB_DMA_WRITE(output_port, stride, access_size, num_strides, mem_addr) \
   __asm__ __volatile__("sb_stride   %0, %1" : : "r"(stride), "r"(access_size)); \
   __asm__ __volatile__("sb_wr_dma   %0, %1, %2"   : : "r"(mem_addr), "r"(num_strides), "i"(output_port)); 
@@ -58,9 +72,6 @@ int garbage[1024];
   __asm__ __volatile__("sb_wr_dma   %0, %1, %2"   : : "r"(mem_addr), "r"(num_strides), "i"(output_port)); 
 
 
-
-
-
 //Write to DMA, but throw away all but the last 16-bits from each word
 #define SB_DMA_WRITE_SHF16(output_port, stride, access_size, num_strides, mem_addr) \
   __asm__ __volatile__("sb_stride   %0, %1" : : "r"(stride), "r"(access_size)); \
@@ -69,17 +80,35 @@ int garbage[1024];
 //Write to DMA, but throw away all but the last 32-bits from each word  (implemented, not tested yet)
 #define SB_DMA_WRITE_SHF32(output_port, stride, access_size, num_strides, mem_addr) \
   __asm__ __volatile__("sb_stride   %0, %1" : : "r"(stride), "r"(access_size)); \
-  __asm__ __volatile__("sb_wr_dma   %0, %1, %2"   : : "r"(mem_addr),  "r"(num_stirides), "i"(output_port|0x80)); 
+  __asm__ __volatile__("sb_wr_dma   %0, %1, %2"   : : "r"(mem_addr),  "r"(num_strides), "i"(output_port|0x80)); 
 
-//  __asm__ __volatile__("sb_dma_addr %0, %1" : : "r"(access_size), "r"(stride)); 
+
+// Scratch Oriented Instructions
+// Plain Write to Scratch  (TODO -- NEW -- TEST)
+#define SB_SCR_WRITE(output_port, num_bytes, scr_addr) \
+  __asm__ __volatile__("sb_wr_scr   %0, %1, %2"   : : "r"(scr_addr), "r"(num_bytes), "i"(output_port)); 
+
+
+
+
+// Unused Instructions
 //  __asm__ __volatile__("sb_wr %0 "          : : "i"(output_port)); 
-//  __asm__ __volatile__("sb_stride   %0, %1" : : "r"(mem_addr), "r"(stride)); 
 //  __asm__ __volatile__("sb_dma_addr_p %0, %1, " #output_port : : "r"(mem_addr), "r"(stride_size)); 
 //  __asm__ __volatile__("sb_dma_wr   %0, " : : "r"(num_strides)); 
 
 //Send a constant value, repetated num_elements times to a port
 #define SB_CONST(port, val, num_elements) \
   __asm__ __volatile__("sb_const %0, %1, %2 " : : "r"(val), "r"(num_elements), "i"(port)); 
+
+//Send a constant value, repetated num_elements times to a port
+// Plain Write to Scratch  (TODO -- NEW -- TEST)
+#define SB_2D_CONST(port, val1, v1_repeat, val2, v2_repeat, iters) \
+  __asm__ __volatile__("sb_set_iter %0 " : : "r"(iters)); \
+  __asm__ __volatile__("sb_const %0, %1, %2 " : : "r"(val1), "r"(v1_repeat), "i"(port|(1<<7))); \
+  __asm__ __volatile__("sb_const %0, %1, %2 " : : "r"(val2), "r"(v2_repeat), "i"(port|(1<<6))); 
+
+
+
 
 //Write to Scratch from a CGRA output port.  Note that only linear writes are currently allowed
 //#define SB_SCRATCH_WRITE(output_port, num_bytes, scratch_addr) 
