@@ -3,23 +3,16 @@ Input: AO
 Input: B
 Input: reset
 
-L = DupHigh32(B)
-R = DupLow32(B)
-
-TMP_REAL_AE = FxMul16x4(AE, L)
-TMP_IMAG_AE = FxMulX16x4(AE, L)
+TMP_REAL_AE = FxMul16x4(AE, B)
+TMP_IMAG_AE = FxMulX16x4(AE, B)
 TMP_AE = FxSubAdd16x4(TMP_REAL_AE, TMP_IMAG_AE)
 
-TMP_REAL_AO = FxMul16x4(AO, R)
-TMP_IMAG_AO = FxMulX16x4(AO, R)
+TMP_REAL_AO = FxMul16x4(AO, B)
+TMP_IMAG_AO = FxMulX16x4(AO, B)
 TMP_AO = FxSubAdd16x4(TMP_REAL_AO, TMP_IMAG_AO)
 
-AE_ACC = FxAcc16x4(TMP_AE, reset)
-AO_ACC = FxAcc16x4(TMP_AO, reset)
+RED = FxRedCom16x4(TMP_AE, TMP_AO)
 
-AE_RED = FxComRed32x2(AE_ACC)
-AO_RED = FxComRed32x2(AO_ACC)
-
-O = ConcatLow32(AO_RED, AE_RED)
+O = FxAcc16x4(RED, reset)
 
 Output: O

@@ -1,16 +1,18 @@
 #include <complex>
 #include <cmath>
 #include <algorithm>
+#include "softbrain-config/fixed_point.h"
 #include "sb_insts.h"
 #include "compute.h"
 
-#define complex_mul(a, b) (a).real() * (b).real() - (a).imag() * (b).imag(), \
-  (a).real() * (b).imag() + (a).imag() * (b).real()
+#define complex_mul(a, b) \
+  FIX_MINUS(FIX_MUL((a).real(), (b).real()), FIX_MUL((a).imag(), (b).imag())), \
+  FIX_ADD(FIX_MUL((a).real(), (b).imag()), FIX_MUL((a).imag(), (b).real()))
 
 #define complex_conj_mul(a, b) (a).real() * (b).real() + (a).imag() * (b).imag(), \
   (a).real() * (b).imag() - (a).imag() * (b).real()
 
-#define complex_add(a, b) (a).real() + (b).real(), (a).imag() + (b).imag()
+#define complex_add(a, b) FIX_ADD((a).real(), (b).real()), FIX_ADD((a).imag(), (b).imag())
 
 #define complex_sub(a, b) (a).real() - (b).real(), (a).imag() - (b).imag()
 
@@ -18,16 +20,16 @@
 
 using std::complex;
 
+#define PI 3.14159265358979303
 
 void transform(int n, complex<int16_t> *a, complex<int16_t> *b, complex<int16_t> *c) {
   SB_CONFIG(compute_config, compute_size);
-  SB_DMA_READ(a    , n * 8, n * 4, n / 2, P_compute_AE);
-  SB_DMA_READ(a + n, n * 8, n * 4, n / 2, P_compute_AO);
-  SB_DMA_READ(b, 0, n * 4, n / 2, P_compute_B);
+  SB_DMA_READ(a, 8 * n, 4 * n, n / 2, P_compute_AE);
+  SB_DMA_READ(a + n, 8 * n, 4 * n, n / 2, P_compute_AO);
+  SB_DMA_READ(b, 0, 4 * n, n / 2, P_compute_B);
+  SB_2D_CONST(P_compute_reset, 2, n / 2 - 1, 1, 1, n / 2);
+  //SB_DMA_WRITE(P_compute_O, 8, 8, n / 2, c);
   for (int i = 0; i < n; i += 2) {
-    SB_CONST(P_compute_reset, 0, n / 2 - 1);
-    SB_CONST(P_compute_reset, 1, 1);
-    SB_GARBAGE(P_compute_O, N / 2 - 1);
     SB_DMA_WRITE(P_compute_O, 0, 8, 1, c + i);
   }
   SB_WAIT_ALL();

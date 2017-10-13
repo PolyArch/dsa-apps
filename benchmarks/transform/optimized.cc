@@ -23,13 +23,18 @@ using std::complex;
 void transform(int n, complex<int16_t> *a, complex<int16_t> *b, complex<int16_t> *c) {
   for (int i = 0; i < n; i += 2) {
     c[i] = complex<int16_t>(0, 0);
+    c[i + 1] = complex<int16_t>(0, 0);
     complex<int16_t> sum0(0, 0);
     complex<int16_t> sum1(0, 0);
-    for (int j = 0; j < n; ++j) {
-      complex<int16_t> tmp0(complex_mul(a[i * N + j], b[j]));
-      sum0 = complex<int16_t>(complex_add(sum0, tmp0));
-      complex<int16_t> tmp1(complex_mul(a[(i + 1) * N + j], b[j]));
-      sum1 = complex<int16_t>(complex_add(sum1, tmp1));
+    for (int j = 0; j < n; j += 2) {
+      complex<int16_t> tmp00(complex_mul(a[i * N + j], b[j]));
+      complex<int16_t> tmp01(complex_mul(a[i * N + j + 1], b[j + 1]));
+      complex<int16_t> tmp10(complex_mul(a[(i + 1) * N + j], b[j]));
+      complex<int16_t> tmp11(complex_mul(a[(i + 1) * N + j + 1], b[j + 1]));
+      sum0 = complex<int16_t>(complex_add(sum0, tmp00));
+      sum0 = complex<int16_t>(complex_add(sum0, tmp01));
+      sum1 = complex<int16_t>(complex_add(sum1, tmp10));
+      sum1 = complex<int16_t>(complex_add(sum1, tmp11));
     }
     c[i] = sum0;
     c[i + 1] = sum1;

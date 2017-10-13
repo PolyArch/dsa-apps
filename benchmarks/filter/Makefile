@@ -35,7 +35,7 @@ $(OBJS): %.o: %.cc
 
 $(LOGS): %.log: %
 	SBCONFIG=$(SBCONFIG) \
-	spike --ic=64:4:64 --dc=64:4:64 --l2=1024:8:64 --extension=softbrain $(SS_TOOLS)/riscv64-unknown-elf/bin/pk $< \
+	gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=minor --l1d_size=64kB --l1i_size=16kB --l2_size=1024kB --caches --cmd=./$< \
 	| tee $@
 	
 $(BENCHMARKS): %: input.data ref.data %.o main.cc
@@ -52,6 +52,6 @@ cleandfg:
 
 clean: cleandfg
 	rm -f $(OBJS) $(BENCHMARKS) $(LOGS)
-	rm -rf stats gams viz verif
+	rm -rf stats gams viz verif m5out
 
 ultraclean: clean cleandata
