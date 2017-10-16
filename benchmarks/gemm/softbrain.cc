@@ -36,7 +36,7 @@ void gemm(int n, int m, int p, complex<int16_t> *a, complex<int16_t> *b, complex
     SB_RECURRENCE(P_compute_O, P_compute_C, (p / 2) * (m / 2 - 1));
     SB_DMA_READ(b    , 8 * p, 4 * p, m / 2, P_compute_BE);
     SB_DMA_READ(b + p, 8 * p, 4 * p, m / 2, P_compute_BO);
-    SB_DMA_WRITE(P_compute_O, 0, 4 * p, 1, c + i * n);
+    SB_DMA_WRITE(P_compute_O, 0, 4 * p, 1, c + i * p);
     for (int k = 0; k < m; k += 2) {
       SB_DMA_READ(a + i * m + k, 0, 8, p / 2, P_compute_A);
     }
