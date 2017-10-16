@@ -9,7 +9,7 @@
 
 using std::complex;
 
-complex<int16_t> a[N * N], b[N * N], c[N * N];
+complex<int16_t> a[N * M], b[M * P], c[N * P];
 
 bool compare(complex<int16_t> *a, int n, FILE *ref_data) {
   for (int i = 0; i < n; ++i) {
@@ -32,13 +32,13 @@ int main() {
     return 1;
   }
 
-  for (int i = 0; i < N * N; ++i) {
+  for (int i = 0; i < N * M; ++i) {
     float real, imag;
     fscanf(input_data, " (%f+%fj)", &real, &imag);
     a[i] = complex<int16_t>(DOUBLE_TO_FIX(real), DOUBLE_TO_FIX(imag));
   }
 
-  for (int i = 0; i < N * N; ++i) {
+  for (int i = 0; i < M * P; ++i) {
     float real, imag;
     fscanf(input_data, " (%f+%fj)", &real, &imag);
     b[i] = complex<int16_t>(DOUBLE_TO_FIX(real), DOUBLE_TO_FIX(imag));
@@ -46,11 +46,11 @@ int main() {
 
 
   begin_roi();
-  gemm(N, a, b, c);
+  gemm(N, M, P, a, b, c);
   end_roi();
   sb_stats();
 
-  if (!compare(c, N, ref_data)) {
+  if (!compare(c, N * P, ref_data)) {
     puts("Error result!");
     return 1;
   }

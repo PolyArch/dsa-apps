@@ -21,12 +21,12 @@ using std::complex;
 
 #define PI 3.14159265358979303
 
-void gemm(int n, complex<int16_t> *a, complex<int16_t> *b, complex<int16_t> *c) {
+void gemm(int n, int m, int p,  complex<int16_t> *a, complex<int16_t> *b, complex<int16_t> *c) {
   for (int i = 0; i < n; ++i) {
-    for (int j = 0; j < n; ++j) {
-      for (int k = 0; k < n; ++k)
-        c[i * N + j] =
-          complex<int16_t>(complex_add(c[i * N + j], complex<int16_t>(complex_mul(a[i * n + k], b[k * n + j]))));
+    for (int j = 0; j < p; ++j) {
+      for (int k = 0; k < m; ++k)
+        c[i * p + j] =
+          complex<int16_t>(complex_add(c[i * p + j], complex<int16_t>(complex_mul(a[i * m + k], b[k * p + j]))));
     }
   }
 }

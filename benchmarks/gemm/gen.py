@@ -1,10 +1,12 @@
 import sys, numpy
 from math import sin, cos, pi 
 n = int(sys.argv[1])
+m = int(sys.argv[2])
+p = int(sys.argv[3])
 numpy.set_printoptions(suppress = True, precision = 4., linewidth = 180, threshold = numpy.nan)
 
-a = numpy.random.rand(n, n).astype('complex64') + 1j * numpy.random.rand(n, n).astype('complex64')
-b = numpy.random.rand(n, n).astype('complex64') + 1j * numpy.random.rand(n).astype('complex64')
+a = numpy.random.rand(n, m).astype('complex64') + 1j * numpy.random.rand(n, m).astype('complex64')
+b = numpy.random.rand(m, p).astype('complex64') + 1j * numpy.random.rand(m, p).astype('complex64')
 numpy.savetxt('input.data', numpy.concatenate((a.flatten(), b.flatten())))
 print 'input generated'
 

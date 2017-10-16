@@ -11,6 +11,6 @@
 #define eps 2e-2
 using std::complex;
 
-void gemm(int n, complex<int16_t> *, complex<int16_t> *, complex<int16_t> *);
+void gemm(int n, int m, int p, complex<int16_t> *, complex<int16_t> *, complex<int16_t> *);
 
 #endif

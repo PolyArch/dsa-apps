@@ -7,6 +7,14 @@ ifndef N
 N=4
 endif
 
+ifndef M
+M=8
+endif
+
+ifndef P
+P=4
+endif
+
 DFG = compute.dfg
 DFG_HEADERS=$(DFG:.dfg=.h)
 
@@ -20,12 +28,12 @@ LFLAGS=-lm
 CC=riscv64-unknown-elf-g++
 
 input.data ref.data:
-	python gen.py $(N)
+	python gen.py $(N) $(M) $(P)
 
 BENCHMARKS=baseline optimized softbrain
 OBJS=$(BENCHMARKS:=.o)
 LOGS=$(BENCHMARKS:=.log)
-MACROS=-D N=$(N)
+MACROS=-DN=$(N) -DM=$(M) -DP=$(P)
 
 softbrain.o: softbrain.cc $(DFG_HEADERS)
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) $(CFLAGS) $(LFLAGS)

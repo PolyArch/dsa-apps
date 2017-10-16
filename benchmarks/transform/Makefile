@@ -5,6 +5,9 @@ endif
 
 ifndef N
 N=64
+endif
+
+ifndef M
 M=16
 endif
 
