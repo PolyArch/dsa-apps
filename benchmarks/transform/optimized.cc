@@ -20,17 +20,17 @@ using std::complex;
 
 #define PI 3.14159265358979303
 
-void transform(int n, complex<int16_t> *a, complex<int16_t> *b, complex<int16_t> *c) {
+void transform(int n, int m, complex<int16_t> *a, complex<int16_t> *b, complex<int16_t> *c) {
   for (int i = 0; i < n; i += 2) {
     c[i] = complex<int16_t>(0, 0);
     c[i + 1] = complex<int16_t>(0, 0);
     complex<int16_t> sum0(0, 0);
     complex<int16_t> sum1(0, 0);
-    for (int j = 0; j < n; j += 2) {
-      complex<int16_t> tmp00(complex_mul(a[i * N + j], b[j]));
-      complex<int16_t> tmp01(complex_mul(a[i * N + j + 1], b[j + 1]));
-      complex<int16_t> tmp10(complex_mul(a[(i + 1) * N + j], b[j]));
-      complex<int16_t> tmp11(complex_mul(a[(i + 1) * N + j + 1], b[j + 1]));
+    for (int j = 0; j < m; j += 2) {
+      complex<int16_t> tmp00(complex_mul(a[i * m + j], b[j]));
+      complex<int16_t> tmp01(complex_mul(a[i * m + j + 1], b[j + 1]));
+      complex<int16_t> tmp10(complex_mul(a[(i + 1) * m + j], b[j]));
+      complex<int16_t> tmp11(complex_mul(a[(i + 1) * m + j + 1], b[j + 1]));
       sum0 = complex<int16_t>(complex_add(sum0, tmp00));
       sum0 = complex<int16_t>(complex_add(sum0, tmp01));
       sum1 = complex<int16_t>(complex_add(sum1, tmp10));

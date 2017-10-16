@@ -22,12 +22,12 @@ using std::complex;
 
 #define PI 3.14159265358979303
 
-void transform(int n, complex<int16_t> *a, complex<int16_t> *b, complex<int16_t> *c) {
+void transform(int n, int m, complex<int16_t> *a, complex<int16_t> *b, complex<int16_t> *c) {
   SB_CONFIG(compute_config, compute_size);
-  SB_DMA_READ(a, 8 * n, 4 * n, n / 2, P_compute_AE);
-  SB_DMA_READ(a + n, 8 * n, 4 * n, n / 2, P_compute_AO);
-  SB_DMA_READ(b, 0, 4 * n, n / 2, P_compute_B);
-  SB_2D_CONST(P_compute_reset, 2, n / 2 - 1, 1, 1, n / 2);
+  SB_DMA_READ(a, 8 * m, 4 * m, n / 2, P_compute_AE);
+  SB_DMA_READ(a + m, 8 * m, 4 * m, n / 2, P_compute_AO);
+  SB_DMA_READ(b, 0, 4 * m, n / 2, P_compute_B);
+  SB_2D_CONST(P_compute_reset, 2, m / 2 - 1, 1, 1, n / 2);
   //SB_DMA_WRITE(P_compute_O, 8, 8, n / 2, c);
   for (int i = 0; i < n; i += 2) {
     SB_DMA_WRITE(P_compute_O, 0, 8, 1, c + i);

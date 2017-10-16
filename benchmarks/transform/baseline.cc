@@ -2,6 +2,7 @@
 #include <stdint.h>
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 #include "softbrain-config/fixed_point.h"
 
 #define complex_mul(a, b) \
@@ -21,12 +22,12 @@ using std::complex;
 
 #define PI 3.14159265358979303
 
-void transform(int n, complex<int16_t> *a, complex<int16_t> *b, complex<int16_t> *c) {
+void transform(int n, int m, complex<int16_t> *a, complex<int16_t> *b, complex<int16_t> *c) {
   for (int i = 0; i < n; ++i) {
     c[i] = complex<int16_t>(0, 0);
-    for (int j = 0; j < n; ++j) {
+    for (int j = 0; j < m; ++j) {
       c[i] =
-        complex<int16_t>(complex_add(c[i], complex<int16_t>(complex_mul(a[i * n + j], b[j]))));
+        complex<int16_t>(complex_add(c[i], complex<int16_t>(complex_mul(a[i * m + j], b[j]))));
     }
   }
 }

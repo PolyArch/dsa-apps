@@ -4,7 +4,8 @@ SBCONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 endif
 
 ifndef N
-N=4
+N=64
+M=16
 endif
 
 DFG = compute.dfg
@@ -20,12 +21,12 @@ LFLAGS=-lm
 CC=riscv64-unknown-elf-g++
 
 input.data ref.data:
-	python gen.py $(N)
+	python gen.py $(N) $(M)
 
 BENCHMARKS=baseline optimized softbrain
 OBJS=$(BENCHMARKS:=.o)
 LOGS=$(BENCHMARKS:=.log)
-MACROS=-D N=$(N) -D VEC_WIDTH=$(VEC_WIDTH)
+MACROS=-D N=$(N) -D M=$(M)
 
 softbrain.o: softbrain.cc $(DFG_HEADERS)
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) $(CFLAGS) $(LFLAGS)

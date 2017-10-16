@@ -9,7 +9,7 @@
 
 using std::complex;
 
-complex<int16_t> a[N * N], b[N], c[N];
+complex<int16_t> a[N * M], b[M], c[N];
 
 bool compare(complex<int16_t> *a, int n, FILE *ref_data) {
   for (int i = 0; i < n; ++i) {
@@ -17,7 +17,7 @@ bool compare(complex<int16_t> *a, int n, FILE *ref_data) {
     fscanf(ref_data, " (%f+%fj)", &real, &imag);
     norm = real * real + imag * imag;
     if ((fabs(real - FIX_TO_DOUBLE(a[i].real())) + fabs(imag - FIX_TO_DOUBLE(a[i].imag()))) / norm  > eps) {
-      printf("expect %f+%fi but %f+%fi\n", real, imag,
+      printf("@%d: expect %f+%fi but %f+%fi\n", i, real, imag,
           FIX_TO_DOUBLE(a[i].real()), FIX_TO_DOUBLE(a[i].imag()));
       return false;
     }
@@ -32,13 +32,13 @@ int main() {
     return 1;
   }
 
-  for (int i = 0; i < N * N; ++i) {
+  for (int i = 0; i < N * M; ++i) {
     float real, imag;
     fscanf(input_data, " (%f+%fj)", &real, &imag);
     a[i] = complex<int16_t>(DOUBLE_TO_FIX(real), DOUBLE_TO_FIX(imag));
   }
 
-  for (int i = 0; i < N; ++i) {
+  for (int i = 0; i < M; ++i) {
     float real, imag;
     fscanf(input_data, " (%f+%fj)", &real, &imag);
     b[i] = complex<int16_t>(DOUBLE_TO_FIX(real), DOUBLE_TO_FIX(imag));
@@ -46,7 +46,7 @@ int main() {
 
 
   begin_roi();
-  transform(N, a, b, c);
+  transform(N, M, a, b, c);
   end_roi();
   sb_stats();
 

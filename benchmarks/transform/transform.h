@@ -11,6 +11,6 @@
 #define eps 2e-2
 using std::complex;
 
-void transform(int n, complex<int16_t> *, complex<int16_t> *, complex<int16_t> *);
+void transform(int n, int m, complex<int16_t> *, complex<int16_t> *, complex<int16_t> *);
 
 #endif
