@@ -4,15 +4,15 @@ SBCONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 endif
 
 ifndef N
-N=4
+N=64
 endif
 
 ifndef M
-M=8
+M=16
 endif
 
 ifndef P
-P=4
+P=48
 endif
 
 DFG = compute.dfg
