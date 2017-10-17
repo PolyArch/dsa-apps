@@ -6,13 +6,16 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <complex>
 
 #define eps 1e-4
+using std::complex;
 
-#ifndef DTYPE
-#define DTYPE float
-#endif
+struct complex_t {
+  float real;
+  float imag;
+};
 
-void qr(DTYPE *, DTYPE *, DTYPE *);
+void qr(complex<float> *, complex<float> *, complex<float> *);
 
 #endif

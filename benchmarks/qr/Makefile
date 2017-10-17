@@ -3,29 +3,30 @@ $(warning SBCONFIG is undefined, using default)
 SBCONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 endif
 
-WIDTHS=8
+WIDTHS=4
 
 ifndef N
 N=32
 endif
 
-ifndef VEC_WIDTH
-VEC_WIDTH=$(firstword $(WIDTHS))
-endif
+#ifndef VEC_WIDTH
+#VEC_WIDTH=$(firstword $(WIDTHS))
+#endif
 
-ifeq ($(findstring $(VEC_WIDTH), $(WIDTHS)),)
-$(error Unsupported vectorization width! Abort!)
-endif
+#ifeq ($(findstring $(VEC_WIDTH), $(WIDTHS)),)
+#$(error Unsupported vectorization width! Abort!)
+#endif
 
-DFG_DIR=sb-$(VEC_WIDTH)-wide
+#DFG_DIR=sb-$(VEC_WIDTH)-wide
 
-DFG=$(DFG_DIR)/compute.dfg
+#DFG=$(DFG_DIR)/compute.dfg
+DFG = mul.dfg dot.dfg fin1.dfg fin2.dfg
 DFG_HEADERS=$(DFG:.dfg=.h)
 
 $(DFG_HEADERS): %.h: %.dfg
 	$(SS_TOOLS)/bin/sb_sched $(SBCONFIG) $< 
 
-IFLAGS=-I../../common/include -I$(DFG_DIR)
+IFLAGS=-I../../common/include
 CFLAGS=-O3
 LFLAGS=-lm
 
@@ -39,10 +40,10 @@ OBJS=$(BENCHMARKS:=.o)
 LOGS=$(BENCHMARKS:=.log)
 MACROS=-D N=$(N) -D VEC_WIDTH=$(VEC_WIDTH)
 
-softbrain.o: softbrain.c $(DFG_HEADERS)
+softbrain.o: softbrain.cc $(DFG_HEADERS)
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) $(CFLAGS) $(LFLAGS)
 
-$(OBJS): %.o: %.c
+$(OBJS): %.o: %.cc
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) $(CFLAGS) $(LFLAGS)
 
 $(LOGS): %.log: %
@@ -50,8 +51,8 @@ $(LOGS): %.log: %
 	gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=minor --l1d_size=64kB --l1i_size=16kB --l2_size=1024kB --caches --cmd=./$< \
 	| tee $@
 	
-$(BENCHMARKS): %: input.data ref.data %.o main.c
-	$(CC) main.c $@.o -o $@ $(CFLAGS) $(LFLAGS) $(MACROS) $(IFLAGS)
+$(BENCHMARKS): %: input.data ref.data %.o main.cc
+	$(CC) main.cc $@.o -o $@ $(CFLAGS) $(LFLAGS) $(MACROS) $(IFLAGS)
 
 $(BENCHMARKS:=clean):
 	cd $(@:clean=); make clean
@@ -60,10 +61,10 @@ cleandata:
 	rm -f input.data ref.data
 
 cleandfg:
-	rm -rf sb-8-wide/compute.h sb-8-wide/verif sb-8-wide/viz
+	rm -rf $(DFG_HEADERS) verif
 
 clean: cleandfg
-	rm -f $(OBJS) $(BENCHMARKS) $(LOGS)
+	rm -f $(OBJS) $(BENCHMARKS) $(LOGS) 
 	rm -rf stats gams viz m5out
 
 ultraclean: clean cleandata
