@@ -4,7 +4,7 @@ SBCONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 endif
 
 ifndef N
-N=2048
+N=512
 endif
 
 DFG = compute.dfg

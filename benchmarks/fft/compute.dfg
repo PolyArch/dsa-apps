@@ -1,14 +1,20 @@
-Input: L
-Input: R
-Input: W
+InputVec: L [0, 1]
+InputVec: R [0, 1]
+InputVec: W [0, 1]
 
-TMP_REAL = FMul32x2(R, W)
-TMP_IMAG = FMulX32x2(R, W)
-TMP = FSubAdd32x2(TMP_REAL, TMP_IMAG)
+TMP_REAL0 = FMul32x2(R0, W0)
+TMP_IMAG0 = FMulX32x2(R0, W0)
+TMP0 = FSubAdd32x2(TMP_REAL0, TMP_IMAG0)
 
-A = FAdd32x2(L, TMP)
-B = FSub32x2(L, TMP)
+TMP_REAL1 = FMul32x2(R1, W1)
+TMP_IMAG1 = FMulX32x2(R1, W1)
+TMP1 = FSubAdd32x2(TMP_REAL1, TMP_IMAG1)
 
-Output: A
-Output: B
+A0 = FAdd32x2(L0, TMP0)
+A1 = FAdd32x2(L1, TMP1)
+B0 = FSub32x2(L0, TMP0)
+B1 = FSub32x2(L1, TMP1)
+
+OutputVec: A [0, 1]
+OutputVec: B [0, 1]
 
