@@ -101,6 +101,10 @@ int garbage[1024];
   __asm__ __volatile__("sb_const %0, %1, %2 " : : "r"(val), "r"(num_elements), "i"(port)); 
 
 //Send a constant value, repetated num_elements times to a port
+#define SB_RECV(out_port, val) \
+  __asm__ __volatile__("sb_recv %0, a0, %1 " : "=r"(val) : "i"(out_port)); 
+
+//Send a constant value, repetated num_elements times to a port
 // Plain Write to Scratch  (TODO -- NEW -- TEST)
 #define SB_2D_CONST(port, val1, v1_repeat, val2, v2_repeat, iters) \
   __asm__ __volatile__("sb_set_iter %0 " : : "r"(iters)); \
