@@ -16,7 +16,7 @@ bool compare(complex<int16_t> *a, int n, FILE *ref_data) {
     float real, imag, norm;
     fscanf(ref_data, " (%f+%fj)", &real, &imag);
     norm = real * real + imag * imag;
-    if ((fabs(real - FIX_TO_DOUBLE(a[i].real())) + fabs(imag - FIX_TO_DOUBLE(a[i].imag()))) / norm  > eps) {
+    if ((fabs(real - FIX_TO_DOUBLE(a[i].real())) + fabs(imag - FIX_TO_DOUBLE(a[i].imag()))) / norm  > eps * 2) {
       printf("@%d: expect %f+%fi but %f+%fi\n", i, real, imag,
           FIX_TO_DOUBLE(a[i].real()), FIX_TO_DOUBLE(a[i].imag()));
       return false;
