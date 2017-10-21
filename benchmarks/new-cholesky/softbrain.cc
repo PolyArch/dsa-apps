@@ -31,7 +31,6 @@ void cholesky(complex<float> *a, complex<float> *L) {
   SB_CONFIG(compute_config, compute_size);
   complex<float> div;
   {
-    div= std::sqrt(*a);
     complex<float> *bj = a + 1, *bk, v = *a;
     float norm = 1 / (v.real() * v.real() + v.imag() * v.imag());
     union {
@@ -48,29 +47,17 @@ void cholesky(complex<float> *a, complex<float> *L) {
       SB_CONST(P_compute_V, ri_v.v, len);
       ++bj;
     }
-    /*{
-      L[0] = div;
-      float norm = div.real() * div.real() + div.imag() * div.imag();
-      norm = 1 / norm;
-      for (int i = 1; i < N; ++i) {
-        complex<float> tmp(complex_mul(div, a[i]));
-        L[i * N] = complex<float>(tmp.real() * norm, tmp.imag() * norm);
-      }
-    }*/
   }
   for (int i = 1; i < N; ++i) {
     SB_GARBAGE(P_compute_O1, N - i);
     SB_RECURRENCE(P_compute_O1, P_compute_Z, (N - i - 1) * (N - i) / 2);
     complex<float> tmp;
-    SB_RECV(P_compute_O2, tmp);
     float norm = 1 / (tmp.real() * tmp.real() + tmp.imag() * tmp.imag());
     union {
       float f[2];
       uint64_t v;
     } ri_norm = {-norm, -norm}, ri_v = {tmp.real(), tmp.imag()};
-    a[i * (N + 1)] = tmp;
-    div = tmp;
-    for (int j = i + 1; j < N; ++j) {
+    for (int j = i; j < N; ++j) {
       SB_RECV(P_compute_O2, tmp);
       a[i * N + j] = tmp;
     }
@@ -82,16 +69,6 @@ void cholesky(complex<float> *a, complex<float> *L) {
       SB_CONST(P_compute_NORM, ri_norm.v, len);
       SB_CONST(P_compute_V, ri_v.v, len);
     }
-    /*{
-      div = std::sqrt(div);
-      L[i * (N + 1)] = div;
-      float norm = div.real() * div.real() + div.imag() * div.imag();
-      norm = 1 / norm;
-      for (int j = i + 1; j < N; ++j) {
-        complex<float> tmp(complex_mul(div, a[i * N + j]));
-        L[j * N + i] = complex<float>(tmp.real() * norm, tmp.imag() * norm);
-      }
-    }*/
   }
   SB_WAIT_ALL();
   SB_CONFIG(writeback_config, writeback_size);
