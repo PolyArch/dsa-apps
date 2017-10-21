@@ -8,6 +8,7 @@
 #include <complex>
 #include "cholesky.h"
 #include "compute.h"
+#include "writeback.h"
 #include "sb_insts.h"
 
 #define complex_mul(a, b) (a).real() * (b).real() - (a).imag() * (b).imag(), \
@@ -47,7 +48,7 @@ void cholesky(complex<float> *a, complex<float> *L) {
       SB_CONST(P_compute_V, ri_v.v, len);
       ++bj;
     }
-    {
+    /*{
       L[0] = div;
       float norm = div.real() * div.real() + div.imag() * div.imag();
       norm = 1 / norm;
@@ -55,7 +56,7 @@ void cholesky(complex<float> *a, complex<float> *L) {
         complex<float> tmp(complex_mul(div, a[i]));
         L[i * N] = complex<float>(tmp.real() * norm, tmp.imag() * norm);
       }
-    }
+    }*/
   }
   for (int i = 1; i < N; ++i) {
     SB_GARBAGE(P_compute_O1, N - i);
@@ -81,7 +82,7 @@ void cholesky(complex<float> *a, complex<float> *L) {
       SB_CONST(P_compute_NORM, ri_norm.v, len);
       SB_CONST(P_compute_V, ri_v.v, len);
     }
-    {
+    /*{
       div = std::sqrt(div);
       L[i * (N + 1)] = div;
       float norm = div.real() * div.real() + div.imag() * div.imag();
@@ -90,7 +91,23 @@ void cholesky(complex<float> *a, complex<float> *L) {
         complex<float> tmp(complex_mul(div, a[i * N + j]));
         L[j * N + i] = complex<float>(tmp.real() * norm, tmp.imag() * norm);
       }
-    }
+    }*/
+  }
+  SB_WAIT_ALL();
+  SB_CONFIG(writeback_config, writeback_size);
+  for (int i = 0; i < N; ++i) {
+    complex<float> div = std::sqrt(a[i * N + i]);
+    float norm = div.real() * div.real() + div.imag() * div.imag();
+    norm = 1 / norm;
+    L[i * N + i] = div;
+    union {
+      float f[2];
+      uint64_t v;
+    } ri_norm = {norm, norm};
+    SB_DMA_READ(a + i * N + i + 1, 8, 8, N - i - 1, P_writeback_BP);
+    SB_CONST(P_writeback_NORM, ri_norm.v, N - i - 1);
+    SB_CONST(P_writeback_DIV, *((uint64_t *) &div), N - i - 1);
+    SB_DMA_WRITE(P_writeback_RES, N * 8, 8, N - i - 1, L + (i + 1) * N + i);
   }
   SB_WAIT_ALL();
 }
