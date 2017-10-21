@@ -31,7 +31,7 @@ int main() {
     fscanf(ref_data, " (%f+%fj)", &real, &imag);
     if (fabs(real - L[i].real()) + fabs(imag - L[i].imag()) > eps * 2) {
       printf("error @%d %d\n", i / N, i % N);
-      printf("%f+%fi %f+%fi\n", real, imag, L[i].real(), L[i].imag());
+      printf("expected %f+%fi but %f+%fi\n", real, imag, L[i].real(), L[i].imag());
       return 1;
     }
   }
