@@ -4,7 +4,7 @@ numpy.set_printoptions(suppress = True, precision = 4., linewidth = 180, thresho
 n = int(sys.argv[1])
 f = file('debug.data', 'w')
 _a = numpy.random.rand(n, n) + 1j * numpy.random.rand(n, n)
-_a = _a.astype('complex128')
+_a = _a.astype('complex64')
 numpy.savetxt('input.data', _a.flatten())
 print 'Data generated!'
 #print numpy.linalg.svd(_a)
