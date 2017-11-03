@@ -14,7 +14,7 @@ pass_list=""
 
 function run_test {
   test=$1
-  #    SUPRESS_SB_STATS=1 spike --extension=softbrain $RISCV/riscv64-unknown-elf/bin/pk $test
+      #SUPRESS_SB_STATS=1 spike --extension=softbrain $RISCV/riscv64-unknown-elf/bin/pk $test
   timeout 10 ~/ss-stack/gem5/build/RISCV/gem5.debug ~/ss-stack/gem5/configs/example/se.py --cpu-type=minor --l1d_size=64kB --l1i_size=16kB --caches  --cmd=$test
   
   if [ "$?" != "0" ]; then

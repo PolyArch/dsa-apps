@@ -100,7 +100,7 @@ int garbage[1024];
 #define SB_CONST(port, val, num_elements) \
   __asm__ __volatile__("sb_const %0, %1, %2 " : : "r"(val), "r"(num_elements), "i"(port)); 
 
-//Send a constant value, repetated num_elements times to a port
+//Put a softbrain generated output value to a riscv core variable
 #define SB_RECV(out_port, val) \
   __asm__ __volatile__("sb_recv %0, a0, %1 " : "=r"(val) : "i"(out_port)); 
 

@@ -52,3 +52,4 @@ $(TESTS2048): bin/%_2048 : %.c  $(DFG_HEADERS)  $(HEADERS)
 
 clean:
 	rm -f $(TESTS) $(DFG_HEADERS) *.s *.o
+	rm -rf m5out viz verif stats gams bin
