@@ -3,8 +3,6 @@
 int main(int argc, char* argv[]) {
   init();
 
-  printf("%d\n", AWORDS);
-  printf("%d\n", A2WORDS);
   begin_roi();
   SB_CONFIG(none_config,none_size);
   SB_DMA_READ(&in[0],16,8,A2WORDS,P_none_in);
