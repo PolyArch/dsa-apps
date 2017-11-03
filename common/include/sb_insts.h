@@ -1,14 +1,17 @@
 #ifndef SB_INSTS_H
 #define SB_INSTS_H
 
-//TODO Seperate out the sb_wait commands
-//and other ones which are dependent on arguments
+// This sets the context -- ie. which cores the following commands apply to
+#define SB_CONTEXT(bitmask) \
+  __asm__ __volatile__("sb_ctx %0, t0, 0" : : "r"(bitmask));
 
-int garbage[1024];
+#define SB_CONTEXT_I(bitmask) \
+  __asm__ __volatile__("sb_ctx t0, t0, %0" : : "i"(bitmask));
 
 //Stream in the Config
 #define SB_CONFIG(mem_addr, size) \
   __asm__ __volatile__("sb_cfg  %0, %1" : : "r"(mem_addr), "i"(size));
+
 
 //Fill the scratchpad from DMA (from memory or cache)
 //Note that scratch_addr will be written linearly
@@ -46,16 +49,16 @@ int garbage[1024];
 //Throw away some outputs.  We will add a proper instruction for this at some point, rather then writing to memory
 #define SB_GARBAGE(output_port, num_elem) \
   __asm__ __volatile__("sb_stride   %0, %1" : : "r"(8), "r"(8)); \
-  __asm__ __volatile__("sb_wr_dma   %0, %1, %2"   : : "r"(&garbage), "r"(num_elem), "i"(output_port|0x100)); 
+  __asm__ __volatile__("sb_wr_dma   %0, %1, %2"   : : "r"(0), "r"(num_elem), "i"(output_port|0x100)); 
 
 //Throw away some outputs.  We will add a proper instruction for this at some point, rather then writing to memory
 #define SB_GARBAGE_SIMP(output_port, num_elem) \
-  __asm__ __volatile__("sb_wr_dma   %0, %1, %2"   : : "r"(&garbage), "r"(num_elem), "i"(output_port|0x100)); 
+  __asm__ __volatile__("sb_wr_dma   %0, %1, %2"   : : "r"(0), "r"(num_elem), "i"(output_port|0x100)); 
 
 
 // Memory Oriented Instructions
 
-// Set this back to zero if you need different kinds of writes later in the same code!!!
+//Set this back to zero if you need different kinds of writes later in the same code!!!
 #define SB_GARBAGE_BEFORE_STRIDE(num_garb) \
   __asm__ __volatile__("sb_garb   %0, %1, 0" : : "r"(num_garb), "r"(num_garb)); \
 
@@ -105,14 +108,16 @@ int garbage[1024];
   __asm__ __volatile__("sb_recv %0, a0, %1 " : "=r"(val) : "i"(out_port)); 
 
 //Send a constant value, repetated num_elements times to a port
-// Plain Write to Scratch  (TODO -- NEW -- TEST)
+// Plain Write to Scratch
 #define SB_2D_CONST(port, val1, v1_repeat, val2, v2_repeat, iters) \
   __asm__ __volatile__("sb_set_iter %0 " : : "r"(iters)); \
   __asm__ __volatile__("sb_const %0, %1, %2 " : : "r"(val1), "r"(v1_repeat), "i"(port|(1<<7))); \
   __asm__ __volatile__("sb_const %0, %1, %2 " : : "r"(val2), "r"(v2_repeat), "i"(port|(1<<6))); 
 
 
-
+// This tells the port to repeat a certain number of times before consuming
+#define SB_REPEAT_PORT(times) \
+  __asm__ __volatile__("sb_cfg_port %0, t0, 0" : : "r"(times));
 
 //Write to Scratch from a CGRA output port.  Note that only linear writes are currently allowed
 //#define SB_SCRATCH_WRITE(output_port, num_bytes, scratch_addr) 
@@ -120,7 +125,13 @@ int garbage[1024];
 
 //Write from output to input port
 #define SB_RECURRENCE(output_port, input_port, num_strides) \
-  __asm__ __volatile__("sb_wr_rd %0, %1" : : "r"(num_strides), "i"((input_port<<6) | (output_port)));
+  __asm__ __volatile__("sb_wr_rd %0, %1" : : "r"(num_strides), "i"((input_port<<5) | (output_port)));
+
+//Write from output to remote input port
+//pos: local=0, left=1, right=2, undef=3
+#define SB_XFER(output_port, input_port, num_strides, pos) \
+  __asm__ __volatile__("sb_wr_rd %0, %1" : : "r"(num_strides), "i"(pos<<10 | (input_port<<5) | (output_port)));
+
 
 //Write from output to input port  (type -- 3:8-bit,2:16-bit,1:32-bit,0:64-bit)
 #define SB_INDIRECT(ind_port, addr_offset, type, num_elem, input_port) \
@@ -161,7 +172,7 @@ int garbage[1024];
 #define SB_WAIT_COMPUTE() \
   __asm__ __volatile__("sb_wait t0, t0, 2"); \
 
-//wait for all prior scratch reads to be complete (NOT IMPLEMENTED IN SIMULTOR YET)
+//wait for all prior scratch reads to be complete
 #define SB_WAIT_SCR_RD() \
   __asm__ __volatile__("sb_wait t0, t0, 4"); \
 

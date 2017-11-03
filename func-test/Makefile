@@ -3,7 +3,7 @@ $(warning SBCONFIG is undefined, using default)
 SBCONFIG=$(RISCV)/configs/diannao_simd64.sbmodel
 endif
 
-TESTN=$(wildcard none*.c)
+TESTN=$(wildcard fix*.c)
 TESTALL=$(wildcard *.c)
 TESTC=$(filter-out $(TESTN), $(TESTALL))
 

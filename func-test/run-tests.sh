@@ -1,5 +1,6 @@
 #!/bin/bash
-export SBCONFIG=$RISCV/configs/diannao_simd64.sbmodel
+export SBCONFIG=$SS_TOOLS/configs/diannao_simd64.sbmodel
+
 
 #export LD_LIBRARY_PATH=~/ss-stack/ss_tools/lib
 
@@ -14,7 +15,6 @@ pass_list=""
 
 function run_test {
   test=$1
-      #SUPRESS_SB_STATS=1 spike --extension=softbrain $RISCV/riscv64-unknown-elf/bin/pk $test
   timeout 10 ~/ss-stack/gem5/build/RISCV/gem5.debug ~/ss-stack/gem5/configs/example/se.py --cpu-type=minor --l1d_size=64kB --l1i_size=16kB --caches  --cmd=$test
   
   if [ "$?" != "0" ]; then
@@ -28,15 +28,15 @@ function run_test {
   tests_total=$((tests_total+1))
 }
 
-#for i in `ls ind*.c | grep -v none | grep -v unalign`; do
-for i in `ls *.c | grep -v none | grep -v unalign`; do
+#for i in `ls ind*.c | grep -v fix | grep -v unalign`; do
+for i in `ls *.c | grep -v fix | grep -v unalign`; do
   for l in 4 12 32 36 2048; do
     test=bin/`basename $i .c`_$l
     run_test $test
   done
 done
 
-for i in `ls none*.c`; do
+for i in `ls fix*.c`; do
   test=bin/`basename $i .c`
   run_test $test
 done
