@@ -65,8 +65,6 @@ int main(int argc, char* argv[]) {
     total_i++;
   }
 
-  printf("total_i: %d total_rep_i: %d \n", total_i, total_rep_i);
-
   begin_roi();
   SB_CONFIG(none_config,none_size);
   SB_DMA_READ(&in64[0],8,8,5,P_none_in);
