@@ -4,10 +4,10 @@ SBCONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 endif
 
 ifndef N
-N=16
+N=256
 endif
 
-DFG = compute.dfg
+DFG = compute0.dfg compute1.dfg
 DFG_HEADERS=$(DFG:.dfg=.h)
 
 $(DFG_HEADERS): %.h: %.dfg
