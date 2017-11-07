@@ -37,15 +37,16 @@ f.write('transform:\n' + str(right) + '\n')
 _h = h.copy()
 V = numpy.identity(n)
 cycles = 0
-while True:
+for i in xrange(1000):
     cycles += 1
     #numpy.testing.assert_allclose(numpy.conj(R.transpose()), R, atol = 1e-5);
     Q = numpy.identity(n).astype('complex128')
     d = (h[n - 2, n - 2] - h[n - 1, n - 1]) / 2.
     #mu = h[n - 1, n - 1] + d - d / abs(d) * cmath.sqrt(d * d + h[n - 2, n - 2] * h[n - 2, n - 2])
-    mu = 0
-    h = h - mu * numpy.identity(n)
+    #mu = 0
+    #h = h - mu * numpy.identity(n)
     R = h
+    prev = h.copy()
     #print mu
     for i in xrange(n - 1):
         x = h[i:i+2, i].copy()
@@ -61,11 +62,14 @@ while True:
     #f.write('Q:\n' + str(Q) + '\n')
     #f.write('R:\n' + str(R) + '\n')
     #f.write('R:\n' + str(R) + '\n')
-    h = numpy.dot(R, Q) + mu * numpy.identity(n)
+    h = numpy.dot(R, Q)# + mu * numpy.identity(n)
     V = numpy.dot(V, Q)
-    #f.write('RQ:\n' + str(h) + '\n')
+    f.write('RQ:\n' + str(h) + '\n')
     #f.write('V:\n' + str(V) + '\n')
-    if sum(abs(i.imag) + abs(i.real) < 1e-6 for i in h.flatten()) == n * (n - 1):
+    #print sum(h.flatten() - prev.flatten())
+    #if sum(sum(h - prev)) < 1e-7:
+    #print (sum(abs(i) > 2e-3 for i in h.flatten()))
+    if (sum(abs(i) > 2e-3 for i in h.flatten())) <= n:
         break
 
 print cycles

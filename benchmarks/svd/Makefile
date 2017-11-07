@@ -51,8 +51,8 @@ cleandata:
 cleandfg:
 	rm -rf  $(DFG_HEADERS) sb-8-wide/verif sb-8-wide/viz
 
-clean: cleandfg
+clean: cleandata
 	rm -f $(OBJS) $(BENCHMARKS) $(LOGS)
 	rm -rf stats gams viz verif
 
-ultraclean: clean cleandata
+ultraclean: clean cleandfg
