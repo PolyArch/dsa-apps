@@ -4,6 +4,8 @@
 #include "../common/include/sb_insts.h"
 #include "../common/include/sim_timing.h"
 #include <inttypes.h>
+#include <stdlib.h>
+
 
 //top level shoudl define ASIZE
 
@@ -15,17 +17,18 @@
 
 static DTYPE out[ASIZE]; 
 static DTYPE in[ASIZE];
-static DTYPE mod[ASIZE];
-static DTYPE str2[ASIZE];
 
+void finalfunc(int argc, void* arg) {
+  sb_stats();
+}
 
 void init() {
   for(int i=0; i < ASIZE; ++i) {
     in[i]=i;
     out[i]=0;
-    mod[i]=i%4;
   }
-  for(int i = 0; i < A2WORDS/sizeof(DTYPE)*8; i+=1) {
-    str2[i]=(i/4)*8+i%4;
-  }
+
+  on_exit(finalfunc, (void*)10);
 }
+
+

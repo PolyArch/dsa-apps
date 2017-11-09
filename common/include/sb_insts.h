@@ -129,8 +129,11 @@
 
 //Write from output to remote input port
 //pos: local=0, left=1, right=2, undef=3
-#define SB_XFER(output_port, input_port, num_strides, pos) \
-  __asm__ __volatile__("sb_wr_rd %0, %1" : : "r"(num_strides), "i"(pos<<10 | (input_port<<5) | (output_port)));
+//(might be replaced later by some other RISCV instructions)
+#define SB_XFER_LEFT(output_port, input_port, num_strides) \
+  __asm__ __volatile__("sb_wr_rd %0, %1" : : "r"(num_strides), "i"(1<<10 | (input_port<<5) | (output_port)));
+#define SB_XFER_RIGHT(output_port, input_port, num_strides) \
+  __asm__ __volatile__("sb_wr_rd %0, %1" : : "r"(num_strides), "i"( -2048 + (0<<10 |  (input_port<<5) | (output_port))) );
 
 
 //Write from output to input port  (type -- 3:8-bit,2:16-bit,1:32-bit,0:64-bit)

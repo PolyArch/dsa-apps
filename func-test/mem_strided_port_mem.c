@@ -1,7 +1,13 @@
 #include "testing.h"
 
+DTYPE str2[ASIZE];
+
 int main(int argc, char* argv[]) {
   init();
+
+  for(int i = 0; i < A2WORDS/sizeof(DTYPE)*8; i+=1) {
+    str2[i]=(i/4)*8+i%4;
+  }
 
   begin_roi();
   SB_CONFIG(none_config,none_size);

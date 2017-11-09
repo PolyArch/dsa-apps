@@ -1,7 +1,13 @@
 #include "testing.h"
 
+static DTYPE mod[ASIZE];
+
 int main(int argc, char* argv[]) {
   init();
+
+  for(int i=0; i < ASIZE; ++i) {
+    mod[i]=i%4;
+  }
 
   begin_roi();
   SB_CONFIG(none_config,none_size);
