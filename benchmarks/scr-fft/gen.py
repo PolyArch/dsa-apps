@@ -1,15 +1,17 @@
+import imp
+output = imp.load_source('output', '../common/output.py')
+
 import sys, numpy
 from math import sin, cos, pi 
 n = int(sys.argv[1])
 numpy.set_printoptions(suppress = True, precision = 4., linewidth = 180, threshold = numpy.nan)
 
 _a = numpy.random.rand(n).astype('complex64')
-numpy.savetxt('input.data', _a.flatten())
+output.print_complex_array('input.data', _a.flatten())
+
 print '%d-length input generated' % n
 a = _a.copy()
 
-"""
-"""
 def brute_force(a):
     n = len(a)
     res = []
@@ -39,5 +41,6 @@ def non_recursive(_a):
 
 numpy.testing.assert_allclose(non_recursive(a), brute_force(a), atol = 1e-4)
 print 'check pass!'
-numpy.savetxt('ref.data', non_recursive(a).flatten())
+
+output.print_complex_array('ref.data', non_recursive(a).flatten())
 print 'output generated!'

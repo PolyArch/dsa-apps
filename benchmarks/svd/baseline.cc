@@ -108,21 +108,17 @@ void qr_hessenberg(complex<float> *a, complex<float> *q, complex<float> *r) {
   for (int i = 0; i < N - 1; ++i) {
     complex<float> v[2], w;
     household_vector(r, i, i, 2, v, w);
-    outer_mul_a(r, i, i, 2, N - i, v, w);
-    a_mul_outer(q, 0, i, N, 2, v, w);
+    outer_mul_a(r, i, i, 2, 3 < N - i ? 3 : N - i, v, w);
+    a_mul_outer(q, 0, i, i + 1, 2, v, w);
   }
 }
 
 bool converged(complex<float> *a) {
   int cnt = 0;
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < N; ++j) {
-      if (fabs(a[i * N + j].real()) + fabs(a[i * N + j].imag()) < eps) {
-        ++cnt;
-      }
-    }
-  }
-  return cnt == N * (N - 1);
+  for (int i = 0; i < N; ++i)
+    for (int j = 0; j < N; ++j)
+      cnt += (fabs(a[i * N + j].real()) + fabs(a[i * N + j].imag()) > 2 * eps);
+  return cnt <= N;
 }
 
 void svd(complex<float> *a, complex<float> *u, complex<float> *s, complex<float> *v) {
@@ -134,6 +130,7 @@ void svd(complex<float> *a, complex<float> *u, complex<float> *s, complex<float>
   complex<float> *h_inv = new complex<float>[N * N];
   complex<float> *q = new complex<float>[N * N];
   complex<float> *r = new complex<float>[N * N];
+
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < N; ++j) {
       complex<float> sum(0, 0);
@@ -150,7 +147,7 @@ void svd(complex<float> *a, complex<float> *u, complex<float> *s, complex<float>
   while (!converged(hes)) {
     qr_hessenberg(hes, q, r);
     for (int i = 0; i < N; ++i) {
-      for (int j = i; j < N; ++j) {
+      for (int j = i; j < i + 3 && j < N; ++j) {
         hes[i * N + j] = 0;
         for (int k = i; k < N; ++k) {
           hes[i * N + j] += r[i * N + k] * q[k * N + j];

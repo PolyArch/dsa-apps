@@ -1,4 +1,5 @@
 #include "svd.h"
+#include "fileop.h"
 #include <complex>
 #include <stdlib.h>
 #include <stdio.h>
@@ -7,58 +8,35 @@
 
 using std::complex;
 
-complex<float> a[N * N], U[N * N], S[N], V[N * N];
-
-bool compare(complex<float> *a, int n, FILE *ref_data) {
-  for (int i = 0; i < n; ++i) {
-    float real, imag;
-    fscanf(ref_data, " (%f+%fj)", &real, &imag);
-    if (fabs(real - a[i].real()) + fabs(imag - a[i].imag()) > eps * 20) {
-      printf("error @%d %d\n", i / N, i % N);
-      printf("%f+%fi %f+%fi\n", real, imag, a[i].real(), a[i].imag());
-      return false;
-    }
-  }
-  return true;
-}
+complex<float> a[N * N], U[N * N], S[N], V[N * N], tmp[N * N], res[N * N];
 
 int main() {
-  FILE *input_data = fopen("input.data", "r"), *ref_data = fopen("ref.data", "r");
-  if (!input_data || !ref_data) {
+  FILE *input_data = fopen("input.data", "r");
+  FILE *ref_data = fopen("input.data", "r");
+
+  if (!input_data) {
     puts("Data error!");
     return 1;
   }
 
-  for (int i = 0; i < N * N; ++i) {
-    float real, imag;
-    fscanf(input_data, " (%f+%fj)", &real, &imag);
-    a[i] = complex<float>(real, imag);
-  }
+  read_n_float_complex(input_data, N * N, a);
 
   begin_roi();
   svd(a, U, S, V);
   end_roi();
+  sb_stats();
 
-  if (U[0].real() < 0) {
-    for (int i = 0; i < N * N; ++i) {
-      U[i] = -U[i];
-      V[i] = -V[i];
-    }
-  }
+  for (int i = 0; i < N; ++i)
+    for (int j = 0; j < N; ++j)
+      tmp[i * N + j] += U[i * N + j] * S[j];
 
-  if (!compare(U, N * N, ref_data)) {
-    puts("Error U!");
-    return 1;
-  }
-  if (!compare(S, N, ref_data)) {
-    puts("Error \\sigma!");
-    return 1;
-  }
-  if (!compare(V, N * N, ref_data)) {
-    puts("Error V*!");
-    return 1;
-  }
+  for (int i = 0; i < N; ++i)
+    for (int k = 0; k < N; ++k)
+      for (int j = 0; j < N; ++j)
+        res[i * N + j] += tmp[i * N + k] * V[k * N + j];
 
-  puts("result correct!");
+  if (compare_n_float_complex(ref_data, N * N, res))
+    puts("result correct!");
+
   return 0;
 }

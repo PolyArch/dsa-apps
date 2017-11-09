@@ -1,9 +1,12 @@
+import imp
+output = imp.load_source('output', '../common/output.py')
+
 # A quick POC (proof of concept) of Cholesky Decomposition in numpy.
 import numpy, cmath, sys
 n = int(sys.argv[1])
 a = numpy.random.rand(n, n) + 1j * numpy.random.rand(n, n)
 a = a + numpy.identity(n)
-numpy.savetxt('input.data', a.flatten())
+output.print_complex_array('input.data', a.flatten())
 print("%d x %d Input generated!" % (n, n))
 
 Q = numpy.identity(n)
@@ -25,5 +28,5 @@ numpy.testing.assert_allclose(a, numpy.dot(Q, R), rtol = 1e-5)
 numpy.testing.assert_allclose(numpy.identity(n), numpy.dot(Q, numpy.conj(Q.transpose())), atol = 1e-5)
 
 print "Correctness check pass!"
-numpy.savetxt('ref.data', numpy.concatenate((Q.flatten(), R.flatten())));
+output.print_complex_array('ref.data', numpy.concatenate((Q.flatten(), R.flatten())));
 print "New data generated!"
