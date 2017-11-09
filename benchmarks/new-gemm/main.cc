@@ -1,4 +1,5 @@
 #include "gemm.h"
+#include "fileop.h"
 #include <complex>
 #include <stdlib.h>
 #include <stdio.h>
@@ -11,20 +12,6 @@ using std::complex;
 
 complex<int16_t> a[N * M], b[M * P], c[N * P];
 
-bool compare(complex<int16_t> *a, int n, FILE *ref_data) {
-  for (int i = 0; i < n; ++i) {
-    float real, imag, norm;
-    fscanf(ref_data, " (%f+%fj)", &real, &imag);
-    norm = real * real + imag * imag;
-    if ((fabs(real - FIX_TO_DOUBLE(a[i].real())) + fabs(imag - FIX_TO_DOUBLE(a[i].imag()))) / norm  > eps) {
-      printf("expect %f+%fi but %f+%fi\n", real, imag,
-          FIX_TO_DOUBLE(a[i].real()), FIX_TO_DOUBLE(a[i].imag()));
-      return false;
-    }
-  }
-  return true;
-}
-
 int main() {
   FILE *input_data = fopen("input.data", "r"), *ref_data = fopen("ref.data", "r");
   if (!input_data || !ref_data) {
@@ -32,25 +19,15 @@ int main() {
     return 1;
   }
 
-  for (int i = 0; i < N * M; ++i) {
-    float real, imag;
-    fscanf(input_data, " (%f+%fj)", &real, &imag);
-    a[i] = complex<int16_t>(DOUBLE_TO_FIX(real), DOUBLE_TO_FIX(imag));
-  }
-
-  for (int i = 0; i < M * P; ++i) {
-    float real, imag;
-    fscanf(input_data, " (%f+%fj)", &real, &imag);
-    b[i] = complex<int16_t>(DOUBLE_TO_FIX(real), DOUBLE_TO_FIX(imag));
-  }
-
+  read_n_fix_complex(input_data, N * M, a);
+  read_n_fix_complex(input_data, P * M, b);
 
   begin_roi();
   gemm(N, M, P, a, b, c);
   end_roi();
   sb_stats();
 
-  if (!compare(c, N * P, ref_data)) {
+  if (!compare_n_fix_complex(ref_data, N * P, c)) {
     puts("Error result!");
     return 1;
   }

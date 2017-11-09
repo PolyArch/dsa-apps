@@ -1,10 +1,5 @@
-ifndef SBCONFIG
-$(warning SBCONFIG is undefined, using default)
-SBCONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
-endif
-
 ifndef N
-N=16
+N=12
 endif
 
 ifndef M
@@ -12,54 +7,14 @@ M=16
 endif
 
 ifndef P
-P=16
+P=64
 endif
 
-DFG = compute.dfg
-DFG_HEADERS=$(DFG:.dfg=.h)
+DFG=compute.dfg
 
-$(DFG_HEADERS): %.h: %.dfg
-	$(SS_TOOLS)/bin/sb_sched $(SBCONFIG) $< 
+SCALE=$(N) $(M) $(P)
 
-IFLAGS=-I../../common/include -I ../../../ss-tools/include
-CFLAGS=-O3
-LFLAGS=-lm
+MACROS=-DN=$(N) -DM=$(M) -DP=$(P) -DEMULATE
 
-CC=riscv64-unknown-elf-g++
+include ../common/Makefile.inc
 
-input.data ref.data:
-	python gen.py $(N) $(M) $(P)
-
-BENCHMARKS=baseline optimized softbrain
-OBJS=$(BENCHMARKS:=.o)
-LOGS=$(BENCHMARKS:=.log)
-MACROS=-DN=$(N) -DM=$(M) -DP=$(P)
-
-softbrain.o: softbrain.cc $(DFG_HEADERS)
-	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) $(CFLAGS) $(LFLAGS)
-
-$(OBJS): %.o: %.cc
-	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) $(CFLAGS) $(LFLAGS)
-
-$(LOGS): %.log: %
-	SBCONFIG=$(SBCONFIG) \
-	gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=minor --l1d_size=64kB --l1i_size=16kB --l2_size=1024kB --caches --cmd=./$< \
-	| tee $@
-	
-$(BENCHMARKS): %: input.data ref.data %.o main.cc
-	$(CC) main.cc $@.o -o $@ $(CFLAGS) $(LFLAGS) $(MACROS) $(IFLAGS)
-
-$(BENCHMARKS:=clean):
-	cd $(@:clean=); make clean
-
-cleandata:
-	rm -f input.data ref.data
-
-cleandfg:
-	rm -rf $(DFG_HEADERS)
-
-clean: cleandata
-	rm -f $(OBJS) $(BENCHMARKS) $(LOGS)
-	rm -rf stats gams viz verif m5out
-
-ultraclean: clean cleandfg
