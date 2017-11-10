@@ -1,11 +1,14 @@
+import imp
+output = imp.load_source('output', '../common/output.py')
 import numpy, cmath, sys
 from scipy import linalg
+
 numpy.set_printoptions(suppress = True, precision = 4., linewidth = 180, threshold = numpy.nan)
 n = int(sys.argv[1])
 f = file('debug.data', 'w')
 _a = numpy.random.rand(n, n) + 1j * numpy.random.rand(n, n)
 _a = _a.astype('complex64')
-file('input.data', 'w').writelines(['%f %f\n' % (i.real, i.imag) for i in _a.flatten()])
+output.print_complex_array('input.data', _a.flatten())
 print 'Data generated!'
 #print numpy.linalg.svd(_a)
 
@@ -98,9 +101,7 @@ print 'Correctness check pass!'
 #print U
 #print S
 #print numpy.conj(V.transpose())
-ref = file('ref.data', 'w')
-ref.writelines(['%.5f %.5f\n' % (i.real, i.imag) for i in numpy.concatenate((U.flatten(), S.flatten(), numpy.conj(V.transpose()).flatten()))])
-ref.close()
+output.print_complex_array('ref.data', numpy.concatenate((U.flatten(), S.flatten(), numpy.conj(V.transpose()).flatten())))
 #numpy.savetxt('ref.data', numpy.concatenate((U.flatten(), S.flatten(), numpy.conj(V.transpose()).flatten())))
 print 'Ref data generated!'
 

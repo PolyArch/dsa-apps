@@ -1,5 +1,5 @@
 ifndef N
-N=16
+N=32
 endif
 
 DFG=compute.dfg writeback.dfg
