@@ -16,5 +16,8 @@ H = FAddSub32x2(F, G)
 I = FMul32x2(H, NORM)
 
 O = FAdd32x2(Z, I)
+O0 = O
+O1 = O
 
-Output: O
+Output: O0
+Output: O1

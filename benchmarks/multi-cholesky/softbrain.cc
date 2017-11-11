@@ -65,10 +65,12 @@ void cholesky(complex<float> *a, complex<float> *L) {
   for (int i = 1; i < N; ++i) {
     SB_CONTEXT(1);
     complex<float> tmp0, tmp1;
-    SB_RECV(P_compute_O, tmp0);
-    //SB_SCR_WRITE(P_compute_O, (N - i - 1) * 8, addr);
-    SB_XFER_RIGHT(P_compute_O, P_writeback_BP, N - i - 1);
-    SB_RECURRENCE(P_compute_O, P_compute_Z, (N - i - 1) * (N - i) / 2);
+    SB_RECV(P_compute_O0, tmp0);
+    SB_GARBAGE(P_compute_O1, 1);
+    SB_SCR_WRITE(P_compute_O0, (N - i - 1) * 8, addr);
+    SB_XFER_RIGHT(P_compute_O1, P_writeback_BP, N - i - 1);
+    SB_RECURRENCE(P_compute_O0, P_compute_Z, (N - i - 1) * (N - i) / 2);
+    SB_GARBAGE(P_compute_O1, (N - i - 1) * (N - i) / 2);
     float norm = 1 / (tmp0.real() * tmp0.real() + tmp0.imag() * tmp0.imag());
     union {
       float f[2];
@@ -79,6 +81,10 @@ void cholesky(complex<float> *a, complex<float> *L) {
     int total = N - i - 1;
     SB_CONST(P_compute_NORM, ri_norm.v, (1 + total) * total / 2);
     SB_CONST(P_compute_V, ri_v.v, (1 + total) * total / 2);
+
+    SB_WAIT_SCR_WR();
+
+    //SB_DMA_READ_STRETCH(a + i * (N + 1) + 1, 8, 8 * (N - i - 1), -8, N - i - 1, P_compute_B);
     for (int j = i + 1, cur = addr; j < N; ++j) {
       int len = N - j;
       //SB_DMA_READ(a + i * N + j, 0, 8, len, P_compute_A);
@@ -95,6 +101,7 @@ void cholesky(complex<float> *a, complex<float> *L) {
     SB_CONST(P_writeback_NORM, ri_norm.v, N - i - 1);
     SB_CONST(P_writeback_DIV, *((uint64_t *) &tmp1), N - i - 1);
     SB_DMA_WRITE(P_writeback_RES, N * 8, 8, N - i - 1, L + (i + 1) * N + i);
+
   }
   SB_CONTEXT(3);
   SB_WAIT_ALL();

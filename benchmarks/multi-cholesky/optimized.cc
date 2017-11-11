@@ -50,7 +50,6 @@ void cholesky(complex<float> *a, complex<float> *L) {
     }
     complex_t *b = A + i * (N + 1);
     L[i * (N + 1)] = std::complex<float>(div.real, div.imag);
-    std::cout << i * (N + 1) << ": " << L[i * (N + 1)] << "\n";
     {
       complex_t *bp = b + 1;
       float norm = 1 / ((div.real * div.real) + (div.imag * div.imag));
