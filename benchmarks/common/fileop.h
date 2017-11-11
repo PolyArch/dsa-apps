@@ -23,7 +23,7 @@ bool compare_n_float_complex(FILE *ref_data, int n, complex<float> *a) {
     float real, imag;
     fscanf(ref_data, "%f%f", &real, &imag);
     if (fabs(real - a[i].real()) + fabs(imag - a[i].imag()) > eps * 2) {
-      printf("expected %f+%fi but %f+%fi\n", real, imag, a[i].real(), a[i].imag());
+      printf("@%d expected %f+%fi but %f+%fi\n", i, real, imag, a[i].real(), a[i].imag());
       return false;
     }
   }
@@ -36,7 +36,7 @@ bool compare_n_fix_complex(FILE *ref_data, int n, complex<int16_t> *a) {
     fscanf(ref_data, "%f%f", &real, &imag);
     norm = real * real + imag * imag;
     if ((fabs(real - FIX_TO_DOUBLE(a[i].real())) + fabs(imag - FIX_TO_DOUBLE(a[i].imag()))) / norm  > eps) {
-      printf("expect %f+%fi but %f+%fi\n", real, imag,
+      printf("@%d expect %f+%fi but %f+%fi\n", i, real, imag,
           FIX_TO_DOUBLE(a[i].real()), FIX_TO_DOUBLE(a[i].imag()));
       return false;
     }
