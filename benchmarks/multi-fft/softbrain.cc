@@ -18,6 +18,15 @@
 
 #define complex_norm(a) ((a).real() * (a).real() + (a).imag() * (a).imag())
 
+#define group_balance(ctx, offset) \
+      SB_CONTEXT(ctx);\
+      SB_DMA_READ(from + (2 * blocks) * offset         , 2 * blocks * 8, blocks * 8, _span, P_compute0_L);\
+      SB_DMA_READ(from + (2 * blocks) * offset + blocks, 2 * blocks * 8, blocks * 8, _span, P_compute0_R);\
+      SB_REPEAT_PORT(blocks / 2);\
+      SB_DMA_READ(w + blocks * offset, 8 * blocks, 8, _span, P_compute0_W);\
+      SB_DMA_WRITE(P_compute0_A, 8, 8, N / 8, to +         offset);\
+      SB_DMA_WRITE(P_compute0_B, 8, 8, N / 8, to + N / 2 + offset);
+
 using std::complex;
 complex<float> _buffer[N];
 #define PI 3.14159265358979303
@@ -65,12 +74,21 @@ void fft(complex<float> *_a, complex<float> *w) {
     swap(from, to);
   }
 
+  SB_CONTEXT(1 | 2 | 4 | 8);
   SB_CONFIG(compute1_config, compute1_size);
-  SB_DMA_READ(from,     16, 8, N / 2, P_compute1_L)
-  SB_DMA_READ(from + 1, 16, 8, N / 2, P_compute1_R)
-  SB_DMA_READ(w, 8, 8, N / 2, P_compute1_W);
-  SB_DMA_WRITE(P_compute1_A, 8, 8, N / 2, to);
-  SB_DMA_WRITE(P_compute1_B, 8, 8, N / 2, to + N / 2);
+
+  int _span = span / 8;
+  for (int offset = 0, ctx = 1; offset < span / 2; offset += _span, ctx <<= 1) {
+    SB_CONTEXT(ctx);
+
+    SB_DMA_READ(from + (2 * blocks) * offset         , 2 * blocks * 8, blocks * 8, _span, P_compute1_L);
+    SB_DMA_READ(from + (2 * blocks) * offset + blocks, 2 * blocks * 8, blocks * 8, _span, P_compute1_R);
+
+    SB_DMA_READ(w + offset, 8 * blocks, 8, _span, P_compute1_W);
+
+    SB_DMA_WRITE(P_compute1_A, 8, 8, N / 8, to +         offset);
+    SB_DMA_WRITE(P_compute1_B, 8, 8, N / 8, to + N / 2 + offset);
+  }
   SB_WAIT_ALL();
   //swap(from, to);
 
