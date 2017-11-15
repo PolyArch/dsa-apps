@@ -35,7 +35,7 @@
 //Read from scratch into a cgra port
 #define SB_SCR_PORT_STREAM_STRETCH(scr_addr,stride,acc_size,stretch,n_strides, port) \
   __asm__ __volatile__("sb_stride %0, %1, %2" : : "r"(stride), "r"(acc_size), "i"(stretch)); \
-  __asm__ __volatile__("sb_scr_rd   %0, %1, %2 " : : "r"(scr_addr), "r"(num_strides), "i"(port)); 
+  __asm__ __volatile__("sb_scr_rd   %0, %1, %2 " : : "r"(scr_addr), "r"(n_strides), "i"(port)); 
 
 #define SB_SCR_PORT_STREAM(scr_addr,stride,acc_size,n_strides, port) \
    SB_SCR_PORT_STREAM_STRETCH(scr_addr,stride,acc_size,0,n_strides, port) 
