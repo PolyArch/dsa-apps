@@ -4,10 +4,10 @@ SBCONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 endif
 
 ifndef N
-N=32
+N=12
 endif
 
-DFG = mul.dfg dot.dfg fin1.dfg fin2.dfg
+DFG = finalize.dfg conjconj.dfg mulconj.dfg
 DFG_HEADERS=$(DFG:.dfg=.h)
 
 $(DFG_HEADERS): %.h: %.dfg
@@ -50,8 +50,8 @@ cleandata:
 cleandfg:
 	rm -rf $(DFG_HEADERS) verif
 
-clean: cleandfg
+clean: cleandata
 	rm -f $(OBJS) $(BENCHMARKS) $(LOGS) 
 	rm -rf stats gams viz m5out
 
-ultraclean: clean cleandata
+ultraclean: clean cleandfg

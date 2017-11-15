@@ -3,24 +3,11 @@ $(warning SBCONFIG is undefined, using default)
 SBCONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 endif
 
-WIDTHS=4
-
 ifndef N
-N=32
+N=12
 endif
 
-#ifndef VEC_WIDTH
-#VEC_WIDTH=$(firstword $(WIDTHS))
-#endif
-
-#ifeq ($(findstring $(VEC_WIDTH), $(WIDTHS)),)
-#$(error Unsupported vectorization width! Abort!)
-#endif
-
-#DFG_DIR=sb-$(VEC_WIDTH)-wide
-
-#DFG=$(DFG_DIR)/compute.dfg
-DFG = mul.dfg dot.dfg fin1.dfg fin2.dfg
+DFG = finalize.dfg conjconj.dfg mulconj.dfg
 DFG_HEADERS=$(DFG:.dfg=.h)
 
 $(DFG_HEADERS): %.h: %.dfg
@@ -63,8 +50,8 @@ cleandata:
 cleandfg:
 	rm -rf $(DFG_HEADERS) verif
 
-clean: cleandfg
+clean: cleandata
 	rm -f $(OBJS) $(BENCHMARKS) $(LOGS) 
 	rm -rf stats gams viz m5out
 
-ultraclean: clean cleandata
+ultraclean: clean cleandfg
