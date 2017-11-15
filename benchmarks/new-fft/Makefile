@@ -1,5 +1,5 @@
 ifndef N
-N=256
+N=128
 endif
 
 DFG = compute0.dfg compute1.dfg
