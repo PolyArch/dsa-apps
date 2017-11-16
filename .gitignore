@@ -3,10 +3,11 @@
 *.swo
 
 benchmarks/*/stats/*
-benchmarks/*/verif/*
-benchmarks/*/viz/*
 benchmarks/*/m5out/*
-benchmarks/*/bin/*
+benchmarks/*/viz/*
+benchmarks/*/dfgs/verif/*
+benchmarks/*/dfgs/viz/*
+benchmarks/*/dfgs/*.h
 benchmarks/*/*.data
 benchmarks/*/*.o
 benchmarks/*/*.log

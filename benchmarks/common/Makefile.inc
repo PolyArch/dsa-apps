@@ -3,12 +3,12 @@ $(warning SBCONFIG is undefined, using default)
 SBCONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 endif
 
-DFG_HEADERS=$(DFG:.dfg=.h)
+DFG_HEADERS = $(DFG:.dfg=.h)
 
 $(DFG_HEADERS): %.h: %.dfg
-	$(SS_TOOLS)/bin/sb_sched $(SBCONFIG) $< 
+	$(SS_TOOLS)/bin/sb_sched --verbose $(SBCONFIG) $< 
 
-IFLAGS=-I../../common/include -I ../../../ss-tools/include -I ../common/
+IFLAGS=-I../../common/include -I ../../../ss-tools/include -I ../common/ -I ./dfgs
 
 CC=riscv64-unknown-elf-g++
 
@@ -40,10 +40,10 @@ cleandata:
 	rm -f input.data ref.data
 
 cleandfg:
-	rm -rf verif $(DFG_HEADERS)
+	rm -rf $(DFG_HEADERS)
 
 clean: cleandata
 	rm -f $(OBJS) $(BENCHMARKS) $(LOGS)
-	rm -rf stats gams viz m5out
+	rm -rf stats gams m5out viz verif
 
 ultraclean: clean cleandfg
