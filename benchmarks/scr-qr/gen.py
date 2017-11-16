@@ -12,6 +12,8 @@ print("%d x %d Input generated!" % (n, n))
 Q = numpy.identity(n)
 R = a.copy()
 
+#print origin
+
 for i in xrange(n):
     x = numpy.concatenate((numpy.zeros(i), R[i:, i].copy()))
     v = x.copy()

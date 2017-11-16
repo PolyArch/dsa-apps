@@ -50,10 +50,9 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
       for (j = i; j < N; ++j) {
         vp->real *= norm;
         vp->imag *= norm;
-        printf("%f, %f ", vp->real, vp->imag);
         ++vp;
+        //*vp++ /= norm;
       }
-      puts("");
     }
 
     complex_t w;
@@ -75,7 +74,6 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
       w.real = (xv.real * vx.real + xv.imag * vx.imag) / norm + 1;
       w.imag = (xv.imag * vx.real - xv.real * vx.imag) / norm;
       //w = one + xv / vx;
-      //std::cout << w.real << ", " << w.imag << "\n";
     }
 
     {

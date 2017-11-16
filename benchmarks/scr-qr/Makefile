@@ -1,12 +1,12 @@
 ifndef N
-N=4
+N=16
 endif
 
-DFG = finalize.dfg conjconj.dfg mulconj.dfg
+DFG = mul.dfg dot.dfg fin1.dfg fin2.dfg
 
-SCALE = $(N)
+SCALE=$(N)
 
-MACROS=-D N=$(N)
+MACROS=-D N=$(N) -D VEC_WIDTH=$(VEC_WIDTH)
 
 include ../common/Makefile.inc
 
