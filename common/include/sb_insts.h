@@ -26,9 +26,8 @@
  SB_DMA_SCRATCH_LOAD_GENERAL(mem_addr, stride, acc_size, stretch, n_strides, scr_addr, 0);
 
 
-#define SB_DMA_SCRATCH_LOAD_REMOTE(remote_scr_addr, stride, acc_size, stretch, n_strides, scr_addr) \
+#define SB_SCRATCH_LOAD_REMOTE(remote_scr_addr, stride, acc_size, stretch, n_strides, scr_addr) \
  SB_DMA_SCRATCH_LOAD_GENERAL(remote_scr_addr, stride, acc_size, stretch, n_strides, scr_addr, 1);
-
 
 //Maintain compatibility with old thing (stretch=0)
 #define SB_DMA_SCRATCH_LOAD(mem_addr, stride, acc_size, n_strides, scr_addr) \
@@ -37,11 +36,16 @@
 
 //Fill the scratchpad from DMA (from memory or cache)
 //Note that mem_addr will be written linearly
-#define SB_SCRATCH_DMA_STORE(scr_addr, stride, access_size, num_strides, mem_addr) \
+#define SB_SCRATCH_DMA_STORE_GENERAL(scr_addr, stride, access_size, num_strides, mem_addr, shr) \
   __asm__ __volatile__("sb_stride    %0, %1, 0" : : "r"(stride), "r"(access_size)); \
   __asm__ __volatile__("sb_dma_addr  %0, %1" : : "r"(mem_addr), "r"(mem_addr)); \
-  __asm__ __volatile__("sb_scr_dma   %0, %1, 0" : : "r"(num_strides), "r"(scr_addr));
+  __asm__ __volatile__("sb_scr_dma   %0, %1, %2" : : "r"(num_strides), "r"(scr_addr), "i"(shr));
 
+#define SB_SCRATCH_DMA_STORE(scr_addr, stride, access_size, num_strides, mem_addr) \
+  SB_SCRATCH_DMA_STORE_GENERAL(scr_addr, stride, access_size, num_strides, mem_addr, 0)
+
+#define SB_SCRATCH_STORE_REMOTE(scr_addr, stride, access_size, num_strides, mem_addr) \
+  SB_SCRATCH_DMA_STORE_GENERAL(scr_addr, stride, access_size, num_strides, mem_addr, 1)
 
 //Read from scratch into a cgra port
 #define SB_SCR_PORT_STREAM_STRETCH(scr_addr,stride,acc_size,stretch,n_strides, port) \
