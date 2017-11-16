@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
   SB_CONFIG(add1_config,add1_size);
   SB_DMA_SCRATCH_LOAD_REMOTE(0,ABYTES,ABYTES,0,1,0); //stretch parameter added
   SB_WAIT_SCR_WR();
-  SB_SCRATCH_READ(0, ABYTES, P_none_in);
+  SB_SCRATCH_READ(0, ABYTES, P_add1_in);
   SB_DMA_WRITE(P_add1_out,8,8,AWORDS,&out2[0]);
 
   SB_CONTEXT(0x0002);
@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
 
   end_roi();
 
-  //compare<DTYPE>(argv[0],out2,answer_add1,ASIZE);
-  compare<DTYPE>(argv[0],out,in,ASIZE);
+  compare<DTYPE>(argv[0],out2,answer_add1,ASIZE);
+ // compare<DTYPE>(argv[0],out,in,ASIZE);
 
 }
