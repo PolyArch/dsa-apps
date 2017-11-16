@@ -15,7 +15,7 @@ pass_list=""
 
 function run_test {
   test=$1
-  timeout 10 ~/ss-stack/gem5/build/RISCV/gem5.debug ~/ss-stack/gem5/configs/example/se.py --cpu-type=minor --l1d_size=64kB --l1i_size=16kB --caches  --cmd=$test
+  timeout 10 gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=minor --l1d_size=64kB --l1i_size=16kB --caches  --cmd=$test
   
   if [ "$?" != "0" ]; then
     echo $test FAILED
