@@ -11,10 +11,10 @@ TESTSN=$(patsubst %.c,bin/%,$(TESTN))
 TESTS4=$(patsubst %.c,bin/%_4,$(TESTC))
 TESTS12=$(patsubst %.c,bin/%_12,$(TESTC))
 TESTS32=$(patsubst %.c,bin/%_32,$(TESTC))
-TESTS36=$(patsubst %.c,bin/%_36,$(TESTC))
+TESTS500=$(patsubst %.c,bin/%_500,$(TESTC))
 TESTS2048=$(patsubst %.c,bin/%_2048,$(TESTC))
 
-TESTS=$(TESTS4) $(TESTS8)    $(TESTS12)   $(TESTS16) $(TESTS20) $(TESTS24) $(TESTS28) $(TESTS32) $(TESTS36) $(TESTS128)  $(TESTS2048) $(TESTSN) 
+TESTS=$(TESTS4) $(TESTS8)    $(TESTS12)   $(TESTS16) $(TESTS20) $(TESTS24) $(TESTS28) $(TESTS32) $(TESTS500) $(TESTS128)  $(TESTS2048) $(TESTSN) 
 
 all: bin $(TESTS) 
 
@@ -36,7 +36,7 @@ CFLAGS=$(OPT) -g -ggdb -gdwarf-3 -static
 #--std=c++11 
 
 $(TESTSN):  bin/% : %.c $(DFG_HEADERS) $(HEADERS)
-	 $(CPP) $< $(LIB) $(CFLAGS) -o $@ -DASIZE=4 
+	 $(CPP) $< $(LIB) $(CFLAGS) -o $@ -DASIZE=2048
 
 $(TESTS4): bin/%_4 : %.c  $(DFG_HEADERS) $(HEADERS)
 	 $(CPP) $< $(LIB) $(CFLAGS) -o $@ -DASIZE=4 
@@ -44,8 +44,8 @@ $(TESTS12): bin/%_12 : %.c  $(DFG_HEADERS) $(HEADERS)
 	 $(CPP) $< $(LIB) $(CFLAGS) -o $@ -DASIZE=12
 $(TESTS32): bin/%_32 : %.c  $(DFG_HEADERS)  $(HEADERS)
 	 $(CPP) $< $(LIB) $(CFLAGS) -o $@ -DASIZE=32
-$(TESTS36): bin/%_36 : %.c  $(DFG_HEADERS)  $(HEADERS)
-	 $(CPP) $< $(LIB) $(CFLAGS) -o $@ -DASIZE=36
+$(TESTS500): bin/%_500 : %.c  $(DFG_HEADERS)  $(HEADERS)
+	 $(CPP) $< $(LIB) $(CFLAGS) -o $@ -DASIZE=500
 $(TESTS2048): bin/%_2048 : %.c  $(DFG_HEADERS)  $(HEADERS)
 	 $(CPP) $< $(LIB) $(CFLAGS) -o $@ -DASIZE=2048
 

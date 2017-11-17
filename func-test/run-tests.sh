@@ -15,7 +15,8 @@ pass_list=""
 
 function run_test {
   test=$1
-  timeout 10 gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=minor --l1d_size=64kB --l1i_size=16kB --caches  --cmd=$test
+
+  SUPRESS_SB_STATS=1 timeout 10 gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=minor --l1d_size=64kB --l1i_size=16kB --caches  --cmd=$test
   
   if [ "$?" != "0" ]; then
     echo $test FAILED
@@ -30,7 +31,7 @@ function run_test {
 
 #for i in `ls ind*.c | grep -v fix | grep -v unalign`; do
 for i in `ls *.c | grep -v fix | grep -v unalign`; do
-  for l in 4 12 32 36 2048; do
+  for l in 4 12 32 500 2048; do
     test=bin/`basename $i .c`_$l
     run_test $test
   done
