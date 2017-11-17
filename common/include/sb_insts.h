@@ -3,10 +3,17 @@
 
 //Mask for accessing shared scratchpad
 #define SHARED_SP 0x10000
+#define SHARED_SP_INDEX 16
+
 
 // This sets the context -- ie. which cores the following commands apply to
 #define SB_CONTEXT(bitmask) \
   __asm__ __volatile__("sb_ctx %0, t0, 0" : : "r"(bitmask));
+
+//This is the same as SB_CONTEXT butwith
+#define SB_SET_ACCEL(core_id) \
+  SB_CONTEXT(1<<core_id)
+
 
 #define SB_CONTEXT_I(bitmask) \
   __asm__ __volatile__("sb_ctx t0, t0, %0" : : "i"(bitmask));
@@ -34,7 +41,6 @@
   SB_DMA_SCRATCH_LOAD_STRETCH(mem_addr,stride, acc_size, 0, n_strides, scr_addr)
 
 
-//Fill the scratchpad from DMA (from memory or cache)
 //Note that mem_addr will be written linearly
 #define SB_SCRATCH_DMA_STORE_GENERAL(scr_addr, stride, access_size, num_strides, mem_addr, shr) \
   __asm__ __volatile__("sb_stride    %0, %1, 0" : : "r"(stride), "r"(access_size)); \
