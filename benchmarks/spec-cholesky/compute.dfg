@@ -14,7 +14,8 @@ G = FMulX32x2(V, E)
 H = FSubAdd32x2(F, G)
 I = H
 
-O = FAdd32x2(Z, I)
+# O = FAdd32x2(Z, I)
+O = FSub32x2(Z, I)
 O0 = O
 O1 = O
 
