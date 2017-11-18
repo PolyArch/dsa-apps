@@ -1,5 +1,5 @@
 ifndef N
-N=4
+N=32
 endif
 
 DFG=compute.dfg writeback.dfg offload.dfg
