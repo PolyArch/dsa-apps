@@ -18,8 +18,8 @@ I = H
 O = FSub32x2(Z, I)
 O0 = O
 O1 = O
-O2 = O
+#O2 = O
 
 Output: O0
 Output: O1
-Output: O2
+#Output: O2
