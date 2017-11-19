@@ -1,0 +1,36 @@
+InputVec: L [0, 1]
+InputVec: R [0, 1]
+Input: W
+Input: MUX
+
+TMP_REAL0 = FMul32x2(R0, W)
+TMP_IMAG0 = FMulX32x2(R0, W)
+TMP0 = FSubAdd32x2(TMP_REAL0, TMP_IMAG0)
+
+TMP_REAL1 = FMul32x2(R1, W)
+TMP_IMAG1 = FMulX32x2(R1, W)
+TMP1 = FSubAdd32x2(TMP_REAL1, TMP_IMAG1)
+
+A0 = FAdd32x2(L0, TMP0)
+A1 = FAdd32x2(L1, TMP1)
+
+B0 = FSub32x2(L0, TMP0)
+B1 = FSub32x2(L1, TMP1)
+
+AEVEN0 = Discard(A0, MUX)
+AEVEN1 = Discard(A1, MUX)
+BEVEN0 = Discard(B0, MUX)
+BEVEN1 = Discard(B1, MUX)
+
+MUX_ = Xor(MUX, 1)
+AODD0 = Discard(A0, MUX_)
+AODD1 = Discard(A0, MUX_)
+BODD0 = Discard(B0, MUX_)
+BODD1 = Discard(B1, MUX_)
+
+
+OutputVec: AEVEN [0, 1]
+OutputVec: AODD [0, 1]
+OutputVec: BEVEN [0, 1]
+OutputVec: BODD [0, 1]
+
