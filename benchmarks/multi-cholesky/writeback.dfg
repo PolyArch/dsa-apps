@@ -1,0 +1,8 @@
+Input: BP
+Input: DIV
+
+TMP_REAL = FMul32x2(DIV, BP)
+TMP_IMAG = FMulX32x2(DIV, BP)
+RES = FAddSub32x2(TMP_REAL, TMP_IMAG)
+
+Output: RES

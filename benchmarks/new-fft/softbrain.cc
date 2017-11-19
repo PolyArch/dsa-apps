@@ -26,8 +26,9 @@ void fft(complex<float> *_a, complex<float> *w) {
   SB_CONFIG(compute0_config, compute0_size);
 
   complex<float> *from = _a, *to = _buffer;
-  int span = 2;
-  for (int blocks = N / 2; blocks != 1; blocks >>= 1, span <<= 1) {
+  int blocks = N / 2;
+  int span = N / blocks;
+  for ( ; blocks != 1; blocks >>= 1, span <<= 1) {
     SB_DMA_READ(from,          2 * blocks * 8, blocks * 8, span / 2, P_compute0_L);
     SB_DMA_READ(from + blocks, 2 * blocks * 8, blocks * 8, span / 2, P_compute0_R);
 

@@ -7,7 +7,7 @@
 #include <stdlib.h>
 
 
-//top level shoudl define ASIZE
+//top level should define ASIZE
 
 #define DTYPE  uint16_t
 #define ABYTES (sizeof(DTYPE)*ASIZE)

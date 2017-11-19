@@ -1,3 +1,6 @@
+import imp
+output = imp.load_source('output', '../common/output.py')
+
 def round(a):
     return a.real.astype('int16') + a.imag.astype('int16') * 1j
 
@@ -11,7 +14,7 @@ a = (numpy.dot(a, numpy.conj(a.transpose())))
 #a = a + numpy.identity(n)
 #a *= scale * scale;
 #a = round(a)
-numpy.savetxt('input.data', a.flatten())
+output.print_complex_array('input.data', a.flatten())
 print("%d x %d Input generated!" % (n, n))
 
 L = numpy.identity(n).astype('complex')
@@ -39,6 +42,6 @@ for i in xrange(n):
 
 numpy.testing.assert_allclose(origin, numpy.dot(numpy.conj(L), L.transpose()), rtol = 1e-4)
 print "Correctness check pass!"
-numpy.savetxt('ref.data', L.flatten());
+output.print_complex_array('ref.data', L.flatten());
 print "New data generated!"
 

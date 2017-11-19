@@ -40,7 +40,7 @@
 #define SB_DMA_SCRATCH_LOAD(mem_addr, stride, acc_size, n_strides, scr_addr) \
   SB_DMA_SCRATCH_LOAD_STRETCH(mem_addr,stride, acc_size, 0, n_strides, scr_addr)
 
-
+//Fill the scratchpad from DMA (from memory or cache)
 //Note that mem_addr will be written linearly
 #define SB_SCRATCH_DMA_STORE_GENERAL(scr_addr, stride, access_size, num_strides, mem_addr, shr) \
   __asm__ __volatile__("sb_stride    %0, %1, 0" : : "r"(stride), "r"(access_size)); \
@@ -150,8 +150,11 @@
 
 
 // This tells the port to repeat a certain number of times before consuming
+#define SB_CONFIG_PORT(repeat_times, stretch) \
+  __asm__ __volatile__("sb_cfg_port %0, t0, %1" : : "r"(repeat_times), "i"(stretch));
+
 #define SB_REPEAT_PORT(times) \
-  __asm__ __volatile__("sb_cfg_port %0, t0, 0" : : "r"(times));
+  SB_CONFIG_PORT(times,0);
 
 //Write to Scratch from a CGRA output port.  Note that only linear writes are currently allowed
 //#define SB_SCRATCH_WRITE(output_port, num_bytes, scratch_addr) 

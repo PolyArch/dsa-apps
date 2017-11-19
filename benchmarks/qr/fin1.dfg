@@ -1,0 +1,22 @@
+Input: _A
+Input: _B
+Input: _W
+Input: Q
+
+A = _A
+B = _B
+W = _W
+
+V_REAL = FMul32x2(A, B)
+V_IMAG = FMulX32x2(A, B)
+_V = FAddSub32x2(V_REAL, V_IMAG)
+
+V = _V
+
+DELTA_REAL = FMul32x2(V, W)
+DELTA_IMAG = FMulX32x2(V, W)
+DELTA = FSubAdd32x2(DELTA_REAL, DELTA_IMAG)
+
+O = FAdd32x2(Q, DELTA)
+
+Output: O

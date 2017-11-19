@@ -28,6 +28,7 @@ struct complex_t {
 };
 
 void cholesky(complex<float> *a, complex<float> *L) {
+  SB_CONTEXT(2);
   SB_CONFIG(compute_config, compute_size);
   complex<float> div;
   {
@@ -64,12 +65,13 @@ void cholesky(complex<float> *a, complex<float> *L) {
       a[i * N + j] = tmp;
     }
     SB_GARBAGE(P_compute_O2, (N - i - 1) * (N - i) / 2);
+    int len = N - i - 1;
+    SB_CONST(P_compute_NORM, ri_norm.v, (len + 1) * len / 2);
+    SB_CONST(P_compute_V, ri_v.v, (len + 1) * len / 2);
+    SB_DMA_READ_STRETCH(a + i * (N + 1) + 1, 8, 8 * (N - i - 1), -8, N - i - 1, P_compute_B);
     for (int j = i + 1; j < N; ++j) {
-      int len = N - j;
-      SB_DMA_READ(a + i * N + j, 0, 8, len, P_compute_A);
-      SB_DMA_READ(a + i * N + j, 0, 8 * len, 1, P_compute_B);
-      SB_CONST(P_compute_NORM, ri_norm.v, len);
-      SB_CONST(P_compute_V, ri_v.v, len);
+      SB_DMA_READ(a + i * N + j, 0, 8, (N - j), P_compute_A);
+      //SB_DMA_READ(a + i * N + j, 0, 8 * (N - j), 1, P_compute_B);
     }
   }
   SB_WAIT_ALL();

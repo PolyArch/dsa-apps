@@ -1,23 +1,22 @@
+import imp
+output = imp.load_source('output', '../common/output.py')
+
 def round(a):
     return a.real.astype('int16') + a.imag.astype('int16') * 1j
 
 
 # A quick POC (proof of concept) of Cholesky Decomposition in numpy.
 import numpy, cmath, sys
-scale = 50
 n = int(sys.argv[1])
 a = numpy.random.rand(n, n) + 1j * numpy.random.rand(n, n)
 a = (numpy.dot(a, numpy.conj(a.transpose())))
-#a = a + numpy.identity(n)
-#a *= scale * scale;
-#a = round(a)
-numpy.savetxt('input.data', a.flatten())
+
+output.print_complex_array('input.data', a.flatten())
 print("%d x %d Input generated!" % (n, n))
 
 L = numpy.identity(n).astype('complex')
 
 origin = a.copy()
-#print origin
 
 for i in xrange(n):
     l = numpy.identity(n).astype('complex')
@@ -39,6 +38,7 @@ for i in xrange(n):
 
 numpy.testing.assert_allclose(origin, numpy.dot(numpy.conj(L), L.transpose()), rtol = 1e-4)
 print "Correctness check pass!"
-numpy.savetxt('ref.data', L.flatten());
+
+output.print_complex_array('ref.data', L.flatten())
 print "New data generated!"
 

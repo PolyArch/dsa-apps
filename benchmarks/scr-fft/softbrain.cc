@@ -23,7 +23,7 @@ complex<float> _buffer[N];
 #define PI 3.14159265358979303
 
 void fft(complex<float> *_a, complex<float> *_w) {
-  int from = 0, to = 16384, w = 32768;
+  int from = 0, to = 16384;
   SB_DMA_SCRATCH_LOAD(_a, 8, 8, N, 0);
   //SB_DMA_SCRATCH_LOAD(_w, 8, 8, N / 2, w);
   SB_CONFIG(compute0_config, compute0_size);
@@ -46,8 +46,9 @@ void fft(complex<float> *_a, complex<float> *_w) {
     to ^= from;
     from ^= to;
   }
+  SB_WAIT_ALL();
+  //SB_WAIT_SCR_WR();
 
-  SB_WAIT_SCR_WR();
   SB_CONFIG(compute1_config, compute1_size);
   SB_SCR_PORT_STREAM(from,     16, 8, N / 2, P_compute1_L)
   SB_SCR_PORT_STREAM(from + 8, 16, 8, N / 2, P_compute1_R)

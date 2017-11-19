@@ -1,4 +1,5 @@
 #include "qr.h"
+#include "fileop.h"
 #include <complex>
 #include <stdlib.h>
 #include <stdio.h>
@@ -15,33 +16,17 @@ int main() {
     puts("Data error!");
     return 1;
   }
-  for (int i = 0; i < N * N; ++i) {
-    float real, imag;
-    fscanf(input_data, " (%f+%fj)", &real, &imag);
-    a[i] = complex<float>(real, imag);
-  }
+
+  read_n_float_complex(input_data, N * N, a);
+
   begin_roi();
   qr(a, Q, R);
   end_roi();
   sb_stats();
-  for (int i = 0; i < N * N; ++i) {
-    float real, imag;
-    fscanf(ref_data, " (%f+%fj)", &real, &imag);
-    if (fabs(real - Q[i].real()) + fabs(imag - Q[i].imag()) > eps * 2) {
-      printf("error @%d %d\n", i / N, i % N);
-      printf("%f+%fi %f+%fi\n", real, imag, Q[i].real(), Q[i].imag());
-      return 1;
-    }
-  }
-  for (int i = 0; i < N * N; ++i) {
-    float real, imag;
-    fscanf(ref_data, " (%f+%fj)", &real, &imag);
-    if (fabs(real - R[i].real()) + fabs(imag - R[i].imag()) > eps * 2) {
-      printf("error @%d %d\n", i / N, i % N);
-      printf("%f+%fi %f+%fi\n", real, imag, R[i].real(), R[i].imag());
-      return 1;
-    }
-  }
+
+  if (!compare_n_float_complex(ref_data, N * N, Q) || !compare_n_float_complex(ref_data, N * N, R))
+    return 1;
+
   puts("result correct!");
   return 0;
 }

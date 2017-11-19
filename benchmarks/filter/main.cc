@@ -1,4 +1,5 @@
 #include "filter.h"
+#include "fileop.h"
 #include <complex.h>
 #include <iostream>
 
@@ -10,31 +11,18 @@ int main() {
     puts("Data error!");
     return 1;
   }
-  for (int i = 0; i < N; ++i) {
-    float real, imag;
-    fscanf(input_data, " (%f+%fj)", &real, &imag);
-    a[i] = complex<float>(real, imag);
-  }
-  for (int i = 0; i < FILTER; ++i) {
-    float real, imag;
-    fscanf(input_data, " (%f+%fj)", &real, &imag);
-    b[i] = complex<float>(real, imag);
-  }
 
+  read_n_float_complex(input_data, N, a);
+  read_n_float_complex(input_data, N, b);
 
   begin_roi();
   filter(a, b, c);
   end_roi();
+  sb_stats();
 
-  for (int i = 0; i < N - FILTER + 1; ++i) {
-    float real, imag;
-    fscanf(ref_data, " (%f+%fj)", &real, &imag);
-    if (fabs(real - c[i].real()) + fabs(imag - c[i].imag()) > eps * 2) {
-      printf("error @%d %d\n", i / N, i % N);
-      printf("%f+%fi %f+%fi\n", real, imag, c[i].real(), c[i].imag());
-      return 1;
-    }
-  }
+  if (!compare_n_float_complex(ref_data, N - FILTER + 1, c))
+    return 1;
+
   puts("result correct!");
   return 0;
 }
