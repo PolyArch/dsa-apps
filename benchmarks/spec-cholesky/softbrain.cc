@@ -56,42 +56,21 @@ void cholesky(complex<float> *a, complex<float> *L) {
 
     SB_CONTEXT(4);
     SB_DMA_WRITE(P_writeback_RES, N * 8, 8, N - 1, L + N);
-
-    /*SB_CONTEXT(1);
-    SB_GARBAGE(P_compute_O0, N * (N - 1) / 2);
-    SB_GARBAGE(P_compute_O1, N * (N - 1) / 2);
-    SB_CONTEXT(7);
-    SB_WAIT_ALL();
-    return;*/
   }
   int addr = (N - 1) * 8;
   for (int i = 1; i < N; ++i) {
     int total = N - i - 1;
     SB_CONTEXT(1);
-    /*SB_GARBAGE(P_compute_O0, 1);
-    SB_GARBAGE(P_compute_O0, total);
-    SB_GARBAGE(P_compute_O1, N * (N - 1) / 2);*/
     SB_GARBAGE(P_compute_O0, 1);
-    //complex<float> tmp;
-    //SB_RECV(P_compute_O0, tmp);
-    //std::cout << tmp << "\n";
     SB_SCR_WRITE(P_compute_O0, total * 8, addr);
     SB_RECURRENCE(P_compute_O0, P_compute_Z, total * (total + 1) / 2);
-    //SB_GARBAGE(P_compute_O0, (total + 1) * total / 2);
     SB_XFER_RIGHT(P_compute_O1, P_offload_V, total + 1);
-    //SB_GARBAGE(P_compute_O1, total + 1);
     SB_GARBAGE(P_compute_O1, total * (total + 1) / 2);
-    //SB_WAIT_SCR_WR();
-    //break;
 
 
     SB_CONTEXT(2);
     SB_CONST(P_offload_MUX, 0, 1);
     SB_CONST(P_offload_MUX, 1, total);
-    //SB_GARBAGE(P_offload_STREAM, total);
-    //SB_GARBAGE(P_offload_INV, 1);
-    //SB_GARBAGE(P_offload_SQRTINV, 1);
-    //SB_GARBAGE(P_offload_SQRT, 1);
 
     SB_REPEAT_PORT((1 + total) * total / 2);
     SB_XFER_LEFT(P_offload_INV, P_compute_V, 1);
@@ -120,11 +99,8 @@ void cholesky(complex<float> *a, complex<float> *L) {
     addr += total * 8;
 
     SB_CONTEXT(4);
-    //SB_GARBAGE(P_writeback_RES, total);
     
     SB_DMA_WRITE(P_writeback_RES, N * 8, 8, total, L + (i + 1) * N + i);
-    //break;
-
   }
   SB_CONTEXT(7);
   SB_WAIT_ALL();

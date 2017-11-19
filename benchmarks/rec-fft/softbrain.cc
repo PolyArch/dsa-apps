@@ -55,7 +55,7 @@ void fft(complex<float> *a, complex<float> *_w) {
     SB_SCR_WRITE(P_compute0_BODD,  N * 2, N * 2);
 
 
-    if (cnt == 2) {
+    /*if (cnt == 5) {
       SB_GARBAGE(P_compute0_AEVEN, N / 4);
       SB_GARBAGE(P_compute0_AODD,  N / 4);
       //printf("%d %d\n", blocks, span);
@@ -65,11 +65,12 @@ void fft(complex<float> *a, complex<float> *_w) {
       //printf("W: %d\n", span / 2 * (blocks / 2));
       SB_WAIT_ALL();
       return;
-    }
+    }*/
   }
   SB_SCR_WRITE(P_compute0_AEVEN, N * 2, N * 4);
   SB_SCR_WRITE(P_compute0_AODD,  N * 2, N * 6);
   SB_WAIT_ALL();
+  //return ;
 
   SB_SCRATCH_READ(0    , N * 4, P_compute0_L);
   SB_SCRATCH_READ(N * 4, N * 4, P_compute0_R);

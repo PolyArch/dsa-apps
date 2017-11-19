@@ -3,23 +3,18 @@ Input: B
 Input: V
 Input: Z
 
-C = FMul32x2(A, B)
-D = FMulX32x2(A, B)
+ab_real = FMul32x2(A, B)
+ab_imag = FMulX32x2(A, B)
+conj_ab = FAddSub32x2(ab_real, ab_imag)
 
-E = FAddSub32x2(C, D)
+vab_real = FMul32x2(V, conj_ab)
+vab_imag = FMulX32x2(V, conj_ab)
+vab = FSubAdd32x2(vab_real, vab_imag)
 
-F = FMul32x2(V, E)
-G = FMulX32x2(V, E)
+O = FSub32x2(Z, vab)
 
-H = FSubAdd32x2(F, G)
-I = H
-
-# O = FAdd32x2(Z, I)
-O = FSub32x2(Z, I)
 O0 = O
 O1 = O
-#O2 = O
 
 Output: O0
 Output: O1
-#Output: O2
