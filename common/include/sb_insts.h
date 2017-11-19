@@ -1,6 +1,9 @@
 #ifndef SB_INSTS_H
 #define SB_INSTS_H
 
+//Mask for accessing shared scratchpad
+#define SHARED_SP 0x10000
+
 // This sets the context -- ie. which cores the following commands apply to
 #define SB_CONTEXT(bitmask) \
   __asm__ __volatile__("sb_ctx %0, t0, 0" : : "r"(bitmask));
@@ -14,10 +17,18 @@
 
 //Fill the scratchpad from DMA (from memory or cache)
 //Note that scratch_addr will be written linearly
-#define SB_DMA_SCRATCH_LOAD_STRETCH(mem_addr, stride, acc_size, stretch, n_strides, scr_addr) \
+#define SB_DMA_SCRATCH_LOAD_GENERAL(mem_addr, stride, acc_size, stretch, n_strides, scr_addr, shr) \
   __asm__ __volatile__("sb_stride    %0, %1, %2" : : "r"(stride), "r"(acc_size), "i"(stretch)); \
   __asm__ __volatile__("sb_dma_addr  %0, %1" : : "r"(mem_addr), "r"(mem_addr)); \
-  __asm__ __volatile__("sb_dma_scr   %0, %1, 0" : : "r"(n_strides), "r"(scr_addr));
+  __asm__ __volatile__("sb_dma_scr   %0, %1, %2" : : "r"(n_strides), "r"(scr_addr), "i"(shr));
+
+#define SB_DMA_SCRATCH_LOAD_STRETCH(mem_addr, stride, acc_size, stretch, n_strides, scr_addr) \
+ SB_DMA_SCRATCH_LOAD_GENERAL(mem_addr, stride, acc_size, stretch, n_strides, scr_addr, 0);
+
+
+#define SB_DMA_SCRATCH_LOAD_REMOTE(remote_scr_addr, stride, acc_size, stretch, n_strides, scr_addr) \
+ SB_DMA_SCRATCH_LOAD_GENERAL(remote_scr_addr, stride, acc_size, stretch, n_strides, scr_addr, 1);
+
 
 //Maintain compatibility with old thing (stretch=0)
 #define SB_DMA_SCRATCH_LOAD(mem_addr, stride, acc_size, n_strides, scr_addr) \
@@ -38,11 +49,9 @@
 #define SB_SCR_PORT_STREAM(scr_addr,stride,acc_size,n_strides, port) \
    SB_SCR_PORT_STREAM_STRETCH(scr_addr,stride,acc_size,0,n_strides, port) 
 
-
-//A convienience CMD if you want to read linearly
-#define SB_SCRATCH_READ(scr_addr, num_bytes, port) \
-  __asm__ __volatile__("sb_stride   %0, %1, 0" : : "r"(8), "r"(8)); \
-  __asm__ __volatile__("sb_scr_rd   %0, %1, %2 " : : "r"(scr_addr), "r"(num_bytes/8), "i"(port)); 
+//A convienience command for linear access
+#define SB_SCRATCH_READ(scr_addr, n_bytes, port) \
+  SB_SCR_PORT_STREAM_STRETCH(scr_addr,8,8,0,n_bytes/8, port) 
 
 //Read from DMA into a port
 #define SB_DMA_READ_STRETCH(mem_addr, stride, acc_size, stretch, n_strides, port ) \
@@ -51,7 +60,6 @@
 
 #define SB_DMA_READ(mem_addr, stride, acc_size, n_strides, port ) \
   SB_DMA_READ_STRETCH(mem_addr, stride, acc_size, 0, n_strides, port )
-
 
 #define SB_DMA_READ_SIMP(mem_addr, num_strides, port ) \
   __asm__ __volatile__("sb_dma_rd    %0, %1, %2" : : "r"(mem_addr), "r"(num_strides), "i"(port)); 
@@ -179,8 +187,7 @@
 #define SB_WAIT(bit_vec) \
   __asm__ __volatile__("sb_wait t0, t0, " #bit_vec); \
 
-//Wait for all softbrain commands to be done -- This will block the processor indefinately if there is
-//unbalanced commands
+//Wait for all softbrain commands and computations to be visible to memory from control core 
 #define SB_WAIT_ALL() \
   __asm__ __volatile__("sb_wait t0, t0, 0" : : : "memory"); \
 

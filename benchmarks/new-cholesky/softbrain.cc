@@ -53,12 +53,14 @@ void cholesky(complex<float> *a, complex<float> *L) {
     SB_GARBAGE(P_compute_O1, N - i);
     SB_RECURRENCE(P_compute_O1, P_compute_Z, (N - i - 1) * (N - i) / 2);
     complex<float> tmp;
+    SB_RECV(P_compute_O2, tmp);
+    a[i * N + i] = tmp;
     float norm = 1 / (tmp.real() * tmp.real() + tmp.imag() * tmp.imag());
     union {
       float f[2];
       uint64_t v;
     } ri_norm = {-norm, -norm}, ri_v = {tmp.real(), tmp.imag()};
-    for (int j = i; j < N; ++j) {
+    for (int j = i + 1; j < N; ++j) {
       SB_RECV(P_compute_O2, tmp);
       a[i * N + j] = tmp;
     }
