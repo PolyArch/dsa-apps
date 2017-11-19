@@ -33,6 +33,15 @@ $(LOGS): %.log: %
 $(BENCHMARKS): %: input.data ref.data %.o main.cc
 	$(CC) main.cc $@.o -o $@ -lm -O3 $(MACROS) $(IFLAGS)
 
+softbrain-all:
+	for i in $(CASES) ; do \
+		make clean > /dev/null 2>&1; \
+		N=$$i make softbrain.log > /dev/null 2>&1; \
+		echo $$i; \
+		cat softbrain.log | grep Cycles; \
+		cat softbrain.log | grep -A2 ACCEL; \
+	done
+
 $(BENCHMARKS:=clean):
 	cd $(@:clean=); make clean
 
