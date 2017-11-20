@@ -28,7 +28,6 @@ struct complex_t {
 };
 
 void cholesky(complex<float> *a, complex<float> *L) {
-  SB_CONTEXT(2);
   SB_CONFIG(compute_config, compute_size);
   complex<float> div;
   {

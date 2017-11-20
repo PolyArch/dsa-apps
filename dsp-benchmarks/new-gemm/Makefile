@@ -1,5 +1,5 @@
 ifndef N
-N=12
+N=120
 endif
 
 ifndef M
@@ -10,10 +10,11 @@ ifndef P
 P=64
 endif
 
-DFG = compute.dfg
+DFG=compute.dfg
 
 SCALE=$(N) $(M) $(P)
 
-MACROS=-DN=$(N) -DM=$(M) -DP=$(P)
+MACROS=-DN=$(N) -DM=$(M) -DP=$(P) -DEMULATE
 
 include ../common/Makefile.inc
+

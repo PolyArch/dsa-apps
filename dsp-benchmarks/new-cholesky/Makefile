@@ -1,12 +1,14 @@
 ifndef N
-N=64
+N=8
 endif
 
-DFG = compute0.dfg compute1.dfg
+DFG=compute.dfg writeback.dfg
 
-SCALE = $(N)
+SCALE=$(N)
 
 MACROS=-D N=$(N)
+
+CASES=12 16 24 32
 
 include ../common/Makefile.inc
 
