@@ -22,6 +22,7 @@ int main() {
   read_n_fix_complex(input_data, N * M, a);
   read_n_fix_complex(input_data, P * M, b);
 
+  gemm(N, M, P, a, b, c);
   begin_roi();
   gemm(N, M, P, a, b, c);
   end_roi();

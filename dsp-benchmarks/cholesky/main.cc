@@ -15,6 +15,7 @@ int main() {
 
   read_n_float_complex(input_data, N * N, a);
 
+  cholesky(a, L);
   begin_roi();
   cholesky(a, L);
   end_roi();

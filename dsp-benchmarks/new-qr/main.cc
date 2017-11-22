@@ -19,6 +19,7 @@ int main() {
 
   read_n_float_complex(input_data, N * N, a);
 
+  qr(a, Q, R);
   begin_roi();
   qr(a, Q, R);
   end_roi();

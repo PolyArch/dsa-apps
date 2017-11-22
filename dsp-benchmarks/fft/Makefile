@@ -1,5 +1,5 @@
 ifndef N
-N=64
+N=256
 endif
 
 DFG = compute.dfg

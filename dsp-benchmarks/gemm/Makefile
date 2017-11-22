@@ -1,5 +1,5 @@
 ifndef N
-N=120
+N=12
 endif
 
 ifndef M
