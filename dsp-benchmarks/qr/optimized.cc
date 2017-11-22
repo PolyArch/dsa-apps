@@ -2,15 +2,18 @@
 #include <iostream>
 #include "sim_timing.h"
 
+complex_t tmp0[N * N];
+complex_t tmp1[N * N];
+complex_t sub_q[N * N];
+complex_t sub_r[N * N];
+
 #define h(x, y) (((x) >= i) && ((y) >= i) ? (((x) == (y)) - v[x] * v[y] * 2.) : (x) == (y))
 void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
   int i, j, k, x, y;
-  complex_t *q = new complex_t[N * N];
   complex_t *r = new complex_t[N * N];
-  complex_t *tmp = new complex_t[N * N];
   //complex<float> *tmp = new complex<float>[N * N];
   for (i = 0; i < N * N; ++i) {
-    q[i] = i % N == i / N ? (complex_t){1, 0} : (complex_t){0, 0};
+    sub_q[i] = i % N == i / N ? (complex_t){1, 0} : (complex_t){0, 0};
   }
   for (i = 0; i < N; ++i) {
     for (j = 0; j < N; ++j) {
@@ -20,8 +23,8 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
   }
 
   for (i = 0; i < N; ++i) {
-
-    complex_t v[N - i];
+    int len = N - i;
+    complex_t v[len];
     {
       float norm = 0;
       complex_t *vp = v, *rp = r + i * (N + 1);
@@ -77,11 +80,11 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
     }
 
     {
+      complex_t *tmpx = tmp0;
       for (y = 0; y < N; ++y) {
-        complex_t *tmpx = tmp + y * N + i;
         for (x = i; x < N; ++x) {
           tmpx->real = tmpx->imag = 0;
-          complex_t *vk = v, *qk = q + y * N + i;
+          complex_t *vk = v, *qk = sub_q + y * len;
           for (k = i; k < N; ++k) {
             tmpx->real += vk->real * qk->real - vk->imag * qk->imag;
             tmpx->imag += vk->real * qk->imag + vk->imag * qk->real;
@@ -94,28 +97,37 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
       }
     }
 
-    for (y = 0; y < N; ++y) {
-      //complex<float> *qx = q + y * N + i, *tmpx = tmp + y * N + i, *vx = v;
-      complex_t *qx = q + y * N + i, *tmpx = tmp + y * N + i, *vx = v;
-      for (x = i; x < N; ++x) {
-        complex_t val = {
-            vx->real * tmpx->real + vx->imag * tmpx->imag,
-            vx->real * tmpx->imag - vx->imag * tmpx->real};
-        complex_t delta = {
-            val.real * w.real - val.imag * w.imag,
-            val.real * w.imag + val.imag * w.real};
-        qx->real -= delta.real;
-        qx->imag -= delta.imag;
-        ++qx;
-        ++tmpx;
-        ++vx;
-        //q[y * N + x] -= tmp[y * N + x] * std::conj(v[x - i]) * w;
+    {
+      complex_t *tmpx = tmp0, *nxt = sub_q, *qx = sub_q;
+      for (y = 0; y < N; ++y) {
+        complex_t *vx = v;
+        for (x = i; x < N; ++x) {
+          complex_t val = {
+              vx->real * tmpx->real + vx->imag * tmpx->imag,
+              vx->real * tmpx->imag - vx->imag * tmpx->real};
+          complex_t delta = {
+              val.real * w.real - val.imag * w.imag,
+              val.real * w.imag + val.imag * w.real
+          };
+          if (x == i) {
+            Q[y * N + i] = complex<float>(qx->real - delta.real, qx->imag - delta.imag);
+            //std::cout << Q[y * N + i] << "\n";
+          } else {
+            nxt->real = qx->real - delta.real;
+            nxt->imag = qx->imag - delta.imag;
+            ++nxt;
+          }
+          ++qx;
+          ++tmpx;
+          ++vx;
+          //q[y * N + x] -= tmp[y * N + x] * std::conj(v[x - i]) * w;
+        }
       }
     }
 
     {
       for (y = i; y < N; ++y) {
-        complex_t *tmpx = tmp + y * N + i;
+        complex_t *tmpx = tmp1 + y * N + i;
         for (x = i; x < N; ++x) {
           tmpx->real = tmpx->imag = 0;
           complex_t *rk = r + x * N + i, *vk = v;
@@ -135,7 +147,7 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
     }
     complex_t *vy = v;
     for (y = i; y < N; ++y) {
-      complex_t *tmpx = tmp + y * N + i;
+      complex_t *tmpx = tmp1 + y * N + i;
       for (x = i; x < N; ++x) {
         complex_t val = {
             tmpx->real * w.real - tmpx->imag * w.imag,
@@ -156,9 +168,6 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
     for (j = 0; j < N; ++j) {
       R[j * N + i] = complex<float>(r[i * N + j].real, r[i * N + j].imag);
     }
-  }
-  for (i = 0; i < N * N; ++i) {
-    Q[i] = complex<float>(q[i].real, q[i].imag);
   }
 }
 #undef h
