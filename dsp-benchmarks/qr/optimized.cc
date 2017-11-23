@@ -5,13 +5,14 @@
 complex_t tmp0[N * N];
 complex_t tmp1[N * N];
 complex_t sub_q[N * N];
-complex_t sub_r[N * N];
+//double buffering
+complex_t rbuffer0[N * N];
+complex_t rbuffer1[N * N];
 
 #define h(x, y) (((x) >= i) && ((y) >= i) ? (((x) == (y)) - v[x] * v[y] * 2.) : (x) == (y))
 void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
   int i, j, k, x, y;
-  complex_t *r = new complex_t[N * N];
-  //complex<float> *tmp = new complex<float>[N * N];
+  complex_t *r = rbuffer0, *_r = rbuffer1;
   for (i = 0; i < N * N; ++i) {
     sub_q[i] = i % N == i / N ? (complex_t){1, 0} : (complex_t){0, 0};
   }
@@ -126,8 +127,8 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
     }
 
     {
+      complex_t *tmpx = tmp1;
       for (y = i; y < N; ++y) {
-        complex_t *tmpx = tmp1 + y * N + i;
         for (x = i; x < N; ++x) {
           tmpx->real = tmpx->imag = 0;
           complex_t *rk = r + x * N + i, *vk = v;
@@ -146,8 +147,9 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
       }
     }
     complex_t *vy = v;
+    complex_t *tmpx = tmp1;
     for (y = i; y < N; ++y) {
-      complex_t *tmpx = tmp1 + y * N + i;
+      complex_t *read = r + y + i * N;
       for (x = i; x < N; ++x) {
         complex_t val = {
             tmpx->real * w.real - tmpx->imag * w.imag,
@@ -155,19 +157,24 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
         complex_t delta = {
             val.real * vy->real - val.imag * vy->imag,
             val.real * vy->imag + val.imag * vy->real};
-        r[x * N + y].real -= delta.real;
-        r[x * N + y].imag -= delta.imag;
+        //r[x * N + y].real -= delta.real;
+        //r[x * N + y].imag -= delta.imag;
+        if (y == i) {
+          R[y * N + x] = complex<float>(
+              read->real - delta.real,
+              read->imag - delta.imag
+          );
+        } else {
+          read->real -= delta.real;
+          read->imag -= delta.imag;
+        }
+        read += N;
         ++tmpx;
         //r[x * N + y] -= tmp[y * N + x] * w * v[y - i];
       }
       ++vy;
     }
 
-  }
-  for (i = 0; i < N; ++i) {
-    for (j = 0; j < N; ++j) {
-      R[j * N + i] = complex<float>(r[i * N + j].real, r[i * N + j].imag);
-    }
   }
 }
 #undef h
