@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <time.h> 
 #include "sim_timing.h"
+#include "fileop.h"
 #include "softbrain-config/fixed_point.h"
 #define PI 3.14159265358979303
 
