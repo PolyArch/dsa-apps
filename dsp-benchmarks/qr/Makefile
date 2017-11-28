@@ -1,8 +1,8 @@
 ifndef N
-N=4
+N=19
 endif
 
-DFG = mul.dfg dot.dfg fin1.dfg fin2.dfg
+DFG = mulconj.dfg finalize.dfg
 SCALE=$(N)
 
 MACROS=-D N=$(N)

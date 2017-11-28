@@ -66,15 +66,17 @@ void cholesky(complex<float> *a, complex<float> *L) {
     int total = N - i - 1;
     SB_CONST(P_compute_NORM, ri_norm.v, (1 + total) * total / 2);
     SB_CONST(P_compute_V, ri_v.v, (1 + total) * total / 2);
-    //SB_SCR_PORT_STREAM_STRETCH(addr, 8, 8 * total, -8, total, P_compute_B);
-    for (int j = i + 1, cur = addr; j < N; ++j) {
+    SB_SCR_PORT_STREAM_STRETCH(addr, 8, 8 * total, -8, total, P_compute_B);
+    SB_CONFIG_PORT(total, -1);
+    SB_SCR_PORT_STREAM(addr, 8, 8, total, P_compute_A);;
+    /*for (int j = i + 1, cur = addr; j < N; ++j) {
       int len = N - j;
       SB_REPEAT_PORT(len);
       SB_SCR_PORT_STREAM(cur, 0, 8, 1, P_compute_A);
-      SB_SCR_PORT_STREAM(cur, 0, 8 * len, 1, P_compute_B);
+      //SB_SCR_PORT_STREAM(cur, 0, 8 * len, 1, P_compute_B);
       cur += 8;
       //SB_DMA_READ(a + i * N + j, 0, 8 * len, 1, P_compute_B);
-    }
+    }*/
     addr += (N - i - 1) * 8;
   }
   SB_WAIT_ALL();

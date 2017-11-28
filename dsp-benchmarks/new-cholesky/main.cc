@@ -3,7 +3,7 @@
 #include <complex.h>
 #include <iostream>
 
-complex<float> a[N * N], L[N * N];
+complex<float> a[N * N], L[N * N], aa[N * N];
 
 int main() {
   FILE *input_data = fopen("input.data", "r"), *ref_data = fopen("ref.data", "r");
@@ -14,7 +14,7 @@ int main() {
 
   read_n_float_complex(input_data, N * N, a);
 
-  cholesky(a, L);
+  cholesky(aa, L);
   begin_roi();
   cholesky(a, L);
   end_roi();

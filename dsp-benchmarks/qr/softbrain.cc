@@ -1,22 +1,41 @@
 #include "qr.h"
 #include <iostream>
+#include <algorithm>
 #include "sim_timing.h"
-#include "fin1.h"
-#include "fin2.h"
-#include "mul.h"
-#include "dot.h"
 #include "sb_insts.h"
+
+#include "mulconj.h"
+#include "finalize.h"
+
+#define complex_mul(a, b) (complex_t) { \
+  (a).real * (b).real - (a).imag * (b).imag, \
+  (a).real * (b).imag + (a).imag * (b).real }
+
+#define complex_conj_mul(a, b) (complex_t) { \
+  (a).real * (b).real + (a).imag * (b).imag, \
+  (a).real * (b).imag - (a).imag * (b).real }
+
+#define complex_add(a, b) (complex_t) { (a).real + (b).real, (a).imag + (b).imag }
+
+#define complex_sub(a, b) (complex_t) { (a).real - (b).real, (a).imag - (b).imag }
+
+#define complex_norm(a) ((a).real * (a).real + (a).imag * (a).imag)
+
+complex_t tmp0[N * N];
+complex_t tmp1[N * N];
+complex_t sub_q[N * N];
+//double buffering
+complex_t rbuffer0[N * N];
+complex_t rbuffer1[N * N];
 
 #define h(x, y) (((x) >= i) && ((y) >= i) ? (((x) == (y)) - v[x] * v[y] * 2.) : (x) == (y))
 void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
   int i, j, k, x, y;
-  complex_t *q = new complex_t[N * N];
-  complex_t *r = new complex_t[N * N];
-  complex_t *tmp = new complex_t[N * N];
-  //complex<float> *tmp = new complex<float>[N * N];
   for (i = 0; i < N * N; ++i) {
-    q[i] = i % N == i / N ? (complex_t){1, 0} : (complex_t){0, 0};
+    sub_q[i] = i % N == i / N ? (complex_t){1, 0} : (complex_t){0, 0};
   }
+
+  complex_t *r = rbuffer0, *_r = rbuffer1;
   for (i = 0; i < N; ++i) {
     for (j = 0; j < N; ++j) {
       r[j * N + i] = (complex_t){a[i * N + j].real(), a[i * N + j].imag()};
@@ -25,17 +44,20 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
   }
 
   for (i = 0; i < N; ++i) {
-
-    complex_t v[N - i];
+    int len = N - i;
+// Household Vector
+    complex_t v[len];
     {
       float norm = 0;
-      complex_t *vp = v, *rp = r + i * (N + 1);
+      complex_t *vp = v, *rp = r;
       for (j = i; j < N; ++j) {
         *vp = *rp;
-        norm += vp->real * vp->real + vp->imag * vp->imag;
+        norm += complex_norm(*vp); //vp->real * vp->real + vp->imag * vp->imag;
+        //std::cout << complex<float>(vp->real, vp->imag) << " ";
         ++vp;
         ++rp;
       }
+      //std::cout << "\n";
       norm = sqrt(norm);
       float sign = sqrt(v->real * v->real + v->imag * v->imag);
       v->real += v->real / sign * norm;
@@ -50,11 +72,11 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
         norm += vp->real * vp->real + vp->imag * vp->imag;
         ++vp;
       }
-      norm = sqrt(norm);
+      norm = 1. / sqrt(norm);
       vp = v;
       for (j = i; j < N; ++j) {
-        vp->real /= norm;
-        vp->imag /= norm;
+        vp->real *= norm;
+        vp->imag *= norm;
         ++vp;
         //*vp++ /= norm;
       }
@@ -63,127 +85,126 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
     complex_t w;
     {
       complex_t xv = {0, 0}, vx = {0, 0};
-      complex_t *rp = r + i * (N + 1),  *vp = v;
+      complex_t *rp = r,  *vp = v;
       for (j = i; j < N; ++j) {
-        xv.real += rp->real * vp->real + rp->imag * vp->imag;
-        xv.imag += rp->real * vp->imag - rp->imag * vp->real;
-        vx.real += vp->real * rp->real + vp->imag * rp->imag;
-        vx.imag += vp->real * rp->imag - vp->imag * rp->real;
-
-        //xv += std::conj(r[i * N + j]) * v[j - i];
-        //vx += std::conj(v[j - i]) * r[i * N + j];
+        complex_t delta = complex_conj_mul(*rp, *vp);
+        xv = complex_add(xv, delta);
+        delta = complex_conj_mul(*vp, *rp);
+        vx = complex_add(vx, delta);
         ++rp;
         ++vp;
       }
-      float norm = vx.real * vx.real + vx.imag * vx.imag;
-      w.real = (xv.real * vx.real + xv.imag * vx.imag) / norm + 1;
-      w.imag = (xv.imag * vx.real - xv.real * vx.imag) / norm;
-      w.real = -w.real;
-      w.imag = -w.imag;
-      //w = one + xv / vx;
+      float norm = 1 / complex_norm(vx);
+      w = complex_conj_mul(xv, vx);
+      w.real *= norm;
+      w.imag *= norm;
+      w.real += 1;
     }
 
+// Intermediate result computing
     {
-      SB_CONFIG(mul_config, mul_size);
-      SB_DMA_READ(v, 0, 8 * (N - i), (N - i) * N, P_mul__A);
-      for (y = 0; y < N; ++y) {
-        complex_t *tmpx = tmp + y * N + i;
-        SB_DMA_READ(q + y * N + i, 0, 8 * (N - i), N - i, P_mul__B);
-        for (x = i; x < N; ++x) {
-          SB_CONST(P_mul_reset, 0, N - i - 1);
-          SB_CONST(P_mul_reset, 1, 1);
-          /* SKIP and WRITE in STRIDE*/
-          SB_GARBAGE(P_mul_O, N - i - 1);
-          SB_DMA_WRITE(P_mul_O, 8, 8, 1, tmpx);
-          ++tmpx;
-          /*
-          tmpx->real = tmpx->imag = 0;
-          complex_t *vk = v, *qk = q + y * N + i;
-          for (k = i; k < N; ++k) {
-            tmpx->real += vk->real * qk->real - vk->imag * qk->imag;
-            tmpx->imag += vk->real * qk->imag + vk->imag * qk->real;
-            //tmp[y * N + x] += v[k - i] * q[y * N + k];
-            ++vk;
-            ++qk;
-          }
-          */
-        }
+      complex_t *tmpxq = tmp0;
+      complex_t *tmpxr = tmp1;
+      complex_t *qk = sub_q;
+
+      SB_CONFIG(mulconj_config, mulconj_size);
+      SB_DMA_READ(sub_q, 0, N * len * 8, 1, P_mulconj_Q);
+      SB_DMA_READ(v, 0, 8 * len, N, P_mulconj_V);
+      SB_CONST(P_mulconj_R, 0, i * len);
+      SB_DMA_READ(r, 0, len * len * 8, 1, P_mulconj_R);
+
+      SB_GARBAGE(P_mulconj_O1, len * i);
+      for (y = 0; y < i; ++y) {
+        SB_CONST(P_mulconj_reset, 0, len - 1);
+        SB_CONST(P_mulconj_reset, 1, 1);
+        SB_GARBAGE(P_mulconj_O0, len - 1);
+        SB_DMA_WRITE(P_mulconj_O0, 0, 8, 1, tmpxq++);
       }
+
+      for (x = 0; x < len; ++x) {
+        SB_CONST(P_mulconj_reset, 0, len - 1);
+        SB_CONST(P_mulconj_reset, 1, 1);
+        SB_GARBAGE(P_mulconj_O0, len - 1);
+        SB_DMA_WRITE(P_mulconj_O0, 0, 8, 1, tmpxq++);
+        SB_GARBAGE(P_mulconj_O1, len - 1);
+        SB_DMA_WRITE(P_mulconj_O1, 0, 8, 1, tmpxr++);
+      }
+
       SB_WAIT_ALL();
     }
 
-    SB_CONFIG(fin1_config, fin1_size);
-    SB_DMA_READ(v, 0, 8 * (N - i), N, P_fin1__A);
-    SB_DMA_READ(tmp + i, N * 8, 8 * (N - i), N, P_fin1__B);
-    SB_CONST(P_fin1__W, *((uint64_t*)&w), (N - i) * N);
-    SB_DMA_READ(q + i, 8 * N, 8 * (N - i), N, P_fin1_Q);
-    SB_DMA_WRITE(P_fin1_O, 8 * N, 8 * (N - i), N, q + i);
-    SB_WAIT_ALL();
-
+// Finalize the result
     {
-      SB_CONFIG(dot_config, dot_size);
-      SB_DMA_READ(v, 0, 8 * (N - i), (N - i) * (N - i), P_dot__A);
-      for (y = i; y < N; ++y) {
-        complex_t *tmpx = tmp + y * N + i;
-        for (x = i; x < N; ++x) {
-          SB_DMA_READ(r + i + x * N, 0, 8 * (N - i), 1, P_dot__B);
-          SB_CONST(P_dot_reset, 0, N - i - 1);
-          SB_CONST(P_dot_reset, 1, 1);
-          SB_GARBAGE(P_dot_O, N - i - 1);
-          SB_DMA_WRITE(P_dot_O, 8, 8, 1, tmpx);
-          /*
-          tmpx->real = tmpx->imag = 0;
-          complex_t *rk = r + x * N + i, *vk = v;
-          for (k = i; k < N; ++k) {
-            complex_t delta = {
-                vk->real * rk->real + vk->imag * rk->imag,
-                vk->real * rk->imag - vk->imag * rk->real};
-            tmpx->real += delta.real;
-            tmpx->imag += delta.imag;
-            ++vk;
-            ++rk;
-            //tmp[y * N + x] += r[x * N + k] * std::conj(v[k - i]);
-          }*/
-          ++tmpx;
-        }
+      complex_t *tmpxq = tmp0, *nxt = sub_q, *qx = sub_q;
+
+      SB_CONFIG(finalize_config, finalize_size);
+      SB_CONST(P_finalize_W, *((uint64_t*)&w), i * len);
+      SB_DMA_READ(qx, 8, 8, i * len, P_finalize_Q);
+      SB_DMA_READ(v, 0, 8 * len, i, P_finalize_VQ);
+
+      SB_CONST(P_finalize_TMPR, 0, i * len);
+      SB_CONST(P_finalize_VR, 0, i * len);
+      SB_CONST(P_finalize_R, 0, i * len);
+      SB_GARBAGE(P_finalize_O1, i * len);
+
+      for (y = 0; y < i; ++y) {
+        SB_CONST(P_finalize_TMPQ, *((uint64_t*)tmpxq), len);
+        SB_DMA_WRITE(P_finalize_O0, 8, 8, 1, Q + y * N + i);
+        SB_DMA_WRITE(P_finalize_O0, 8, 8, len - 1, nxt);
+        tmpxq++;
+        nxt += len - 1;
       }
-    }
-    SB_WAIT_ALL();
+      qx += i * len;
 
-    SB_CONFIG(fin2_config, fin2_size);
-    complex_t *vy = v;
-    SB_CONST(P_fin2__W, *((uint64_t*)&w), (N - i) * (N - i));
-    for (y = i; y < N; ++y) {
-      complex_t *tmpx = tmp + y * N + i;
-      SB_DMA_READ(tmpx, 0, 8 * (N - i), 1, P_fin2__A);
-      SB_CONST(P_fin2__VY, *((uint64_t*)vy), N - i);
-      SB_DMA_READ(r + i * N + y, 8 * N, 8, N - i, P_fin2_R);
-      SB_DMA_WRITE(P_fin2_O, 8 * N, 8, N - i, r + i * N + y);
 
-      /*for (x = i; x < N; ++x) {
-        complex_t val = {
-            tmpx->real * w.real - tmpx->imag * w.imag,
-            tmpx->real * w.imag + tmpx->imag * w.real};
-        complex_t delta = {
-            val.real * vy->real - val.imag * vy->imag,
-            val.real * vy->imag + val.imag * vy->real};
-        r[x * N + y].real += delta.real;
-        r[x * N + y].imag += delta.imag;
-        ++tmpx;
-        //r[x * N + y] -= tmp[y * N + x] * w * v[y - i];
-      }*/
-      ++vy;
-    }
-    SB_WAIT_ALL();
+      {
+        SB_DMA_READ(tmp1, 0, 8 * len, 1, P_finalize_TMPR);
+        SB_DMA_READ(r, len * 8, 8, len, P_finalize_R);
+        SB_CONST(P_finalize_VR, *((uint64_t*)v), len);
 
-  }
-  for (i = 0; i < N; ++i) {
-    for (j = 0; j < N; ++j) {
-      R[j * N + i] = complex<float>(r[i * N + j].real, r[i * N + j].imag);
+        SB_DMA_READ(qx, 8, 8, len, P_finalize_Q);
+        SB_CONST(P_finalize_TMPQ, *((uint64_t*)tmpxq), len);
+        SB_DMA_READ(v, 8, 8, len, P_finalize_VQ);
+
+        SB_CONST(P_finalize_W, *((uint64_t*)&w), len);
+
+        SB_DMA_WRITE(P_finalize_O1, 8, 8, len, R + i * N + i);
+        SB_DMA_WRITE(P_finalize_O0, 0, 8, 1, Q + i * N + i);
+        SB_DMA_WRITE(P_finalize_O0, 8, 8, len - 1, nxt);
+
+        ++tmpxq;
+        qx += len;
+        nxt += len - 1;
+
+      }
+
+ 
+      SB_CONST(P_finalize_W, *((uint64_t*)&w), (len - 1) * len);
+
+      SB_DMA_READ(v, 0, 8 * len, len - 1, P_finalize_VQ);
+      SB_DMA_READ(qx, 8, 8, len * (len - 1), P_finalize_Q);
+
+      SB_CONST(P_finalize_TMPR, 0, len - 1);
+      SB_CONST(P_finalize_VR, 0, len - 1);
+      SB_CONST(P_finalize_R, 0, len - 1);
+      SB_GARBAGE(P_finalize_O1, len - 1);
+
+      SB_DMA_READ(r + len + 1, 8 * len, 8 * (len - 1), len - 1, P_finalize_R);
+      SB_DMA_READ(v + 1, 0, 8 * (len - 1), len - 1, P_finalize_VR);
+      SB_DMA_WRITE(P_finalize_O1, 8, 8, (len - 1) * (len - 1), r);
+
+      for (y = i + 1; y < N; ++y) {
+        SB_CONST(P_finalize_TMPQ, *((uint64_t*)tmpxq), len);
+        SB_CONST(P_finalize_TMPR, *((uint64_t*)tmp1 + y - i), len - 1);
+        SB_DMA_WRITE(P_finalize_O0, 0, 8, 1, Q + y * N + i);
+        SB_DMA_WRITE(P_finalize_O0, 8, 8, len - 1, nxt);
+        ++tmpxq;
+        nxt += len - 1;
+      }
+
+      SB_WAIT_ALL();
     }
-  }
-  for (i = 0; i < N * N; ++i) {
-    Q[i] = complex<float>(q[i].real, q[i].imag);
+
   }
 }
 #undef h

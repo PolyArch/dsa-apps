@@ -42,6 +42,14 @@ softbrain-all:
 		cat softbrain.log | grep -A2 ACCEL; \
 	done
 
+optimized-all:
+	for i in $(CASES) ; do \
+		make clean > /dev/null 2>&1; \
+		N=$$i make optimized.log > /dev/null 2>&1; \
+		echo $$i; \
+		cat optimized.log | grep Cycles; \
+	done
+
 $(BENCHMARKS:=clean):
 	cd $(@:clean=); make clean
 
