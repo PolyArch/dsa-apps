@@ -16,14 +16,21 @@ BENCHMARKS=baseline optimized softbrain
 OBJS=$(BENCHMARKS:=.o)
 LOGS=$(BENCHMARKS:=.log)
 
-input.data ref.data:
-	python gen.py $(SCALE)
+input.data ref.data: gen.py
+	python $< $(SCALE)
 
 softbrain.o: softbrain.cc $(DFG_HEADERS)
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS)
 
 $(OBJS): %.o: %.cc
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O2
+
+physical: main.cc optimized.cc
+	g++ $^ -o $@ $(MACROS) $(IFLAGS) -std=c++11
+
+physical.log: physical input.data ref.data
+	./physical
+	
 
 $(LOGS): %.log: %
 	SBCONFIG=$(SBCONFIG) \
@@ -33,7 +40,7 @@ $(LOGS): %.log: %
 $(BENCHMARKS): %: input.data ref.data %.o main.cc
 	$(CC) main.cc $@.o -o $@ -lm -O3 $(MACROS) $(IFLAGS)
 
-softbrain-all:
+all-softbrain:
 	for i in $(CASES) ; do \
 		make clean > /dev/null 2>&1; \
 		N=$$i make softbrain.log > /dev/null 2>&1; \
@@ -42,7 +49,7 @@ softbrain-all:
 		cat softbrain.log | grep -A2 ACCEL; \
 	done
 
-optimized-all:
+all-optimized:
 	for i in $(CASES) ; do \
 		make clean > /dev/null 2>&1; \
 		N=$$i make optimized.log > /dev/null 2>&1; \
@@ -62,5 +69,6 @@ cleandfg:
 clean: cleandata
 	rm -f $(OBJS) $(BENCHMARKS) $(LOGS)
 	rm -rf stats gams m5out viz verif
+	rm -f physical
 
 ultraclean: clean cleandfg
