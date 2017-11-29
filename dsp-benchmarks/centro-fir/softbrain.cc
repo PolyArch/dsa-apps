@@ -34,19 +34,18 @@ void filter(int n, int m, complex<float> *a, complex<float> *b, complex<float> *
   int len = n - m + 1;
   int pad = len & (VEC - 1);
   int mid = m >> 1;
-  //printf("%d %d\n", len, pad);
-  //printf("%d\n", len + pad);
   SB_DMA_SCRATCH_LOAD(a, 8, 8, n, 0);
   SB_WAIT_ALL();
   SB_REPEAT_PORT((len + pad) / VEC);
   SB_DMA_READ(b, 8, 8, mid, P_compute_B);
   SB_CONST(P_compute_C, 0, len + pad);
   SB_RECURRENCE(P_compute_O, P_compute_C, mid * (len + pad));
-  SB_SCR_PORT_STREAM(0          ,  8, 8 * (len + pad), mid, P_compute_AL);
-  SB_SCR_PORT_STREAM((m - 1) * 8, -8, 8 * (len + pad), mid, P_compute_AR);
-  //SB_DMA_WRITE(P_compute_O, 8, 8, len + pad, c);
-  //SB_WAIT_ALL();
-  //return;
+  for (int i = 0; i < mid; ++i) {
+    SB_SCR_PORT_STREAM(i * 8          ,  0, 8 * len, 1, P_compute_AL);
+    SB_CONST(P_compute_AL, 0, pad);
+    SB_SCR_PORT_STREAM((m - 1 - i) * 8, 0, 8 * len, 1, P_compute_AR);
+    SB_CONST(P_compute_AR, 0, pad);
+  }
   /*for (int j = 0; j < mid; ++j) {
     for (int i = 0; i < len; ++i) {
       complex<float> delta0(complex_mul(a[i + j], b[j]));
@@ -55,7 +54,8 @@ void filter(int n, int m, complex<float> *a, complex<float> *b, complex<float> *
       c[i] = complex<float>(complex_add(c[i], delta));
     }
   }*/
-  SB_DMA_READ(a + mid, 0, 8 * (len + pad), 1, P_compute_AL);
+  SB_DMA_READ(a + mid, 0, 8 * len, 1, P_compute_AL);
+  SB_CONST(P_compute_AL, 0, pad);
   SB_CONST(P_compute_AR, *((uint64_t*)&_zero), len + pad);
   SB_CONST(P_compute_B, *((uint64_t*) b + mid), (len + pad) / VEC);
   SB_DMA_WRITE(P_compute_O, 8, 8, len + pad, c);
