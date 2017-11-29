@@ -5,7 +5,6 @@
 #include <stdint.h>
 #include <math.h>
 #include <stdlib.h>
-#include "sim_timing.h"
 
 #include <complex>
 

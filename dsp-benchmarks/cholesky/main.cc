@@ -2,6 +2,7 @@
 #include "fileop.h"
 #include <complex.h>
 #include <iostream>
+#include "sim_timing.h"
 
 complex<float> a[N * N], L[N * N];
 char input_buffer[1 << 20];

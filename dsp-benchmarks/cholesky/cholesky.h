@@ -7,7 +7,6 @@
 #include <math.h>
 #include <stdlib.h>
 #include <complex>
-#include "sim_timing.h"
 
 #define eps 1e-4
 
