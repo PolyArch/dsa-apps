@@ -5,12 +5,12 @@
 #include <time.h> 
 #include "sim_timing.h"
 #include "fileop.h"
-#include "softbrain-config/fixed_point.h"
+#include <iostream>
 #define PI 3.14159265358979303
 
 using std::complex;
 
-complex<float> a[N], b[M], c[N - M + 1];
+complex<float> a[N], b[M], c[N], cc[N];
 
 int main() {
   FILE *input_data = fopen("input.data", "r"), *ref_data = fopen("ref.data", "r");
@@ -22,6 +22,7 @@ int main() {
   read_n_float_complex(input_data, N, a);
   read_n_float_complex(input_data, M, b);
 
+  filter(N, M, a, b, cc);
   begin_roi();
   filter(N, M, a, b, c);
   end_roi();
