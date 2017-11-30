@@ -1,17 +1,37 @@
 #include "qr.h"
 #include <iostream>
+#include <algorithm>
 #include "sim_timing.h"
+
+#define complex_mul(a, b) (complex_t) { \
+  (a).real * (b).real - (a).imag * (b).imag, \
+  (a).real * (b).imag + (a).imag * (b).real }
+
+#define complex_conj_mul(a, b) (complex_t) { \
+  (a).real * (b).real + (a).imag * (b).imag, \
+  (a).real * (b).imag - (a).imag * (b).real }
+
+#define complex_add(a, b) (complex_t) { (a).real + (b).real, (a).imag + (b).imag }
+
+#define complex_sub(a, b) (complex_t) { (a).real - (b).real, (a).imag - (b).imag }
+
+#define complex_norm(a) ((a).real * (a).real + (a).imag * (a).imag)
+
+complex_t tmp0[N * N];
+complex_t tmp1[N * N];
+complex_t sub_q[N * N];
+//double buffering
+complex_t rbuffer0[N * N];
+complex_t rbuffer1[N * N];
 
 #define h(x, y) (((x) >= i) && ((y) >= i) ? (((x) == (y)) - v[x] * v[y] * 2.) : (x) == (y))
 void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
   int i, j, k, x, y;
-  complex_t *q = new complex_t[N * N];
-  complex_t *r = new complex_t[N * N];
-  complex_t *tmp = new complex_t[N * N];
-  //complex<float> *tmp = new complex<float>[N * N];
   for (i = 0; i < N * N; ++i) {
-    q[i] = i % N == i / N ? (complex_t){1, 0} : (complex_t){0, 0};
+    sub_q[i] = i % N == i / N ? (complex_t){1, 0} : (complex_t){0, 0};
   }
+
+  complex_t *r = rbuffer0, *_r = rbuffer1;
   for (i = 0; i < N; ++i) {
     for (j = 0; j < N; ++j) {
       r[j * N + i] = (complex_t){a[i * N + j].real(), a[i * N + j].imag()};
@@ -20,14 +40,14 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
   }
 
   for (i = 0; i < N; ++i) {
-
-    complex_t v[N - i];
+    int len = N - i;
+    complex_t v[len];
     {
       float norm = 0;
-      complex_t *vp = v, *rp = r + i * (N + 1);
+      complex_t *vp = v, *rp = r;
       for (j = i; j < N; ++j) {
         *vp = *rp;
-        norm += vp->real * vp->real + vp->imag * vp->imag;
+        norm += complex_norm(*vp); //vp->real * vp->real + vp->imag * vp->imag;
         ++vp;
         ++rp;
       }
@@ -58,107 +78,166 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
     complex_t w;
     {
       complex_t xv = {0, 0}, vx = {0, 0};
-      complex_t *rp = r + i * (N + 1),  *vp = v;
+      complex_t *rp = r,  *vp = v;
       for (j = i; j < N; ++j) {
-        xv.real += rp->real * vp->real + rp->imag * vp->imag;
-        xv.imag += rp->real * vp->imag - rp->imag * vp->real;
-        vx.real += vp->real * rp->real + vp->imag * rp->imag;
-        vx.imag += vp->real * rp->imag - vp->imag * rp->real;
-
-        //xv += std::conj(r[i * N + j]) * v[j - i];
-        //vx += std::conj(v[j - i]) * r[i * N + j];
+        complex_t delta = complex_conj_mul(*rp, *vp);
+        xv = complex_add(xv, delta);
+        delta = complex_conj_mul(*vp, *rp);
+        vx = complex_add(vx, delta);
         ++rp;
         ++vp;
       }
-      float norm = vx.real * vx.real + vx.imag * vx.imag;
-      w.real = (xv.real * vx.real + xv.imag * vx.imag) / norm + 1;
-      w.imag = (xv.imag * vx.real - xv.real * vx.imag) / norm;
-      //w = one + xv / vx;
+      float norm = 1 / complex_norm(vx);
+      w = complex_conj_mul(xv, vx);
+      w.real *= norm;
+      w.imag *= norm;
+      w.real += 1;
+    }
+// Household Vector Done
+
+    {
+      complex_t *tmpxq = tmp0;
+      complex_t *tmpxr = tmp1;
+      complex_t *qk = sub_q;
+
+      for (y = 0; y < i; ++y) {
+        tmpxq->real = tmpxq->imag = 0;
+        complex_t *vk = v;
+        for (k = 0; k < len; ++k) {
+          complex_t delta = complex_mul(*vk, *qk);
+          *tmpxq = complex_add(*tmpxq, delta);
+          ++vk;
+          ++qk;
+        }
+        ++tmpxq;
+      }
+
+      for (x = 0; x < len; ++x) {
+        tmpxq->real = tmpxq->imag = tmpxr->real = tmpxr->imag = 0;
+        complex_t *vk = v;
+        complex_t *rk = r + x * len;
+        for (k = i; k < N; ++k) {
+          complex_t delta = complex_conj_mul(*vk, *rk);
+          *tmpxr = complex_add(*tmpxr, delta);
+
+          delta = complex_mul(*vk, *qk);
+          *tmpxq = complex_add(*tmpxq, delta);
+
+          ++qk;
+          ++vk;
+          ++rk;
+        }
+        ++tmpxr;
+        ++tmpxq;
+      }
     }
 
     {
-      for (y = 0; y < N; ++y) {
-        complex_t *tmpx = tmp + y * N + i;
-        for (x = i; x < N; ++x) {
-          tmpx->real = tmpx->imag = 0;
-          complex_t *vk = v, *qk = q + y * N + i;
-          for (k = i; k < N; ++k) {
-            tmpx->real += vk->real * qk->real - vk->imag * qk->imag;
-            tmpx->imag += vk->real * qk->imag + vk->imag * qk->real;
-            //tmp[y * N + x] += v[k - i] * q[y * N + k];
-            ++vk;
-            ++qk;
-          }
-          ++tmpx;
+      complex_t *tmpxq = tmp0, *nxt = sub_q, *qx = sub_q;
+      for (y = 0; y < i; ++y) {
+        complex_t *vx = v;
+        {
+          complex_t val = complex_conj_mul(*vx, *tmpxq);
+          complex_t delta = complex_mul(val, w);
+          Q[y * N + i] = complex<float>(qx->real - delta.real, qx->imag - delta.imag);
+          ++qx;
+          ++vx;
+          //q[y * N + x] -= tmp[y * N + x] * std::conj(v[x - i]) * w;
         }
-      }
-    }
-
-    for (y = 0; y < N; ++y) {
-      //complex<float> *qx = q + y * N + i, *tmpx = tmp + y * N + i, *vx = v;
-      complex_t *qx = q + y * N + i, *tmpx = tmp + y * N + i, *vx = v;
-      for (x = i; x < N; ++x) {
-        complex_t val = {
-            vx->real * tmpx->real + vx->imag * tmpx->imag,
-            vx->real * tmpx->imag - vx->imag * tmpx->real};
-        complex_t delta = {
-            val.real * w.real - val.imag * w.imag,
-            val.real * w.imag + val.imag * w.real};
-        qx->real -= delta.real;
-        qx->imag -= delta.imag;
-        ++qx;
-        ++tmpx;
-        ++vx;
-        //q[y * N + x] -= tmp[y * N + x] * std::conj(v[x - i]) * w;
-      }
-    }
-
-    {
-      for (y = i; y < N; ++y) {
-        complex_t *tmpx = tmp + y * N + i;
-        for (x = i; x < N; ++x) {
-          tmpx->real = tmpx->imag = 0;
-          complex_t *rk = r + x * N + i, *vk = v;
-          for (k = i; k < N; ++k) {
-            //tmp[y * N + x] += r[x * N + k] * std::conj(v[k - i]);
-            complex_t delta = {
-                vk->real * rk->real + vk->imag * rk->imag,
-                vk->real * rk->imag - vk->imag * rk->real};
-            tmpx->real += delta.real;
-            tmpx->imag += delta.imag;
-            ++vk;
-            ++rk;
-          }
-          ++tmpx;
+        for (x = 1; x < len; ++x) {
+          complex_t val = complex_conj_mul(*vx, *tmpxq);
+          complex_t delta = complex_mul(val, w);
+          *nxt = complex_sub(*qx, delta);
+          ++nxt;
+          ++qx;
+          ++vx;
+          //q[y * N + x] -= tmp[y * N + x] * std::conj(v[x - i]) * w;
         }
+        tmpxq++;
       }
-    }
-    complex_t *vy = v;
-    for (y = i; y < N; ++y) {
-      complex_t *tmpx = tmp + y * N + i;
-      for (x = i; x < N; ++x) {
-        complex_t val = {
-            tmpx->real * w.real - tmpx->imag * w.imag,
-            tmpx->real * w.imag + tmpx->imag * w.real};
-        complex_t delta = {
-            val.real * vy->real - val.imag * vy->imag,
-            val.real * vy->imag + val.imag * vy->real};
-        r[x * N + y].real -= delta.real;
-        r[x * N + y].imag -= delta.imag;
-        ++tmpx;
-        //r[x * N + y] -= tmp[y * N + x] * w * v[y - i];
+
+      {
+        complex_t *vy = v;
+        complex_t *tmpxr = tmp1;
+        complex_t *read = r;
+        {
+          complex_t val = complex_mul(*tmpxr, w);
+          complex_t delta = complex_mul(val, *vy);
+          R[i * N + i] = complex<float>(
+              read[0].real - delta.real,
+              read[0].imag - delta.imag
+          );
+          ++tmpxr;
+          //r[x * N + y] -= tmp[y * N + x] * w * v[y - i];
+        }
+        complex_t *vx = v;
+        {
+          complex_t val = complex_conj_mul(*vx, *tmpxq);
+          complex_t delta = complex_mul(val, w);
+          Q[i * N + i] = complex<float>(qx->real - delta.real, qx->imag - delta.imag);
+          ++qx;
+          ++vx;
+          //q[y * N + x] -= tmp[y * N + x] * std::conj(v[x - i]) * w;
+        }
+        for (x = i + 1; x < N; ++x) {
+          complex_t val = complex_conj_mul(*vx, *tmpxq);
+          complex_t delta = complex_mul(val, w);
+          *nxt = complex_sub(*qx, delta);
+          ++nxt;
+          ++qx;
+          ++vx;
+          //q[y * N + x] -= tmp[y * N + x] * std::conj(v[x - i]) * w;
+
+          val = complex_mul(*tmpxr, w);
+          delta = complex_mul(val, *vy);
+          R[i * N + x] = complex<float>(
+              read[len * (x - i)].real - delta.real,
+              read[len * (x - i)].imag - delta.imag
+          );
+          ++tmpxr;
+          //r[x * N + y] -= tmp[y * N + x] * w * v[y - i];
+        }
+        ++vy;
+        tmpxq++;
       }
-      ++vy;
+      complex_t *tmpyr = tmp1 + 1;
+      complex_t *write = r;
+      for (y = i + 1; y < N; ++y) {
+        complex_t *vx = v;
+        {
+          complex_t val = complex_conj_mul(*vx, *tmpxq);
+          complex_t delta = complex_mul(val, w);
+          Q[y * N + i] = complex<float>(qx->real - delta.real, qx->imag - delta.imag);
+          ++qx;
+          ++vx;
+          //q[y * N + x] -= tmp[y * N + x] * std::conj(v[x - i]) * w;
+        }
+
+        complex_t *read = r + (y - i) * len + 1;
+        complex_t *tmpxr = tmp1 + 1;
+        for (x = i + 1; x < N; ++x) {
+          complex_t val = complex_conj_mul(*vx, *tmpxq);
+          complex_t delta = complex_mul(val, w);
+          *nxt = complex_sub(*qx, delta);
+          ++nxt;
+          ++qx;
+
+          val = complex_mul(*tmpyr, w);
+          delta = complex_mul(val, *vx);
+          *write = complex_sub(*read, delta);
+          ++write;
+          ++read;
+          ++vx;
+
+          //q[y * N + x] -= tmp[y * N + x] * std::conj(v[x - i]) * w;
+        }
+        //++vy;
+        tmpxq++;
+        tmpyr++;
+      }
     }
 
-  }
-  for (i = 0; i < N; ++i) {
-    for (j = 0; j < N; ++j) {
-      R[j * N + i] = complex<float>(r[i * N + j].real, r[i * N + j].imag);
-    }
-  }
-  for (i = 0; i < N * N; ++i) {
-    Q[i] = complex<float>(q[i].real, q[i].imag);
+    //std::swap(r, _r);
   }
 }
 #undef h

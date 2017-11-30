@@ -37,6 +37,8 @@ void cholesky(complex<float> *a, complex<float> *L) {
       float f[2];
       uint64_t v;
     } ri_norm = {-norm, -norm}, ri_v = {v.real(), v.imag()};
+    //SB_CONFIG_PORT(N - 1, -1);
+    //SB_DMA_READ(a + 1, 8, 8, N - 1, P_compute_A);
     for (int j = 1; j < N; ++j) {
       int len = N - j;
       uint64_t ri_bj = *((uint64_t*)bj);
@@ -54,6 +56,7 @@ void cholesky(complex<float> *a, complex<float> *L) {
     complex<float> tmp;
     SB_RECV(P_compute_O2, tmp);
     a[i * N + i] = tmp;
+    //std::cout << tmp << "\n";
     float norm = 1 / (tmp.real() * tmp.real() + tmp.imag() * tmp.imag());
     union {
       float f[2];
@@ -68,10 +71,12 @@ void cholesky(complex<float> *a, complex<float> *L) {
     SB_CONST(P_compute_NORM, ri_norm.v, (len + 1) * len / 2);
     SB_CONST(P_compute_V, ri_v.v, (len + 1) * len / 2);
     SB_DMA_READ_STRETCH(a + i * (N + 1) + 1, 8, 8 * (N - i - 1), -8, N - i - 1, P_compute_B);
-    for (int j = i + 1; j < N; ++j) {
-      SB_DMA_READ(a + i * N + j, 0, 8, (N - j), P_compute_A);
+    SB_CONFIG_PORT(N - i - 1, -1);
+    SB_DMA_READ(a + i * N + i + 1, 8, 8, N - i - 1, P_compute_A);
+    //for (int j = i + 1; j < N; ++j) {
+      //SB_DMA_READ(a + i * N + j, 0, 8, (N - j), P_compute_A);
       //SB_DMA_READ(a + i * N + j, 0, 8 * (N - j), 1, P_compute_B);
-    }
+    //}
   }
   SB_WAIT_ALL();
   SB_CONFIG(writeback_config, writeback_size);

@@ -1,8 +1,8 @@
 ifndef N
-N=16
+N=19
 endif
 
-DFG = conjconj.dfg mulconj.dfg finalize.dfg
+DFG = mulconj.dfg finalize.dfg conjconj.dfg
 
 SCALE=$(N)
 

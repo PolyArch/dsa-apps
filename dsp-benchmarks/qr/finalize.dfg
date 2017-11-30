@@ -5,8 +5,6 @@ Input: R
 Input: VQ
 Input: VR
 Input: W
-Input: MUX0
-# Input: MUX1
 
 
 V_REAL0 = FMul32x2(VQ, TMPQ)
@@ -19,9 +17,6 @@ DELTA0 = FSubAdd32x2(DELTA_REAL0, DELTA_IMAG0)
 
 O0 = FSub32x2(Q, DELTA0)
 
-O00 = Discard(O0, MUX0)
-O01 = Keep(O0, MUX0)
-
 V_REAL1 = FMul32x2(TMPR, W)
 V_IMAG1 = FMulX32x2(TMPR, W)
 V1 = FSubAdd32x2(V_REAL1, V_IMAG1)
@@ -32,11 +27,5 @@ DELTA1 = FSubAdd32x2(DELTA_REAL1, DELTA_IMAG1)
 
 O1 = FSub32x2(R, DELTA1)
 
-# O10 = Discard(O1, MUX1)
-# O11 = Keep(O1, MUX1)
-
-Output: O00
-Output: O01
+Output: O0
 Output: O1
-# Output: O10
-# Output: O11

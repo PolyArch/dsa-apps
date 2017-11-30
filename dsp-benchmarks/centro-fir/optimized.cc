@@ -24,14 +24,16 @@ using std::complex;
 
 void filter(int n, int m, complex<float> *a, complex<float> *b, complex<float> *c) {
   int mid = m >> 1;
-  for (int i = 0; i < n - m + 1; ++i) {
-    complex<float> sum(0, 0);
-    for (int j0 = 0, j1 = m - 1; j0 != j1; ++j0, --j1) {
+  for (int j0 = 0, j1 = m - 1; j0 != j1; ++j0, --j1) {
+    for (int i = 0; i < n - m + 1; ++i) {
       complex<float> tmp(complex<float>(complex_add(a[i + j0], a[i + j1])));
-      sum =
-        complex<float>(complex_add(sum, complex<float>(complex_mul(tmp, b[j0]))));
+      c[i] =
+        complex<float>(complex_add(c[i], complex<float>(complex_mul(tmp, b[j0]))));
     }
-    sum = complex<float>(complex_add(sum, complex<float>(complex_mul(a[i + mid], b[mid]))));
-    c[i] = sum;
+    //c[i] = sum;
+  }
+  for (int i = 0; i < n - m + 1; ++i) {
+    std::cout << c[i] << "\n";
+    c[i] = complex<float>(complex_add(c[i], complex<float>(complex_mul(a[i + mid], b[mid]))));
   }
 }
