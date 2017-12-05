@@ -10,7 +10,7 @@
 
 using std::complex;
 
-complex<int16_t> a[N * M], b[M * P], c[N * P];
+complex<int16_t> a[N * M], b[M * P], c[N * P], cc[N * P];
 
 int main() {
   FILE *input_data = fopen("input.data", "r"), *ref_data = fopen("ref.data", "r");
@@ -22,7 +22,7 @@ int main() {
   read_n_fix_complex(input_data, N * M, a);
   read_n_fix_complex(input_data, P * M, b);
 
-  gemm(N, M, P, a, b, c);
+  gemm(N, M, P, a, b, cc);
   begin_roi();
   gemm(N, M, P, a, b, c);
   end_roi();

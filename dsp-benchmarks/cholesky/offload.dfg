@@ -1,0 +1,15 @@
+Input: V
+Input: MUX
+
+_V = Discard(V, MUX)
+SQRT = CplxSqrt(_V)
+INV = CplxInv(_V)
+SQRTINV = CplxInv(SQRT)
+
+Flip = Xor(MUX, 1)
+STREAM = Discard(V, Flip)
+
+Output: SQRT
+Output: INV
+Output: SQRTINV
+Output: STREAM

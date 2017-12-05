@@ -22,7 +22,7 @@ using std::complex;
 
 #define PI 3.14159265358979303
 
-void filter(int n, int m, complex<float> *a, complex<float> *b, complex<float> *c) {
+void filter(int n, int m, complex<float> *a, complex<float> *b, complex<float> *c, complex<float> *) {
   for (int i = 0; i < n - m + 1; ++i) {
     complex<float> sum(0, 0);
     for (int j = 0; j < m; ++j)

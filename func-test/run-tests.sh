@@ -34,7 +34,7 @@ if [ -z "$1" ]; then
   echo "Test all the cases!"
   #for i in `ls ind*.c | grep -v fix | grep -v unalign`; do
   for i in `ls *.c | grep -v fix | grep -v unalign`; do
-    for l in 4 12 32 36 2048; do
+    for l in 4 12 32 500 2048; do
       test=bin/`basename $i .c`_$l
       run_test $test
     done

@@ -12,50 +12,31 @@ IFLAGS=-I../../common/include -I ../../../ss-tools/include -I ../common/ -I ./df
 
 CC=riscv64-unknown-elf-g++
 
-BENCHMARKS=baseline optimized softbrain
-OBJS=$(BENCHMARKS:=.o)
-LOGS=$(BENCHMARKS:=.log)
+BENCHMARKS = baseline optimized
+OBJS = $(BENCHMARKS:=.o)
+LOGS = $(BENCHMARKS:=.log) $(SOFTBRAINS:=.log)
+EXEC = $(BENCHMARKS:=.exe) $(SOFTBRAINS:=.exe)
 
 input.data ref.data: gen.py
 	python $< $(SCALE)
 
-softbrain.o: softbrain.cc $(DFG_HEADERS)
-	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS)
-
 $(OBJS): %.o: %.cc
-	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O2
+	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
-physical: main.cc optimized.cc
-	g++ $^ -o $@ $(MACROS) $(IFLAGS) -std=c++11
+physical.exe: main.cc optimized.cc
+	g++ $^ -o $@ $(MACROS) $(IFLAGS) -std=c++11 -O3
 
-physical.log: physical input.data ref.data
-	./physical
+physical.log: physical.exe input.data ref.data
+	./physical.exe 2>&1 | tee $@
 	
 
-$(LOGS): %.log: %
+$(LOGS): %.log: %.exe
 	SBCONFIG=$(SBCONFIG) \
 	gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=minor --l1d_size=64kB --l1i_size=16kB --l2_size=1024kB --caches --cmd=./$< \
 	| tee $@
 	
-$(BENCHMARKS): %: input.data ref.data %.o main.cc
-	$(CC) main.cc $@.o -o $@ -lm -O3 $(MACROS) $(IFLAGS)
-
-all-softbrain:
-	for i in $(CASES) ; do \
-		make clean > /dev/null 2>&1; \
-		N=$$i make softbrain.log > /dev/null 2>&1; \
-		echo $$i; \
-		cat softbrain.log | grep Cycles; \
-		cat softbrain.log | grep -A2 ACCEL; \
-	done
-
-all-optimized:
-	for i in $(CASES) ; do \
-		make clean > /dev/null 2>&1; \
-		N=$$i make optimized.log > /dev/null 2>&1; \
-		echo $$i; \
-		cat optimized.log | grep Cycles; \
-	done
+$(EXEC): %.exe: input.data ref.data %.o main.cc
+	$(CC) main.cc $(basename $@).o -o $@ -lm -O3 $(MACROS) $(IFLAGS)
 
 $(BENCHMARKS:=clean):
 	cd $(@:clean=); make clean
@@ -67,8 +48,8 @@ cleandfg:
 	rm -rf $(DFG_HEADERS)
 
 clean: cleandata
-	rm -f $(OBJS) $(BENCHMARKS) $(LOGS)
+	rm -f *.o *.log *.exe
 	rm -rf stats gams m5out viz verif
-	rm -f physical
 
 ultraclean: clean cleandfg
+	rm  -f *.csv

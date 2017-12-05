@@ -23,9 +23,6 @@ void finalfunc(int argc, void* arg) {
 }
 
 void init() {
-  
-  SB_CONTEXT(0x02);
-
   for(int i=0; i < ASIZE; ++i) {
     in[i]=i;
     out[i]=0;
