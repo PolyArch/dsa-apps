@@ -1,0 +1,20 @@
+Input: A
+Input: B
+Input: V
+Input: Z
+
+ab_real = FMul32x2(A, B)
+ab_imag = FMulX32x2(A, B)
+conj_ab = FAddSub32x2(ab_real, ab_imag)
+
+vab_real = FMul32x2(V, conj_ab)
+vab_imag = FMulX32x2(V, conj_ab)
+vab = FSubAdd32x2(vab_real, vab_imag)
+
+O = FSub32x2(Z, vab)
+
+O0 = O
+O1 = O
+
+Output: O0
+Output: O1

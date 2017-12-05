@@ -12,9 +12,10 @@ numpy.set_printoptions(suppress = True, precision = 4., linewidth = 180, thresho
 
 a = numpy.random.rand(n).astype('complex64') + 1j * numpy.random.rand(n).astype('complex64')
 b = numpy.random.rand(m / 2).astype('complex64') + 1j * numpy.random.rand(m / 2).astype('complex64')
+b = numpy.concatenate((b, numpy.array([random.random() + 1j * random.random()]), b[::-1]))
 #a = numpy.array(range(1, n + 1)).astype('complex64')
 #b = numpy.array(range(1, m / 2 + 1)).astype('complex64')
-b = numpy.concatenate((b, numpy.array([random.random() + 1j * random.random()]), b[::-1]))
+#b = numpy.concatenate((b, numpy.array([float(m / 2 + 1) + 0j]), b[::-1]))
 
 output.print_complex_array('input.data', numpy.concatenate((a.flatten(), b.flatten())))
 print 'input generated'

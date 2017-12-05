@@ -2,8 +2,8 @@
 #include <stdint.h>
 #include <cmath>
 #include <algorithm>
-//#include "softbrain-config/fixed_point.h"
-#include "fixed_point.h"
+#include "softbrain-config/fixed_point.h"
+//#include "fixed_point.h"
 
 #define complex_mul(a, b) \
   FIX_MINUS(FIX_MUL((a).real(), (b).real()), FIX_MUL((a).imag(), (b).imag())), \
@@ -27,8 +27,8 @@ void gemm(int n, int m, int p, complex<int16_t> *a, complex<int16_t> *b, complex
     for (int k = 0; k < m; ++k) {
       complex<int16_t> tmp = a[i * m + k];
       for (int j = 0; j < p; ++j) {
-        c[i * p + j] = 
-          complex<int16_t>(complex_add(c[i * p + j], complex<int16_t>(complex_mul(tmp, b[k * p + j]))));
+        complex<int16_t> delta(complex_mul(tmp, b[k * p + j]));
+        c[i * p + j] = complex<int16_t>(complex_add(c[i * p + j], delta));
       }
     }
   }

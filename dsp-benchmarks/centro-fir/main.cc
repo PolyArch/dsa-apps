@@ -10,7 +10,7 @@
 
 using std::complex;
 
-complex<float> a[N], b[M], c[N], cc[N];
+complex<float> a[N], b[M], c[N], cc[N], w[N + M];
 
 int main() {
   FILE *input_data = fopen("input.data", "r"), *ref_data = fopen("ref.data", "r");
@@ -22,9 +22,15 @@ int main() {
   read_n_float_complex(input_data, N, a);
   read_n_float_complex(input_data, M, b);
 
-  filter(N, M, a, b, cc);
+  int n;
+  for (n = 1; n < N + M; n <<= 1);
+  for (int i = 0; i < n / 2; ++i) {
+    w[i] = complex<float>(cos(2 * PI * i / n), sin(2 * PI * i / n));
+  }
+
+  filter(N, M, a, b, cc, w);
   begin_roi();
-  filter(N, M, a, b, c);
+  filter(N, M, a, b, c, w);
   end_roi();
   sb_stats();
 

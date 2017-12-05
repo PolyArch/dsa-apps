@@ -2,9 +2,9 @@
 #include "fileop.h"
 #include <complex.h>
 #include <iostream>
+#include "sim_timing.h"
 
-complex<float> a[N * N], L[N * N];
-char input_buffer[1 << 20];
+complex<float> a[N * N], L[N * N], aa[N * N], ll[N * N];
 
 int main() {
   FILE *input_data = fopen("input.data", "r"), *ref_data = fopen("ref.data", "r");
@@ -15,7 +15,7 @@ int main() {
 
   read_n_float_complex(input_data, N * N, a);
 
-  cholesky(a, L);
+  cholesky(aa, ll);
   begin_roi();
   cholesky(a, L);
   end_roi();

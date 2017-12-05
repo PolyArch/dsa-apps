@@ -1,7 +1,6 @@
 #include "qr.h"
 #include <iostream>
 #include <algorithm>
-#include "sim_timing.h"
 
 #define complex_mul(a, b) (complex_t) { \
   (a).real * (b).real - (a).imag * (b).imag, \

@@ -11,6 +11,6 @@
 #define eps 2e-2
 using std::complex;
 
-void filter(int n, int m, complex<float> *, complex<float> *, complex<float> *);
+void filter(int, int, complex<float> *, complex<float> *, complex<float> *, complex<float> *);
 
 #endif

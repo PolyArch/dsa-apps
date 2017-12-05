@@ -1,10 +1,11 @@
 #ifdef __x86_64__
-static __inline__ uint64_t rdtsc(void) {
-  unsigned a, d;
-  //asm("cpuid");
-  asm volatile("rdtsc" : "=a" (a), "=d" (d));
 
-  return (((uint64_t)a) | (((uint64_t)d) << 32));
+#include <sys/time.h>
+
+static __inline__ uint64_t rdtsc(void) {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return (((uint64_t)tv.tv_sec) * 1000000 + ((uint64_t)tv.tv_usec));
 }
 
 static uint64_t ticks;
@@ -13,8 +14,9 @@ __attribute__ ((noinline))  void begin_roi() {
 }
 __attribute__ ((noinline))  void end_roi()   {
   ticks=(rdtsc()-ticks);
-  printf("ticks: %ld\n",ticks);
+  printf("ticks: %lu\n", ticks);
 }
+
 __attribute__ ((noinline)) static void sb_stats()   {
 }
 __attribute__ ((noinline)) static void sb_verify()   {

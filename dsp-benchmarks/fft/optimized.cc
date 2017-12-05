@@ -1,6 +1,7 @@
 #include <complex>
 #include <cmath>
 #include <algorithm>
+#include <iostream>
 
 #define complex_mul(a, b) (a).real() * (b).real() - (a).imag() * (b).imag(), \
   (a).real() * (b).imag() + (a).imag() * (b).real()
@@ -32,6 +33,9 @@ void fft(complex<float> *_a, complex<float> *w) {
         to[i + j + span / 2 * blocks] = complex<float>(complex_sub(L, tmp));
       }
     }
+    //for (int j = 0; j < N; ++j)
+      //std::cout << to[j] << "\n";
+    //std::cout << "\n";
     swap(from, to);
   }
   if (from != _a) {

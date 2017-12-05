@@ -1,4 +1,5 @@
 #include <complex>
+#include <cstdio>
 #include "softbrain-config/fixed_point.h"
 #include <cstdint>
 

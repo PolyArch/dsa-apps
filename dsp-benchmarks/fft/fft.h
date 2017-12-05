@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <complex>
 
-#define eps 1e-5
+#define eps 1e-4
 using std::complex;
 
 struct complex_t {

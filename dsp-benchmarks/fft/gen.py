@@ -5,6 +5,7 @@ output = imp.load_source('output', '../common/output.py')
 n = int(sys.argv[1])
 
 _a = numpy.random.rand(n).astype('complex64') + 1j * numpy.random.rand(n).astype('complex64')
+#_a = numpy.array(range(1, n + 1)).astype('complex64')
 
 output.print_complex_array('input.data', _a.flatten())
 
