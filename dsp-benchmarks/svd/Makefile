@@ -9,5 +9,9 @@ SCALE=$(N)
 
 MACROS=-D N=$(N)
 
+SOFTBRAINS = sb-origin
+
 include ../common/Makefile.inc
 
+sb-origin.o: sb-origin.cc $(DFG_HEADERS)
+	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O2

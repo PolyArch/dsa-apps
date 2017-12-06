@@ -1,7 +1,6 @@
 #include "svd.h"
 #include <iostream>
 #include <iomanip>
-#include "sim_timing.h"
 
 #define complex_mul(a, b) (a).real() * (b).real() - (a).imag() * (b).imag(), \
   (a).real() * (b).imag() + (a).imag() * (b).real()
