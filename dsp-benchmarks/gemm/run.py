@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.5
+#!/usr/bin/env python3
 import imp
 
 run = imp.load_source('run', '../common/run.py')
