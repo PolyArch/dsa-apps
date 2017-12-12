@@ -1,7 +1,7 @@
 #include "Fx16ComplexMul.h"
 #include <iostream>
 #include "sb_insts.h"
-#include "softbrain-config/fixed_point.h"
+#include "ss-config/fixed_point.h"
 #include "check.h"
 #include <complex>
 #include <stdint.h>

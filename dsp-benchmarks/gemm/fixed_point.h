@@ -1,5 +1,5 @@
 // NOTE: The macros below were copied from cambricon/include/fix_common.h
-// in the softbrain-workloads repository
+// in the ss-workloads repository
 
 // In 16-bit integer representation,
 // one bit is reserved for sign,

@@ -3,7 +3,7 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
-#include "softbrain-config/fixed_point.h"
+#include "ss-config/fixed_point.h"
 #include "sb_insts.h"
 
 #include "compute.h"

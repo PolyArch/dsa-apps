@@ -1,6 +1,6 @@
 #include <complex>
 #include <cstdio>
-#include "softbrain-config/fixed_point.h"
+#include "ss-config/fixed_point.h"
 #include <cstdint>
 
 void read_n_float_complex(FILE *file, int n, std::complex<float> *a) {

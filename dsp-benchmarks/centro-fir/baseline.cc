@@ -3,7 +3,7 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
-#include "softbrain-config/fixed_point.h"
+#include "ss-config/fixed_point.h"
 
 #define complex_mul(a, b) \
   (a).real() * (b).real() - (a).imag() * (b).imag(), \

@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <time.h> 
 #include "sim_timing.h"
-#include "softbrain-config/fixed_point.h"
+#include "ss-config/fixed_point.h"
 #define PI 3.14159265358979303
 
 using std::complex;

@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <cmath>
 #include <algorithm>
-#include "softbrain-config/fixed_point.h"
+#include "ss-config/fixed_point.h"
 
 #define complex_mul(a, b) \
   FIX_MINUS(FIX_MUL((a).real(), (b).real()), FIX_MUL((a).imag(), (b).imag())), \
