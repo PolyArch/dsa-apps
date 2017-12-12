@@ -59,7 +59,6 @@ $(info $$DFG_HEADERS is [${DFG_HEADERS}])
 
 
 SB_CONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
-#SB_CONFIG=$(SS_TOOLS)/../softbrain-compiler/softbrain-config/configs/diannao_simd64_half.sbmodel
 
 
 $(DFG_HEADERS): %.h: %.dfg
