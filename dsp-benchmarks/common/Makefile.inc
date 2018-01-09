@@ -1,6 +1,6 @@
 ifndef SBCONFIG
 $(warning SBCONFIG is undefined, using default)
-SBCONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
+SBCONFIG=$(SS_TOOLS)/configs/revel.sbmodel
 endif
 
 DFG_HEADERS = $(DFG:.dfg=.h)

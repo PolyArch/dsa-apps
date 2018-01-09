@@ -1,3 +1,6 @@
+#include <stdint.h>
+#include <stdio.h>
+
 #ifdef __x86_64__
 
 #include <sys/time.h>
