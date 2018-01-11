@@ -1,6 +1,7 @@
 #include <complex>
 #include <cmath>
 #include <algorithm>
+#include <cstring>
 #include "sb_insts.h"
 #include "sim_timing.h"
 #include "compute0.h"
@@ -22,10 +23,9 @@ using std::complex;
 complex<float> _buffer[N];
 #define PI 3.14159265358979303
 
-void fft(complex<float> *_a, complex<float> *w) {
+complex<float> *fft(complex<float> *from, complex<float> *to, complex<float> *w) {
   SB_CONFIG(compute0_config, compute0_size);
 
-  complex<float> *from = _a, *to = _buffer;
   int blocks = N / 2;
   int span = N / blocks;
   for ( ; blocks != 1; blocks >>= 1, span <<= 1) {
@@ -38,8 +38,8 @@ void fft(complex<float> *_a, complex<float> *w) {
     SB_DMA_WRITE(P_compute0_A, 8, 8, N / 2, to);
     SB_DMA_WRITE(P_compute0_B, 8, 8, N / 2, to + N / 2);
 
-    SB_WAIT_ALL();
     swap(from, to);
+    SB_WAIT_ALL();
   }
 
   SB_CONFIG(compute1_config, compute1_size);
@@ -49,11 +49,6 @@ void fft(complex<float> *_a, complex<float> *w) {
   SB_DMA_WRITE(P_compute1_A, 8, 8, N / 2, to);
   SB_DMA_WRITE(P_compute1_B, 8, 8, N / 2, to + N / 2);
   SB_WAIT_ALL();
-  //swap(from, to);
 
-  if (to != _a) {
-    for (int i = 0; i < N; ++i) {
-      _a[i] = _buffer[i];
-    }
-  }
+  return to;
 }

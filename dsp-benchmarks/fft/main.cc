@@ -11,18 +11,7 @@
 using std::complex;
 
 complex<float> a[N], _a[N], w[N / 2];
-
-bool compare(complex<float> *a, int n, FILE *ref_data) {
-  for (int i = 0; i < n; ++i) {
-    float real, imag;
-    fscanf(ref_data, "%f%f", &real, &imag);
-    if (fabs(real - a[i].real()) + fabs(imag - a[i].imag()) > eps) {
-      printf("expect %f+%fi but %f+%fi\n", real, imag, a[i].real(), a[i].imag());
-      return false;
-    }
-  }
-  return true;
-}
+complex<float> b[N], _b[N];
 
 int main() {
   FILE *input_data = fopen("input.data", "r"), *ref_data = fopen("ref.data", "r");
@@ -37,13 +26,13 @@ int main() {
     w[i] = complex<float>(cos(2 * PI * i / N), sin(2 * PI * i / N));
   }
 
-  //fft(_a, w);
+  fft(_a, _b, w);
   begin_roi();
-  fft(a, w);
+  complex<float> *res = fft(a, b, w);
   end_roi();
   sb_stats();
 
-  if (!compare_n_float_complex(ref_data, N, a)) {
+  if (!compare_n_float_complex(ref_data, N, res)) {
     puts("Error result!");
     return 1;
   }

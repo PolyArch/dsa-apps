@@ -17,10 +17,7 @@
 
 using std::complex;
 
-complex<float> _buffer[N];
-
-void fft(complex<float> *_a, complex<float> *w) {
-  complex<float> *from = _a, *to = _buffer;
+complex<float> *fft(complex<float> *from, complex<float> *to, complex<float> *w) {
   for (int blocks = N / 2; blocks; blocks >>= 1) {
     int span = N / blocks;
     for (int j = 0; j < span / 2 * blocks; j += blocks) {
@@ -38,9 +35,5 @@ void fft(complex<float> *_a, complex<float> *w) {
     //std::cout << "\n";
     swap(from, to);
   }
-  if (from != _a) {
-    for (int i = 0; i < N; ++i) {
-      _a[i] = _buffer[i];
-    }
-  }
+  return from;
 }
