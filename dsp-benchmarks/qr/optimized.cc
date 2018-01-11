@@ -42,33 +42,28 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
     int len = N - i;
     complex_t v[len];
     {
-      float norm = 0;
       complex_t *vp = v, *rp = r;
-      for (j = i; j < N; ++j) {
+      *vp = *rp;
+      float norm0 = complex_norm(*vp), norm1 = 0;
+      ++vp; ++rp;
+      for (j = i + 1; j < N; ++j) {
         *vp = *rp;
-        norm += complex_norm(*vp); //vp->real * vp->real + vp->imag * vp->imag;
+        norm1 += complex_norm(*vp); //vp->real * vp->real + vp->imag * vp->imag;
         ++vp;
         ++rp;
       }
-      norm = sqrt(norm);
+      norm0 += norm1;
+      norm0 = sqrt(norm0);
       float sign = sqrt(v->real * v->real + v->imag * v->imag);
-      v->real += v->real / sign * norm;
-      v->imag += v->imag / sign * norm;
-      //*v += *v / sign * norm;
-    }
+      v->real += v->real / sign * norm0;
+      v->imag += v->imag / sign * norm0;
 
-    {
-      float norm = 0;
-      complex_t *vp = v;
-      for (j = i; j < N; ++j) {
-        norm += vp->real * vp->real + vp->imag * vp->imag;
-        ++vp;
-      }
-      norm = 1. / sqrt(norm);
+      norm1 += complex_norm(*v);
+      norm1 = 1. / sqrt(norm1);
       vp = v;
       for (j = i; j < N; ++j) {
-        vp->real *= norm;
-        vp->imag *= norm;
+        vp->real *= norm1;
+        vp->imag *= norm1;
         ++vp;
         //*vp++ /= norm;
       }

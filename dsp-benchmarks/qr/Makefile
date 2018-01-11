@@ -1,5 +1,5 @@
 ifndef N
-N=8
+N=12
 endif
 
 SOFTBRAINS = sb-origin sb-new sb-scr sb-multi
