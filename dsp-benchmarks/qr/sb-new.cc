@@ -28,12 +28,14 @@ complex_t sub_q[N * N];
 //double buffering
 complex_t rbuffer0[N * N];
 
+union _reinterpret_t {
+  complex_t a;
+  uint64_t val;
+};
+
 #define h(x, y) (((x) >= i) && ((y) >= i) ? (((x) == (y)) - v[x] * v[y] * 2.) : (x) == (y))
 void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
   int i, j, k, x, y;
-  for (i = 0; i < N * N; ++i) {
-    sub_q[i] = i % N == i / N ? (complex_t){1, 0} : (complex_t){0, 0};
-  }
 
   complex_t *r = rbuffer0;
   for (i = 0; i < N; ++i) {
@@ -110,7 +112,6 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
     complex_t w;
     {
       complex_t xv = {0, 0}, vx = {0, 0};
-      complex_t *rp = r,  *vp = v;
 
       SB_DMA_READ(r, 8, 8, len, P_conjconj_A0);
       SB_DMA_READ(v, 8, 8, len, P_conjconj_B0);
@@ -134,10 +135,15 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
     {
       complex_t *tmpxq = tmp0;
       complex_t *tmpxr = tmp1;
-      complex_t *qk = sub_q;
 
       SB_CONFIG(mulconj_config, mulconj_size);
-      SB_DMA_READ(sub_q, 0, N * len * 8, 1, P_mulconj_Q);
+      if (i) {
+        SB_DMA_READ(sub_q, 0, N * len * 8, 1, P_mulconj_Q);
+      } else {
+        _reinterpret_t _one = {1, 0}, _zero = {0, 0};
+        SB_2D_CONST(P_mulconj_Q, _one.val, 1, _zero, N, N - 1);
+        SB_CONST(P_mulconj_Q, _one.val, 1);
+      }
       SB_DMA_READ(v, 0, 8 * len, N, P_mulconj_V);
       SB_CONST(P_mulconj_R, 0, i * len);
       SB_DMA_READ(r, 0, len * len * 8, 1, P_mulconj_R);
@@ -152,11 +158,17 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
 
 // Finalize the result
     {
-      complex_t *tmpxq = tmp0, *nxt = sub_q, *qx = sub_q;
+      complex_t *tmpxq = tmp0;
 
       SB_CONFIG(finalize_compact_config, finalize_compact_size);
       SB_CONST(P_finalize_compact_W, *((uint64_t*)&w), N * len);
-      SB_DMA_READ(qx, 8, 8, N * len, P_finalize_compact_Q);
+      if (i) {
+        SB_DMA_READ(sub_q, 0, N * len * 8, 1, P_finalize_compact_Q);
+      } else {
+        _reinterpret_t _one = {1, 0}, _zero = {0, 0};
+        SB_2D_CONST(P_finalize_compact_Q, _one.val, 1, _zero, N, N - 1);
+        SB_CONST(P_finalize_compact_Q, _one.val, 1);
+      }
       SB_DMA_READ(v, 0, 8 * len, N, P_finalize_compact_VQ); 
       SB_CONST(P_finalize_compact_TMPR, 0, i * len);
       SB_CONST(P_finalize_compact_VR, 0, i * len);
@@ -168,7 +180,7 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
 
       SB_2D_CONST(P_finalize_compact_MUX0, 0, 1, 1, len - 1, N);
       SB_DMA_WRITE(P_finalize_compact_O00, 8 * N, 8, N, Q + i);
-      SB_DMA_WRITE(P_finalize_compact_O01, 8, 8, (len - 1) * N, nxt);
+      SB_DMA_WRITE(P_finalize_compact_O01, 8, 8, (len - 1) * N, sub_q);
 
       {
         SB_DMA_READ(tmp1, 0, 8 * len, 1, P_finalize_compact_TMPR);
