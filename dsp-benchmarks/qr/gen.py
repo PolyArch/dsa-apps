@@ -22,6 +22,7 @@ for i in xrange(n):
     v[i] += cmath.exp(1j * cmath.phase(v[i])) * numpy.linalg.norm(v)
     v = v / numpy.linalg.norm(v)
     w = numpy.dot(numpy.conj(x), v) / numpy.dot(numpy.conj(v), x)
+    assert abs(w.real - 1.) < 1e-5
     H = numpy.identity(n) - (1 + w) * numpy.outer(v, numpy.conj(v))
     R = numpy.dot(H, R)
     #print R[i:,i:]
@@ -33,3 +34,4 @@ numpy.testing.assert_allclose(numpy.identity(n), numpy.dot(Q, numpy.conj(Q.trans
 print "Correctness check pass!"
 output.print_complex_array('ref.data', numpy.concatenate((Q.flatten(), R.flatten())));
 print "New data generated!"
+

@@ -4,6 +4,7 @@
 #include "sim_timing.h"
 #include "sb_insts.h"
 
+#include "dot.h"
 #include "mulconj.h"
 #include "finalize.h"
 
@@ -45,67 +46,58 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
 
   for (i = 0; i < N; ++i) {
     int len = N - i;
-// Household Vector
     complex_t v[len];
     {
-      float norm = 0;
-      complex_t *vp = v, *rp = r;
-      for (j = i; j < N; ++j) {
-        *vp = *rp;
-        norm += complex_norm(*vp); //vp->real * vp->real + vp->imag * vp->imag;
-        //std::cout << complex<float>(vp->real, vp->imag) << " ";
-        ++vp;
-        ++rp;
+      complex_t norm1 = {0, 0};
+
+      SB_CONFIG(dot_config, dot_size);
+      if (len > 1) {
+        SB_DMA_READ(r + 1, 8, 8, len - 1, P_dot_A);
+        SB_DMA_READ(r + 1, 8, 8, len - 1, P_dot_B);
+        SB_CONST(P_dot_reset, 0, len - 2);
+        SB_CONST(P_dot_reset, 1, 1);
+        SB_GARBAGE(P_dot_O, len - 2);
+        SB_DMA_WRITE(P_dot_O, 8, 8, 1, &norm1);
       }
-      //std::cout << "\n";
-      norm = sqrt(norm);
-      float sign = sqrt(v->real * v->real + v->imag * v->imag);
-      v->real += v->real / sign * norm;
-      v->imag += v->imag / sign * norm;
-      //*v += *v / sign * norm;
+
+      *v = *r;
+      float norm0 = complex_norm(*v);
+
+      if (len > 1) {
+        SB_WAIT_ALL();
+      }
+
+
+      float rate = 1 + sqrt(1 + norm1.real / norm0);
+      v->real *= rate;
+      v->imag *= rate;
+
+      norm1.real += complex_norm(*v);
+      norm1.real = 1. / sqrt(norm1.real);
+
+
+      if (len > 1) {
+        SB_CONST(P_dot_A, *((uint64_t*) &norm1), len - 1);
+        SB_DMA_READ(r + 1, 8, 8, len - 1, P_dot_B);
+        SB_CONST(P_dot_reset, 1, len - 1);
+        SB_DMA_WRITE(P_dot_O, 8, 8, len - 1, v + 1);
+
+        v->real *= norm1.real;
+        v->imag *= norm1.real;
+
+        SB_WAIT_ALL();
+      } else {
+        v->real *= norm1.real;
+        v->imag *= norm1.real;
+      }
     }
 
-    {
-      float norm = 0;
-      complex_t *vp = v;
-      for (j = i; j < N; ++j) {
-        norm += vp->real * vp->real + vp->imag * vp->imag;
-        ++vp;
-      }
-      norm = 1. / sqrt(norm);
-      vp = v;
-      for (j = i; j < N; ++j) {
-        vp->real *= norm;
-        vp->imag *= norm;
-        ++vp;
-        //*vp++ /= norm;
-      }
-    }
-
-    complex_t w;
-    {
-      complex_t xv = {0, 0}, vx = {0, 0};
-      complex_t *rp = r,  *vp = v;
-      for (j = i; j < N; ++j) {
-        complex_t delta = complex_conj_mul(*rp, *vp);
-        xv = complex_add(xv, delta);
-        delta = complex_conj_mul(*vp, *rp);
-        vx = complex_add(vx, delta);
-        ++rp;
-        ++vp;
-      }
-      float norm = 1 / complex_norm(vx);
-      w = complex_conj_mul(xv, vx);
-      w.real *= norm;
-      w.imag *= norm;
-      w.real += 1;
-    }
+// Household Vector Done
 
 // Intermediate result computing
     {
       complex_t *tmpxq = tmp0;
       complex_t *tmpxr = tmp1;
-      complex_t *qk = sub_q;
 
       SB_CONFIG(mulconj_config, mulconj_size);
       SB_DMA_READ(sub_q, 0, N * len * 8, 1, P_mulconj_Q);
@@ -135,11 +127,10 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
 
 // Finalize the result
     {
-      complex_t *tmpxq = tmp0, *nxt = sub_q, *qx = sub_q;
+      complex_t *tmpxq = tmp0, *nxt = sub_q;//, *qx = sub_q;
 
       SB_CONFIG(finalize_config, finalize_size);
-      SB_CONST(P_finalize_W, *((uint64_t*)&w), i * len);
-      SB_DMA_READ(qx, 8, 8, i * len, P_finalize_Q);
+      SB_DMA_READ(sub_q, 8, 8, N * len, P_finalize_Q);
       SB_DMA_READ(v, 0, 8 * len, i, P_finalize_VQ);
 
       SB_CONST(P_finalize_TMPR, 0, i * len);
@@ -154,7 +145,6 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
         tmpxq++;
         nxt += len - 1;
       }
-      qx += i * len;
 
 
       {
@@ -162,27 +152,22 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
         SB_DMA_READ(r, len * 8, 8, len, P_finalize_R);
         SB_CONST(P_finalize_VR, *((uint64_t*)v), len);
 
-        SB_DMA_READ(qx, 8, 8, len, P_finalize_Q);
         SB_CONST(P_finalize_TMPQ, *((uint64_t*)tmpxq), len);
         SB_DMA_READ(v, 8, 8, len, P_finalize_VQ);
 
-        SB_CONST(P_finalize_W, *((uint64_t*)&w), len);
 
         SB_DMA_WRITE(P_finalize_O1, 8, 8, len, R + i * N + i);
         SB_DMA_WRITE(P_finalize_O0, 0, 8, 1, Q + i * N + i);
         SB_DMA_WRITE(P_finalize_O0, 8, 8, len - 1, nxt);
 
         ++tmpxq;
-        qx += len;
         nxt += len - 1;
 
       }
 
  
-      SB_CONST(P_finalize_W, *((uint64_t*)&w), (len - 1) * len);
 
       SB_DMA_READ(v, 0, 8 * len, len - 1, P_finalize_VQ);
-      SB_DMA_READ(qx, 8, 8, len * (len - 1), P_finalize_Q);
 
       SB_CONST(P_finalize_TMPR, 0, len - 1);
       SB_CONST(P_finalize_VR, 0, len - 1);

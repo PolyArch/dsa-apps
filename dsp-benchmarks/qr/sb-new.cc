@@ -6,7 +6,7 @@
 
 #include "mulconj.h"
 #include "finalize_compact.h"
-#include "conjconj.h"
+#include "norm.h"
 
 #define complex_mul(a, b) (complex_t) { \
   (a).real * (b).real - (a).imag * (b).imag, \
@@ -43,105 +43,72 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
     int len = N - i;
 // Household Vector
     complex_t v[len];
-    complex_t head;
     {
-      float norm = 0;
+      if (len > 1) {
+        float norm1;
+        SB_CONFIG(norm_config, norm_size);
+        if (i) {
+          SB_DMA_READ(r + 1, 8, 8, len - 1, P_norm_A);
+          SB_DMA_READ(r + 1, 8, 8, len - 1, P_norm_B);
+        } else {
+          SB_DMA_READ(a + N, 8 * N, 8, N - 1, P_norm_A);
+          SB_DMA_READ(a + N, 8 * N, 8, N - 1, P_norm_B);
+        }
+        SB_CONST(P_norm_C, 0, len - 1);
+        SB_CONST(P_norm_reset, 2, len - 2);
+        SB_CONST(P_norm_reset, 1, 1);
+        SB_CONST(P_norm_sqrt, 0, len - 1);
 
-      SB_CONFIG(conjconj_config, conjconj_size);
-      if (i) {
-        SB_DMA_READ(r, 8, 8, len, P_conjconj_A0);
-        SB_DMA_READ(r, 8, 8, len, P_conjconj_B0);
+        complex_t head = i ? *r : (complex_t) {a->real(), a->imag()};
+        float norm0 = 1. / (head.real * head.real + head.imag * head.imag);
+
+        SB_RECV(P_norm_O0, norm1);
+
+        _reinterpret_t val = {1 + norm1 * norm0, 0}, another;
+        SB_CONST(P_norm_A, 0, 1);
+        SB_CONST(P_norm_B, 0, 1);
+        SB_CONST(P_norm_reset, 3, 1);
+        SB_CONST(P_norm_sqrt, 1, 1);
+        SB_CONST(P_norm_C, val.val, 1);
+
+        float rate;
+        SB_RECV(P_norm_O1, rate);
+        head.real *= rate + 1;
+        head.imag *= rate + 1;
+
+        val.a.real = head.real * head.real + head.imag * head.imag + norm1;
+        SB_CONST(P_norm_A, 0, 1);
+        SB_CONST(P_norm_B, 0, 1);
+        SB_CONST(P_norm_reset, 3, 1);
+        SB_CONST(P_norm_sqrt, 1, 1);
+        SB_CONST(P_norm_C, val.val, 1);
+        SB_RECV(P_norm_O1, norm0);
+
+
+        val.a.real = 1 / norm0;
+        SB_CONST(P_norm_B, *((uint64_t*)&head), 1);
+        if (i) {
+          SB_DMA_READ(r + 1, 8, 8, len - 1, P_norm_B);
+        } else {
+          SB_DMA_READ(a + N, 8 * N, 8, N - 1, P_norm_B);
+        }
+        SB_CONST(P_norm_A, val.val, len);
+        SB_CONST(P_norm_C, 0, len);
+        SB_CONST(P_norm_reset, 1, len);
+        SB_CONST(P_norm_sqrt, 0, len);
+        SB_DMA_WRITE(P_norm_O0, 8, 8, len, v);
+
+        SB_WAIT_ALL();
       } else {
-        SB_DMA_READ(a, 8 * N, 8, N, P_conjconj_A0);
-        SB_DMA_READ(a, 8 * N, 8, N, P_conjconj_B0);
+        if (N == 1) {
+          *v = (complex_t) {a->real(), a->imag()};
+        } else {
+          *v = *r;
+        }
+        float norm = 1 / sqrt(complex_norm(*v));
+        v->real *= norm;
+        v->imag *= norm;
       }
-      SB_CONST(P_conjconj_A1, 0, len);
-      SB_CONST(P_conjconj_B1, 0, len);
-      SB_CONST(P_conjconj_reset, 2, len - 1);
-      SB_CONST(P_conjconj_reset, 1, 1);
-      SB_CONST(P_conjconj_sqrt, 0, len - 1);
-      SB_CONST(P_conjconj_sqrt, 1, 1);
-
-      SB_GARBAGE(P_conjconj_O0, 1);
-      SB_GARBAGE(P_conjconj_O1, 1);
-      SB_RECV(P_conjconj_O2, norm);
-
-      complex_t temp = i ? *r : (complex_t) {a->real(), a->imag()};
-      float sign = sqrt(temp.real * temp.real + temp.imag * temp.imag);
-      head.real = temp.real + temp.real / sign * norm;
-      head.imag = temp.imag + temp.imag / sign * norm;
-    }
-
-    {
-      float norm = 0;
-      SB_CONST(P_conjconj_A0, *((uint64_t *) &head), 1);
-      SB_CONST(P_conjconj_B0, *((uint64_t *) &head), 1);
-      if (i) {
-        SB_DMA_READ(r + 1, 8, 8, len - 1, P_conjconj_A0);
-        SB_DMA_READ(r + 1, 8, 8, len - 1, P_conjconj_B0);
-      } else {
-        SB_DMA_READ(a + N, 8 * N, 8, N - 1, P_conjconj_A0);
-        SB_DMA_READ(a + N, 8 * N, 8, N - 1, P_conjconj_B0);
-      }
-      SB_CONST(P_conjconj_A1, 0, len);
-      SB_CONST(P_conjconj_B1, 0, len);
-      SB_CONST(P_conjconj_reset, 2, len - 1);
-      SB_CONST(P_conjconj_reset, 1, 1);
-      SB_CONST(P_conjconj_sqrt, 0, len - 1);
-      SB_CONST(P_conjconj_sqrt, 1, 1);
-
-      SB_GARBAGE(P_conjconj_O0, 1);
-      SB_GARBAGE(P_conjconj_O1, 1);
-      SB_RECV(P_conjconj_O2, norm);
-
-      union {
-        complex_t a;
-        uint64_t b;
-      } ri = {(float)(1. / norm), 0};
-
-      SB_CONST(P_conjconj_B0, *((uint64_t *) &head), 1);
-      if (i) {
-        SB_DMA_READ(r + 1, 8, 8, len - 1, P_conjconj_B0);
-      } else {
-        SB_DMA_READ(a + N, 8 * N, 8, N - 1, P_conjconj_B0);
-      }
-      SB_CONST(P_conjconj_A0, ri.b, len);
-      SB_CONST(P_conjconj_A1, 0, len);
-      SB_CONST(P_conjconj_B1, 0, len);
-      SB_CONST(P_conjconj_reset, 1, len);
-      SB_CONST(P_conjconj_sqrt, 0, len);
-      SB_DMA_WRITE(P_conjconj_O0, 8, 8, len, v);
-      SB_GARBAGE(P_conjconj_O1, len);
-
-      SB_WAIT_ALL();
-
-    }
-
-    complex_t w;
-    {
-      complex_t xv = {0, 0}, vx = {0, 0};
-
-      if (i) {
-        SB_DMA_READ(r, 8, 8, len, P_conjconj_A0);
-        SB_DMA_READ(r, 8, 8, len, P_conjconj_B1);
-      } else {
-        SB_DMA_READ(a, 8 * N, 8, N, P_conjconj_A0);
-        SB_DMA_READ(a, 8 * N, 8, N, P_conjconj_B1);
-      }
-      SB_DMA_READ(v, 8, 8, len, P_conjconj_B0);
-      SB_DMA_READ(v, 8, 8, len, P_conjconj_A1);
-      SB_CONST(P_conjconj_reset, 2, len - 1);
-      SB_CONST(P_conjconj_reset, 1, 1);
-      SB_CONST(P_conjconj_sqrt, 0, len);
-      SB_DMA_WRITE(P_conjconj_O0, 8, 8, 1, &xv);
-      SB_DMA_WRITE(P_conjconj_O1, 8, 8, 1, &vx);
-      SB_WAIT_ALL();
-
-      float norm = 1 / complex_norm(vx);
-      w = complex_conj_mul(xv, vx);
-      w.real *= norm;
-      w.imag *= norm;
-      w.real += 1;
     }
 
 // Intermediate result computing
@@ -182,7 +149,7 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
       complex_t *tmpxq = tmp0;
 
       SB_CONFIG(finalize_compact_config, finalize_compact_size);
-      SB_CONST(P_finalize_compact_W, *((uint64_t*)&w), N * len);
+      //SB_CONST(P_finalize_compact_W, *((uint64_t*)&w), N * len);
       SB_DMA_READ(v, 0, 8 * len, N, P_finalize_compact_VQ); 
       SB_CONST(P_finalize_compact_TMPR, 0, i * len);
       SB_CONST(P_finalize_compact_VR, 0, i * len);
