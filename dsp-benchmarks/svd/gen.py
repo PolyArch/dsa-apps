@@ -20,27 +20,35 @@ t = numpy.dot(numpy.conj(_a.transpose()), _a)
 h = t.copy()
 f.write('asta:\n' + str(t) + '\n')
 
-left = numpy.identity(n).astype('complex128')
 right = numpy.identity(n).astype('complex128')
 for i in xrange(n - 1):
     x = h[i + 1:, i].copy()
     v = x.copy()
     v[0] += cmath.exp(1j * cmath.phase(v[0])) * numpy.linalg.norm(v)
     v = v / numpy.linalg.norm(v)
-    f.write('v%d:%s\n' % (i, str(v)))
+    #f.write('v%d:%s\n' % (i, str(v)))
     w = numpy.dot(numpy.conj(x), v) / numpy.dot(numpy.conj(v), x)
+    assert abs(w.real - 1) < 1e-5
     H = numpy.identity(n - i - 1) - (1 + w) * numpy.outer(v, numpy.conj(v))
-    h[i + 1:, i:] = numpy.dot(H, h[i + 1:, i:])
-    #f.write('ph:\n' + str(h) + '\n')
-    h[:, i + 1:] = numpy.dot(h[:, i + 1:], H)
-    #f.write('hp:\n' + str(h) + '\n')
-    left[i+1:,:] = numpy.dot(H, left[i+1:,:])
-    right[:,i+1:] = numpy.dot(right[:,i+1:], H)
+    #fine grained representitive
+    #h[i + 1:, i:] = numpy.dot(H, h[i + 1:, i:])
+    temp = 2 * numpy.dot(numpy.conj(v), h[i + 1:, i:])
+    h[i + 1:, i:] -= numpy.outer(v, temp)
+    f.write('p0 %d:\n%s\n' % (i, str(temp)))
+    f.write('p1 %d:\n%s\n' % (i, str(h[i + 1:, i:])))
+    #h[:, i + 1:] = numpy.dot(h[:, i + 1:], H)
+    temp = 2 * numpy.dot(h[i:, i + 1:], v)
+    f.write('p2 %d:\n%s\n' % (i, str(temp)))
+    h[i:, i + 1:] -= numpy.outer(temp, numpy.conj(v))
+    f.write('p3 %d:\n%s\n' % (i, str(h[i:, i + 1:])))
+
+    temp = numpy.dot(right[1:, i + 1:], v) * 2
+    f.write('p\'0 %d:\n%s\n' % (i, str(temp)))
+    right[1:, i + 1:] -= numpy.outer(temp, numpy.conj(v))
+    f.write('inv %d:\n%s\n' % (i, str(right[1:, i + 1:])))
 
 f.write('hessenberg:\n' + str(h) + '\n')
 f.write('transform:\n' + str(right) + '\n')
-
-#numpy.testing.assert_allclose(numpy.dot(numpy.dot(right, h), left), t, atol = 1e-5)
 
 _h = h.copy()
 V = numpy.identity(n)
@@ -69,7 +77,7 @@ for i in xrange(1000):
     f.write('RQ:\n' + str(h) + '\n')
     #f.write('V:\n' + str(V) + '\n')
     #print sum(h.flatten() - prev.flatten())
-    if (sum(abs(i) > 1e-4 for i in h.flatten())) <= n:
+    if (sum(abs(i) > 1e-6 for i in h.flatten())) <= n:
         print i
         break
 
