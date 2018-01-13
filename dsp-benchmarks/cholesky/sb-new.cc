@@ -10,7 +10,7 @@
 #include "cholesky.h"
 
 #include "compute_dual.h"
-#include "writeback.h"
+#include "finalize.h"
 
 #include "sb_insts.h"
 
@@ -58,7 +58,6 @@ void cholesky(complex<float> *a, complex<float> *L) {
     complex<float> tmp;
     SB_RECV(P_compute_dual_O1, tmp);
     a[i * N + i] = tmp;
-    //std::cout << std::sqrt(tmp) << "\n";
     float norm = 1 / (tmp.real() * tmp.real() + tmp.imag() * tmp.imag());
     union {
       float f[2];
@@ -80,16 +79,17 @@ void cholesky(complex<float> *a, complex<float> *L) {
     //}
   }
   SB_WAIT_ALL();
-  SB_CONFIG(writeback_config, writeback_size);
+
+  SB_CONFIG(finalize_config, finalize_size);
   for (int i = 0; i < N; ++i) {
-    complex<float> div = std::sqrt(a[i * N + i]);
-    float norm = div.real() * div.real() + div.imag() * div.imag();
-    norm = 1 / norm;
-    L[i * N + i] = div;
-    div = complex<float>(div.real() * norm, -div.imag() * norm);
-    SB_DMA_READ(a + i * N + i + 1, 8, 8, N - i - 1, P_writeback_BP);
-    SB_CONST(P_writeback_DIV, *((uint64_t *) &div), N - i - 1);
-    SB_DMA_WRITE(P_writeback_RES, N * 8, 8, N - i - 1, L + (i + 1) * N + i);
+    SB_CONST(P_finalize_DIV, 0, 1);
+    SB_DMA_READ(a + i * (N + 1), 8, 8, N - i, P_finalize_A);
+    SB_CONST(P_finalize_sqrt, 1, 1);
+    SB_CONST(P_finalize_sqrt, 0, N - i - 1);
+    SB_REPEAT_PORT(N - i - 1);
+    SB_RECURRENCE(P_finalize_INV, P_finalize_DIV, 1);
+    SB_DMA_WRITE(P_finalize_SQRT, 8, 8, 1, L + i * (N + 1));
+    SB_DMA_WRITE(P_finalize_RES, N * 8, 8, N - i - 1, L + (i + 1) * N + i);
   }
   SB_WAIT_ALL();
 }
