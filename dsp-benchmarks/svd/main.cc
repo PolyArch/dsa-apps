@@ -33,7 +33,7 @@ int main() {
   for (int i = 0; i < N; ++i)
     for (int k = 0; k < N; ++k)
       for (int j = 0; j < N; ++j)
-        res[i * N + j] += tmp[i * N + k] * V[k * N + j];
+        res[i * N + j] += tmp[i * N + k] * std::conj(V[j * N + k]);
 
   if (compare_n_float_complex(ref_data, N * N, res))
     puts("result correct!");

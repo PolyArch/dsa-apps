@@ -1,11 +1,18 @@
-import numpy, cmath, sys
+import numpy, cmath, sys, imp
 from scipy import linalg
+
+output = imp.load_source('output', '../common/output.py')
+
 numpy.set_printoptions(suppress = True, precision = 4., linewidth = 180, threshold = numpy.nan)
 n = int(sys.argv[1])
+
 f = file('debug.data', 'w')
+
 _a = numpy.random.rand(n, n) + 1j * numpy.random.rand(n, n)
 _a = _a.astype('complex64')
-file('input.data', 'w').writelines(['%f %f\n' % (i.real, i.imag) for i in _a.flatten()])
+
+output.print_complex_array('input.data', _a.flatten())
+
 print 'Data generated!'
 #print numpy.linalg.svd(_a)
 
@@ -20,6 +27,7 @@ for i in xrange(n - 1):
     v = x.copy()
     v[0] += cmath.exp(1j * cmath.phase(v[0])) * numpy.linalg.norm(v)
     v = v / numpy.linalg.norm(v)
+    f.write('v%d:%s\n' % (i, str(v)))
     w = numpy.dot(numpy.conj(x), v) / numpy.dot(numpy.conj(v), x)
     H = numpy.identity(n - i - 1) - (1 + w) * numpy.outer(v, numpy.conj(v))
     h[i + 1:, i:] = numpy.dot(H, h[i + 1:, i:])
@@ -36,9 +44,8 @@ f.write('transform:\n' + str(right) + '\n')
 
 _h = h.copy()
 V = numpy.identity(n)
-cycles = 0
+
 for i in xrange(1000):
-    cycles += 1
     #numpy.testing.assert_allclose(numpy.conj(R.transpose()), R, atol = 1e-5);
     Q = numpy.identity(n).astype('complex128')
     d = (h[n - 2, n - 2] - h[n - 1, n - 1]) / 2.
@@ -62,10 +69,10 @@ for i in xrange(1000):
     f.write('RQ:\n' + str(h) + '\n')
     #f.write('V:\n' + str(V) + '\n')
     #print sum(h.flatten() - prev.flatten())
-    if (sum(abs(i) > 2e-3 for i in h.flatten())) <= n:
+    if (sum(abs(i) > 1e-4 for i in h.flatten())) <= n:
+        print i
         break
 
-print cycles
 
 #numpy.testing.assert_allclose(numpy.dot(_h, V),  numpy.dot(V, h), atol = 1e-5)
 V = numpy.dot(right, V)
@@ -83,13 +90,9 @@ U = numpy.dot(_a, V)
 for i in xrange(n):
     U[:,i] /= S[i]
 
-if U[0, 0].real < 0:
-    U = -1 * U
-    V = -1 * V
-
-#numpy.testing.assert_allclose(numpy.dot(U, numpy.conj(U.transpose())), numpy.identity(n), atol = 1e-5)
-#numpy.testing.assert_allclose(numpy.dot(V, numpy.conj(V.transpose())), numpy.identity(n), atol = 1e-5)
-#numpy.testing.assert_allclose(numpy.dot(U, numpy.dot(sigma, numpy.conj(V.transpose()))), _a, atol = 1e-5)
+numpy.testing.assert_allclose(numpy.dot(U, numpy.conj(U.transpose())), numpy.identity(n), atol = 1e-3)
+numpy.testing.assert_allclose(numpy.dot(V, numpy.conj(V.transpose())), numpy.identity(n), atol = 1e-3)
+numpy.testing.assert_allclose(numpy.dot(U, numpy.dot(sigma, numpy.conj(V.transpose()))), _a, atol = 1e-3)
 print 'Correctness check pass!'
 
 #f.write('U:\n' + str(U) + '\n')
@@ -98,9 +101,7 @@ print 'Correctness check pass!'
 #print U
 #print S
 #print numpy.conj(V.transpose())
-ref = file('ref.data', 'w')
-ref.writelines(['%.5f %.5f\n' % (i.real, i.imag) for i in numpy.concatenate((U.flatten(), S.flatten(), numpy.conj(V.transpose()).flatten()))])
-ref.close()
+output.print_complex_array('ref.data', _a.flatten())
 #numpy.savetxt('ref.data', numpy.concatenate((U.flatten(), S.flatten(), numpy.conj(V.transpose()).flatten())))
 print 'Ref data generated!'
 

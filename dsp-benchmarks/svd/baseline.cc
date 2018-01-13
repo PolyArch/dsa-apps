@@ -3,6 +3,16 @@
 #include <iomanip>
 #include "sim_timing.h"
 
+#define complex_mul(a, b) (a).real() * (b).real() - (a).imag() * (b).imag(), \
+  (a).real() * (b).imag() + (a).imag() * (b).real()
+
+#define complex_conj_mul(a, b) (a).real() * (b).real() + (a).imag() * (b).imag(), \
+  (a).real() * (b).imag() - (a).imag() * (b).real()
+
+#define complex_add(a, b) (a).real() + (b).real(), (a).imag() + (b).imag()
+
+#define complex_norm(a) ((a).real() * (a).real() + (a).imag() * (a).imag())
+
 complex<float> _tmp[N * N];
 const complex<float> _one(1, 0), _zero(0, 0);
 
@@ -25,184 +35,37 @@ float norm(complex<float> *a, int n) {
   return sqrt(res);
 }
 
-void household_vector(complex<float> *a, int y, int x, int n, complex<float> *v, complex<float> &w) {
-  {
-    for (int i = 0; i < n; ++i) {
-      v[i] = a[(y + i) * N + x];
-    }
-    float sign = (v[0] * std::conj(v[0])).real();
-    float _norm = norm(v, n);
-    v[0] += std::exp(complex<float>(0, std::arg(v[0]))) * _norm; }
-  {
-    float _norm = norm(v, n);
-    for (int i = 0; i < n; ++i) {
-      v[i] /= _norm;
-    }
-  }
-  {
-    complex<float> xv(0, 0), vx(0, 0);
-    for (int i = 0; i < n; ++i) {
-      xv += std::conj(a[(y + i) * N + x]) * v[i];
-      vx += std::conj(v[i]) * a[(y + i) * N + x]; }
-    w = xv / vx + _one;
-  }
-}
-
-void outer_mul_a(complex<float> *a, int y, int x, int n, int m, complex<float> *v, complex<float> w) {
-  for (int i = y; i < y + n; ++i) {
-    for (int j = x; j < x + m; ++j) {
-      _tmp[i * N + j] = complex<float>(0, 0);
-      for (int k = 0; k < n; ++k) {
-        _tmp[i * N + j] +=
-          (((i - y) == k ? _one : _zero) - v[i - y] * std::conj(v[k]) * w) * a[(k + y) * N + j];
-      }
-    }
-  }
-  for (int i = y; i < y + n; ++i) {
-    for (int j = x; j < x + m; ++j) {
-      a[i * N + j] = _tmp[i * N + j];
-    }
-  }
-}
-
-void a_mul_outer(complex<float> *a, int y, int x, int n, int m, complex<float> *v, complex<float> w) {
-  for (int i = y; i < y + n; ++i) {
-    for (int j = x; j < x + m; ++j) {
-      _tmp[i * N + j] = complex<float>(0, 0);
-      for (int k = 0; k < m; ++k) {
-        _tmp[i * N + j] +=
-          a[i * N + k + x] * ((k == j - x ? _one : _zero) - v[k] * std::conj(v[j - x]) * w);
-      }
-    }
-  }
-  //show_matrix("tmp", _tmp);
-  for (int i = y; i < y + n; ++i) {
-    for (int j = x; j < x + m; ++j) {
-      a[i * N + j] = _tmp[i * N + j];
-    }
-  }
-}
-
-void hessenberg(complex<float> *a, complex<float> *h, complex<float> *inv) {
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < N; ++j) {
-      inv[i * N + j] = i == j ? _one : _zero;
-      h[i * N + j] = a[i * N + j];
-    }
-  }
-  for (int i = 1; i < N; ++i) {
-    complex<float> v[N - i - 1], w;
-    household_vector(h, i, i - 1, N - i, v, w);
-    outer_mul_a(h, i, i - 1, N - i, N - i + 1, v, w);
-    a_mul_outer(h, 0, i, N, N - i, v, w);
-    a_mul_outer(inv, 0, i, N, N - i, v, w);
-  }
-}
-
-void qr_hessenberg(complex<float> *a, complex<float> *q, complex<float> *r) {
-  for (int i = 0; i < N; ++i)
-    for (int j = 0; j < N; ++j) {
-      q[i * N + j] = i == j ? _one : _zero;
-      r[i * N + j] = a[i * N + j];
-    }
-  for (int i = 0; i < N - 1; ++i) {
-    complex<float> v[2], w;
-    household_vector(r, i, i, 2, v, w);
-    outer_mul_a(r, i, i, 2, 3 < N - i ? 3 : N - i, v, w);
-    a_mul_outer(q, 0, i, i + 1, 2, v, w);
-  }
-}
-
-bool converged(complex<float> *a) {
-  int cnt = 0;
-  for (int i = 0; i < N; ++i)
-    for (int j = 0; j < N; ++j)
-      cnt += (fabs(a[i * N + j].real()) + fabs(a[i * N + j].imag()) > 2 * eps);
-  return cnt <= N;
-}
+complex<float> at_a[N * N];
 
 void svd(complex<float> *a, complex<float> *u, complex<float> *s, complex<float> *v) {
-  std::cout << std::setprecision(4);
-  std::cout << std::fixed;
-
-  complex<float> *at_a = new complex<float>[N * N];
-  complex<float> *hes = new complex<float>[N * N];
-  complex<float> *h_inv = new complex<float>[N * N];
-  complex<float> *q = new complex<float>[N * N];
-  complex<float> *r = new complex<float>[N * N];
-
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < N; ++j) {
       complex<float> sum(0, 0);
-      for (int k = 0; k < N; ++k)
-        sum += std::conj(a[k * N + i]) * a[k * N + j];
+      for (int k = 0; k < N; ++k) {
+        complex<float> tmp(complex_conj_mul(a[k * N + i], a[k * N + j]));
+        sum = complex<float>(complex_add(sum, tmp));
+      }
       at_a[i * N + j] = sum;
     }
   }
-  hessenberg(at_a, hes, h_inv);
-  for (int i = 0; i < N; ++i)
-    for (int j = 0; j < N; ++j) {
-      v[i * N + j] = i == j ? _one : _zero;
+
+  for (int i = 1; i < N; ++i) {
+    int len = N - i;
+    complex<float> v[len];
+    v[0] = at_a[(i - 1) * N + i];
+    float norm0 = complex_norm(v[0]), norm1 = 0.;
+    for (int j = i + 1; j < N; ++j) {
+      v[j - i] = at_a[i * N + j];
+      norm1 += complex_norm(v[j - i]);
     }
-  while (!converged(hes)) {
-    qr_hessenberg(hes, q, r);
-    for (int i = 0; i < N; ++i) {
-      for (int j = i; j < i + 3 && j < N; ++j) {
-        hes[i * N + j] = 0;
-        for (int k = i; k < N; ++k) {
-          hes[i * N + j] += r[i * N + k] * q[k * N + j];
-        }
-        hes[j * N + i] = std::conj(hes[i * N + j]);
-      }
+    float rate = sqrt(1 + norm1 / norm0) + 1;
+    v[0] = complex<float>(v[0].real() * rate, v[0].imag() * rate);
+    norm1 = 1 / sqrt(complex_norm(v[0]) + norm1);
+    for (int j = 0; j < len; ++j) {
+      v[j] = complex<float>(v[j].real() * norm1, v[j].imag() * -norm1);
+      std::cout << v[j] << " ";
     }
-    for (int i = 0; i < N * N; ++i)
-      _tmp[i] = complex<float>(0, 0);
-    for (int i = 0; i < N; ++i) {
-      for (int k = 0; k < N; ++k) {
-        for (int j = k ? k - 1 : 0; j < N; ++j) {
-          _tmp[i * N + j] += v[i * N + k] * q[k * N + j];
-        }
-      }
-    }
-    for (int i = 0; i < N * N; ++i)
-      v[i] = _tmp[i];
-  }
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < N; ++j) {
-      complex<float> sum(0, 0);
-      for (int k = 0; k < N; ++k) {
-        sum += h_inv[i * N + k] * v[k * N + j];
-      }
-      _tmp[i * N + j] = sum;
-    }
-  }
-  for (int i = 0; i < N * N; ++i)
-    v[i] = _tmp[i];
-  //show_matrix("inv", h_inv);
-  //show_matrix("V", v);
-  for (int i = 0; i < N; ++i) {
-    s[i] = std::sqrt(hes[i * (N + 1)]);
-  }
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < N; ++j) {
-      for (int k = 0; k < N; ++k) {
-        u[i * N + j] += a[i * N + k] * v[k * N + j];
-      }
-    }
-  }
-  //show_matrix("U", u);
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < N; ++j) {
-      u[j * N + i] /= s[i];
-    }
-  }
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < N; ++j) {
-      _tmp[j * N + i] = std::conj(v[i * N + j]);
-    }
-  }
-  for (int i = 0; i < N * N; ++i) {
-    v[i] = _tmp[i];
+    std::cout << "\n";
   }
 }
 
