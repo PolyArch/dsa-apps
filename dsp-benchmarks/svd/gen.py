@@ -29,22 +29,26 @@ for i in xrange(n - 1):
     #f.write('v%d:%s\n' % (i, str(v)))
     w = numpy.dot(numpy.conj(x), v) / numpy.dot(numpy.conj(v), x)
     assert abs(w.real - 1) < 1e-5
-    H = numpy.identity(n - i - 1) - (1 + w) * numpy.outer(v, numpy.conj(v))
-    #fine grained representitive
-    #h[i + 1:, i:] = numpy.dot(H, h[i + 1:, i:])
+    #H = numpy.identity(n - i - 1) - (1 + w) * numpy.outer(v, numpy.conj(v))
+    #h[i + 1:, i:] = numpy.dot(H, h[i + 1:, i:])          (1)
+    #h[:, i + 1:] = numpy.dot(h[:, i + 1:], H)            (2)
+    #right[1:, i + 1:] = numpy.dot(right[1:, i + 1:], H)  (3)
+
+    # fine grained representitive
+    #(1)
     temp = 2 * numpy.dot(numpy.conj(v), h[i + 1:, i:])
     h[i + 1:, i:] -= numpy.outer(v, temp)
     f.write('p0 %d:\n%s\n' % (i, str(temp)))
     f.write('p1 %d:\n%s\n' % (i, str(h[i + 1:, i:])))
-    #h[:, i + 1:] = numpy.dot(h[:, i + 1:], H)
+    #(2)
     temp = 2 * numpy.dot(h[i:, i + 1:], v)
-    f.write('p2 %d:\n%s\n' % (i, str(temp)))
     h[i:, i + 1:] -= numpy.outer(temp, numpy.conj(v))
+    f.write('p2 %d:\n%s\n' % (i, str(temp)))
     f.write('p3 %d:\n%s\n' % (i, str(h[i:, i + 1:])))
-
+    #(3)
     temp = numpy.dot(right[1:, i + 1:], v) * 2
-    f.write('p\'0 %d:\n%s\n' % (i, str(temp)))
     right[1:, i + 1:] -= numpy.outer(temp, numpy.conj(v))
+    f.write('p\'0 %d:\n%s\n' % (i, str(temp)))
     f.write('inv %d:\n%s\n' % (i, str(right[1:, i + 1:])))
 
 f.write('hessenberg:\n' + str(h) + '\n')
@@ -56,7 +60,6 @@ V = numpy.identity(n)
 for i in xrange(1000):
     #numpy.testing.assert_allclose(numpy.conj(R.transpose()), R, atol = 1e-5);
     Q = numpy.identity(n).astype('complex128')
-    d = (h[n - 2, n - 2] - h[n - 1, n - 1]) / 2.
     R = h
     for i in xrange(n - 1):
         x = h[i:i+2, i].copy()
@@ -65,11 +68,21 @@ for i in xrange(1000):
         norm = numpy.linalg.norm(v)
         v = v / norm
         w = numpy.dot(numpy.conj(x), v) / numpy.dot(numpy.conj(v), x)
+        assert abs(1 - w.real) < 1e-5
         H = numpy.identity(2) - (1 + w) * numpy.outer(v, numpy.conj(v))
+        #H[0, 0] == H[1, 1]
+        assert abs(H[0, 0] + H[1, 1]) < 1e-5
+        f.write('v:\n%s\n' % str(v))
+        f.write('H:\n%s\n' % str(H))
         h[i:i+2,i:min(i+3,n)] = numpy.dot(H, h[i:i+2,i:min(i+3,n)])
-        #f.write('R:\n' + str(h) + '\n')
-        Q[:min(i+3,n),i:i+2] = numpy.dot(Q[:min(i+3,n),i:i+2], H)
-        #f.write('Q:\n' + str(Q) + '\n')
+        #Q[:min(i+2,n),i:i+2] = numpy.dot(Q[:min(i+2,n),i:i+2], H)
+        #fine grained rep
+        Q[:min(i+2,n)-1, i + 1] = Q[:min(i+2,n) - 1,i] * H[0, 1]
+        Q[:min(i+2,n)-1, i]    *= H[0, 0]
+        Q[min(i+2,n) - 1,i]     = numpy.conj(H[0, 1])
+        Q[min(i+2,n) - 1,i + 1] = -H[0, 0]
+        #print 'Q\'', Q[:min(i+2,n),i:i+2]
+        #f.write('Q\':\n' + str(Q) + '\n')
     f.write('Q:\n' + str(Q) + '\n')
     f.write('R:\n' + str(R) + '\n')
     h = numpy.dot(R, Q)# + mu * numpy.identity(n)
@@ -77,7 +90,7 @@ for i in xrange(1000):
     f.write('RQ:\n' + str(h) + '\n')
     #f.write('V:\n' + str(V) + '\n')
     #print sum(h.flatten() - prev.flatten())
-    if (sum(abs(i) > 1e-6 for i in h.flatten())) <= n:
+    if (sum(abs(i) > 1e-5 for i in h.flatten())) <= n:
         print i
         break
 
