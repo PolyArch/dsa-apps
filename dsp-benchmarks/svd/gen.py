@@ -29,23 +29,23 @@ for i in xrange(n - 1):
     #f.write('v%d:%s\n' % (i, str(v)))
     w = numpy.dot(numpy.conj(x), v) / numpy.dot(numpy.conj(v), x)
     assert abs(w.real - 1) < 1e-5
-    #H = numpy.identity(n - i - 1) - (1 + w) * numpy.outer(v, numpy.conj(v))
-    #h[i + 1:, i:] = numpy.dot(H, h[i + 1:, i:])          (1)
-    #h[:, i + 1:] = numpy.dot(h[:, i + 1:], H)            (2)
-    #right[1:, i + 1:] = numpy.dot(right[1:, i + 1:], H)  (3)
-
+    # H = numpy.identity(n - i - 1) - (1 + w) * numpy.outer(v, numpy.conj(v)) DEPRECATED in fine grained implementation
+    # h[i + 1:, i:] = numpy.dot(H, h[i + 1:, i:])          (1)
+    # h[:, i + 1:] = numpy.dot(h[:, i + 1:], H)            (2)
+    # right[1:, i + 1:] = numpy.dot(right[1:, i + 1:], H)  (3)
     # fine grained representitive
-    #(1)
+
+    # (1)
     temp = 2 * numpy.dot(numpy.conj(v), h[i + 1:, i:])
     h[i + 1:, i:] -= numpy.outer(v, temp)
     f.write('p0 %d:\n%s\n' % (i, str(temp)))
     f.write('p1 %d:\n%s\n' % (i, str(h[i + 1:, i:])))
-    #(2)
+    # (2)
     temp = 2 * numpy.dot(h[i:, i + 1:], v)
     h[i:, i + 1:] -= numpy.outer(temp, numpy.conj(v))
     f.write('p2 %d:\n%s\n' % (i, str(temp)))
     f.write('p3 %d:\n%s\n' % (i, str(h[i:, i + 1:])))
-    #(3)
+    # (3)
     temp = numpy.dot(right[1:, i + 1:], v) * 2
     right[1:, i + 1:] -= numpy.outer(temp, numpy.conj(v))
     f.write('p\'0 %d:\n%s\n' % (i, str(temp)))
@@ -57,8 +57,7 @@ f.write('transform:\n' + str(right) + '\n')
 _h = h.copy()
 V = numpy.identity(n)
 
-for i in xrange(1000):
-    #numpy.testing.assert_allclose(numpy.conj(R.transpose()), R, atol = 1e-5);
+for TOTAL in xrange(1000):
     Q = numpy.identity(n).astype('complex128')
     R = h
     for i in xrange(n - 1):
@@ -74,26 +73,25 @@ for i in xrange(1000):
         assert abs(H[0, 0] + H[1, 1]) < 1e-5
         f.write('v:\n%s\n' % str(v))
         f.write('H:\n%s\n' % str(H))
+        #print h[i:i+2,i:min(i+3,n)]
         h[i:i+2,i:min(i+3,n)] = numpy.dot(H, h[i:i+2,i:min(i+3,n)])
+        #print h[i:i+2,i:min(i+3,n)]
         #Q[:min(i+2,n),i:i+2] = numpy.dot(Q[:min(i+2,n),i:i+2], H)
         #fine grained rep
         Q[:min(i+2,n)-1, i + 1] = Q[:min(i+2,n) - 1,i] * H[0, 1]
         Q[:min(i+2,n)-1, i]    *= H[0, 0]
         Q[min(i+2,n) - 1,i]     = numpy.conj(H[0, 1])
         Q[min(i+2,n) - 1,i + 1] = -H[0, 0]
-        #print 'Q\'', Q[:min(i+2,n),i:i+2]
-        #f.write('Q\':\n' + str(Q) + '\n')
+    #print 
     f.write('Q:\n' + str(Q) + '\n')
     f.write('R:\n' + str(R) + '\n')
-    h = numpy.dot(R, Q)# + mu * numpy.identity(n)
+    h = numpy.dot(R, Q)
     V = numpy.dot(V, Q)
     f.write('RQ:\n' + str(h) + '\n')
     #f.write('V:\n' + str(V) + '\n')
-    #print sum(h.flatten() - prev.flatten())
     if (sum(abs(i) > 1e-5 for i in h.flatten())) <= n:
-        print i
+        print 'Total',  TOTAL
         break
-
 
 #numpy.testing.assert_allclose(numpy.dot(_h, V),  numpy.dot(V, h), atol = 1e-5)
 V = numpy.dot(right, V)
@@ -119,10 +117,6 @@ print 'Correctness check pass!'
 #f.write('U:\n' + str(U) + '\n')
 #f.write('S:\n' + str(S) + '\n')
 #f.write('V*:\n' + str(numpy.conj((V).transpose())) + '\n')
-#print U
-#print S
-#print numpy.conj(V.transpose())
 output.print_complex_array('ref.data', _a.flatten())
-#numpy.savetxt('ref.data', numpy.concatenate((U.flatten(), S.flatten(), numpy.conj(V.transpose()).flatten())))
 print 'Ref data generated!'
 
