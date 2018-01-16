@@ -110,7 +110,7 @@ while True:
     called = False
     while i < N - 1:
         j = i
-        while j < N - 1 and abs(a[j, j + 1]) > 1e-5:
+        while j < N - 1 and abs(a[j, j + 1]) > 1e-6:
             j += 1
         if i != j:
             q = implicit_kernel(a[i:j+1, i:j+1])
@@ -131,7 +131,7 @@ while True:
     if not called:
         break
 
-"""
+""" check pass!
 invsd = numpy.dot(a, V)
 numpy.testing.assert_allclose(
     numpy.dot(numpy.conj(invsd.transpose()), invsd),
@@ -146,17 +146,31 @@ sv = numpy.diag(a)
 sv = numpy.sqrt(sv * numpy.conj(sv))
 
 print 'Singular value:', sv
-print V
 
-"""
-U = numpy.dot(_a, V)
+U = numpy.dot(_a, numpy.conj(V).transpose())
 for i in range(N):
-    U[i,:] /= a[i,i].conjugate()
+    U[:,i] /= sv[i]
 
-print U, '\n'
-print _a, '\n'
+""" check pass!
+numpy.testing.assert_allclose(
+    numpy.dot(numpy.conj(U).transpose(), U),
+    numpy.identity(N, dtype = 'complex128'),
+    atol = 1e-5, rtol = 1e-5
+)
+"""
+
+#verify code:
 
 sigma = numpy.sqrt(numpy.dot(numpy.conj(a).transpose(), a))
-print numpy.dot(numpy.dot(U, sigma), V)
-#print abs(ans - sorted(a)[::-1])
-"""
+
+try:
+    numpy.testing.assert_allclose(
+        numpy.dot(numpy.dot(U, sigma), V),
+        _a,
+        atol = 1e-4, rtol = 1e-4
+    )
+except:
+    print 'WARN: Precision loss too much!'
+
+print 'AVG ERROR: %.6f' % (abs(numpy.dot(numpy.dot(U, sigma), V) - _a).sum() / (N * N))
+
