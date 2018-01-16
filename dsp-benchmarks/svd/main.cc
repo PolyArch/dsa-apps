@@ -9,6 +9,7 @@
 using std::complex;
 
 complex<float> a[N * N], U[N * N], S[N], V[N * N], tmp[N * N], res[N * N];
+complex<float> aa[N * N];
 
 int main() {
   FILE *input_data = fopen("input.data", "r");
@@ -21,6 +22,7 @@ int main() {
 
   read_n_float_complex(input_data, N * N, a);
 
+  svd(aa, aa, aa, aa);
   begin_roi();
   svd(a, U, S, V);
   end_roi();

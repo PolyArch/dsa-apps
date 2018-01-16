@@ -1,9 +1,9 @@
 ifndef N
-N=4
+N=8
 endif
 
 
-DFG = hes_mul.dfg mm_sb.dfg mul_acc.dfg conj_mul_acc.dfg fin_a_mul_outer.dfg fin_outer_mul_a.dfg
+DFG = 
 
 SCALE=$(N)
 
