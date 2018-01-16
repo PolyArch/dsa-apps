@@ -46,15 +46,16 @@ def implicit_kernel(a):
     assert shape[0] == shape[1]
     n = shape[0]
     assert n > 1
-    for i in range(n - 1):
-        if i:
-            m = household(a[i-1,i].conjugate(), a[i-1,i+1].conjugate())
-            a[i-1:i+2,i:i+2] = numpy.dot(a[i-1:i+2,i:i+2], m)
-        else:
-            t = numpy.dot(numpy.conj(a[-1:,-1:].transpose()), a[-1:,-1:])
-            mu = t[-1, -1]
-            m = household(a[0, 0] * a[0, 0].conjugate() - mu, a[0, 0] * a[0, 1].conjugate())
-            a[:2,0:2] = numpy.dot(a[:2,0:2], m)
+    
+    t = numpy.dot(numpy.conj(a[-1:,-1:].transpose()), a[-1:,-1:])
+    mu = t[-1, -1]
+    m = household(a[0, 0] * a[0, 0].conjugate() - mu, a[0, 0] * a[0, 1].conjugate())
+    a[:2,0:2] = numpy.dot(a[:2,0:2], m)
+    a[:2,:3] = numpy.dot(household(a[0,0],a[1,0]), a[:2,:3])
+
+    for i in range(1, n - 1):
+        m = household(a[i-1,i].conjugate(), a[i-1,i+1].conjugate())
+        a[i-1:i+2,i:i+2] = numpy.dot(a[i-1:i+2,i:i+2], m)
         a[i:i+2,i:i+3] = numpy.dot(household(a[i,i],a[i+1,i]), a[i:i+2,i:i+3])
 
 while True:
@@ -66,9 +67,6 @@ while True:
             j += 1
         if i != j:
             implicit_kernel(a[i:j+1, i:j+1])
-            #print '[%d,%d]' % (i, j)
-            #print numpy.dot(numpy.conj(a).transpose(), a)
-            #raw_input()
             called = True
         i = j + 1
     if not called:
