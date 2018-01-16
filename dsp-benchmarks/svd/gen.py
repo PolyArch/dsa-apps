@@ -4,9 +4,14 @@ numpy.set_printoptions(precision = 4, suppress = True, threshold = 1000, linewid
 
 N = int(sys.argv[1])
 
-a = numpy.random.rand(N, N) + 1j * numpy.random.rand(N, N)
+_a = numpy.random.rand(N, N) + 1j * numpy.random.rand(N, N)
+a = _a.copy()
 
 ans = numpy.linalg.svd(a, compute_uv = False)
+
+V = numpy.identity(N, dtype = 'complex128')
+
+ata = numpy.dot(numpy.conj(a).transpose(), a)
 
 for i in range(N - 1):
     house = a[i:,i].copy()
@@ -16,7 +21,6 @@ for i in range(N - 1):
     #make it fine-grained later
     h = numpy.identity(N - i, dtype = 'complex128') - 2 * numpy.outer(house, numpy.conj(house))
     a[i:,i:] = numpy.dot(h, a[i:,i:])
-
     if i != N - 2:
         house = a[i,i+1:].copy()
         house[0] += cmath.exp(1j * cmath.phase(house[0])) * numpy.linalg.norm(house)
@@ -24,7 +28,16 @@ for i in range(N - 1):
         #make it fine-grained later
         h = numpy.identity(N - i - 1, dtype = 'complex128') - 2 * numpy.outer(numpy.conj(house), house)
         a[i:,i+1:] = numpy.dot(a[i:,i+1:], h)
-        #print a
+        V[i+1:,:] = numpy.dot(h, V[i+1:,:])
+        """ check passed!
+        invsd = numpy.dot(a, V)
+        numpy.testing.assert_allclose(
+            numpy.dot(numpy.conj(invsd.transpose()), invsd),
+            ata,
+            atol = 1e-5,
+            rtol = 1e-5
+        )
+        """
 
 def household(x, y):
     v = numpy.array([x, y])
@@ -46,17 +59,51 @@ def implicit_kernel(a):
     assert shape[0] == shape[1]
     n = shape[0]
     assert n > 1
-    
+
+    q = numpy.identity(n, dtype = 'complex128')
+
+    """ check pass
+    ata = numpy.dot(numpy.conj(a).transpose(), a)
+    """
+
     t = numpy.dot(numpy.conj(a[-1:,-1:].transpose()), a[-1:,-1:])
     mu = t[-1, -1]
     m = household(a[0, 0] * a[0, 0].conjugate() - mu, a[0, 0] * a[0, 1].conjugate())
-    a[:2,0:2] = numpy.dot(a[:2,0:2], m)
-    a[:2,:3] = numpy.dot(household(a[0,0],a[1,0]), a[:2,:3])
+    a[:2,:2] = numpy.dot(a[:2,0:2], m)
+    q[:2,:2] = m
+    h = household(a[0,0],a[1,0])
+    a[:2,:3] = numpy.dot(h, a[:2,:3])
+
+
+    """ check pass!
+    invsd = numpy.dot(a, q)
+    numpy.testing.assert_allclose(
+        numpy.dot(numpy.conj(invsd.transpose()), invsd),
+        ata,
+        atol = 1e-5,
+        rtol = 1e-5
+    )
+    """
 
     for i in range(1, n - 1):
         m = household(a[i-1,i].conjugate(), a[i-1,i+1].conjugate())
         a[i-1:i+2,i:i+2] = numpy.dot(a[i-1:i+2,i:i+2], m)
-        a[i:i+2,i:i+3] = numpy.dot(household(a[i,i],a[i+1,i]), a[i:i+2,i:i+3])
+        q[i:i+2,:i+2] = numpy.dot(m, q[i:i+2,:i+2])
+
+        """ check pass!
+        invsd = numpy.dot(a, q)
+        numpy.testing.assert_allclose(
+            numpy.dot(numpy.conj(invsd.transpose()), invsd),
+            ata,
+            atol = 1e-5,
+            rtol = 1e-5
+        )
+        """
+
+        h = household(a[i,i],a[i+1,i])
+        a[i:i+2,i:i+3] = numpy.dot(h, a[i:i+2,i:i+3])
+
+    return q
 
 while True:
     i = 0
@@ -66,17 +113,50 @@ while True:
         while j < N - 1 and abs(a[j, j + 1]) > 1e-5:
             j += 1
         if i != j:
-            implicit_kernel(a[i:j+1, i:j+1])
+            q = implicit_kernel(a[i:j+1, i:j+1])
+            V[i:j+1,:] = numpy.dot(q, V[i:j+1,:])
+
+            """ check pass!
+            invsd = numpy.dot(a, V)
+            numpy.testing.assert_allclose(
+                numpy.dot(numpy.conj(invsd.transpose()), invsd),
+                ata,
+                atol = 1e-5,
+                rtol = 1e-5
+            )
+            """
+
             called = True
         i = j + 1
     if not called:
         break
 
-print TOTAL
-a = numpy.diag(a)
-a = numpy.sqrt(a * numpy.conj(a))
-a = numpy.array(map(lambda x: x.real, a))
-print a
-print ans
-print abs(ans - sorted(a)[::-1])
+"""
+invsd = numpy.dot(a, V)
+numpy.testing.assert_allclose(
+    numpy.dot(numpy.conj(invsd.transpose()), invsd),
+    ata,
+    atol = 1e-5,
+    rtol = 1e-5
+)
+"""
 
+print "Total iteration: %d" % TOTAL
+sv = numpy.diag(a)
+sv = numpy.sqrt(sv * numpy.conj(sv))
+
+print 'Singular value:', sv
+print V
+
+"""
+U = numpy.dot(_a, V)
+for i in range(N):
+    U[i,:] /= a[i,i].conjugate()
+
+print U, '\n'
+print _a, '\n'
+
+sigma = numpy.sqrt(numpy.dot(numpy.conj(a).transpose(), a))
+print numpy.dot(numpy.dot(U, sigma), V)
+#print abs(ans - sorted(a)[::-1])
+"""
