@@ -11,33 +11,7 @@ ans = numpy.linalg.svd(a, compute_uv = False)
 
 V = numpy.identity(N, dtype = 'complex128')
 
-ata = numpy.dot(numpy.conj(a).transpose(), a)
-
-for i in range(N - 1):
-    house = a[i:,i].copy()
-    alpha = cmath.exp(1j * cmath.phase(house[0])) * numpy.linalg.norm(house)
-    house[0] += alpha
-    house /= numpy.linalg.norm(house)
-    #make it fine-grained later
-    h = numpy.identity(N - i, dtype = 'complex128') - 2 * numpy.outer(house, numpy.conj(house))
-    a[i:,i:] = numpy.dot(h, a[i:,i:])
-    if i != N - 2:
-        house = a[i,i+1:].copy()
-        house[0] += cmath.exp(1j * cmath.phase(house[0])) * numpy.linalg.norm(house)
-        house /= numpy.linalg.norm(house)
-        #make it fine-grained later
-        h = numpy.identity(N - i - 1, dtype = 'complex128') - 2 * numpy.outer(numpy.conj(house), house)
-        a[i:,i+1:] = numpy.dot(a[i:,i+1:], h)
-        V[i+1:,:] = numpy.dot(h, V[i+1:,:])
-        """ check passed!
-        invsd = numpy.dot(a, V)
-        numpy.testing.assert_allclose(
-            numpy.dot(numpy.conj(invsd.transpose()), invsd),
-            ata,
-            atol = 1e-5,
-            rtol = 1e-5
-        )
-        """
+#ata = numpy.dot(numpy.conj(a).transpose(), a)
 
 def household(x, y):
     v = numpy.array([x, y])
@@ -49,6 +23,52 @@ def household(x, y):
     hv /= numpy.linalg.norm(hv)
     h = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
     return h
+
+for i in range(N - 1):
+    house = a[i:,i].copy()
+    alpha = cmath.exp(1j * cmath.phase(house[0])) * numpy.linalg.norm(house)
+    house[0] += alpha
+    house /= numpy.linalg.norm(house)
+    #make it fine-grained later
+    h = numpy.identity(N - i, dtype = 'complex128') - 2 * numpy.outer(house, numpy.conj(house))
+
+    """ check pass!
+    r = numpy.zeros((N - i, N - i), dtype = 'complex128')
+    r[:,1:] = numpy.dot(h, a[i:,i+1:])
+    r[0, 0] = -alpha
+    a[i:,i:] = numpy.dot(h, a[i:,i:])
+    numpy.testing.assert_allclose(r, a[i:, i:], atol = 1e-5, rtol = 1e-5)
+    """
+
+    a[i, i] = -alpha
+    a[i:,i+1:] = numpy.dot(h, a[i:,i+1:])
+    a[i+1:,i] = numpy.zeros((N-i-1,), 'complex128')
+
+    if i != N - 2:
+        house = a[i,i+1:].copy()
+        alpha = cmath.exp(1j * cmath.phase(house[0])) * numpy.linalg.norm(house)
+        house[0] += alpha
+        house /= numpy.linalg.norm(house)
+        #make it fine-grained later
+        h = numpy.identity(N - i - 1, dtype = 'complex128') - 2 * numpy.outer(numpy.conj(house), house)
+
+        #a[i:,i+1:] = numpy.dot(a[i:,i+1:], h)
+
+        a[i,i+1] = -alpha
+        a[i,i+2:] = numpy.zeros((N-i-2), 'complex128')
+        a[i+1:,i+1:] = numpy.dot(a[i+1:,i+1:], h)
+
+        V[i+1:,:] = numpy.dot(h, V[i+1:,:])
+
+        """ check passed!
+        invsd = numpy.dot(a, V)
+        numpy.testing.assert_allclose(
+            numpy.dot(numpy.conj(invsd.transpose()), invsd),
+            ata,
+            atol = 1e-5,
+            rtol = 1e-5
+        )
+        """
 
 TOTAL = 0
 
@@ -68,6 +88,7 @@ def implicit_kernel(a):
 
     t = numpy.dot(numpy.conj(a[-1:,-1:].transpose()), a[-1:,-1:])
     mu = t[-1, -1]
+    # unroll these bunch!
     m = household(a[0, 0] * a[0, 0].conjugate() - mu, a[0, 0] * a[0, 1].conjugate())
     a[:2,:2] = numpy.dot(a[:2,0:2], m)
     q[:2,:2] = m
