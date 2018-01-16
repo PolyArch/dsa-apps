@@ -24,6 +24,9 @@ def household(x, y):
     h = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
     return h
 
+f,d = [],[]
+r = a.copy()
+
 for i in range(N - 1):
     house = a[i:,i].copy()
     alpha = cmath.exp(1j * cmath.phase(house[0])) * numpy.linalg.norm(house)
@@ -32,17 +35,12 @@ for i in range(N - 1):
     #make it fine-grained later
     h = numpy.identity(N - i, dtype = 'complex128') - 2 * numpy.outer(house, numpy.conj(house))
 
-    """ check pass!
-    r = numpy.zeros((N - i, N - i), dtype = 'complex128')
-    r[:,1:] = numpy.dot(h, a[i:,i+1:])
-    r[0, 0] = -alpha
-    a[i:,i:] = numpy.dot(h, a[i:,i:])
-    numpy.testing.assert_allclose(r, a[i:, i:], atol = 1e-5, rtol = 1e-5)
-    """
+    #a[i:,i:] = numpy.dot(h, a[i:,i:])
 
     a[i, i] = -alpha
     a[i:,i+1:] = numpy.dot(h, a[i:,i+1:])
     a[i+1:,i] = numpy.zeros((N-i-1,), 'complex128')
+    f.append(-alpha)
 
     if i != N - 2:
         house = a[i,i+1:].copy()
@@ -57,6 +55,7 @@ for i in range(N - 1):
         a[i,i+1] = -alpha
         a[i,i+2:] = numpy.zeros((N-i-2), 'complex128')
         a[i+1:,i+1:] = numpy.dot(a[i+1:,i+1:], h)
+        d.append(-alpha)
 
         V[i+1:,:] = numpy.dot(h, V[i+1:,:])
 
@@ -164,9 +163,19 @@ numpy.testing.assert_allclose(
 
 print "Total iteration: %d" % TOTAL
 sv = numpy.diag(a)
-sv = numpy.sqrt(sv * numpy.conj(sv))
+sv = numpy.real(numpy.sqrt(sv * numpy.conj(sv)))
+
+try:
+    numpy.testing.assert_allclose(numpy.sort(sv)[::-1], ans, atol = 1e-5, rtol = 1e-5)
+    print "Check pass!"
+except:
+    print "ERROR: SV not computed correctly"
+    print sv
+    print ans
+    quit()
 
 print 'Singular value:', sv
+
 
 U = numpy.dot(_a, numpy.conj(V).transpose())
 for i in range(N):
