@@ -1,8 +1,8 @@
-import numpy, math, cmath
+import numpy, cmath, sys, imp
 
-numpy.set_printoptions(precision = 6, suppress = True, threshold = 1000, linewidth = 200)
+numpy.set_printoptions(precision = 4, suppress = True, threshold = 1000, linewidth = 200)
 
-N = 6
+N = int(sys.argv[1])
 
 a = numpy.random.rand(N, N) + 1j * numpy.random.rand(N, N)
 
@@ -37,30 +37,49 @@ def household(x, y):
     h = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
     return h
 
+TOTAL = 0
 
-print ans
-
-last = -1
-
-for TOTAL in range(1000):
-    for i in range(N - 1):
+def implicit_kernel(a):
+    global TOTAL
+    TOTAL += 1
+    shape = a.shape
+    assert shape[0] == shape[1]
+    n = shape[0]
+    assert n > 1
+    #print a
+    for i in range(n - 1):
         if i:
             m = household(a[i-1,i].conjugate(), a[i-1,i+1].conjugate())
             a[i-1:,i:i+2] = numpy.dot(a[i-1:,i:i+2], m)
         else:
-            mu = a[last, last] * a[last, last].conjugate()
-            print mu
+            t = numpy.dot(numpy.conj(a[-2:,-2:].transpose()), a[-2:,-2:])
+            """
+            d = (t[-2, -2] - t[-1, -1]) * .5
+            sd = 1.
+            math.copysign(sd, d)
+            mu = t[-1, -1] + d - cmath.sqrt(d * d - t[-1, -2] * t[-1, -2]) * sd
+            """
+            mu = t[-1, -1]
             m = household(a[0, 0] * a[0, 0].conjugate() - mu, a[0, 0] * a[0, 1].conjugate())
             a[:,0:2] = numpy.dot(a[:,0:2], m)
         a[i:i+2,i:] = numpy.dot(household(a[i,i],a[i+1,i]), a[i:i+2,i:])
-    while last > -N and abs(a[last - 1, last]) < 1e-5:
-        last -= 1
-    if last <= -N:
+
+while True:
+    i = 0
+    called = False
+    while i < N - 1:
+        j = i
+        while j < N - 1 and abs(a[j, j + 1]) > 1e-5:
+            j += 1
+        if i != j:
+            implicit_kernel(a[i:j+1, i:j+1])
+            #print '[%d,%d]' % (i, j)
+            #print numpy.dot(numpy.conj(a).transpose(), a)
+            #raw_input()
+            called = True
+        i = j + 1
+    if not called:
         break
-    ata = numpy.dot(numpy.conj(a.transpose()), a)
-    print ata
-    print numpy.sqrt(numpy.diag(ata))
-    raw_input()
 
 print TOTAL
 a = numpy.diag(a)
@@ -68,5 +87,5 @@ a = numpy.sqrt(a * numpy.conj(a))
 a = numpy.array(map(lambda x: x.real, a))
 print a
 print ans
-print abs(ans - a)
+print abs(ans - sorted(a)[::-1])
 
