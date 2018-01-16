@@ -77,11 +77,12 @@ def implicit_kernel(a):
     """ check pass
     ata = numpy.dot(numpy.conj(a).transpose(), a)
     """
+    d = numpy.diag(a)
+    f = numpy.diag(a[:-1,1:])
 
-    t = numpy.dot(numpy.conj(a[-1:,-1:].transpose()), a[-1:,-1:])
-    mu = t[-1, -1]
+    mu = d[-1].conjugate() * d[-1]
     # unroll these bunch!
-    alpha, hv = household(numpy.array([a[0, 0] * a[0, 0].conjugate() - mu, a[0, 0] * a[0, 1].conjugate()]))
+    alpha, hv = household(numpy.array([d[0] * d[0].conjugate() - mu, d[0] * f[0].conjugate()]))
     m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
     q[:2,:2] = m
     a[:2,:2] = numpy.dot(a[:2,:2], m)
