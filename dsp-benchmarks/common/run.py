@@ -53,8 +53,8 @@ def run_cpu(env = ''):
     run_shell(env + ' make physical.log')
     run_shell(env + ' make optimized.log')
     res = []
-    res += analyze_log('physical.log')
     res += analyze_log('optimized.log')
+    res += analyze_log('physical.log')
     return res
 
 def run(cases, template, softbrains):
