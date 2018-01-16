@@ -12,7 +12,7 @@ IFLAGS=-I../../common/include -I ../../../ss-tools/include -I ../common/ -I ./df
 
 CC=riscv64-unknown-elf-g++
 
-BENCHMARKS = baseline optimized
+BENCHMARKS = optimized
 OBJS = $(BENCHMARKS:=.o)
 LOGS = $(BENCHMARKS:=.log) $(SOFTBRAINS:=.log)
 EXEC = $(BENCHMARKS:=.exe) $(SOFTBRAINS:=.exe)
@@ -37,9 +37,6 @@ $(LOGS): %.log: %.exe
 	
 $(EXEC): %.exe: input.data ref.data %.o main.cc
 	$(CC) main.cc $(basename $@).o -o $@ -lm -O3 $(MACROS) $(IFLAGS)
-
-$(BENCHMARKS:=clean):
-	cd $(@:clean=); make clean
 
 cleandata:
 	rm -f input.data ref.data
