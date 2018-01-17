@@ -15,7 +15,7 @@ V = numpy.identity(N, dtype = 'complex128')
 
 def household(v):
     if numpy.linalg.norm(v) < 1e-5:
-        return numpy.identity(2)
+        return v[0], numpy.array([1] + [0] * (len(v) - 1))
     hv = v.copy()
     alpha = cmath.exp(1j * cmath.phase(hv[0])) * numpy.linalg.norm(hv)
     hv[0] += alpha
@@ -74,22 +74,44 @@ def implicit_kernel(a):
 
     q = numpy.identity(n, dtype = 'complex128')
 
+
     """ check pass
     ata = numpy.dot(numpy.conj(a).transpose(), a)
     """
-    d = numpy.diag(a)
-    f = numpy.diag(a[:-1,1:])
+    d = numpy.diag(a).copy()
+    f = numpy.diag(a[:-1,1:]).copy()
 
     mu = d[-1].conjugate() * d[-1]
     # unroll these bunch!
     alpha, hv = household(numpy.array([d[0] * d[0].conjugate() - mu, d[0] * f[0].conjugate()]))
     m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
     q[:2,:2] = m
-    a[:2,:2] = numpy.dot(a[:2,:2], m)
+    #a[:2,:2] = numpy.dot(a[:2,:2], m)
+    sub = numpy.dot([[d[0], f[0]], [0, d[1]]], m)
+    d[0] = sub[0, 0]
+    f[0] = sub[0, 1]
+    extra= sub[1, 0]
+    d[1] = sub[1, 1]
 
-    alpha, hv = household(numpy.array([a[0,0],a[1,0]]))
+    #alpha, hv = household(numpy.array([a[0],a[1,0]]))
+    alpha, hv = household(numpy.array([d[0],extra]))
     m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
-    a[:2,:3] = numpy.dot(m, a[:2,:3])
+    try:
+        sub = numpy.dot(m, [[d[0], f[0], 0], [extra, d[1], f[1]]])
+        d[0] = -alpha
+        assert sub[0, 0] + alpha < 1e-5
+        f[0] = sub[0, 1]
+        d[1] = sub[1, 1]
+        extra= sub[0, 2]
+        f[1] = sub[1, 2]
+    except:
+        assert n == 2
+        sub = numpy.dot(m, [[d[0], f[0]], [extra, d[1]]])
+        assert sub[0, 0] + alpha < 1e-5
+        d[0] = -alpha
+        f[0] = sub[0, 1]
+        d[1] = sub[1, 1]
+        pass
 
 
     """ check pass!
@@ -103,9 +125,20 @@ def implicit_kernel(a):
     """
 
     for i in range(1, n - 1):
-        alpha, hv = household(numpy.array([a[i-1,i].conjugate(), a[i-1,i+1].conjugate()]))
+        #alpha, hv = household(numpy.array([a[i-1,i].conjugate(), a[i-1,i+1].conjugate()]))
+        alpha, hv = household(numpy.array([f[i-1].conjugate(), extra.conjugate()]))
         m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
-        a[i-1:i+2,i:i+2] = numpy.dot(a[i-1:i+2,i:i+2], m)
+        #a[i-1:i+2,i:i+2] = numpy.dot(a[i-1:i+2,i:i+2], m)
+        sub = numpy.dot([[f[i-1], extra], [d[i], f[i]], [0., d[i+1]]], m)
+        assert abs(sub[0, 1]) < 1e-5
+        #print 'sub', sub[0, 0]
+        #print 'alpha', alpha
+        assert abs(sub[0, 0] + alpha.conjugate()) < 1e-5
+        f[i-1] = sub[0,0]
+        d[i]   = sub[1,0]
+        f[i]   = sub[1,1]
+        extra  = sub[2,0]
+        d[i+1] = sub[2,1]
         q[i:i+2,:i+2] = numpy.dot(m, q[i:i+2,:i+2])
 
         """ check pass!
@@ -118,9 +151,29 @@ def implicit_kernel(a):
         )
         """
 
-        alpha, hv = household(numpy.array([a[i,i],a[i+1,i]]))
+        #alpha, hv = household(numpy.array([a[i,i],a[i+1,i]]))
+        alpha, hv = household(numpy.array([d[i],extra]))
         m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
-        a[i:i+2,i:i+3] = numpy.dot(m, a[i:i+2,i:i+3])
+        #a[i:i+2,i:i+3] = numpy.dot(m, a[i:i+2,i:i+3])
+        try:
+            sub = numpy.dot(m, [[d[i], f[i], 0], [extra, d[i+1], f[i+1]]])
+            d[i]   = -alpha
+            f[i]   = sub[0, 1]
+            d[i+1] = sub[1, 1]
+            extra  = sub[0, 2]
+            f[i+1] = sub[1, 2]
+        except:
+            assert i == n - 2
+            sub = numpy.dot(m, [[d[i], f[i]], [extra, d[i+1]]])
+            d[i]   = -alpha
+            f[i]   = sub[0, 1]
+            d[i+1] = sub[1, 1]
+            pass
+
+    for i in range(n):
+        a[i,i] = d[i]
+        if i + 1 < n:
+            a[i,i+1] = f[i]
 
     return q
 
