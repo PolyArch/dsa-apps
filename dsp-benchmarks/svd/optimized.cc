@@ -89,19 +89,24 @@ void svd(complex<float> *a, complex<float> *u, complex<float> *s, complex<float>
         for (int k = 1; k < N; ++k) {
           temp[k] = 0;
           for (int j = i + 1; j < N; ++j) {
-            complex<float> delta(complex_mul(hv[j - i - 1], v[k * N + j]));
+            complex<float> delta(complex_mul(hv[j - i - 1], v[j * N + k]));
             temp[k] = complex<float>(complex_add(temp[k], delta));
           }
           temp[k] = complex<float>(temp[k].real() * 2, temp[k].imag() * 2);
         }
         //for (int j = 1; j < N; ++j) std::cout << temp[j] << " "; std::cout << "\n";
+        for (int k = 1; k < N; ++k) {
+          for (int j = i + 1; j < N; ++j) {
+            complex<float> delta(complex_conj_mul(hv[j - i - 1], temp[k]));
+            v[j * N + k] -= delta;
+          }
+        }
+        //for (int j = i + 1; j < N; ++j) { for (int k = 1; k < N; ++k) std::cout << v[j * N + k] << " "; std::cout << "\n"; }
       }
     }
-
   }
   f[N - 2] = r[0];
   d[N - 1] = r[1];
-
   //for (int i = 1; i < N; ++i) std::cout << f[i - 1] << " "; std::cout << "\n";
   //for (int i = 0; i < N; ++i) std::cout << d[i] << " "; std::cout << "\n";
 }
