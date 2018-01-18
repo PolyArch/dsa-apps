@@ -137,7 +137,7 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
 }
 
 void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
-  std::cout << std::fixed << std::setprecision(4);
+  //std::cout << std::fixed << std::setprecision(4);
   for (int i = 0; i < N - 1; ++i) {
     int len = N - i;
     complex<float> hv[len], alpha;
@@ -145,14 +145,15 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
       hv[j] = (i ? r : a)[j * len];
     household(hv, len, d[i]);
 
-    for (int j = 1; j < len; ++j) {
+    for (int j = 1; j < len; ++j)
       temp[j] = 0;
-      for (int k = 0; k < len; ++k) {
+    for (int k = 0; k < len; ++k) {
+      for (int j = 1; j < len; ++j) {
         temp[j] += complex<float>(complex_conj_mul(hv[k], (i ? r : a)[k * len + j]));
       }
-      temp[j] = complex<float>(temp[j].real() * 2, temp[j].imag() * 2);
-      //std::cout << temp[j] << "\n";
     }
+    for (int j = 1; j < len; ++j)
+      temp[j] = complex<float>(temp[j].real() * 2, temp[j].imag() * 2);
 
     for (int j = 0; j < len; ++j) {
       for (int k = 1; k < len; ++k) {
@@ -170,7 +171,8 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
       for (int j = 0; j < len; ++j) {
         temp[j] = 0;
         for (int k = 0; k < len; ++k) {
-          temp[j] += complex<float>(complex_conj_mul(hv[k], r[(j + 1) * len + k]));
+          complex<float> delta(complex_conj_mul(hv[k], r[(j + 1) * len + k]));
+          temp[j] = complex<float>(complex_add(temp[j], delta));
         }
         temp[j] = complex<float>(temp[j].real() * 2, temp[j].imag() * 2);
       }
@@ -193,14 +195,16 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
         }
         //for (int j = 0; j < N; ++j) { for (int k = 0; k < N; ++k) std::cout << v[j * N + k] << " "; std::cout << "\n"; }
       } else {
-        for (int k = 1; k < N; ++k) {
+        for (int k = 1; k < N; ++k)
           temp[k] = 0;
-          for (int j = i + 1; j < N; ++j) {
+        for (int j = i + 1; j < N; ++j) {
+          for (int k = 1; k < N; ++k) {
             complex<float> delta(complex_mul(hv[j - i - 1], v[j * N + k]));
             temp[k] = complex<float>(complex_add(temp[k], delta));
           }
-          temp[k] = complex<float>(temp[k].real() * 2, temp[k].imag() * 2);
         }
+        for (int k = 1; k < N; ++k)
+          temp[k] = complex<float>(temp[k].real() * 2, temp[k].imag() * 2);
         //for (int j = 1; j < N; ++j) std::cout << temp[j] << " "; std::cout << "\n";
         for (int k = 1; k < N; ++k) {
           for (int j = i + 1; j < N; ++j) {
@@ -252,5 +256,4 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
     }
   }
   //for (int i = 0; i < N; ++i) { for (int j = 0; j < N; ++j) std::cout << u[i * N + j] << " "; std::cout << "\n"; }
-  
 }
