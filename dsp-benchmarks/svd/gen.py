@@ -63,31 +63,23 @@ for i in range(N - 1):
 
 d.append(r[1,0])
 f.append(r[0,0])
-a = numpy.zeros((N, N), dtype = 'complex128')
-for i in range(N):
-    a[i,i] = d[i]
-    if i + 1 < N:
-        a[i,i+1] = f[i]
+
+d = numpy.array(d)
+f = numpy.array(f)
 
 TOTAL = 0
 
-def implicit_kernel(a):
+def implicit_kernel(d, f):
     global TOTAL
     TOTAL += 1
-    shape = a.shape
-    assert shape[0] == shape[1]
-    n = shape[0]
+    n = len(d)
     assert n > 1
 
     q = numpy.identity(n, dtype = 'complex128')
 
-
     """ check pass
     ata = numpy.dot(numpy.conj(a).transpose(), a)
     """
-    d = numpy.diag(a).copy()
-    f = numpy.diag(a[:-1,1:]).copy()
-
     mu = d[-1].conjugate() * d[-1]
     # unroll these bunch!
     alpha, hv = household(numpy.array([d[0] * d[0].conjugate() - mu, d[0] * f[0].conjugate()]))
@@ -170,11 +162,6 @@ def implicit_kernel(a):
             d[i+1] = sub[1, 1]
             pass
 
-    for i in range(n):
-        a[i,i] = d[i]
-        if i + 1 < n:
-            a[i,i+1] = f[i]
-
     return q
 
 while True:
@@ -182,10 +169,10 @@ while True:
     called = False
     while i < N - 1:
         j = i
-        while j < N - 1 and abs(a[j, j + 1]) > 1e-6:
+        while j < N - 1 and abs(f[j]) > 1e-6:
             j += 1
         if i != j:
-            q = implicit_kernel(a[i:j+1, i:j+1])
+            q = implicit_kernel(d[i:j+1], f[i:j])
             V[i:j+1,:] = numpy.dot(q, V[i:j+1,:])
 
             """ check pass!
@@ -214,7 +201,7 @@ numpy.testing.assert_allclose(
 """
 
 print "Total iteration: %d" % TOTAL
-sv = numpy.diag(a)
+sv = d
 sv = numpy.real(numpy.sqrt(sv * numpy.conj(sv)))
 
 try:
@@ -243,7 +230,9 @@ numpy.testing.assert_allclose(
 
 #verify code:
 
-sigma = numpy.sqrt(numpy.dot(numpy.conj(a).transpose(), a))
+sigma = numpy.zeros((N, N), dtype = 'complex128')
+for i in range(N):
+    a[i, i] = sv[i]
 
 try:
     numpy.testing.assert_allclose(
