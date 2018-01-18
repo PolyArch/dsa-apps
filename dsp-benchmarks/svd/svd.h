@@ -7,11 +7,13 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <complex>
+#include <iostream>
+#include <iomanip>
 
 #define BN 4
 #define NN (N + BN - 1)
 
-#define eps 1e-3
+#define eps 1e-5
 using std::complex;
 
 struct complex_t {
@@ -19,6 +21,6 @@ struct complex_t {
   float imag;
 };
 
-void svd(complex<float> *, complex<float> *, complex<float> *, complex<float> *);
+void svd(complex<float> *, complex<float> *, float *, complex<float> *);
 
 #endif

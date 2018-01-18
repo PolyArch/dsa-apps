@@ -36,7 +36,6 @@ for i in range(N - 1):
         V[i+1:,1:] = V[i+1:,1:] - 2 * numpy.outer(numpy.conj(hv), numpy.dot(hv, V[i+1:,1:]))
         f.append(-alpha)
 
-
 d.append(r[1,0])
 f.append(r[0,0])
 
@@ -52,7 +51,6 @@ def implicit_kernel(d, f, V):
     assert n > 1
 
     mu = d[-1].conjugate() * d[-1]
-    # unroll these bunch!
     alpha, hv = household(numpy.array([d[0] * d[0].conjugate() - mu, d[0] * f[0].conjugate()]))
     m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
     d[0], f[0], extra, d[1] = d[0] * m[0,0] + f[0] * m[1,0], d[0] * m[0,1] + f[0] * m[1,1], d[1] * m[1,0], d[1] * m[1,1]
@@ -90,7 +88,7 @@ while True:
     called = False
     while i < N - 1:
         j = i
-        while j < N - 1 and abs(f[j]) > 1e-5:
+        while j < N - 1 and (abs(f[j].real) > 1e-5 or abs(f[j].imag) > 1e-5):
             j += 1
         if i != j:
             implicit_kernel(d[i:j+1], f[i:j], V[i:j+1,:])
@@ -98,6 +96,7 @@ while True:
         i = j + 1
     if not called:
         break
+
 
 """ check pass!
 invsd = numpy.dot(a, V)
@@ -124,10 +123,10 @@ except:
 
 print 'Singular value:', sv
 
-
 U = numpy.dot(_a, numpy.conj(V).transpose())
 for i in range(N):
     U[:,i] /= sv[i]
+
 
 """ check pass!
 numpy.testing.assert_allclose(
