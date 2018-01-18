@@ -52,21 +52,13 @@ def implicit_kernel(d, f, V):
     # unroll these bunch!
     alpha, hv = household(numpy.array([d[0] * d[0].conjugate() - mu, d[0] * f[0].conjugate()]))
     m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
+    d[0], f[0], extra, d[1] = d[0] * m[0,0] + f[0] * m[1,0], d[0] * m[0,1] + f[0] * m[1,1], d[1] * m[1,0], d[1] * m[1,1]
     V[:2,:] = numpy.dot(m, V[:2,:])
-
-    sub = numpy.dot([[d[0], f[0]], [0, d[1]]], m)
-    d[0] = sub[0, 0]
-    f[0] = sub[0, 1]
-    extra= sub[1, 0]
-    d[1] = sub[1, 1]
 
     alpha, hv = household(numpy.array([d[0],extra]))
     m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
-
-    sub = numpy.dot(m, [f[0], d[1]])
     d[0] = -alpha
-    f[0] = sub[0]
-    d[1] = sub[1]
+    f[0], d[1] = m[0,0] * f[0] + m[0,1] * d[1], m[1,0] * f[0] + m[1,1] * d[1]
     if n != 2:
         extra = m[0, 1] * f[1]
         f[1]  = m[1, 1] * f[1]
@@ -74,21 +66,17 @@ def implicit_kernel(d, f, V):
     for i in range(1, n - 1):
         alpha, hv = household(numpy.array([f[i-1].conjugate(), extra.conjugate()]))
         m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
-        sub = numpy.dot([[d[i], f[i]], [0., d[i+1]]], m)
         f[i-1] = -alpha.conjugate()
-        d[i]   = sub[0,0]
-        f[i]   = sub[0,1]
-        extra  = sub[1,0]
-        d[i+1] = sub[1,1]
+        d[i], f[i] = d[i] * m[0,0] + f[i] * m[1,0], d[i] * m[0,1] + f[i] * m[1,1]
+        extra  = d[i+1] * m[1,0]
+        d[i+1] = d[i+1] * m[1,1]
         V[i:i+2,:] = numpy.dot(m, V[i:i+2,:])
 
         alpha, hv = household(numpy.array([d[i],extra]))
         m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
 
-        sub = numpy.dot(m, [f[i], d[i+1]])
         d[i]   = -alpha
-        f[i]   = sub[0]
-        d[i+1] = sub[1]
+        f[i], d[i+1] = m[0,0] * f[i] + m[0,1] * d[i+1], m[1,0] * f[i] + m[1,1] * d[i+1]
         if i != n - 2:
             extra  = m[0, 1] * f[i+1]
             f[i+1] = m[1, 1] * f[i+1]
