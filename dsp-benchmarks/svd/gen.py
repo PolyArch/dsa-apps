@@ -1,4 +1,5 @@
 import numpy, cmath, sys, imp
+output = imp.load_source('output', '../common/output.py')
 
 numpy.set_printoptions(precision = 4, suppress = True, threshold = 1000, linewidth = 200)
 
@@ -6,6 +7,8 @@ N = int(sys.argv[1])
 
 _a = numpy.random.rand(N, N) + 1j * numpy.random.rand(N, N)
 a = _a.copy()
+output.print_complex_array('input.data', a.flatten())
+output.print_complex_array('ref.data', a.flatten())
 
 ans = numpy.linalg.svd(a, compute_uv = False)
 
@@ -13,7 +16,8 @@ V = numpy.identity(N, dtype = 'complex128')
 
 def household(v):
     if numpy.linalg.norm(v) < 1e-5:
-        return v[0], numpy.array([1] + [0] * (len(v) - 1))
+        return v[0], numpy.ones((len(v)), dtype = 'complex128')
+        #return v[0], numpy.array([1] + [0] * (len(v) - 1))
     hv = v.copy()
     alpha = cmath.exp(1j * cmath.phase(hv[0])) * numpy.linalg.norm(hv)
     hv[0] += alpha
@@ -87,7 +91,7 @@ while True:
     called = False
     while i < N - 1:
         j = i
-        while j < N - 1 and abs(f[j]) > 1e-6:
+        while j < N - 1 and abs(f[j]) > 1e-5:
             j += 1
         if i != j:
             implicit_kernel(d[i:j+1], f[i:j], V[i:j+1,:])
