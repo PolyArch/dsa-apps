@@ -16,8 +16,7 @@ V = numpy.identity(N, dtype = 'complex128')
 
 def household(v):
     if numpy.linalg.norm(v) < 1e-5:
-        return v[0], numpy.ones((len(v)), dtype = 'complex128')
-        #return v[0], numpy.array([1] + [0] * (len(v) - 1))
+        return v[0], numpy.ones((len(v)), dtype = 'complex128') / cmath.sqrt(len(v))
     hv = v.copy()
     alpha = cmath.exp(1j * cmath.phase(hv[0])) * numpy.linalg.norm(hv)
     hv[0] += alpha
