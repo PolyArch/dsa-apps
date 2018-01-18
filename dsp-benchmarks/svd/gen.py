@@ -25,29 +25,14 @@ r = a.copy()
 
 for i in range(N - 1):
     alpha, hv = household(r[:,0].copy())
-    #make it fine-grained later
-    h = numpy.identity(N - i, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
-    r = numpy.dot(h, r[:,1:])
+    r = r[:,1:] - 2 * numpy.outer(hv, numpy.dot(numpy.conj(hv), r[:,1:]))
     d.append(-alpha)
-
     if i != N - 2:
         alpha, hv = household(r[0,:].copy())
-        #make it fine-grained later
-        h = numpy.identity(N - i - 1, dtype = 'complex128') - 2 * numpy.outer(numpy.conj(hv), hv)
-        r = numpy.dot(r[1:,:], h)
+        r = r[1:,:] - 2 * numpy.outer(numpy.dot(r[1:,:], numpy.conj(hv)), hv)
+        V[i+1:,:] = V[i+1:,:] - 2 * numpy.outer(numpy.conj(hv), numpy.dot(hv, V[i+1:,:]))
         f.append(-alpha)
 
-        V[i+1:,:] = numpy.dot(h, V[i+1:,:])
-
-        """ check passed!
-        invsd = numpy.dot(a, V)
-        numpy.testing.assert_allclose(
-            numpy.dot(numpy.conj(invsd.transpose()), invsd),
-            ata,
-            atol = 1e-5,
-            rtol = 1e-5
-        )
-        """
 
 d.append(r[1,0])
 f.append(r[0,0])
