@@ -42,19 +42,17 @@ f = numpy.array(f)
 
 TOTAL = 0
 
-def implicit_kernel(d, f):
+def implicit_kernel(d, f, V):
     global TOTAL
     TOTAL += 1
     n = len(d)
     assert n > 1
 
-    q = numpy.identity(n, dtype = 'complex128')
-
     mu = d[-1].conjugate() * d[-1]
     # unroll these bunch!
     alpha, hv = household(numpy.array([d[0] * d[0].conjugate() - mu, d[0] * f[0].conjugate()]))
     m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
-    q[:2,:2] = m
+    V[:2,:] = numpy.dot(m, V[:2,:])
 
     sub = numpy.dot([[d[0], f[0]], [0, d[1]]], m)
     d[0] = sub[0, 0]
@@ -103,7 +101,7 @@ def implicit_kernel(d, f):
         f[i]   = sub[1,1]
         extra  = sub[2,0]
         d[i+1] = sub[2,1]
-        q[i:i+2,:i+2] = numpy.dot(m, q[i:i+2,:i+2])
+        V[i:i+2,:] = numpy.dot(m, V[i:i+2,:])
 
         """ check pass!
         invsd = numpy.dot(a, q)
@@ -130,9 +128,7 @@ def implicit_kernel(d, f):
             d[i]   = -alpha
             f[i]   = sub[0, 1]
             d[i+1] = sub[1, 1]
-            pass
 
-    return q
 
 while True:
     i = 0
@@ -142,8 +138,8 @@ while True:
         while j < N - 1 and abs(f[j]) > 1e-6:
             j += 1
         if i != j:
-            q = implicit_kernel(d[i:j+1], f[i:j])
-            V[i:j+1,:] = numpy.dot(q, V[i:j+1,:])
+            implicit_kernel(d[i:j+1], f[i:j], V[i:j+1,:])
+            #V[i:j+1,:] = numpy.dot(q, V[i:j+1,:])
 
             """ check pass!
             invsd = numpy.dot(a, V)
