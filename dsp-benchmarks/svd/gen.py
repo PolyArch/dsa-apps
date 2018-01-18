@@ -62,72 +62,36 @@ def implicit_kernel(d, f, V):
 
     alpha, hv = household(numpy.array([d[0],extra]))
     m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
-    try:
-        sub = numpy.dot(m, [[d[0], f[0], 0], [extra, d[1], f[1]]])
-        d[0] = -alpha
-        assert sub[0, 0] + alpha < 1e-5
-        f[0] = sub[0, 1]
-        d[1] = sub[1, 1]
-        extra= sub[0, 2]
-        f[1] = sub[1, 2]
-    except:
-        assert n == 2
-        sub = numpy.dot(m, [[d[0], f[0]], [extra, d[1]]])
-        assert sub[0, 0] + alpha < 1e-5
-        d[0] = -alpha
-        f[0] = sub[0, 1]
-        d[1] = sub[1, 1]
-        pass
 
-
-    """ check pass!
-    invsd = numpy.dot(a, q)
-    numpy.testing.assert_allclose(
-        numpy.dot(numpy.conj(invsd.transpose()), invsd),
-        ata,
-        atol = 1e-5,
-        rtol = 1e-5
-    )
-    """
+    sub = numpy.dot(m, [f[0], d[1]])
+    d[0] = -alpha
+    f[0] = sub[0]
+    d[1] = sub[1]
+    if n != 2:
+        extra = m[0, 1] * f[1]
+        f[1]  = m[1, 1] * f[1]
 
     for i in range(1, n - 1):
         alpha, hv = household(numpy.array([f[i-1].conjugate(), extra.conjugate()]))
         m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
-        sub = numpy.dot([[f[i-1], extra], [d[i], f[i]], [0., d[i+1]]], m)
-        assert abs(sub[0, 1]) < 1e-5
-        assert abs(sub[0, 0] + alpha.conjugate()) < 1e-5
-        f[i-1] = sub[0,0]
-        d[i]   = sub[1,0]
-        f[i]   = sub[1,1]
-        extra  = sub[2,0]
-        d[i+1] = sub[2,1]
+        sub = numpy.dot([[d[i], f[i]], [0., d[i+1]]], m)
+        f[i-1] = -alpha.conjugate()
+        d[i]   = sub[0,0]
+        f[i]   = sub[0,1]
+        extra  = sub[1,0]
+        d[i+1] = sub[1,1]
         V[i:i+2,:] = numpy.dot(m, V[i:i+2,:])
-
-        """ check pass!
-        invsd = numpy.dot(a, q)
-        numpy.testing.assert_allclose(
-            numpy.dot(numpy.conj(invsd.transpose()), invsd),
-            ata,
-            atol = 1e-5,
-            rtol = 1e-5
-        )
-        """
 
         alpha, hv = household(numpy.array([d[i],extra]))
         m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
-        try:
-            sub = numpy.dot(m, [[d[i], f[i], 0], [extra, d[i+1], f[i+1]]])
-            d[i]   = -alpha
-            f[i]   = sub[0, 1]
-            d[i+1] = sub[1, 1]
-            extra  = sub[0, 2]
-            f[i+1] = sub[1, 2]
-        except:
-            assert i == n - 2
-            sub = numpy.dot(m, [[d[i], f[i]], [extra, d[i+1]]])
-            d[i]   = -alpha
-            f[i]   = sub[0, 1]
-            d[i+1] = sub[1, 1]
+
+        sub = numpy.dot(m, [f[i], d[i+1]])
+        d[i]   = -alpha
+        f[i]   = sub[0]
+        d[i+1] = sub[1]
+        if i != n - 2:
+            extra  = m[0, 1] * f[i+1]
+            f[i+1] = m[1, 1] * f[i+1]
 
 
 while True:
@@ -139,18 +103,6 @@ while True:
             j += 1
         if i != j:
             implicit_kernel(d[i:j+1], f[i:j], V[i:j+1,:])
-            #V[i:j+1,:] = numpy.dot(q, V[i:j+1,:])
-
-            """ check pass!
-            invsd = numpy.dot(a, V)
-            numpy.testing.assert_allclose(
-                numpy.dot(numpy.conj(invsd.transpose()), invsd),
-                ata,
-                atol = 1e-5,
-                rtol = 1e-5
-            )
-            """
-
             called = True
         i = j + 1
     if not called:
