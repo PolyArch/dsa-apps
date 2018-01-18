@@ -3,7 +3,7 @@
 #define complex_mul(a, b) (a).real() * (b).real() - (a).imag() * (b).imag(), \
   (a).real() * (b).imag() + (a).imag() * (b).real()
 
-#define complex_mul_cons(a, b) (a).real() * b, (a).imag() * b
+#define complex_mul_cons(a, b) (a).real() * (b), (a).imag() * (b)
 
 #define complex_conj_mul(a, b) (a).real() * (b).real() + (a).imag() * (b).imag(), \
   (a).real() * (b).imag() - (a).imag() * (b).real()
@@ -44,24 +44,60 @@ void household2(complex<float> &a, complex<float> &b, complex<float> &alpha) {
   b = complex<float>(b.real() * norm1, b.imag() * norm1);
 }
 
+#define outer2(a, b, m0, m1) \
+  do { \
+    m0 = 1 - complex_norm(a) * 2; \
+    m1 = complex<float>(complex_conj_mul(b, a)); \
+    m1 = complex<float>(complex_mul_cons(m1, -2)); \
+  } while(false)
+
+/* Outer MM
+ * (m0        m1) (a)
+ * (m1.conj  -m0) (b)
+ * */
+#define lmm2x2(m0, m1, a, b) \
+  do { \
+    complex<float> \
+      l0(complex_mul_cons(a, m0)), \
+      r0(complex_mul(m1, b)), \
+      l1(complex_conj_mul(m1, a)), \
+      r1(complex_mul_cons(b, -m0)); \
+    a = complex<float>(complex_add(l0, r0)); \
+    b = complex<float>(complex_add(l1, r1)); \
+  } while(false)
+
+/*  Outer MM
+ *  (a b) (m0       m1)
+ *        (m1.conj -m0)
+ * */
+#define rmm2x2(a, b, m0, m1) \
+  do { \
+    complex<float> \
+      l0(complex_mul_cons(a, m0)), \
+      r0(complex_conj_mul(m1, b)), \
+      l1(complex_mul(a, m1)), \
+      r1(complex_mul_cons(b, -m0)); \
+    a = complex<float>(complex_add(l0, r0)); \
+    b = complex<float>(complex_add(l1, r1)); \
+  } while(false)
+
 void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, int n) {
   float mu = complex_norm(d[n - 1]);
   complex<float> a(complex_norm(d[0]) - mu), b(complex_conj_mul(f[0], d[0])), alpha;
   household2(a, b, alpha);
-  float m0 = 1 - complex_norm(a) * 2;
-  complex<float> m1(complex_conj_mul(b, a));
-  m1 = complex<float>(complex_mul_cons(m1, -2));
+  float m0;
+  complex<float> m1;
+  outer2(a, b, m0, m1);
   //std::cout << m0 << " " << m1 << "\n";
   //for (int i = 0; i < 2; ++i) { for (int j = 0; j < N; ++j) std::cout << v[i * N + j] << " "; std::cout << "\n"; }
   for (int i = 0; i < N; ++i) {
-    complex<float> l0(complex_mul_cons(v[i], m0));
-    complex<float> r0(complex_mul(m1, v[N + i]));
-    complex<float> l1(complex_conj_mul(m1, v[i]));
-    complex<float> r1(complex_mul_cons(v[N + i], -m0));
-    v[i] = complex<float>(complex_add(l0, r0));
-    v[i + N] = complex<float>(complex_add(l1, r1));
+    lmm2x2(m0, m1, v[i], v[i + N]);
   }
   //for (int i = 0; i < 2; ++i) { for (int j = 0; j < N; ++j) std::cout << v[i * N + j] << " "; std::cout << "\n"; }
+  complex<float> extra(0, 0);
+  rmm2x2(d[0], f[0], m0, m1);
+  rmm2x2(extra, d[1], m0, m1);
+  //std::cout << d[0] << " " << f[0] << " " << extra << " " << d[1] << "\n";
 }
 
 void svd(complex<float> *a, complex<float> *u, complex<float> *s, complex<float> *v) {
