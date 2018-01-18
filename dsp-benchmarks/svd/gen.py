@@ -33,7 +33,7 @@ for i in range(N - 1):
     if i != N - 2:
         alpha, hv = household(r[0,:].copy())
         r = r[1:,:] - 2 * numpy.outer(numpy.dot(r[1:,:], numpy.conj(hv)), hv)
-        V[i+1:,:] = V[i+1:,:] - 2 * numpy.outer(numpy.conj(hv), numpy.dot(hv, V[i+1:,:]))
+        V[i+1:,1:] = V[i+1:,1:] - 2 * numpy.outer(numpy.conj(hv), numpy.dot(hv, V[i+1:,1:]))
         f.append(-alpha)
 
 
