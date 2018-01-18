@@ -48,15 +48,16 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
   float mu = complex_norm(d[n - 1]);
   complex<float> a(complex_norm(d[0]) - mu), b(complex_conj_mul(f[0], d[0])), alpha;
   household2(a, b, alpha);
-  complex<float> m[2];
-  m[0] = 1. - complex_norm(a) * 2;
-  m[1] = complex<float>(complex_conj_mul(b, a));
-  m[1] = complex<float>(complex_mul_cons(m[1], -2));
+  float m0 = 1 - complex_norm(a) * 2;
+  complex<float> m1(complex_conj_mul(b, a));
+  m1 = complex<float>(complex_mul_cons(m1, -2));
+  //std::cout << m0 << " " << m1 << "\n";
+  //for (int i = 0; i < 2; ++i) { for (int j = 0; j < N; ++j) std::cout << v[i * N + j] << " "; std::cout << "\n"; }
   for (int i = 0; i < N; ++i) {
-    complex<float> l0(complex_mul(m[0], v[i]));
-    complex<float> r0(complex_mul(m[1], v[N + i]));
-    complex<float> l1(complex_conj_mul(m[1], v[i]));
-    complex<float> r1(complex_conj_mul(m[0], v[N + i]));
+    complex<float> l0(complex_mul_cons(v[i], m0));
+    complex<float> r0(complex_mul(m1, v[N + i]));
+    complex<float> l1(complex_conj_mul(m1, v[i]));
+    complex<float> r1(complex_mul_cons(v[N + i], -m0));
     v[i] = complex<float>(complex_add(l0, r0));
     v[i + N] = complex<float>(complex_add(l1, r1));
   }
