@@ -3,6 +3,8 @@
 #define complex_mul(a, b) (a).real() * (b).real() - (a).imag() * (b).imag(), \
   (a).real() * (b).imag() + (a).imag() * (b).real()
 
+#define complex_mul_cons(a, b) (a).real() * b, (a).imag() * b
+
 #define complex_conj_mul(a, b) (a).real() * (b).real() + (a).imag() * (b).imag(), \
   (a).real() * (b).imag() - (a).imag() * (b).real()
 
@@ -28,6 +30,37 @@ void household(complex<float> *v, int n, complex<float> &alpha) {
   for (int j = 0; j < n; ++j) {
     v[j] = complex<float>(v[j].real() * norm1, v[j].imag() * norm1);
   }
+}
+
+void household2(complex<float> &a, complex<float> &b, complex<float> &alpha) {
+  float norm0 = complex_norm(a), norm1 = complex_norm(b);
+  float _alpha = sqrt(1 + norm1 / norm0);
+  alpha = complex<float>(-a.real() * _alpha, -b.imag() * _alpha);
+  float rate = 1 + _alpha;
+  a = complex<float>(a.real() * rate, a.imag() * rate);
+  norm1 += complex_norm(a);
+  norm1 = 1 / sqrt(norm1);
+  a = complex<float>(a.real() * norm1, a.imag() * norm1);
+  b = complex<float>(b.real() * norm1, b.imag() * norm1);
+}
+
+void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, int n) {
+  float mu = complex_norm(d[n - 1]);
+  complex<float> a(complex_norm(d[0]) - mu), b(complex_conj_mul(f[0], d[0])), alpha;
+  household2(a, b, alpha);
+  complex<float> m[2];
+  m[0] = 1. - complex_norm(a) * 2;
+  m[1] = complex<float>(complex_conj_mul(b, a));
+  m[1] = complex<float>(complex_mul_cons(m[1], -2));
+  for (int i = 0; i < N; ++i) {
+    complex<float> l0(complex_mul(m[0], v[i]));
+    complex<float> r0(complex_mul(m[1], v[N + i]));
+    complex<float> l1(complex_conj_mul(m[1], v[i]));
+    complex<float> r1(complex_conj_mul(m[0], v[N + i]));
+    v[i] = complex<float>(complex_add(l0, r0));
+    v[i + N] = complex<float>(complex_add(l1, r1));
+  }
+  //for (int i = 0; i < 2; ++i) { for (int j = 0; j < N; ++j) std::cout << v[i * N + j] << " "; std::cout << "\n"; }
 }
 
 void svd(complex<float> *a, complex<float> *u, complex<float> *s, complex<float> *v) {
@@ -109,4 +142,5 @@ void svd(complex<float> *a, complex<float> *u, complex<float> *s, complex<float>
   d[N - 1] = r[1];
   //for (int i = 1; i < N; ++i) std::cout << f[i - 1] << " "; std::cout << "\n";
   //for (int i = 0; i < N; ++i) std::cout << d[i] << " "; std::cout << "\n";
+  implicit_kernel(d, f, v, N);
 }
