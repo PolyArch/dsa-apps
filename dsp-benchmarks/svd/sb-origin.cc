@@ -282,17 +282,17 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
         //  }
         //}
         SB_CONFIG(vvc_config, vvc_size);
-        SB_DMA_READ(hv, 0, 8 * len, N - 1, P_vvc_A);
+        SB_DMA_READ(temp, 0, 8 * (N - 1), len, P_vvc_B);
         SB_DMA_READ(v + N * (i + 1) + 1, 8 * N, 8 * (N - 1), len, P_vvc_C);
         SB_DMA_WRITE(P_vvc_O, 8 * N, 8 * (N - 1), len, v + N * (i + 1) + 1);
-        for (int k = 1; k < N; ++k) {
-          SB_CONST(P_vvc_B, *((uint64_t*)(temp + k)), len);
+        for (int k = 0; k < len; ++k) {
+          SB_CONST(P_vvc_A, *(uint64_t*)(hv + k), N - 1);
         }
         SB_WAIT_ALL();
         //for (int k = 1; k < N; ++k)
         //  temp[k] = complex<float>(temp[k].real() * 2, temp[k].imag() * 2);
-        //for (int k = 1; k < N; ++k) {
-        //  for (int j = i + 1; j < N; ++j) {
+        //for (int j = i + 1; j < N; ++j) {
+        //  for (int k = 1; k < N; ++k) {
         //    complex<float> delta(complex_conj_mul(hv[j - i - 1], temp[k]));
         //    v[j * N + k] -= delta;
         //  }
