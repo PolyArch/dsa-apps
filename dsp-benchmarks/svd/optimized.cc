@@ -14,7 +14,7 @@
 
 #define complex_norm(a) ((a).real() * (a).real() + (a).imag() * (a).imag())
 
-complex<float> f[N], d[N], r[N * N], temp[N];
+complex<float> f[N], d[N], r[N * N], temp[N], another[N];
 
 void household(complex<float> *v, int n, complex<float> &alpha) {
   float norm0 = complex_norm(v[0]), norm1 = 0;

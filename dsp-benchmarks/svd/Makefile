@@ -1,9 +1,9 @@
 ifndef N
-N=4
+N=12
 endif
 
 
-DFG = kernel1.dfg kernel2.dfg
+DFG = vmc.dfg vv.dfg mvc.dfg vvc.dfg vm.dfg lmm2x2.dfg
 
 SCALE=$(N)
 
@@ -13,5 +13,5 @@ SOFTBRAINS = sb-origin
 
 include ../common/Makefile.inc
 
-sb-origin.o: sb-origin.cc kernel1.h kernel2.h
+sb-origin.o: sb-origin.cc vmc.h vv.h mvc.h vvc.h vm.h lmm2x2.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
