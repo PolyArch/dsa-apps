@@ -107,7 +107,6 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
   SB_DMA_READ(v + N, 8, 8, N, P_lmm2x2_B);
   SB_DMA_WRITE(P_lmm2x2_O0, 8, 8, N, v);
   SB_DMA_WRITE(P_lmm2x2_O1, 8, 8, N, v + N);
-  SB_WAIT_ALL();
   //for (int i = 0; i < N; ++i) {
   //  lmm2x2(m0, m1, v[i], v[i + N]);
   //}
@@ -149,8 +148,8 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
       b = complex<float>(complex_mul(m1, f[i + 1]));
       f[i + 1] = complex<float>(complex_mul_cons(f[i + 1], -m0));
     }
-    SB_WAIT_ALL();
   }
+  SB_WAIT_ALL();
 }
 
 void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
@@ -206,13 +205,14 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
         hv[j] = r[j];
       household(hv, len, f[i]);
 
+      int pad = (len % 4) ? 4 - len % 4 : 0;
       SB_CONFIG(mvc_config, mvc_size);
-      SB_DMA_READ(hv, 0, 8 * len, len, P_mvc_A);
-      SB_DMA_READ(r + len, 8, 8, len * len, P_mvc_B);
       for (int j = 0; j < len; ++j) {
-        SB_CONST(P_mvc_reset, 0, len - 1);
+        SB_DMA_READ(hv, 0, 8 * len, 1, P_mvc_A); SB_CONST(P_mvc_A, *((uint64_t*)&_zero), pad);
+        SB_DMA_READ(r + len * (j + 1), 8, 8, len, P_mvc_B); SB_CONST(P_mvc_B, *((uint64_t*)&_zero), pad);
+        SB_CONST(P_mvc_reset, 0, (len + pad) / 4 - 1);
         SB_CONST(P_mvc_reset, 1, 1);
-        SB_GARBAGE(P_mvc_O, len - 1);
+        SB_GARBAGE(P_mvc_O, (len + pad) / 4 - 1);
         SB_DMA_WRITE(P_mvc_O, 8, 8, 1, temp + j);
       }
       SB_WAIT_ALL();
@@ -229,7 +229,7 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
       SB_DMA_READ(hv, 0, 8 * len, len, P_vv_A);
       SB_DMA_WRITE(P_vv_O, 8, 8, len * len, r);
       for (int j = 0; j < len; ++j) {
-        SB_CONST(P_mvc_B, *((uint64_t*)(temp + j)), len);
+        SB_CONST(P_vv_B, *((uint64_t*)(temp + j)), len);
       }
       SB_WAIT_ALL();
       //for (int j = 0; j < len; ++j) {
@@ -265,12 +265,12 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
         //}
       } else {
         SB_CONFIG(vm_config, vm_size);
-        SB_CONST(P_vm_C, *((uint64_t*)&_zero), N - 1);
-        SB_DMA_READ(v + N * (i + 1) + 1, 8 * N, 8 * (N - 1), len, P_vm_B);
-        SB_RECURRENCE(P_vm_O, P_vm_C, (N - 1) * (len - 1));
-        SB_DMA_WRITE(P_vm_O, 8, 8, N - 1, temp + 1);
+        SB_CONST(P_vm_C, *((uint64_t*)&_zero), N);
+        SB_DMA_READ(v + N * (i + 1), 8 * N, 8 * N, len, P_vm_B);
+        SB_RECURRENCE(P_vm_O, P_vm_C, N * (len - 1));
+        SB_DMA_WRITE(P_vm_O, 8, 8, N, temp);
         for (int j = i + 1; j < N; ++j) {
-          SB_CONST(P_vm_A, hv + j - i - 1, N - 1);
+          SB_CONST(P_vm_A, hv + j - i - 1, N/ 4);
         }
         SB_WAIT_ALL();
         //for (int k = 1; k < N; ++k)
@@ -316,6 +316,7 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
       i = j + 1;
     }
   }
+
   for (int i = 0; i < N; ++i) {
     s[i] = sqrt(complex_norm(d[i]));
   }
@@ -325,9 +326,9 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
   for (int i = 0; i < N; ++i) {
     SB_DMA_READ(v + i * N, 0, 8 * N, N, P_mvc_B);
     for (int j = 0; j < N; ++j) {
-      SB_CONST(P_mvc_reset, 0, N - 1)
+      SB_CONST(P_mvc_reset, 0, N / 4 - 1)
       SB_CONST(P_mvc_reset, 1, 1)
-      SB_GARBAGE(P_mvc_O, N - 1);
+      SB_GARBAGE(P_mvc_O, N / 4 - 1);
       SB_DMA_WRITE(P_mvc_O, 0, 8, 1, u + i * N + j);
     }
   }

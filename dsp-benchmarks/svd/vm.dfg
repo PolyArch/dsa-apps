@@ -1,10 +1,25 @@
 Input: A
-Input: B
-Input: C
+InputVec: B [0, 1, 2, 3]
+InputVec: C [0, 1, 2, 3]
 
-REAL = FMul32x2(A, B)
-IMAG = FMulX32x2(A, B)
-VAL = FSubAdd32x2(REAL, IMAG)
-O = FAdd32x2(C, VAL)
+REAL0 = FMul32x2(A, B0)
+REAL1 = FMul32x2(A, B1)
+REAL2 = FMul32x2(A, B2)
+REAL3 = FMul32x2(A, B3)
 
-Output: O
+IMAG0 = FMulX32x2(A, B0)
+IMAG1 = FMulX32x2(A, B1)
+IMAG2 = FMulX32x2(A, B2)
+IMAG3 = FMulX32x2(A, B3)
+
+VAL0 = FSubAdd32x2(REAL0, IMAG0)
+VAL1 = FSubAdd32x2(REAL1, IMAG1)
+VAL2 = FSubAdd32x2(REAL2, IMAG2)
+VAL3 = FSubAdd32x2(REAL3, IMAG3)
+
+O0 = FAdd32x2(C0, VAL0)
+O1 = FAdd32x2(C1, VAL1)
+O2 = FAdd32x2(C2, VAL2)
+O3 = FAdd32x2(C3, VAL3)
+
+OutputVec: O [0, 1, 2, 3]
