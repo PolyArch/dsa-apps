@@ -5,6 +5,7 @@
 #define NO_FILL        0
 #define POST_ZERO_FILL 1
 #define PRE_ZERO_FILL  2
+#define STRIDE_ZERO_FILL 1
 #define SB_FILL_MODE(mode) \
   __asm__ __volatile__("sb_fill_mode t0, t0, %0" : : "i"(mode));
 
@@ -30,7 +31,7 @@
 
 //Reset all live data requests!  (config retained)
 #define SB_RESET() \
-  __asm__ __volatile__("sb_cfg 0, 0");
+  __asm__ __volatile__("sb_cfg x0, 0");
 
 
 //Fill the scratchpad from DMA (from memory or cache)
@@ -225,6 +226,10 @@
 //wait for all prior scratch reads to be complete (NOT IMPLEMENTED IN SIMULTOR YET)
 #define SB_WAIT_SCR_RD_QUEUED() \
   __asm__ __volatile__("sb_wait t0, t0, 8"); \
+
+//wait for all prior scratch reads to be complete (NOT IMPLEMENTED IN SIMULTOR YET)
+#define SB_WAIT_MEM_WR() \
+  __asm__ __volatile__("sb_wait t0, t0, 16"); \
 
 
 //Indirect Ports
