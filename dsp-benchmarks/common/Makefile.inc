@@ -8,7 +8,7 @@ DFG_HEADERS = $(DFG:.dfg=.h)
 $(DFG_HEADERS): %.h: %.dfg
 	$(SS_TOOLS)/bin/sb_sched --verbose $(SBCONFIG) $< 
 
-IFLAGS=-I../../common/include -I ../../../ss-tools/include -I ../common/ -I ./dfgs
+IFLAGS=-I../../common/include -I../../../ss-tools/include -I../common/
 
 CC=riscv64-unknown-elf-g++
 
