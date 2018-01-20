@@ -1,10 +1,16 @@
 #ifndef SB_INSTS_H
 #define SB_INSTS_H
 
+// For bottom two bits:
+#define NO_FILL        0
+#define POST_ZERO_FILL 1
+#define PRE_ZERO_FILL  2
+#define SB_FILL_MODE(mode) \
+  __asm__ __volatile__("sb_fill_mode t0, t0, %0" : : "i"(mode));
+
 //Mask for accessing shared scratchpad
 #define SHARED_SP 0x10000
 #define SHARED_SP_INDEX 16
-
 
 // This sets the context -- ie. which cores the following commands apply to
 #define SB_CONTEXT(bitmask) \
@@ -22,6 +28,11 @@
 #define SB_CONFIG(mem_addr, size) \
   __asm__ __volatile__("sb_cfg  %0, %1" : : "r"(mem_addr), "i"(size));
 
+//Reset all live data requests!  (config retained)
+#define SB_RESET() \
+  __asm__ __volatile__("sb_cfg 0, 0");
+
+
 //Fill the scratchpad from DMA (from memory or cache)
 //Note that scratch_addr will be written linearly
 #define SB_DMA_SCRATCH_LOAD_GENERAL(mem_addr, stride, acc_size, stretch, n_strides, scr_addr, shr) \
@@ -31,7 +42,6 @@
 
 #define SB_DMA_SCRATCH_LOAD_STRETCH(mem_addr, stride, acc_size, stretch, n_strides, scr_addr) \
  SB_DMA_SCRATCH_LOAD_GENERAL(mem_addr, stride, acc_size, stretch, n_strides, scr_addr, 0);
-
 
 #define SB_SCRATCH_LOAD_REMOTE(remote_scr_addr, stride, acc_size, stretch, n_strides, scr_addr) \
  SB_DMA_SCRATCH_LOAD_GENERAL(remote_scr_addr, stride, acc_size, stretch, n_strides, scr_addr, 1);
@@ -55,8 +65,8 @@
 
 //Read from scratch into a cgra port
 #define SB_SCR_PORT_STREAM_STRETCH(scr_addr,stride,acc_size,stretch,n_strides, port) \
-  __asm__ __volatile__("sb_stride %0, %1, %2" : : "r"(stride), "r"(acc_size), "i"(stretch)); \
-  __asm__ __volatile__("sb_scr_rd   %0, %1, %2 " : : "r"(scr_addr), "r"(n_strides), "i"(port)); 
+  __asm__ __volatile__("sb_stride %0, %1, %2"  : : "r"(stride),   "r"(acc_size),  "i"(stretch)); \
+  __asm__ __volatile__("sb_scr_rd %0, %1, %2 " : : "r"(scr_addr), "r"(n_strides), "i"(port)); 
 
 #define SB_SCR_PORT_STREAM(scr_addr,stride,acc_size,n_strides, port) \
    SB_SCR_PORT_STREAM_STRETCH(scr_addr,stride,acc_size,0,n_strides, port) 
@@ -185,15 +195,12 @@
 #define SB_INDIRECT32(ind_port, addr_offset, input_port) \
   SB_INDIRECT(ind_port, addr_offset, 12231, input_port)
 
-
 #define SB_INDIRECT_WR(ind_port, addr_offset, type, num_elem, output_port) \
   __asm__ __volatile__("sb_ind_wr %0, %1, %2" : : "r"(addr_offset), "r"(num_elem),\
                                        "i"((type<<10)|(output_port<<5) | (ind_port)));
 //64-bit indicies, 64-bit values
 #define SB_INDIRECT64_WR(ind_port, addr_offset, num_elem, output_port) \
   SB_INDIRECT_WR(ind_port, addr_offset, 0, num_elem, output_port)
-
-
 
 //Wait with custom bit vector -- probably don't need to use
 #define SB_WAIT(bit_vec) \
