@@ -10,26 +10,24 @@ a = a + numpy.identity(n)
 output.print_complex_array('input.data', a.flatten())
 print("%d x %d Input generated!" % (n, n))
 
-Q = numpy.identity(n)
+Q = numpy.identity(n, dtype = 'complex128')
 R = a.copy()
 
 #print origin
 
 for i in xrange(n):
-    x = numpy.concatenate((numpy.zeros(i), R[i:, i].copy()))
-    v = x.copy()
-    #print v
-    v[i] += cmath.exp(1j * cmath.phase(v[i])) * numpy.linalg.norm(v)
+    v = R[i:,i].copy()
+    alpha = -cmath.exp(1j * cmath.phase(v[0])) * numpy.linalg.norm(v)
+    v[0] -= alpha
     v = v / numpy.linalg.norm(v)
-    w = numpy.dot(numpy.conj(x), v) / numpy.dot(numpy.conj(v), x)
-    assert abs(w.real - 1.) < 1e-5
-    H = numpy.identity(n) - (1 + w) * numpy.outer(v, numpy.conj(v))
-    R = numpy.dot(H, R)
-    #print R[i:,i:]
-    Q = numpy.dot(Q, H)
+    H = numpy.identity(n - i, dtype = 'complex128') - 2 * numpy.outer(v, numpy.conj(v))
+    temp = numpy.dot(numpy.conj(v), R[i:,i:])
+    R[i:,i:] -= 2 * numpy.outer(v, temp)
+    temp = numpy.dot(Q[:,i:], v)
+    Q[:,i:] -= 2 * numpy.outer(temp, numpy.conj(v))
 
-numpy.testing.assert_allclose(a, numpy.dot(Q, R), rtol = 1e-5)
 numpy.testing.assert_allclose(numpy.identity(n), numpy.dot(Q, numpy.conj(Q.transpose())), atol = 1e-5)
+numpy.testing.assert_allclose(a, numpy.dot(Q, R), rtol = 1e-5)
 
 print "Correctness check pass!"
 output.print_complex_array('ref.data', numpy.concatenate((Q.flatten(), R.flatten())));
