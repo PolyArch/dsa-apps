@@ -1,5 +1,5 @@
 ifndef N
-N=12
+N=32
 endif
 
 

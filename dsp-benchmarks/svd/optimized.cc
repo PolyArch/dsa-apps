@@ -1,18 +1,5 @@
 #include "svd.h"
-
-#define complex_mul(a, b) (a).real() * (b).real() - (a).imag() * (b).imag(), \
-  (a).real() * (b).imag() + (a).imag() * (b).real()
-
-#define complex_mul_cons(a, b) (a).real() * (b), (a).imag() * (b)
-
-#define complex_conj_mul(a, b) (a).real() * (b).real() + (a).imag() * (b).imag(), \
-  (a).real() * (b).imag() - (a).imag() * (b).real()
-
-#define complex_add(a, b) (a).real() + (b).real(), (a).imag() + (b).imag()
-
-#define complex_sub(a, b) (a).real() - (b).real(), (a).imag() - (b).imag()
-
-#define complex_norm(a) ((a).real() * (a).real() + (a).imag() * (a).imag())
+#include "matvec.h"
 
 complex<float> f[N], d[N], r[N * N], temp[N], another[N];
 
@@ -133,24 +120,15 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
       hv[j] = (i ? r : a)[j * len];
     household(hv, len, d[i]);
 
-    for (int j = 1; j < len; ++j)
-      temp[j] = 0;
-    for (int k = 0; k < len; ++k) {
-      for (int j = 1; j < len; ++j) {
-        temp[j] += complex<float>(complex_conj_mul(hv[k], (i ? r : a)[k * len + j]));
-      }
-    }
-    for (int j = 1; j < len; ++j)
-      temp[j] = complex<float>(temp[j].real() * 2, temp[j].imag() * 2);
-    //for (int j = 1; j < len; ++j) std::cout << temp[j] << " "; std::cout << "\n";
+    CPUvec_mul_mat(0, len, 1, len, len, hv, true, (i ? r : a), temp + 1);
 
     for (int j = 0; j < len; ++j) {
       for (int k = 1; k < len; ++k) {
-        complex<float> delta(complex_mul(temp[k], hv[j]));
+        complex<float> delta(temp[k] * hv[j]);
+        delta *= 2;
         r[j * (len - 1) + (k - 1)] = complex<float>(complex_sub((i ? r : a)[j * len + k], delta));
       }
     }
-    //for (int j = 0; j < len; ++j) { for (int k = 0; k < len - 1; ++k) std::cout << r[j * (len - 1) + k] << " "; std::cout << "\n"; }
 
     if (i != N - 2) {
       --len;
@@ -158,20 +136,16 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
         hv[j] = r[j];
       household(hv, len, f[i]);
 
-      for (int j = 0; j < len; ++j) {
-        temp[j] = 0;
-        for (int k = 0; k < len; ++k) {
-          complex<float> delta(complex_conj_mul(hv[k], r[(j + 1) * len + k]));
-          temp[j] = complex<float>(complex_add(temp[j], delta));
-        }
-        temp[j] = complex<float>(temp[j].real() * 2, temp[j].imag() * 2);
-      }
+      CPUmat_mul_vec(1, len, 0, len, len, r, hv, true, temp);
+
       for (int j = 0; j < len; ++j) {
         for (int k = 0; k < len; ++k) {
           complex<float> delta(complex_mul(temp[j], hv[k]));
+          delta *= 2;
           r[j * len + k] = complex<float>(complex_sub(r[(j + 1) * len + k], delta));
         }
       }
+
       if (!i) {
         v[0] = complex<float>(1, 0);
         for (int j = 1; j < N; ++j) {
@@ -184,19 +158,12 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
           }
         }
       } else {
-        for (int k = 1; k < N; ++k)
-          temp[k] = 0;
-        for (int j = i + 1; j < N; ++j) {
-          for (int k = 1; k < N; ++k) {
-            complex<float> delta(complex_mul(hv[j - i - 1], v[j * N + k]));
-            temp[k] = complex<float>(complex_add(temp[k], delta));
-          }
-        }
-        for (int k = 1; k < N; ++k)
-          temp[k] = complex<float>(temp[k].real() * 2, temp[k].imag() * 2);
+        CPUvec_mul_mat(i + 1, N - i - 1, 1, N - 1, N, hv, false, v, temp + 1);
+
         for (int k = 1; k < N; ++k) {
           for (int j = i + 1; j < N; ++j) {
-            complex<float> delta(complex_conj_mul(hv[j - i - 1], temp[k]));
+            complex<float> delta(std::conj(hv[j - i - 1]) * temp[k]);
+            delta *= 2;
             v[j * N + k] -= delta;
           }
         }
