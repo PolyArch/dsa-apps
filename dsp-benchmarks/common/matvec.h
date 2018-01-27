@@ -1,3 +1,6 @@
+#ifndef MATVEC_H
+#define MATVEC_H
+
 #include <complex>
 #include <algorithm>
 #include "sb_insts.h"
@@ -153,3 +156,5 @@
     SB_GARBAGE(O, pad); \
     SB_WAIT_ALL(); \
   } while (false)
+
+#endif
