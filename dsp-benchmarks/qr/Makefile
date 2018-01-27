@@ -2,7 +2,7 @@ ifndef N
 N=12
 endif
 
-SOFTBRAINS = sb-origin sb-new sb-scr sb-multi
+SOFTBRAINS = sb-origin sb-new sb-scr sb-wrap
 
 DFG = dot.dfg norm.dfg mulconj.dfg finalize.dfg finalize_compact.dfg
 SCALE=$(N)
@@ -24,3 +24,6 @@ sb-origin.o: sb-origin.cc mulconj.h finalize.h dot.h
 sb-multi.o sb-new.o sb-scr.o: %.o: %.cc mulconj.h finalize_compact.h norm.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
+
+sb-wrap.o: sb-wrap.cc
+	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
