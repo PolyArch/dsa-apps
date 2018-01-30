@@ -229,7 +229,7 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
       SB_DMA_READ(hv, 0, 8 * len, len, P_vv_A);
       SB_DMA_WRITE(P_vv_O, 8, 8, len * len, r);
       for (int j = 0; j < len; ++j) {
-        SB_CONST(P_mvc_B, *((uint64_t*)(temp + j)), len);
+        SB_CONST(P_vv_B, *((uint64_t*)(temp + j)), len);
       }
       SB_WAIT_ALL();
       //for (int j = 0; j < len; ++j) {
