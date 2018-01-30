@@ -178,9 +178,8 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
     SB_DMA_READ((i ? r : a) + 1, 8 * len, 8 * (len - 1), len, P_vv_C);
     SB_DMA_READ(temp + 1, 0, 8 * (len - 1), len, P_vv_A);
     SB_DMA_WRITE(P_vv_O, 8, 8, (len - 1) * len, r);
-    for (int j = 0; j < len; ++j) {
-      SB_CONST(P_vv_B, *((uint64_t*)(hv + j)), len - 1);
-    }
+    SB_REPEAT_PORT(len - 1);
+    SB_DMA_READ(hv, 8, 8, len, P_vv_B);
     SB_WAIT_ALL();
     
     //for (int j = 1; j < len; ++j)
@@ -212,9 +211,8 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
       SB_DMA_READ(r + len, 8, 8, len * len, P_vv_C);
       SB_DMA_READ(hv, 0, 8 * len, len, P_vv_A);
       SB_DMA_WRITE(P_vv_O, 8, 8, len * len, r);
-      for (int j = 0; j < len; ++j) {
-        SB_CONST(P_vv_B, *((uint64_t*)(temp + j)), len);
-      }
+      SB_REPEAT_PORT(len);
+      SB_DMA_READ(temp, 8, 8, len, P_vv_B);
       SB_WAIT_ALL();
       //for (int j = 0; j < len; ++j) {
       //  for (int k = 0; k < len; ++k) {
@@ -229,13 +227,12 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
         SB_CONFIG(vvc_config, vvc_size);
         SB_DMA_READ(hv, 0, 8 * (N - 1), N - 1, P_vvc_B);
         SB_DMA_WRITE(P_vvc_O, 8 * N, 8 * (N - 1), N - 1, v + N + 1);
+        SB_REPEAT_PORT(N - 1);
+        SB_DMA_READ(hv, 8, 8, N - 1, P_vvc_A);
+        SB_2D_CONST(P_vvc_C, *((uint64_t*)&_one), 1, *((uint64_t*)&_zero), N - 1, N - 2);
+        SB_CONST(P_vvc_C, *((uint64_t*)&_one), 1);
         for (int j = 1; j < N; ++j) {
           v[j] = v[j * N] = complex<float>(0, 0);
-          SB_CONST(P_vvc_A, *((uint64_t*)(hv + j - 1)), N - 1);
-          SB_CONST(P_vvc_C, *((uint64_t*)&_one), 1);
-          if (j != N - 1) {
-            SB_CONST(P_vvc_C, *((uint64_t*)&_zero), N - 1);
-          }
         }
         SB_WAIT_ALL();
         //for (int j = 1; j < N; ++j) {
