@@ -9,9 +9,9 @@ SCALE=$(N)
 
 MACROS=-D N=$(N)
 
-SOFTBRAINS = sb-origin
+SOFTBRAINS = sb-origin sb-new
 
 include ../common/Makefile.inc
 
-sb-origin.o: sb-origin.cc vmc.h vv.h mvc.h vvc.h vm.h lmm2x2.h
+sb-new.o sb-origin.o: %.o: %.cc vmc.h vv.h mvc.h vvc.h vm.h lmm2x2.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
