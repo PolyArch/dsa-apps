@@ -14,7 +14,7 @@ CC=riscv64-unknown-elf-g++
 
 BENCHMARKS = optimized
 OBJS = $(BENCHMARKS:=.o)
-LOGS = $(BENCHMARKS:=.log) $(SOFTBRAINS:=.log)
+LOGS = $(SOFTBRAINS:=.log)
 EXEC = $(BENCHMARKS:=.exe) $(SOFTBRAINS:=.exe)
 
 input.data ref.data: gen.py
@@ -30,12 +30,17 @@ physical.log: physical.exe input.data ref.data
 	./physical.exe 2>&1 | tee $@
 	
 
-$(LOGS): %.log: %.exe
+ooo.log: optimized.exe input.data ref.data
+	SBCONFIG=$(SBCONFIG) \
+	gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=detailed --l1d_size=64kB --l1i_size=16kB --l2_size=1024kB --caches --cmd=./$< \
+	| tee $@
+
+$(LOGS): %.log: %.exe input.data ref.data
 	SBCONFIG=$(SBCONFIG) \
 	gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=minor --l1d_size=64kB --l1i_size=16kB --l2_size=1024kB --caches --cmd=./$< \
 	| tee $@
 	
-$(EXEC): %.exe: input.data ref.data %.o main.cc
+$(EXEC): %.exe: %.o main.cc
 	$(CC) main.cc $(basename $@).o -o $@ -lm -O3 $(MACROS) $(IFLAGS)
 
 cleandata:

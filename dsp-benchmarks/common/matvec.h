@@ -23,7 +23,7 @@
 
 #define complex_norm(a) ((a).real() * (a).real() + (a).imag() * (a).imag())
 
-#define get_pad(n, vec_width) (n % (vec_width) ? (vec_width) - (n % vec_width) : 0)
+#define get_pad(n, vec_width) ((n) % (vec_width) ? (vec_width) - ((n) % vec_width) : 0)
 
 #define CPUvec_norm(from, ext, vec, res) \
   do { \
@@ -94,6 +94,7 @@
     SB_2D_CONST(reset, 2, ((left_ext) + pad) / 4 - 1, 1, 1, upper_ext); \
     SB_DMA_WRITE(O, 8, 8, upper_ext, res); \
     SB_WAIT_ALL(); \
+    SB_FILL_MODE(NO_FILL); \
   } while(false)
 
 #define CPUvec_mul_mat(upper, upper_ext, left, left_ext, mat_stride, vec, is_conj, mat, res) \
@@ -155,6 +156,7 @@
     SB_DMA_WRITE(O, 8, 8, (left_ext), (res)); \
     SB_GARBAGE(O, pad); \
     SB_WAIT_ALL(); \
+    SB_FILL_MODE(NO_FILL); \
   } while (false)
 
 #endif
