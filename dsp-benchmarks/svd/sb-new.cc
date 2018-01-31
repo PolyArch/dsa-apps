@@ -8,22 +8,13 @@
 #include "vm.h"
 #include "lmm2x2.h"
 
-#define complex_mul(a, b) (a).real() * (b).real() - (a).imag() * (b).imag(), \
-  (a).real() * (b).imag() + (a).imag() * (b).real()
-
-#define complex_mul_cons(a, b) (a).real() * (b), (a).imag() * (b)
-
-#define complex_conj_mul(a, b) (a).real() * (b).real() + (a).imag() * (b).imag(), \
-  (a).real() * (b).imag() - (a).imag() * (b).real()
-
-#define complex_add(a, b) (a).real() + (b).real(), (a).imag() + (b).imag()
-
-#define complex_sub(a, b) (a).real() - (b).real(), (a).imag() - (b).imag()
-
-#define complex_norm(a) ((a).real() * (a).real() + (a).imag() * (a).imag())
-
 complex<float> f[N], d[N], r[N * N], temp[N];
 complex<float> _one(1, 0), _zero(0, 0);
+
+union _reiter_t {
+  float a[2];
+  uint64_t val;
+};
 
 void household(complex<float> *v, int n, complex<float> &alpha) {
   float norm0 = complex_norm(v[0]), norm1 = 0;
@@ -43,7 +34,12 @@ void household(complex<float> *v, int n, complex<float> &alpha) {
 
 void household2(complex<float> &a, complex<float> &b, complex<float> &alpha) {
   float norm0 = complex_norm(a), norm1 = complex_norm(b);
-  float _alpha = sqrt(1 + norm1 / norm0);
+
+  _reiter_t ri = {1 + norm1 / norm0, 0};
+  SB_CONST(P_lmm2x2_VAL, ri.val, 1);
+  SB_RECV(P_lmm2x2_sqrt, ri.val); //It is forever stuck here
+
+  float _alpha = ri.a[0];//sqrt(1 + norm1 / norm0);
   alpha = complex<float>(-a.real() * _alpha, -a.imag() * _alpha);
   float rate = 1 + _alpha;
   a = complex<float>(a.real() * rate, a.imag() * rate);
@@ -97,10 +93,7 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
   complex<float> a(complex_norm(d[0]) - mu), b(complex_conj_mul(f[0], d[0])), alpha;
   household2(a, b, alpha);
   outer2(a, b, m0, m1);
-  union _reiter_t {
-    float a[2];
-    uint64_t val;
-  } ri_m0 = {m0, m0};
+  _reiter_t ri_m0 = {m0, m0};
   SB_CONFIG(lmm2x2_config, lmm2x2_size);
   SB_CONST(P_lmm2x2_M0, ri_m0.val, N);
   SB_CONST(P_lmm2x2_M1, *((uint64_t*)&m1), N);
@@ -112,6 +105,7 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
   //for (int i = 0; i < N; ++i) {
   //  lmm2x2(m0, m1, v[i], v[i + N]);
   //}
+
   a = d[0];
   b = complex<float>(0, 0);
   rmm2x2(a, f[0], m0, m1);
@@ -245,6 +239,7 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
         //  }
         //}
       } else {
+        //REVELvec_mul_mat(i + 1, len, 1, N - 1, N, hv, false, v, temp + 1);
         SB_CONFIG(vm_config, vm_size);
         SB_CONST(P_vm_C, *((uint64_t*)&_zero), N - 1);
         SB_DMA_READ(v + N * (i + 1) + 1, 8 * N, 8 * (N - 1), len, P_vm_B);
@@ -263,12 +258,11 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
         //  }
         //}
         SB_CONFIG(vvc_config, vvc_size);
-        SB_DMA_READ(temp, 0, 8 * (N - 1), len, P_vvc_B);
+        SB_DMA_READ(temp + 1, 0, 8 * (N - 1), len, P_vvc_B);
         SB_DMA_READ(v + N * (i + 1) + 1, 8 * N, 8 * (N - 1), len, P_vvc_C);
         SB_DMA_WRITE(P_vvc_O, 8 * N, 8 * (N - 1), len, v + N * (i + 1) + 1);
-        for (int k = 0; k < len; ++k) {
-          SB_CONST(P_vvc_A, *((uint64_t*)(hv + k)), N - 1);
-        }
+        SB_REPEAT_PORT(N - 1);
+        SB_DMA_READ(hv, 8, 8, len, P_vvc_A);
         SB_WAIT_ALL();
         //for (int k = 1; k < N; ++k)
         //  temp[k] = complex<float>(temp[k].real() * 2, temp[k].imag() * 2);

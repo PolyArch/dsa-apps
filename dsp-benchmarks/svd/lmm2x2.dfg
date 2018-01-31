@@ -19,3 +19,10 @@ O1 = FAdd32x2(L1, R1)
 Output: O0
 Output: O1
 
+---
+
+Input: VAL
+
+sqrt = RealSqrt(VAL)
+
+Output: sqrt

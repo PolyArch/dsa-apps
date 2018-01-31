@@ -282,7 +282,7 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
         //  }
         //}
         SB_CONFIG(vvc_config, vvc_size);
-        SB_DMA_READ(temp, 0, 8 * (N - 1), len, P_vvc_B);
+        SB_DMA_READ(temp + 1, 0, 8 * (N - 1), len, P_vvc_B);
         SB_DMA_READ(v + N * (i + 1) + 1, 8 * N, 8 * (N - 1), len, P_vvc_C);
         SB_DMA_WRITE(P_vvc_O, 8 * N, 8 * (N - 1), len, v + N * (i + 1) + 1);
         for (int k = 0; k < len; ++k) {
