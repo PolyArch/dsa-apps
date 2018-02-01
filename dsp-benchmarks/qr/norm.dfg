@@ -11,7 +11,7 @@ NUM = FAddSub32x2(REAL, IMAGE)
 O0 = FAcc32x2(NUM, reset)
 
 VAL = Keep(C, sqrt)
-O1 = Sqrt32(VAL)
+O1 = RealSqrt(VAL)
 
 Output: O0
 Output: O1

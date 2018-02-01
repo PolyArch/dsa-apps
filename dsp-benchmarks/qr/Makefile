@@ -4,7 +4,7 @@ endif
 
 SOFTBRAINS = sb-origin sb-new sb-scr sb-wrap
 
-DFG = dot.dfg norm.dfg mulconj.dfg finalize.dfg finalize_compact.dfg
+DFG = dot.dfg norm.dfg mulconj.dfg finalize.dfg finalize_compact.dfg sub2outer.dfg sub2couter.dfg multi.dfg
 SCALE=$(N)
 
 MACROS=-D N=$(N)
@@ -25,5 +25,5 @@ sb-multi.o sb-new.o sb-scr.o: %.o: %.cc mulconj.h finalize_compact.h norm.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
 
-sb-wrap.o: sb-wrap.cc
+sb-wrap.o: sb-wrap.cc sub2outer.h sub2couter.h multi.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
