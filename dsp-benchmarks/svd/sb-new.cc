@@ -36,15 +36,22 @@ void household2(complex<float> &a, complex<float> &b, complex<float> &alpha) {
   float norm0 = complex_norm(a), norm1 = complex_norm(b);
 
   _reiter_t ri = {1 + norm1 / norm0, 0};
-  SB_CONST(P_lmm2x2_VAL, ri.val, 1);
-  SB_RECV(P_lmm2x2_sqrt, ri.val); //It is forever stuck here
+  //SB_CONST(P_lmm2x2_VAL, ri.val, 1);
+  //SB_RECV(P_lmm2x2_sqrt, ri.val); //It is forever stuck here
 
-  float _alpha = ri.a[0];//sqrt(1 + norm1 / norm0);
+  float _alpha = sqrt(1 + norm1 / norm0);
   alpha = complex<float>(-a.real() * _alpha, -a.imag() * _alpha);
   float rate = 1 + _alpha;
   a = complex<float>(a.real() * rate, a.imag() * rate);
   norm1 += complex_norm(a);
+
+  //ri.a[0] = norm1;
+  //ri.a[1] = 0;
+  //SB_CONST(P_lmm2x2_VAL, ri.val, 1);
+  //SB_RECV(P_lmm2x2_sqrt, ri.val); //It is forever stuck here
+
   norm1 = 1 / sqrt(norm1);
+
   a = complex<float>(a.real() * norm1, a.imag() * norm1);
   b = complex<float>(b.real() * norm1, b.imag() * norm1);
 }
@@ -91,10 +98,10 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
   float m0;
   complex<float> m1;
   complex<float> a(complex_norm(d[0]) - mu), b(complex_conj_mul(f[0], d[0])), alpha;
+  SB_CONFIG(lmm2x2_config, lmm2x2_size);
   household2(a, b, alpha);
   outer2(a, b, m0, m1);
   _reiter_t ri_m0 = {m0, m0};
-  SB_CONFIG(lmm2x2_config, lmm2x2_size);
   SB_CONST(P_lmm2x2_M0, ri_m0.val, N);
   SB_CONST(P_lmm2x2_M1, *((uint64_t*)&m1), N);
   SB_DMA_READ(v, 8, 8, N, P_lmm2x2_A);
