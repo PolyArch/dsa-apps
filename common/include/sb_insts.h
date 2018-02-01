@@ -6,6 +6,7 @@
 #define POST_ZERO_FILL 1
 #define PRE_ZERO_FILL  2
 #define STRIDE_ZERO_FILL 3
+#define STRIDE_DISCARD_FILL 4
 #define SB_FILL_MODE(mode) \
   __asm__ __volatile__("sb_fill_mode t0, t0, %0" : : "i"(mode));
 
