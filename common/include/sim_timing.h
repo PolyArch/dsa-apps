@@ -1,7 +1,6 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#ifdef __x86_64__
 
 #include <sys/time.h>
 
@@ -12,34 +11,38 @@ static __inline__ uint64_t rdtsc(void) {
 }
 
 static uint64_t ticks;
-__attribute__ ((noinline))  void begin_roi() {
+
+static void begin_roi() {
   ticks=rdtsc();
+
+#ifndef __x86_64__
+  __asm__ __volatile__("add x0, x0, 1");
+#endif
+
 }
-__attribute__ ((noinline))  void end_roi()   {
+
+
+static void end_roi()   {
+
+#ifndef __x86_64__
+  __asm__ __volatile__("add x0, x0, 2");
+#endif
+
   ticks=(rdtsc()-ticks);
   printf("ticks: %lu\n", ticks);
 }
 
-__attribute__ ((noinline)) static void sb_stats()   {
-}
-__attribute__ ((noinline)) static void sb_verify()   {
-}
-
-#else
-static void begin_roi() {
-    __asm__ __volatile__("add x0, x0, 1"); \
-}
-static void end_roi()   {
-    __asm__ __volatile__("add x0, x0, 2"); \
-}
 static void sb_stats()   {
-    __asm__ __volatile__("add x0, x0, 3"); \
+#ifndef __x86_64__
+  __asm__ __volatile__("add x0, x0, 3");
+#endif
 }
 static void sb_verify()   {
-    __asm__ __volatile__("add x0, x0, 4"); \
+#ifndef __x86_64__
+    __asm__ __volatile__("add x0, x0, 4");
+#endif
 }
 
-#endif
 
 
 

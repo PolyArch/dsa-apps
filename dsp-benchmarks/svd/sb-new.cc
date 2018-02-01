@@ -1,5 +1,6 @@
 #include "svd.h"
 #include "sb_insts.h"
+#include "matvec.h"
 #include "vmc.h"
 #include "vv.h"
 #include "mvc.h"
@@ -7,22 +8,13 @@
 #include "vm.h"
 #include "lmm2x2.h"
 
-#define complex_mul(a, b) (a).real() * (b).real() - (a).imag() * (b).imag(), \
-  (a).real() * (b).imag() + (a).imag() * (b).real()
-
-#define complex_mul_cons(a, b) (a).real() * (b), (a).imag() * (b)
-
-#define complex_conj_mul(a, b) (a).real() * (b).real() + (a).imag() * (b).imag(), \
-  (a).real() * (b).imag() - (a).imag() * (b).real()
-
-#define complex_add(a, b) (a).real() + (b).real(), (a).imag() + (b).imag()
-
-#define complex_sub(a, b) (a).real() - (b).real(), (a).imag() - (b).imag()
-
-#define complex_norm(a) ((a).real() * (a).real() + (a).imag() * (a).imag())
-
 complex<float> f[N], d[N], r[N * N], temp[N];
 complex<float> _one(1, 0), _zero(0, 0);
+
+union _reiter_t {
+  float a[2];
+  uint64_t val;
+};
 
 void household(complex<float> *v, int n, complex<float> &alpha) {
   float norm0 = complex_norm(v[0]), norm1 = 0;
@@ -42,12 +34,24 @@ void household(complex<float> *v, int n, complex<float> &alpha) {
 
 void household2(complex<float> &a, complex<float> &b, complex<float> &alpha) {
   float norm0 = complex_norm(a), norm1 = complex_norm(b);
+
+  _reiter_t ri = {1 + norm1 / norm0, 0};
+  //SB_CONST(P_lmm2x2_VAL, ri.val, 1);
+  //SB_RECV(P_lmm2x2_sqrt, ri.val); //It is forever stuck here
+
   float _alpha = sqrt(1 + norm1 / norm0);
   alpha = complex<float>(-a.real() * _alpha, -a.imag() * _alpha);
   float rate = 1 + _alpha;
   a = complex<float>(a.real() * rate, a.imag() * rate);
   norm1 += complex_norm(a);
+
+  //ri.a[0] = norm1;
+  //ri.a[1] = 0;
+  //SB_CONST(P_lmm2x2_VAL, ri.val, 1);
+  //SB_RECV(P_lmm2x2_sqrt, ri.val); //It is forever stuck here
+
   norm1 = 1 / sqrt(norm1);
+
   a = complex<float>(a.real() * norm1, a.imag() * norm1);
   b = complex<float>(b.real() * norm1, b.imag() * norm1);
 }
@@ -94,13 +98,10 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
   float m0;
   complex<float> m1;
   complex<float> a(complex_norm(d[0]) - mu), b(complex_conj_mul(f[0], d[0])), alpha;
+  SB_CONFIG(lmm2x2_config, lmm2x2_size);
   household2(a, b, alpha);
   outer2(a, b, m0, m1);
-  union _reiter_t {
-    float a[2];
-    uint64_t val;
-  } ri_m0 = {m0, m0};
-  SB_CONFIG(lmm2x2_config, lmm2x2_size);
+  _reiter_t ri_m0 = {m0, m0};
   SB_CONST(P_lmm2x2_M0, ri_m0.val, N);
   SB_CONST(P_lmm2x2_M1, *((uint64_t*)&m1), N);
   SB_DMA_READ(v, 8, 8, N, P_lmm2x2_A);
@@ -111,6 +112,7 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
   //for (int i = 0; i < N; ++i) {
   //  lmm2x2(m0, m1, v[i], v[i + N]);
   //}
+
   a = d[0];
   b = complex<float>(0, 0);
   rmm2x2(a, f[0], m0, m1);
@@ -161,15 +163,7 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
       hv[j] = (i ? r : a)[j * len];
     household(hv, len, d[i]);
 
-    SB_CONFIG(vmc_config, vmc_size);
-    SB_CONST(P_vmc_C, *((uint64_t*)&_zero), len - 1);
-    SB_DMA_READ((i ? r : a) + 1, 8 * len, 8 * (len - 1), len, P_vmc_B);
-    SB_RECURRENCE(P_vmc_O, P_vmc_C, (len - 1) * (len - 1));
-    for (int k = 0; k < len; ++k) {
-      SB_CONST(P_vmc_A, *((uint64_t*)(hv + k)), len - 1);
-    }
-    SB_DMA_WRITE(P_vmc_O, 8, 8, len - 1, temp + 1);
-    SB_WAIT_ALL();
+    REVELvec_mul_mat(0, len, 1, len, len, hv, true, (i ? r : a), temp + 1);
 
     //for (int j = 1; j < len; ++j) std::cout << temp[j] << " "; std::cout << "\n";
 
@@ -185,9 +179,8 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
     SB_DMA_READ((i ? r : a) + 1, 8 * len, 8 * (len - 1), len, P_vv_C);
     SB_DMA_READ(temp + 1, 0, 8 * (len - 1), len, P_vv_A);
     SB_DMA_WRITE(P_vv_O, 8, 8, (len - 1) * len, r);
-    for (int j = 0; j < len; ++j) {
-      SB_CONST(P_vv_B, *((uint64_t*)(hv + j)), len - 1);
-    }
+    SB_REPEAT_PORT(len - 1);
+    SB_DMA_READ(hv, 8, 8, len, P_vv_B);
     SB_WAIT_ALL();
     
     //for (int j = 1; j < len; ++j)
@@ -205,17 +198,8 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
       for (int j = 0; j < len; ++j)
         hv[j] = r[j];
       household(hv, len, f[i]);
-
-      SB_CONFIG(mvc_config, mvc_size);
-      SB_DMA_READ(hv, 0, 8 * len, len, P_mvc_A);
-      SB_DMA_READ(r + len, 8, 8, len * len, P_mvc_B);
-      for (int j = 0; j < len; ++j) {
-        SB_CONST(P_mvc_reset, 0, len - 1);
-        SB_CONST(P_mvc_reset, 1, 1);
-        SB_GARBAGE(P_mvc_O, len - 1);
-        SB_DMA_WRITE(P_mvc_O, 8, 8, 1, temp + j);
-      }
-      SB_WAIT_ALL();
+      
+      REVELmat_mul_vec(1, len, 0, len, len, r, hv, true, temp);
       //for (int j = 0; j < len; ++j) {
       //  temp[j] = 0;
       //  for (int k = 0; k < len; ++k) {
@@ -228,9 +212,8 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
       SB_DMA_READ(r + len, 8, 8, len * len, P_vv_C);
       SB_DMA_READ(hv, 0, 8 * len, len, P_vv_A);
       SB_DMA_WRITE(P_vv_O, 8, 8, len * len, r);
-      for (int j = 0; j < len; ++j) {
-        SB_CONST(P_vv_B, *((uint64_t*)(temp + j)), len);
-      }
+      SB_REPEAT_PORT(len);
+      SB_DMA_READ(temp, 8, 8, len, P_vv_B);
       SB_WAIT_ALL();
       //for (int j = 0; j < len; ++j) {
       //  for (int k = 0; k < len; ++k) {
@@ -245,13 +228,12 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
         SB_CONFIG(vvc_config, vvc_size);
         SB_DMA_READ(hv, 0, 8 * (N - 1), N - 1, P_vvc_B);
         SB_DMA_WRITE(P_vvc_O, 8 * N, 8 * (N - 1), N - 1, v + N + 1);
+        SB_REPEAT_PORT(N - 1);
+        SB_DMA_READ(hv, 8, 8, N - 1, P_vvc_A);
+        SB_2D_CONST(P_vvc_C, *((uint64_t*)&_one), 1, *((uint64_t*)&_zero), N - 1, N - 2);
+        SB_CONST(P_vvc_C, *((uint64_t*)&_one), 1);
         for (int j = 1; j < N; ++j) {
           v[j] = v[j * N] = complex<float>(0, 0);
-          SB_CONST(P_vvc_A, *((uint64_t*)(hv + j - 1)), N - 1);
-          SB_CONST(P_vvc_C, *((uint64_t*)&_one), 1);
-          if (j != N - 1) {
-            SB_CONST(P_vvc_C, *((uint64_t*)&_zero), N - 1);
-          }
         }
         SB_WAIT_ALL();
         //for (int j = 1; j < N; ++j) {
@@ -264,6 +246,7 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
         //  }
         //}
       } else {
+        //REVELvec_mul_mat(i + 1, len, 1, N - 1, N, hv, false, v, temp + 1);
         SB_CONFIG(vm_config, vm_size);
         SB_CONST(P_vm_C, *((uint64_t*)&_zero), N - 1);
         SB_DMA_READ(v + N * (i + 1) + 1, 8 * N, 8 * (N - 1), len, P_vm_B);
@@ -285,9 +268,8 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
         SB_DMA_READ(temp + 1, 0, 8 * (N - 1), len, P_vvc_B);
         SB_DMA_READ(v + N * (i + 1) + 1, 8 * N, 8 * (N - 1), len, P_vvc_C);
         SB_DMA_WRITE(P_vvc_O, 8 * N, 8 * (N - 1), len, v + N * (i + 1) + 1);
-        for (int k = 0; k < len; ++k) {
-          SB_CONST(P_vvc_A, *((uint64_t*)(hv + k)), N - 1);
-        }
+        SB_REPEAT_PORT(N - 1);
+        SB_DMA_READ(hv, 8, 8, len, P_vvc_A);
         SB_WAIT_ALL();
         //for (int k = 1; k < N; ++k)
         //  temp[k] = complex<float>(temp[k].real() * 2, temp[k].imag() * 2);

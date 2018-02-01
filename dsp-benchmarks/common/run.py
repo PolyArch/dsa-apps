@@ -14,9 +14,11 @@ def find_line(s, raw):
 
 def find_line_val(s, raw):
     if s[-1] != ':':
+        print(s)
         raise Exception('Cannot find value without :')
     tmp = find_line(s, raw)
     if len(tmp) != 1:
+        print(tmp)
         raise Exception('More than one line with the same prefix')
     return float(tmp[0].strip(s).split()[0])
     
@@ -24,9 +26,9 @@ def find_line_val(s, raw):
 def analyze_log(s):
     raw = open(s, 'r').readlines()
 
-    if s == 'physical.log':
+    if s == 'ooo.log' or s == 'physical.log':
         for i in raw:
-            if 'ticks' in i:
+            if 'ticks:' in i:
                 return [int(i.split(':')[1])]
 
     res = []
@@ -50,11 +52,11 @@ def analyze_log(s):
     return res
 
 def run_cpu(env = ''):
-    run_shell(env + ' make physical.log')
-    run_shell(env + ' make optimized.log')
+    #run_shell(env + ' make physical.log')
+    run_shell(env + ' make ooo.log')
     res = []
-    res += analyze_log('physical.log')
-    res += analyze_log('optimized.log')
+    #res += analyze_log('physical.log')
+    res += analyze_log('ooo.log')
     return res
 
 def run(cases, template, softbrains):

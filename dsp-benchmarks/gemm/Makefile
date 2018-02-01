@@ -1,5 +1,5 @@
 ifndef N
-N=12
+N=8
 endif
 
 ifndef M
@@ -22,4 +22,4 @@ include ../common/Makefile.inc
 
 # The cholesky implemented in origin Softbrain. The comparison baseline.
 sb-origin.o sb-new.o: %.o: %.cc compute.h
-	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O2
+	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
