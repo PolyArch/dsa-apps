@@ -1,5 +1,5 @@
 #!/bin/bash
-export SBCONFIG=$SS_TOOLS/configs/diannao_simd64.sbmodel
+export SBCONFIG=$SS_TOOLS/configs/revel.sbmodel
 
 
 #export LD_LIBRARY_PATH=~/ss-stack/ss_tools/lib

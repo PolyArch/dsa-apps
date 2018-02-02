@@ -1,37 +1,42 @@
 #include "testing.h"
-#include "add1_vec.h"
+#include "add1_vec_o2.h"
 
-#define N 5
-#define M 5
-#define TOTAL ((N) * (M))
-
-uint64_t input[TOTAL];
-uint64_t output[TOTAL];
-uint64_t answer[TOTAL];
+uint64_t input[6];
+uint64_t output[16];
+uint64_t answer[16];
 
 
 int main(int argc, char* argv[]) {
   init();
-  for (int i = 0; i < TOTAL; ++i) {
-    input[i] = i;
-    answer[i] = i + 1;
-  }
+  input[0]=1;
+  input[1]=2;
+  input[2]=3;
+  input[3]=4;
+  input[4]=5;
+  input[5]=6;
 
+
+  answer[0]=2;  //every fourth input was 0
+  answer[1]=3;
+  answer[2]=4;
+  answer[3]=5;
+  answer[4]=6;
+  answer[5]=7;
+  answer[6]=2;
+  answer[7]=3;
+
+  SB_CONFIG(add1_vec_o2_config,add1_vec_o2_size);
+  SB_FILL_MODE(STRIDE_DISCARD_FILL);
 
   begin_roi();
-  SB_CONFIG(add1_vec_config,add1_vec_size);
-  SB_FILL_MODE(STRIDE_DISCARD_FILL);
-  //SB_FILL_MODE(STRIDE_ZERO_FILL);
+  SB_DMA_READ(&input[0],   8, 8, 6, P_add1_vec_o2_in);
+  SB_DMA_READ(&input[0],   8, 8, 2, P_add1_vec_o2_in);
 
-  SB_DMA_READ(input, M * 8, M * 8, N, P_add1_vec_in);
-  SB_DMA_WRITE(P_add1_vec_out, M * 8, M * 8, N, output);
-  //for (int i = 0; i < N; ++i) {
-  //  SB_DMA_WRITE(P_add1_vec_out, 8, 8, M, output + i * M);
-  //  SB_GARBAGE(P_add1_vec_out, 1);
-  //}
+  SB_DMA_WRITE(P_add1_vec_o2_outA,8,8, 8,&output[0]);
+  //SB_DMA_WRITE(P_add1_vec_o2_outB,8,8, 2,&output[4]);
 
   SB_WAIT_ALL();
   end_roi();
 
-  compare<uint64_t>(argv[0], answer, output, TOTAL);
+  compare<uint64_t>(argv[0],answer,output,8);
 }
