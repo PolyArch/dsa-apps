@@ -1,6 +1,6 @@
 ifndef SBCONFIG
 $(warning SBCONFIG is undefined, using default)
-SBCONFIG=$(RISCV)/configs/diannao_simd64.sbmodel
+SBCONFIG=$(RISCV)/configs/revel.sbmodel
 endif
 
 TESTN=$(wildcard fix*.c)
