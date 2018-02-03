@@ -97,19 +97,19 @@
     SB_FILL_MODE(NO_FILL); \
   } while(false)
 
-#define CPUvec_mul_mat(upper, upper_ext, left, left_ext, mat_stride, vec, is_conj, mat, res) \
+#define CPUvec_mul_mat(mat, mat_height, mat_width, mat_stride, vec, is_conj, res) \
   do { \
-    for (int _i_(0); _i_ < (left_ext); ++_i_) \
+    for (int _i_(0); _i_ < (mat_width); ++_i_) \
       (res)[_i_] = complex<float>(0, 0); \
-    for (int _j_(upper); _j_ < (upper) + (upper_ext); ++_j_) \
-      for (int _i_(left); _i_ < (left) + (left_ext); ++_i_) \
-        (res)[_i_ - (left)] += (mat)[_j_ * (mat_stride) + _i_] * \
-            ((is_conj) ? std::conj((vec)[_j_ - (upper)]) : (vec)[_j_ - (upper)]); \
+    for (int _j_(0); _j_ < (mat_height); ++_j_) \
+      for (int _i_(0); _i_ < (mat_width); ++_i_) \
+        (res)[_i_] += (mat)[_j_ * (mat_stride) + _i_] * \
+            ((is_conj) ? std::conj((vec)[_j_]) : (vec)[_j_]); \
   } while (false)
 
-#define SBvec_mul_mat(upper, upper_ext, left, left_ext, mat_stride, vec, is_conj, mat, res) \
+#define SBvec_mul_mat(mat, mat_height, mat_width, mat_stride, vec, is_conj, res) \
   do { \
-    int pad(get_pad((left_ext), 4)); \
+    int pad(get_pad((mat_width), 4)); \
     int A(is_conj ? P_vcmm_A : P_vmm_A); \
     int B(is_conj ? P_vcmm_B : P_vmm_B); \
     int C(is_conj ? P_vcmm_C : P_vmm_C); \
@@ -119,15 +119,15 @@
     } else { \
       SB_CONFIG(vmm_config, vmm_size); \
     } \
-    SB_CONST(C, 0, (left_ext) + pad); \
-    for (int _i_(upper); _i_ < (upper) + (upper_ext); ++_i_) { \
-      SB_DMA_READ((mat) + _i_ * (mat_stride) + (left), 8, 8, (left_ext), A); \
+    SB_CONST(C, 0, (mat_width) + pad); \
+    for (int _i_(0); _i_ < (0) + (mat_height); ++_i_) { \
+      SB_DMA_READ((mat) + _i_ * (mat_stride), 8, 8, (mat_width), A); \
       SB_CONST(A, 0, pad); \
-      SB_CONST(B, *((uint64_t*)(vec) + _i_ - (upper)), ((left_ext) + pad) / 4); \
-      if (_i_ != (upper_ext) + (upper) - 1) { \
-        SB_RECURRENCE(O, C, (left_ext) + pad); \
+      SB_CONST(B, *((uint64_t*)(vec) + _i_), ((mat_width) + pad) / 4); \
+      if (_i_ != (mat_height) - 1) { \
+        SB_RECURRENCE(O, C, (mat_width) + pad); \
       } else { \
-        SB_DMA_WRITE(O, 8, 8, (left_ext), (res)); \
+        SB_DMA_WRITE(O, 8, 8, (mat_width), (res)); \
         SB_GARBAGE(O, pad); \
       } \
     } \
@@ -135,9 +135,9 @@
   } while (false)
 
 
-#define REVELvec_mul_mat(upper, upper_ext, left, left_ext, mat_stride, vec, is_conj, mat, res) \
+#define REVELvec_mul_mat(mat, mat_height, mat_width, mat_stride, vec, is_conj, res) \
   do { \
-    int pad(get_pad(left_ext, 4)); \
+    int pad(get_pad(mat_width, 4)); \
     int A(is_conj ? P_vcmm_A : P_vmm_A); \
     int B(is_conj ? P_vcmm_B : P_vmm_B); \
     int C(is_conj ? P_vcmm_C : P_vmm_C); \
@@ -148,12 +148,12 @@
       SB_CONFIG(vmm_config, vmm_size); \
     } \
     SB_FILL_MODE(STRIDE_ZERO_FILL); \
-    SB_DMA_READ((mat) + (upper) * (mat_stride) + (left), 8 * (mat_stride), 8 * (left_ext), (upper_ext), A); \
-    SB_CONST(C, 0, (left_ext) + pad); \
-    SB_RECURRENCE(O, C, ((left_ext) + pad) * ((upper_ext) - 1)); \
-    SB_REPEAT_PORT(((left_ext) + pad) / 4); \
-    SB_DMA_READ((vec), 8, 8, (upper_ext), B); \
-    SB_DMA_WRITE(O, 8, 8, (left_ext), (res)); \
+    SB_DMA_READ(mat, 8 * (mat_stride), 8 * (mat_width), (mat_height), A); \
+    SB_CONST(C, 0, (mat_width) + pad); \
+    SB_RECURRENCE(O, C, ((mat_width) + pad) * ((mat_height) - 1)); \
+    SB_REPEAT_PORT(((mat_width) + pad) / 4); \
+    SB_DMA_READ((vec), 8, 8, (mat_height), B); \
+    SB_DMA_WRITE(O, 8, 8, (mat_width), (res)); \
     SB_GARBAGE(O, pad); \
     SB_WAIT_ALL(); \
     SB_FILL_MODE(NO_FILL); \
