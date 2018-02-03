@@ -8,9 +8,10 @@ N = int(sys.argv[1])
 _a = numpy.random.rand(N, N) + 1j * numpy.random.rand(N, N)
 a = _a.copy()
 output.print_complex_array('input.data', a.flatten())
-output.print_complex_array('ref.data', a.flatten())
 
 ans = numpy.linalg.svd(a, compute_uv = False)
+
+output.print_complex_array('ref.data', numpy.concatenate((ans, a.flatten())))
 
 V = numpy.identity(N, dtype = 'complex128')
 
