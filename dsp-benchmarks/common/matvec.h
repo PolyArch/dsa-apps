@@ -159,4 +159,17 @@
     SB_FILL_MODE(NO_FILL); \
   } while (false)
 
+#define CPUsub_outerx2(m, m_height, m_width, m_stride, a, conj_a, b, conj_b, res, res_stride) \
+  do { \
+    for (int _i_(0); _i_ < (m_height); ++_i_) { \
+      for (int _j_(0); _j_ < (m_width); ++_j_) { \
+        complex<float> _a_ = a[_i_]; \
+        if (conj_a) _a_ = std::conj(_a_); \
+        complex<float> _b_ = b[_j_]; \
+        if (conj_b) _b_ = std::conj(_b_); \
+        (res)[_i_ * (res_stride) + _j_] = (m)[_i_ * (m_stride) + _j_] - _a_ * _b_ * 2.0f; \
+      } \
+    } \
+  } while (false)
+
 #endif
