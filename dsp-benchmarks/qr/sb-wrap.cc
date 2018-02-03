@@ -67,20 +67,19 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *r) {
     
     REVELvec_mul_mat(i, n, i, n, N, hv, true, (i ? r : a), temp);
 
-    int pad = get_pad(n - 1, 4);
+    int pad = get_pad(n, 4);
     SB_CONFIG(sub2outer_config, sub2outer_size);
-    SB_FILL_MODE(STRIDE_ZERO_FILL);
-    SB_DMA_READ((i ? r : a) + i * N + i + 1, 8 * N, 8 * (n - 1), n, P_sub2outer_A);
-    SB_REPEAT_PORT((n - 1 + pad) / 4);
+    SB_FILL_MODE(STRIDE_DISCARD_FILL);
+    SB_DMA_READ((i ? r : a) + i * N + i, 8 * N, 8 * n, n, P_sub2outer_A);
+    SB_REPEAT_PORT((n + pad) / 4);
     SB_DMA_READ(hv, 8, 8, n, P_sub2outer_B);
-    SB_DMA_READ(temp + 1, 0, 8 * (n - 1), n, P_sub2outer_C);
-    for (int j = i; j < N; ++j) {
-      r[j * N + i] = (j == i) ? complex<float>(alpha.real, alpha.imag) : 0;
-      SB_DMA_WRITE(P_sub2outer_O, 8, 8, n - 1, r + j * N + i + 1);
-      SB_GARBAGE(P_sub2outer_O, pad);
-      //for (int k = i + 1; k < N; ++k)
-      //  r[j * N + k] = (i ? r : a)[j * N + k] - hv[j - i] * temp[k - i] * 2.0f;
-    }
+    SB_DMA_READ(temp, 0, 8 * n, n, P_sub2outer_C);
+    SB_DMA_WRITE(P_sub2outer_O, 8 * N, 8 * n, n, r + i * N + i);
+    //for (int j = i; j < N; ++j) {
+    //  r[j * N + i] = (j == i) ? complex<float>(alpha.real, alpha.imag) : 0;
+    //  for (int k = i + 1; k < N; ++k)
+    //    r[j * N + k] = (i ? r : a)[j * N + k] - hv[j - i] * temp[k - i] * 2.0f;
+    //}
     SB_FILL_MODE(NO_FILL);
     SB_WAIT_ALL();
 
@@ -89,17 +88,16 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *r) {
 
       int pad = get_pad(n, 4);
       SB_CONFIG(sub2couter_config, sub2couter_size);
-      SB_FILL_MODE(STRIDE_ZERO_FILL);
+      SB_FILL_MODE(STRIDE_DISCARD_FILL);
       SB_DMA_READ(q + i, 8 * N, 8 * n, N, P_sub2couter_A);
       SB_REPEAT_PORT((n + pad) / 4);
       SB_DMA_READ(temp, 8, 8, N, P_sub2couter_B);
       SB_DMA_READ(hv, 0, 8 * n, N, P_sub2couter_C);
-      for (int j = 0; j < N; ++j) {
-        SB_DMA_WRITE(P_sub2couter_O, 8, 8, n, q + j * N + i);
-        SB_GARBAGE(P_sub2couter_O, pad);
-        //for (int k = i; k < N; ++k)
-        //  q[j * N + k] -= temp[j] * std::conj(hv[k - i]) * 2.0f;
-      }
+      SB_DMA_WRITE(P_sub2outer_O, 8 * N, 8 * n, N, q + i);
+      //for (int j = 0; j < N; ++j) {
+      //  for (int k = i; k < N; ++k)
+      //    q[j * N + k] -= temp[j] * std::conj(hv[k - i]) * 2.0f;
+      //}
       SB_WAIT_ALL();
 
     } else {
