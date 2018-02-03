@@ -10,6 +10,7 @@
 using std::complex;
 
 complex<float> a[N * N], Q[N * N], R[N * N];
+complex<float> aa[N * N];
 
 int main() {
   FILE *input_data = fopen("input.data", "r"), *ref_data = fopen("ref.data", "r");
@@ -21,7 +22,7 @@ int main() {
 
   read_n_float_complex(input_data, N * N, a);
 
-  qr(a, Q, R);
+  qr(aa, aa, aa);
   begin_roi();
   qr(a, Q, R);
   end_roi();
