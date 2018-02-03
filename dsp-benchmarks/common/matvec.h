@@ -161,15 +161,32 @@
 
 #define CPUsub_outerx2(m, m_height, m_width, m_stride, a, conj_a, b, conj_b, res, res_stride) \
   do { \
+    complex<float> *_m = (complex<float> *) m; \
     for (int _i_(0); _i_ < (m_height); ++_i_) { \
       for (int _j_(0); _j_ < (m_width); ++_j_) { \
         complex<float> _a_ = a[_i_]; \
         if (conj_a) _a_ = std::conj(_a_); \
         complex<float> _b_ = b[_j_]; \
         if (conj_b) _b_ = std::conj(_b_); \
-        (res)[_i_ * (res_stride) + _j_] = (m)[_i_ * (m_stride) + _j_] - _a_ * _b_ * 2.0f; \
+        complex<float> _m_ = _m == NULL ? (_i_ == _j_ ? 1.0f : 0.0f) : _m[_i_ * (m_stride) + _j_]; \
+        (res)[_i_ * (res_stride) + _j_] = _m_ - _a_ * _b_ * 2.0f; \
       } \
     } \
   } while (false)
+
+#define REVELsub_outerx2(m, m_height, m_width, m_stride, a, conj_a, b, conj_b, res, res_stride) \
+  do { \
+      int pad = get_pad((m_width), 4); \
+      SB_CONFIG(sub2couter_config, sub2couter_size); ??? \
+      SB_FILL_MODE(STRIDE_DISCARD_FILL); \
+      SB_DMA_READ(m, 8 * (m_stride), 8 * (m_width), (m_height), P_sub2couter_A); \
+      SB_REPEAT_PORT(((m_width) + pad) / 4); \
+      SB_DMA_READ(a, 8, 8, (m_height), P_sub2couter_B); \
+      SB_DMA_READ(b, 0, 8 * (m_width), m_height, P_sub2couter_C); \
+      SB_DMA_WRITE(P_sub2outer_O, 8 * (res_stride), 8 * (m_width), m_height, res); \
+      SB_WAIT_ALL(); \
+  } while (false)
+
+
 
 #endif
