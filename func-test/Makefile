@@ -21,14 +21,14 @@ all: bin $(TESTS)
 CPP=riscv64-unknown-elf-g++
 
 DFGS=$(wildcard *.dfg)
-DFG_HEADERS=$(DFGS:.dfg=.h)
+DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 HEADERS=testing.h check.h
 #${info $(DFG_HEADERS)}
 
 bin:
 	mkdir -p bin
 
-$(DFG_HEADERS): %.h: %.dfg
+$(DFG_HEADERS): %.dfg.h: %.dfg
 	$(RISCV)/bin/sb_sched $(SBCONFIG) $<
 
 OPT?=-O3

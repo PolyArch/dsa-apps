@@ -3,7 +3,7 @@
 #include "softbrain.hpp"
 #include <inttypes.h>
 
-#include "red32to1sig.h"
+#include "red32to1sig.dfg.h"
 #include "../../common/include/sb_insts.h"
 
 using namespace std;

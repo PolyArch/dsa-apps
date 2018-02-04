@@ -1,5 +1,5 @@
 #include "testing.h"
-#include "mul_by_2.h"
+#include "mul_by_2.dfg.h"
 
 static DTYPE answer[ASIZE]; 
 

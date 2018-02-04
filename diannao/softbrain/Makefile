@@ -43,14 +43,14 @@ classifier: classifier.cpp $(HEADERS)
 
 
 CONV_DFGS=red32to1sig.dfg red16to1sig.dfg red8to1sig.dfg
-CONV_DFG_HEADERS=$(CONV_DFGS:.dfg=.h)
+CONV_DFG_HEADERS=$(CONV_DFGS:.dfg=.dfg.h)
 
 CLASS_DFGS=red32to1sig.dfg
-CLASS_DFG_HEADERS=$(CLASS_DFGS:.dfg=.h)
+CLASS_DFG_HEADERS=$(CLASS_DFGS:.dfg=.dfg.h)
 
 #pool2x2avg.dfg  test.dfg pool_simple.dfg
 POOL_DFGS=pool4x4l2avg.dfg pool2x2l4avg.dfg
-POOL_DFG_HEADERS=$(POOL_DFGS:.dfg=.h)
+POOL_DFG_HEADERS=$(POOL_DFGS:.dfg=.dfg.h)
 
 DFG_HEADERS=$(sort $(CLASS_DFG_HEADERS) $(POOL_DFG_HEADERS) $(CONV_DFG_HEADERS))
 
@@ -61,7 +61,7 @@ $(info $$DFG_HEADERS is [${DFG_HEADERS}])
 SB_CONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 
 
-$(DFG_HEADERS): %.h: %.dfg
+$(DFG_HEADERS): %.dfg.h: %.dfg
 	$(SS_TOOLS)/bin/sb_sched $(SB_CONFIG) $< 
 
 #conv1  Nx=500, Ny=375, Kx=9,  Ky=9,  Ni=32,  No=48,  priv=False

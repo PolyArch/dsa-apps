@@ -1,5 +1,5 @@
 #include "testing.h"
-#include "add1_vec_o2.h"
+#include "add1_vec_o2.dfg.h"
 
 uint64_t input[6];
 uint64_t output[16];

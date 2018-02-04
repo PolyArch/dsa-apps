@@ -25,12 +25,12 @@ SB_CONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 #SB_CONFIG=$(SS_TOOLS)/configs/isca2017.sbmodel
 
 DFGS=mm_sb.dfg
-DFG_HEADERS=$(DFGS:.dfg=.h)
+DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 
 all: $(RUN)
 
 
-$(DFG_HEADERS): %.h: %.dfg
+$(DFG_HEADERS): %dfg.h: %.dfg
 ifeq ($(RUN), sim)
 	$(SS_TOOLS)/bin/sb_sched $(SB_CONFIG) $<
 else

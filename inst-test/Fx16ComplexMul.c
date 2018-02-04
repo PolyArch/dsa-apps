@@ -1,4 +1,4 @@
-#include "Fx16ComplexMul.h"
+#include "Fx16ComplexMul.dfg.h"
 #include <iostream>
 #include "sb_insts.h"
 #include "ss-config/fixed_point.h"

@@ -1,6 +1,6 @@
 #include <stdio.h>
-#include "dot.h"
-#include "dot_acc.h"
+#include "dot.dfg.h"
+#include "dot_acc.dfg.h"
 #include "../common/include/sb_insts.h"
 #include "../common/include/sim_timing.h"
 #include <inttypes.h>

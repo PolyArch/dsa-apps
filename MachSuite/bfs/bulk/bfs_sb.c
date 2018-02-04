@@ -5,7 +5,7 @@ Hong, Oguntebi, Olukotun. "Efficient Parallel Graph Exploration on Multi-Core CP
 */
 
 #include "bfs.h"
-#include "bfs_sb.h"
+#include "bfs_sb.dfg.h"
 #include "../../../common/include/sb_insts.h"
 
 

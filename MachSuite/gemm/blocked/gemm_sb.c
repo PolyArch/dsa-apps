@@ -6,7 +6,7 @@ ASPLOS 1991
 */
 
 #include "gemm.h"
-#include "mm_sb.h"
+#include "mm_sb.dfg.h"
 
 #include "../../../common/include/sb_insts.h"
 

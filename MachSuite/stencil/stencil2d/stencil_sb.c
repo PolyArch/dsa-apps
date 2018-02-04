@@ -1,7 +1,7 @@
 #include "stencil.h"
 #include "softbrain.hpp"
 #include "../../../common/include/sb_insts.h"
-#include "stencil_sb.h"
+#include "stencil_sb.dfg.h"
 
 #define pipewidth 128
 

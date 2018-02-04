@@ -22,12 +22,12 @@ SB_CPP=riscv64-unknown-elf-g++
 SB_CONFIG=$(SS_TOOLS)/configs/isca2017.sbmodel
 
 DFGS=viterbi_sb.dfg
-DFG_HEADERS=$(DFGS:.dfg=.h)
+DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 
 all: $(KERN_SB) $(KERN)
 
 
-$(DFG_HEADERS): %.h: %.dfg
+$(DFG_HEADERS): %.dfg.h: %.dfg
 	$(SS_TOOLS)/bin/sb_sched $(SB_CONFIG) $<
 
 $(KERN_SB): $(SB_FILES) ../../common/harness.c $(DFG_HEADERS) 

@@ -1,25 +1,20 @@
-*.swp
-*.swn
-*.swo
+*.sw?
+*.exe
+*.data
+*.log
+*.o
+*.dfg.h
 
-benchmarks/*/stats/*
-benchmarks/*/m5out/*
-benchmarks/*/viz/*
-benchmarks/*/dfgs/verif/*
-benchmarks/*/dfgs/viz/*
+viz/
+verif/
+stats/
+m5out/
+bin/
+
 benchmarks/*/dfgs/*.h
-benchmarks/*/*.data
-benchmarks/*/*.o
-benchmarks/*/*.log
 benchmarks/*/softbrain
 benchmarks/*/baseline
 benchmarks/*/optimized
-
-*/stats/*
-*/verif/*
-*/viz/*
-*/m5out/*
-*/bin/*
 
 */.ycm_extra_conf.py
 

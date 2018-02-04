@@ -2,9 +2,9 @@
 #include <string>
 #include "dnn.hpp"
 
-#include "red32to1sig.h"
-#include "red16to1sig.h"
-#include "red8to1sig.h"
+#include "red32to1sig.dfg.h"
+#include "red16to1sig.dfg.h"
+#include "red8to1sig.dfg.h"
 #include "../../common/include/sb_insts.h"
 
 

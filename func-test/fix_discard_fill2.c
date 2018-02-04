@@ -1,5 +1,5 @@
 #include "testing.h"
-#include "add1_vec.h"
+#include "add1_vec.dfg.h"
 
 #define N 5
 #define M 3
