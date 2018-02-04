@@ -7,8 +7,8 @@
 
 using namespace std;
 
-#include "pool2x2l4avg.h"
-#include "pool4x4l2avg.h"
+#include "pool2x2l4avg.dfg.h"
+#include "pool4x4l2avg.dfg.h"
 //#include "pool_simple.h"
 
 #include "../../common/include/sb_insts.h"

@@ -1,6 +1,6 @@
 #include "fft.h"
 #include "sb_insts.h"
-#include "compute.h"
+#include "compute.dfg.h"
 
 void fft(double real[FFT_SIZE], double img[FFT_SIZE], double real_twid[FFT_SIZE/2], double img_twid[FFT_SIZE/2]){
   int span, log, i;

@@ -1,4 +1,4 @@
-#include "Dup32.h"
+#include "Dup32.dfg.h"
 #include "../common/include/sb_insts.h"
 #include "check.h"
 

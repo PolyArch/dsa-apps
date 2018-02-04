@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "Constant.h"
+#include "Constant.dfg.h"
 #include "check.h"
 #include "../common/include/sb_insts.h"
 #include "../common/include/sim_timing.h"

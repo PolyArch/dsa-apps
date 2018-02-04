@@ -1,4 +1,4 @@
-#include "FxAcc16x4.h"
+#include "FxAcc16x4.dfg.h"
 #include "sb_insts.h"
 #include "ss-config/fixed_point.h"
 #include "check.h"

@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "Acc16x4.h"
+#include "Acc16x4.dfg.h"
 #include "check.h"
 #include "../common/include/sb_insts.h"
 #include "../common/include/sim_timing.h"

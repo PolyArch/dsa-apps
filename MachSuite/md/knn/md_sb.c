@@ -6,7 +6,7 @@ In Proceedings of the 3rd Workshop on General-Purpose Computation on Graphics Pr
 */
 
 #include "md.h"
-#include "md_sb.h"
+#include "md_sb.dfg.h"
 #include "../../../common/include/sb_insts.h"
 
 void md_kernel(TYPE force_x[nAtoms],

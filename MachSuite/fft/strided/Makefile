@@ -8,9 +8,9 @@ KERN_SB=fft_sb
 ALG=strided
 
 DFG=compute.dfg
-DFG_HEADERS=$(DFG:.dfg=.h)
+DFG_HEADERS=$(DFG:.dfg=.dfg.h)
 
-$(DFG_HEADERS): %.h: %.dfg
+$(DFG_HEADERS): %.dfg.h: %.dfg
 	$(SS_TOOLS)/bin/sb_sched $(SBCONFIG) $< 
 
 CC=riscv64-unknown-elf-g++

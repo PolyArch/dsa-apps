@@ -4,7 +4,7 @@ http://www.cs.berkeley.edu/~mhoemmen/matrix-seminar/slides/UCB_sparse_tutorial_1
 */
 
 #include "spmv.h"
-#include "mm_lanes.h"
+#include "mm_lanes.dfg.h"
 #include "../../../common/include/sb_insts.h"
 
 void spmv(TYPE val[NNZ], int64_t cols[NNZ], int64_t rowDelimiters[N+1], TYPE vec[N], TYPE out[N]){

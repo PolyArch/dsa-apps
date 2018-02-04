@@ -4,7 +4,7 @@ http://www.cs.berkeley.edu/~mhoemmen/matrix-seminar/slides/UCB_sparse_tutorial_1
 */
 
 #include "spmv.h"
-#include "ellpack.h"
+#include "ellpack.dfg.h"
 #include "../../../common/include/sb_insts.h"
 
 void ellpack(TYPE nzval[N*L], int64_t cols[N*L], TYPE vec[N], TYPE out[N])

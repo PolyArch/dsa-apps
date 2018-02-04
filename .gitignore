@@ -1,6 +1,15 @@
-*.swp
-*.swn
-*.swo
+*.sw?
+*.exe
+*.data
+*.log
+*.o
+*.dfg.h
+
+viz/
+verif/
+stats/
+m5out/
+bin/
 
 dsp-benchmarks/*/stats/*
 dsp-benchmarks/*/m5out/*
@@ -18,6 +27,5 @@ dsp-benchmarks/*/*.exe
 */m5out/*
 */bin/*
 
-*.dfg.h
 *.pyc
 *.dot
