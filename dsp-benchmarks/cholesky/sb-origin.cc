@@ -7,8 +7,8 @@
 #include <stdlib.h>
 #include <complex>
 #include "cholesky.h"
-#include "compute.h"
-#include "writeback.h"
+#include "compute.dfg.h"
+#include "writeback.dfg.h"
 #include "sb_insts.h"
 
 using std::complex;

@@ -6,7 +6,7 @@
 #include "ss-config/fixed_point.h"
 #include "sb_insts.h"
 
-#include "compute.h"
+#include "compute.dfg.h"
 
 #define complexmidul(a, b) \
   (a).real() * (b).real() - (a).imag() * (b).imag(), \

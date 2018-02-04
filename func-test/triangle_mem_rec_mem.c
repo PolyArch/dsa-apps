@@ -1,5 +1,5 @@
 #include "testing.h"
-#include "add.h"
+#include "add.dfg.h"
 
 uint64_t input[AWORDS];
 

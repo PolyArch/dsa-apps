@@ -1,7 +1,7 @@
 #include "svd.h"
 #include "matvec.h"
 
-complex<float> f[N], d[N], r[N * N], temp[N], another[N];
+static complex<float> f[N], d[N], r[N * N], temp[N], another[N];
 
 void household(complex<float> *v, int n, complex<float> &alpha) {
   float norm0 = complex_norm(v[0]), norm1 = 0;
@@ -120,8 +120,8 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
       hv[j] = (i ? r : a)[j * len];
     household(hv, len, d[i]);
 
-    CPUvec_mul_mat(0, len, 1, len, len, hv, true, (i ? r : a), temp + 1);
-
+    CPUvec_mul_mat((i ? r : a) + 1, len, len, len, hv, true, temp + 1);
+    //CPUsub_outerx2((i ? r : a) + 1, len, len - 1, len, hv, temp + 1, false, r, len - 1);
     for (int j = 0; j < len; ++j) {
       for (int k = 1; k < len; ++k) {
         complex<float> delta(temp[k] * hv[j]);
@@ -136,15 +136,8 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
         hv[j] = r[j];
       household(hv, len, f[i]);
 
-      CPUmat_mul_vec(1, len, 0, len, len, r, hv, true, temp);
-
-      for (int j = 0; j < len; ++j) {
-        for (int k = 0; k < len; ++k) {
-          complex<float> delta(complex_mul(temp[j], hv[k]));
-          delta *= 2;
-          r[j * len + k] = complex<float>(complex_sub(r[(j + 1) * len + k], delta));
-        }
-      }
+      CPUmat_mul_vec(r + len, len, len, len, hv, true, temp);
+      CPUsub_outerx2(r + len, len, len, len, temp, hv, false, r, len);
 
       if (!i) {
         v[0] = complex<float>(1, 0);
@@ -158,10 +151,10 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
           }
         }
       } else {
-        CPUvec_mul_mat(i + 1, N - i - 1, 1, N - 1, N, hv, false, v, temp + 1);
-
-        for (int k = 1; k < N; ++k) {
-          for (int j = i + 1; j < N; ++j) {
+        CPUvec_mul_mat(v + (i + 1) * N + 1, len, N - 1, N, hv, false, temp + 1);
+        //CPUsub_outerx2(v + (i + 1) * N + 1, len, N - 1, N, temp + 1, hv, true, v + (i + 1) * N + 1, N);
+        for (int j = i + 1; j < N; ++j) {
+          for (int k = 1; k < N; ++k) {
             complex<float> delta(std::conj(hv[j - i - 1]) * temp[k]);
             delta *= 2;
             v[j * N + k] -= delta;

@@ -1,0 +1,14 @@
+Input: A
+
+OA = RealSqrt(A)
+
+Output: OA
+
+----
+
+Input: B
+
+OB = RealSqrt(B)
+
+Output: OB
+

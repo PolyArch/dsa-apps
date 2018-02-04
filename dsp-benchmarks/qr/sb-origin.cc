@@ -4,9 +4,9 @@
 #include "sim_timing.h"
 #include "sb_insts.h"
 
-#include "dot.h"
-#include "mulconj.h"
-#include "finalize.h"
+#include "dot.dfg.h"
+#include "mulconj.dfg.h"
+#include "finalize.dfg.h"
 
 #define complex_mul(a, b) (complex_t) { \
   (a).real * (b).real - (a).imag * (b).imag, \

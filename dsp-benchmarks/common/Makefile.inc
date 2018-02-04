@@ -3,9 +3,9 @@ $(warning SBCONFIG is undefined, using default)
 SBCONFIG=$(SS_TOOLS)/configs/revel.sbmodel
 endif
 
-DFG_HEADERS = $(DFG:.dfg=.h)
+DFG_HEADERS = $(DFG:.dfg=.dfg.h)
 
-$(DFG_HEADERS): %.h: %.dfg
+$(DFG_HEADERS): %.dfg.h: %.dfg
 	$(SS_TOOLS)/bin/sb_sched --verbose $(SBCONFIG) $< 
 
 IFLAGS=-I../../common/include -I../../../ss-tools/include -I../common/
@@ -47,7 +47,7 @@ cleandata:
 	rm -f input.data ref.data
 
 cleandfg:
-	rm -rf $(DFG_HEADERS)
+	rm -rf *.dfg.h
 
 clean: cleandata
 	rm -f *.o *.log *.exe

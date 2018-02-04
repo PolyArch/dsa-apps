@@ -30,6 +30,6 @@ numpy.testing.assert_allclose(numpy.identity(n), numpy.dot(Q, numpy.conj(Q.trans
 numpy.testing.assert_allclose(a, numpy.dot(Q, R), rtol = 1e-5)
 
 print "Correctness check pass!"
-output.print_complex_array('ref.data', numpy.concatenate((Q.flatten(), R.flatten())));
+output.print_complex_array('ref.data', a.flatten()) #numpy.concatenate((Q.flatten(), R.flatten())));
 print "New data generated!"
 

@@ -7,9 +7,9 @@
 #include <stdlib.h>
 #include <complex>
 #include "cholesky.h"
-#include "compute_dual.h"
+#include "compute_dual.dfg.h"
 #include "offload.h"
-#include "writeback.h"
+#include "writeback.dfg.h"
 #include "sb_insts.h"
 
 #define complex_mul(a, b) (a).real() * (b).real() - (a).imag() * (b).imag(), \

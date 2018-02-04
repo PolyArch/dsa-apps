@@ -15,9 +15,9 @@ include ../common/Makefile.inc
 # sb-origin: The simplest origin Softbrain.
 # sb-new: Softbrain with new instructions to remove control overhead.
 # sb-scr: All the data will go through the spad instead of memory. TOO AGGRESSIVE, crashes on large scale.
-sb-scr.o sb-new.o sb-origin.o: %.o: %.cc compute0.h compute1.h
+sb-scr.o sb-new.o sb-origin.o: %.o: %.cc compute0.dfg.h compute1.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
 # FIXME: Combine spad and reccurence to cut half of the scratch pad usage. Still wrong.
-sb-rec.o: sb-rec.cc compute_rec.h compute1.h
+sb-rec.o: sb-rec.cc compute_rec.dfg.h compute1.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3

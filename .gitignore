@@ -2,18 +2,15 @@
 *.swn
 *.swo
 
-benchmarks/*/stats/*
-benchmarks/*/m5out/*
-benchmarks/*/viz/*
-benchmarks/*/dfgs/verif/*
-benchmarks/*/dfgs/viz/*
-benchmarks/*/dfgs/*.h
-benchmarks/*/*.data
-benchmarks/*/*.o
-benchmarks/*/*.log
-benchmarks/*/softbrain
-benchmarks/*/baseline
-benchmarks/*/optimized
+dsp-benchmarks/*/stats/*
+dsp-benchmarks/*/m5out/*
+dsp-benchmarks/*/viz/*
+dsp-benchmarks/*/verif/*
+dsp-benchmarks/*/viz/*
+dsp-benchmarks/*/*.data
+dsp-benchmarks/*/*.o
+dsp-benchmarks/*/*.log
+dsp-benchmarks/*/*.exe
 
 */stats/*
 */verif/*
@@ -21,7 +18,6 @@ benchmarks/*/optimized
 */m5out/*
 */bin/*
 
-*/.ycm_extra_conf.py
-
+*.dfg.h
 *.pyc
 *.dot

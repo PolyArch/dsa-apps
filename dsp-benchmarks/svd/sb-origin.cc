@@ -1,11 +1,11 @@
 #include "svd.h"
 #include "sb_insts.h"
-#include "vmc.h"
-#include "vv.h"
-#include "mvc.h"
-#include "vvc.h"
-#include "vm.h"
-#include "lmm2x2.h"
+#include "vmc.dfg.h"
+#include "vv.dfg.h"
+#include "mvc.dfg.h"
+#include "vvc.dfg.h"
+#include "vm.dfg.h"
+#include "lmm2x2.dfg.h"
 
 #define complex_mul(a, b) (a).real() * (b).real() - (a).imag() * (b).imag(), \
   (a).real() * (b).imag() + (a).imag() * (b).real()

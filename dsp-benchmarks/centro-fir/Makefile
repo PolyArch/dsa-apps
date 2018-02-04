@@ -20,5 +20,5 @@ include ../common/Makefile.inc
 
 
 # New instructions remove control overhead
-sb-origin.o sb-new.o sb-spad.o: %.o: %.cc compute.h
+sb-origin.o sb-new.o sb-spad.o: %.o: %.cc compute.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3

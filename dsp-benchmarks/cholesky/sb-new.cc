@@ -9,8 +9,8 @@
 
 #include "cholesky.h"
 
-#include "compute_dual.h"
-#include "finalize.h"
+#include "compute_dual.dfg.h"
+#include "finalize.dfg.h"
 
 #include "sb_insts.h"
 

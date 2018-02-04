@@ -1,12 +1,12 @@
 #include "svd.h"
 #include "sb_insts.h"
 #include "matvec.h"
-#include "vmc.h"
-#include "vv.h"
-#include "mvc.h"
-#include "vvc.h"
-#include "vm.h"
-#include "lmm2x2.h"
+#include "vmc.dfg.h"
+#include "vv.dfg.h"
+#include "mvc.dfg.h"
+#include "vvc.dfg.h"
+#include "vm.dfg.h"
+#include "lmm2x2.dfg.h"
 
 complex<float> f[N], d[N], r[N * N], temp[N];
 complex<float> _one(1, 0), _zero(0, 0);

@@ -1,5 +1,5 @@
 #include "testing.h"
-#include "add1.h"
+#include "add1.dfg.h"
 
 static DTYPE add1[ASIZE]; 
 static DTYPE answer_add1[ASIZE]; 

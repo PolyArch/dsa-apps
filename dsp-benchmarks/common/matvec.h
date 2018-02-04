@@ -96,7 +96,6 @@
     SB_2D_CONST(reset, 2, ((mat_width) + pad) / 4 - 1, 1, 1, mat_height); \
     SB_DMA_WRITE(O, 8, 8, mat_height, res); \
     SB_WAIT_ALL(); \
-    SB_FILL_MODE(NO_FILL); \
   } while(false)
 
 #define CPUvec_mul_mat(mat, mat_height, mat_width, mat_stride, vec, is_conj, res) \
@@ -158,7 +157,6 @@
     SB_DMA_WRITE(O, 8, 8, (mat_width), (res)); \
     SB_GARBAGE(O, pad); \
     SB_WAIT_ALL(); \
-    SB_FILL_MODE(NO_FILL); \
   } while (false)
 
 #define CPUsub_outerx2(m, m_height, m_width, m_stride, a, b, conj_b, res, res_stride) \

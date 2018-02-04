@@ -3,7 +3,7 @@
 #include <cmath>
 #include <algorithm>
 #include "ss-config/fixed_point.h"
-#include "compute.h"
+#include "compute.dfg.h"
 #include "sb_insts.h"
 
 #define complex_mul(a, b) \

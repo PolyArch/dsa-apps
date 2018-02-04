@@ -16,14 +16,6 @@ Output: NORM2
 
 ----
 
-Input: sqrt
-
-NORM = RealSqrt(sqrt)
-
-Output: NORM
-
-----
-
 InputVec: VEC [0, 1, 2, 3]
 Input: norm
 

@@ -1,5 +1,5 @@
 #include "testing.h"
-#include "multi.h"
+#include "multi.dfg.h"
 
 uint64_t input[64];
 uint64_t output[64];
