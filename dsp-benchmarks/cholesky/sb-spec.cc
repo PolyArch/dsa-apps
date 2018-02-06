@@ -8,7 +8,7 @@
 #include <complex>
 #include "cholesky.h"
 #include "compute_dual.dfg.h"
-#include "offload.h"
+#include "offload.dfg.h"
 #include "writeback.dfg.h"
 #include "sb_insts.h"
 

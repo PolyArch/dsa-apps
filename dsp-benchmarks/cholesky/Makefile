@@ -30,6 +30,6 @@ sb-multi.o: sb-multi.cc compute_dual.dfg.h writeback.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
 # Based on the last one, add aggressive FU, like sqrter and 1/x divider to CGRA
-sb-spec.o: sb-spec.cc compute_dual.dfg.h writeback.dfg.h offload.h
+sb-spec.o: sb-spec.cc compute_dual.dfg.h writeback.dfg.h offload.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 

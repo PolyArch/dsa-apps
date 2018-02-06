@@ -10,31 +10,21 @@
 #include "compute.dfg.h"
 #include "writeback.dfg.h"
 #include "sb_insts.h"
+#include "matvec.h"
 
 using std::complex;
 
-struct complex_t {
-  float real, imag;
-};
-
 void cholesky(complex<float> *a, complex<float> *L) {
 
-  complex_t *A = new complex_t[N * N];
-  for (int i = 0; i < N * N; ++i) {
-    A[i].real = a[i].real();
-    A[i].imag = a[i].imag();
-  }
   for (int i = 0; i < N; ++i) {
-    complex<float> _div = std::sqrt(complex<float>(A[i * (N + 1)].real, A[i * (N + 1)].imag));
-    complex_t div = {_div.real(), _div.imag()};
+    complex<float> div = std::sqrt(a[i * N + i]);
 
-    complex_t *b = A + i * (N + 1);
-    L[i * (N + 1)] = std::complex<float>(div.real, div.imag);
+    complex<float> *b = a + i * (N + 1);
+    L[i * (N + 1)] = div;
     {
-      complex_t *bp = b + 1;
-      float norm = 1 / ((div.real * div.real) + (div.imag * div.imag));
-      div.real *= norm;
-      div.imag *=-norm;
+      complex<float> *bp = b + 1;
+      float norm = 1 / complex_norm(div);
+      div = std::conj(div * norm);
       SB_CONFIG(writeback_config, writeback_size);
       SB_DMA_READ(bp, 8, 8, N - i - 1, P_writeback_BP);
       SB_CONST(P_writeback_DIV, *((uint64_t *) &div), N - i - 1);
@@ -49,12 +39,12 @@ void cholesky(complex<float> *a, complex<float> *L) {
       }*/
     }
     {
-      complex_t *bj = b + 1, *bk, v = A[i * (N + 1)];
-      float norm = 1 / (v.real * v.real + v.imag * v.imag);
+      complex<float> *bj = b + 1, *bk, v = a[i * (N + 1)];
+      float norm = 1 / complex_norm(v);
       union {
         float f[2];
         uint64_t v;
-      } ri_v = {v.real * norm, v.imag * -norm};
+      } ri_v = {v.real() * norm, v.imag() * -norm};
       SB_WAIT_ALL();
       SB_CONFIG(compute_config, compute_size);
 
@@ -64,16 +54,15 @@ void cholesky(complex<float> *a, complex<float> *L) {
         uint64_t ri_bj = *((uint64_t *) bj);
 
         SB_CONST(P_compute_A, ri_bj, times);
-        SB_DMA_READ(A + j * (N + 1), 0, 8 * times, 1, P_compute_Z);
+        SB_DMA_READ(a + j * (N + 1), 0, 8 * times, 1, P_compute_Z);
         SB_DMA_READ(bj, 0, 8 * times, 1, P_compute_B);
         SB_CONST(P_compute_V, ri_v.v, times);
-        SB_DMA_WRITE(P_compute_O, 0, 8 * times, 1, A + j * (N + 1));
+        SB_DMA_WRITE(P_compute_O, 0, 8 * times, 1, a + j * (N + 1));
 
         ++bj;
       }
       SB_WAIT_ALL();
     }
   }
-  delete []A;
 }
 

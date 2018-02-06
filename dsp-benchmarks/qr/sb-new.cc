@@ -4,208 +4,154 @@
 #include "sim_timing.h"
 #include "sb_insts.h"
 
-#include "mulconj.dfg.h"
-#include "finalize_compact.dfg.h"
-#include "norm.dfg.h"
+#include "matvec.h"
+#include "multi.dfg.h"
+#include "fused1.dfg.h"
+#include "fused2.dfg.h"
 
-#define complex_mul(a, b) (complex_t) { \
-  (a).real * (b).real - (a).imag * (b).imag, \
-  (a).real * (b).imag + (a).imag * (b).real }
+static complex_t _one = {1, 0}, _zero = {0, 0};
 
-#define complex_conj_mul(a, b) (complex_t) { \
-  (a).real * (b).real + (a).imag * (b).imag, \
-  (a).real * (b).imag - (a).imag * (b).real }
+static complex_t temp0[N], temp1[N];
+static complex_t hv[N];
+static complex_t alpha;
 
-#define complex_add(a, b) (complex_t) { (a).real + (b).real, (a).imag + (b).imag }
+void qr(complex<float> *a, complex<float> *q, complex<float> *r) {
+  {
+    SB_CONFIG(multi_config, multi_size);
+    int pad = get_pad(N - 1, 4);
+    SB_FILL_MODE(POST_ZERO_FILL);
+    SB_DMA_READ(a + N, 8 * N, 8, N - 1, P_multi_V);
+    SB_CONST(P_multi_reset, 2, (N + pad - 1) / 4 - 1);
+    SB_CONST(P_multi_reset, 1, 1);
+    union {
+      float a[2];
+      uint64_t b;
+    } _norm1, to_sqrt, head;
+    head.a[0] = a->real();
+    head.a[1] = a->imag();
+    float norm0 = head.a[0] * head.a[0] + head.a[1] * head.a[1];
+    SB_RECV(P_multi_NORM2, _norm1.b);
 
-#define complex_sub(a, b) (complex_t) { (a).real - (b).real, (a).imag - (b).imag }
+    float norm1 = _norm1.a[0] + _norm1.a[1];
+    float _alpha = sqrt(1 + norm1 / norm0);
 
-#define complex_norm(a) ((a).real * (a).real + (a).imag * (a).imag)
+    alpha = (complex_t) {-head.a[0] * _alpha, -head.a[1] * _alpha};
+    float rate = 1 + _alpha;
+    head.a[0] *= rate;
+    head.a[1] *= rate;
+    norm1 += head.a[0] * head.a[0] + head.a[1] * head.a[1];
 
-complex_t tmp0[N * N];
-complex_t tmp1[N * N];
-complex_t sub_q[N * N];
-//double buffering
-complex_t rbuffer0[N * N];
+    to_sqrt.a[0] = to_sqrt.a[1] = 1 / sqrt(norm1);
 
-union _reinterpret_t {
-  complex_t a;
-  uint64_t val;
-};
+    SB_FILL_MODE(NO_FILL);
+    SB_CONST(P_multi_VEC, head.b, 1);
+    SB_FILL_MODE(POST_ZERO_FILL);
+    SB_DMA_READ(a + N, 8 * N, 8, N - 1, P_multi_VEC);
+    pad = get_pad(N, 4);
+    SB_CONST(P_multi_norm, to_sqrt.b, (N + pad) / 4);
+    SB_DMA_WRITE(P_multi_O, 8, 8, N, hv);
+    SB_GARBAGE(P_multi_O, pad);
+    SB_WAIT_ALL();
+ 
+    REVELvec_mul_mat(a, N, N, N, hv, true, temp0);
+    REVELsub_outerx2(a, N, N, N, hv, temp0, false, r, N);
+    REVELsub_outerx2(NULL, N, N, -1, hv, hv, true, q, N);
+  }
+  for (int i = 1; i < N - 1; ++i) {
+    int n  = N - i;
+    complex<float> *m = r;
 
-#define h(x, y) (((x) >= i) && ((y) >= i) ? (((x) == (y)) - v[x] * v[y] * 2.) : (x) == (y))
-void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
-  int i, j, k, x, y;
+    SB_CONFIG(multi_config, multi_size);
+    int pad = get_pad(n - 1, 4);
+    SB_FILL_MODE(POST_ZERO_FILL);
+    SB_DMA_READ(m + (i + 1) * N + i, 8 * N, 8, n - 1, P_multi_V);
+    SB_CONST(P_multi_reset, 2, (n + pad - 1) / 4 - 1);
+    SB_CONST(P_multi_reset, 1, 1);
+    union {
+      float a[2];
+      uint64_t b;
+    } _norm1, to_sqrt, head;
+    head.a[0] = m[i * N + i].real();
+    head.a[1] = m[i * N + i].imag();
+    float norm0 = head.a[0] * head.a[0] + head.a[1] * head.a[1];
+    SB_RECV(P_multi_NORM2, _norm1.b);
 
-  complex_t *r = rbuffer0;
+    float norm1 = _norm1.a[0] + _norm1.a[1];
+    float _alpha = sqrt(1 + norm1 / norm0);
 
-  for (i = 0; i < N; ++i) {
-    int len = N - i;
-// Household Vector
-    complex_t v[len];
+    alpha = (complex_t) {-head.a[0] * _alpha, -head.a[1] * _alpha};
+    float rate = 1 + _alpha;
+    head.a[0] *= rate;
+    head.a[1] *= rate;
+    norm1 += head.a[0] * head.a[0] + head.a[1] * head.a[1];
+
+    to_sqrt.a[0] = to_sqrt.a[1] = 1 / sqrt(norm1);
+
+    SB_FILL_MODE(NO_FILL);
+    SB_CONST(P_multi_VEC, head.b, 1);
+    SB_FILL_MODE(POST_ZERO_FILL);
+    SB_DMA_READ(m + (i + 1) * N + i, 8 * N, 8, n - 1, P_multi_VEC);
+    pad = get_pad(n, 4);
+    SB_CONST(P_multi_norm, to_sqrt.b, (n + pad) / 4);
+    SB_DMA_WRITE(P_multi_O, 8, 8, n, hv);
+    SB_GARBAGE(P_multi_O, pad);
+    SB_WAIT_ALL();
+ ////////////////////////////////////////////////////////////////////////
+    SB_CONFIG(fused1_config, fused1_size);
+
+    //REVELvec_mul_mat(m + i * N + i, n, n, N, hv, true, temp0);
     {
-      if (len > 1) {
-        float norm1;
-        SB_CONFIG(norm_config, norm_size);
-        if (i) {
-          SB_DMA_READ(r + 1, 8, 8, len - 1, P_norm_A);
-          SB_DMA_READ(r + 1, 8, 8, len - 1, P_norm_B);
-        } else {
-          SB_DMA_READ(a + N, 8 * N, 8, N - 1, P_norm_A);
-          SB_DMA_READ(a + N, 8 * N, 8, N - 1, P_norm_B);
-        }
-        SB_CONST(P_norm_C, 0, len - 1);
-        SB_CONST(P_norm_reset, 2, len - 2);
-        SB_CONST(P_norm_reset, 1, 1);
-        SB_CONST(P_norm_sqrt, 0, len - 1);
-
-        complex_t head = i ? *r : (complex_t) {a->real(), a->imag()};
-        float norm0 = 1. / (head.real * head.real + head.imag * head.imag);
-
-        SB_RECV(P_norm_O0, norm1);
-
-        _reinterpret_t val = {1 + norm1 * norm0, 0}, another;
-        SB_CONST(P_norm_A, 0, 1);
-        SB_CONST(P_norm_B, 0, 1);
-        SB_CONST(P_norm_reset, 3, 1);
-        SB_CONST(P_norm_sqrt, 1, 1);
-        SB_CONST(P_norm_C, val.val, 1);
-
-        float rate;
-        SB_RECV(P_norm_O1, rate);
-        head.real *= rate + 1;
-        head.imag *= rate + 1;
-
-        val.a.real = head.real * head.real + head.imag * head.imag + norm1;
-        SB_CONST(P_norm_A, 0, 1);
-        SB_CONST(P_norm_B, 0, 1);
-        SB_CONST(P_norm_reset, 3, 1);
-        SB_CONST(P_norm_sqrt, 1, 1);
-        SB_CONST(P_norm_C, val.val, 1);
-        SB_RECV(P_norm_O1, norm0);
-
-
-        val.a.real = 1 / norm0;
-        SB_CONST(P_norm_B, *((uint64_t*)&head), 1);
-        if (i) {
-          SB_DMA_READ(r + 1, 8, 8, len - 1, P_norm_B);
-        } else {
-          SB_DMA_READ(a + N, 8 * N, 8, N - 1, P_norm_B);
-        }
-        SB_CONST(P_norm_A, val.val, len);
-        SB_CONST(P_norm_C, 0, len);
-        SB_CONST(P_norm_reset, 1, len);
-        SB_CONST(P_norm_sqrt, 0, len);
-        SB_DMA_WRITE(P_norm_O0, 8, 8, len, v);
-
-        SB_WAIT_ALL();
-      } else {
-        if (N == 1) {
-          *v = (complex_t) {a->real(), a->imag()};
-        } else {
-          *v = *r;
-        }
-        float norm = 1 / sqrt(complex_norm(*v));
-        v->real *= norm;
-        v->imag *= norm;
-      }
+      int pad = get_pad(n, 2);
+      SB_FILL_MODE(STRIDE_ZERO_FILL);
+      SB_DMA_READ(m + i * N + i, 8 * N, 8 * n, n, P_fused1_A);
+      SB_CONST(P_fused1_C, 0, n + pad);
+      SB_RECURRENCE(P_fused1_O, P_fused1_C, (n + pad) * (n - 1));
+      SB_REPEAT_PORT((n + pad) / 2);
+      SB_DMA_READ(hv, 8, 8, n, P_fused1_B);
+      SB_DMA_WRITE(P_fused1_O, 8, 8, n, temp0);
+      SB_GARBAGE(P_fused1_O, pad);
     }
 
-// Intermediate result computing
+    //REVELmat_mul_vec(q + i, N, n, N, hv, false, temp1);
     {
-      complex_t *tmpxq = tmp0;
-      complex_t *tmpxr = tmp1;
+      int pad = get_pad(n, 2);
+      SB_FILL_MODE(STRIDE_ZERO_FILL);
+      SB_DMA_READ(q + i, 8 * N, 8 * n, N, P_fused1_A_);
+      SB_DMA_READ(hv, 0, 8 * n, N, P_fused1_B_);
+      SB_2D_CONST(P_fused1_reset, 2, (n + pad) / 2 - 1, 1, 1, N);
+      SB_DMA_WRITE(P_fused1_O_, 8, 8, N, temp1);
+    }
+    SB_WAIT_ALL();
 
-      SB_CONFIG(mulconj_config, mulconj_size);
-      if (i) {
-        SB_DMA_READ(sub_q, 0, N * len * 8, 1, P_mulconj_Q);
-      } else {
-        _reinterpret_t _one = {1, 0}, _zero = {0, 0};
-        SB_2D_CONST(P_mulconj_Q, _one.val, 1, _zero, N, N - 1);
-        SB_CONST(P_mulconj_Q, _one.val, 1);
-      }
-      SB_DMA_READ(v, 0, 8 * len, N, P_mulconj_V);
-      SB_CONST(P_mulconj_R, 0, i * len);
+    //REVELsub_outerx2(m + i * N + i, n, n, N, hv, temp0, false, r + i * N + i, N);
+    //for (int j = i; j < N; ++j) {
+    //  r[j * N + i] = (j == i) ? complex<float>(alpha.real, alpha.imag) : 0;
+    //  for (int k = i + 1; k < N; ++k)
+    //    r[j * N + k] = (i ? r : a)[j * N + k] - hv[j - i] * temp[k - i] * 2.0f;
+    //}
+    SB_CONFIG(fused2_config, fused2_size);
+    {
+      SB_DMA_READ(r + i * N + i, 8 * N, 8 * n, n, P_fused2_A_);
+      SB_REPEAT_PORT(n);
+      SB_DMA_READ(hv, 8, 8, n, P_fused2_B_);
+      SB_DMA_READ(temp0, 0, 8 * n, n, P_fused2_C_);
+      SB_DMA_WRITE(P_fused2_O_, 8 * N, 8 * n, n, r + i * N + i);
+    }
 
-      SB_GARBAGE(P_mulconj_O1, i);
-      SB_2D_CONST(P_mulconj_reset, 2, len - 1, 1, 1, N);
-      SB_DMA_WRITE(P_mulconj_O0, 8, 8, N, tmpxq);
-      SB_DMA_WRITE(P_mulconj_O1, 8, 8, len, tmpxr);
-
-      if (i) {
-        SB_DMA_READ(r, 0, len * len * 8, 1, P_mulconj_R);
-      } else {
-        for (int j = 0; j < N; ++j) {
-          SB_DMA_READ(a + j, 8 * N, 8, N, P_mulconj_R);
-        }
-      }
-
-
+    //REVELsub_outerx2(q + i, N, n, N, temp1, hv, true, q + i, N);
+    //for (int j = 0; j < N; ++j)
+    //  for (int k = i; k < N; ++k)
+    //    q[j * N + k] -= temp[j] * std::conj(hv[k - i]) * 2.0f;
+    {
+      int pad = get_pad(n, 2);
+      SB_FILL_MODE(STRIDE_DISCARD_FILL);
+      SB_DMA_READ(q + i, 8 * N, 8 * n, N, P_fused2_A);
+      SB_REPEAT_PORT((n + pad) / 2);
+      SB_DMA_READ(temp1, 8, 8, N, P_fused2_B);
+      SB_DMA_READ(hv, 0, 8 * n, N, P_fused2_C);
+      SB_DMA_WRITE(P_fused2_O, 8 * N, 8 * n, N, q + i);
       SB_WAIT_ALL();
     }
-
-// Finalize the result
-    {
-      complex_t *tmpxq = tmp0;
-
-      SB_CONFIG(finalize_compact_config, finalize_compact_size);
-      //SB_CONST(P_finalize_compact_W, *((uint64_t*)&w), N * len);
-      SB_DMA_READ(v, 0, 8 * len, N, P_finalize_compact_VQ); 
-      SB_CONST(P_finalize_compact_TMPR, 0, i * len);
-      SB_CONST(P_finalize_compact_VR, 0, i * len);
-      SB_CONST(P_finalize_compact_R, 0, i * len);
-      if (i) {
-        SB_DMA_READ(sub_q, 0, N * len * 8, 1, P_finalize_compact_Q);
-      } else {
-        _reinterpret_t _one = {1, 0}, _zero = {0, 0};
-        SB_2D_CONST(P_finalize_compact_Q, _one.val, 1, _zero, N, N - 1);
-        SB_CONST(P_finalize_compact_Q, _one.val, 1);
-      }
-      SB_GARBAGE(P_finalize_compact_O1, i * len);
-
-      SB_REPEAT_PORT(len);
-      SB_DMA_READ(tmpxq, 8, 8, N, P_finalize_compact_TMPQ);
-
-      SB_2D_CONST(P_finalize_compact_MUX0, 0, 1, 1, len - 1, N);
-      SB_DMA_WRITE(P_finalize_compact_O00, 8 * N, 8, N, Q + i);
-      SB_DMA_WRITE(P_finalize_compact_O01, 8, 8, (len - 1) * N, sub_q);
-
-      {
-        SB_DMA_READ(tmp1, 0, 8 * len, 1, P_finalize_compact_TMPR);
-        SB_CONST(P_finalize_compact_VR, *((uint64_t*)v), len);
-        if (i) {
-          SB_DMA_READ(r, len * 8, 8, len, P_finalize_compact_R);
-        } else {
-          SB_DMA_READ(a, 8, 8, N, P_finalize_compact_R);
-        }
-
-        SB_DMA_WRITE(P_finalize_compact_O1, 8, 8, len, R + i * N + i);
-      }
-
-
-      SB_CONST(P_finalize_compact_TMPR, 0, len - 1);
-      SB_CONST(P_finalize_compact_VR, 0, len - 1);
-      SB_CONST(P_finalize_compact_R, 0, len - 1);
-      SB_GARBAGE(P_finalize_compact_O1, len - 1);
-
-      SB_DMA_READ(v + 1, 0, 8 * (len - 1), len - 1, P_finalize_compact_VR);
-      SB_DMA_WRITE(P_finalize_compact_O1, 8, 8, (len - 1) * (len - 1), r);
-
-
-      SB_REPEAT_PORT(len - 1);
-      SB_DMA_READ(tmp1 + 1, 8, 8, len - 1, P_finalize_compact_TMPR);
-
-      if (i) {
-        SB_DMA_READ(r + len + 1, 8 * len, 8 * (len - 1), len - 1, P_finalize_compact_R);
-      } else {
-        for (int j = 1; j < N; ++j) {
-          SB_DMA_READ(a + N + j, 8 * N, 8, N - 1, P_finalize_compact_R);
-        }
-      }
-
-      SB_WAIT_ALL();
-    }
-
   }
 }
 #undef h

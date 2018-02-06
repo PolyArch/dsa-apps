@@ -11,16 +11,6 @@ stats/
 m5out/
 bin/
 
-dsp-benchmarks/*/stats/*
-dsp-benchmarks/*/m5out/*
-dsp-benchmarks/*/viz/*
-dsp-benchmarks/*/verif/*
-dsp-benchmarks/*/viz/*
-dsp-benchmarks/*/*.data
-dsp-benchmarks/*/*.o
-dsp-benchmarks/*/*.log
-dsp-benchmarks/*/*.exe
-
 */stats/*
 */verif/*
 */viz/*

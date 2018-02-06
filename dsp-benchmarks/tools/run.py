@@ -6,7 +6,6 @@ def run_shell(s):
 
 def run_sb(env = '', sb = 'origin'):
     run_shell('%s make sb-%s.log' % (env, sb))
-    return analyze_log('sb-%s.log' % sb)
 
 
 def find_line(s, raw):
@@ -51,6 +50,14 @@ def analyze_log(s):
 
     return res
 
+def analyze_breakdown(s):
+    raw = open(s, 'r').readlines()
+    line = find_line('Cycle Breakdown: ', raw)[0].lstrip('Cycle Breakdown: ')
+    res = map(lambda x: float(x.split(':')[1]), line.strip().split())
+    ticks = '%.2f' % (find_line_val('Cycles:', raw) / 1000.)
+    return [ticks] + list(res)
+
+
 def run_cpu(env = ''):
     #run_shell(env + ' make physical.log')
     run_shell(env + ' make ooo.log')
@@ -67,13 +74,16 @@ def run(cases, template, softbrains):
         env = template % i
         print('Run ' + env)
         line += run_cpu(env)
+        breakdowns = line[:]
         print('CPU Done')
-        for j in softbrains:
-            line += run_sb(env, j)
-            print(j + ' SB Done')
+        for sb in softbrains:
+            run_sb(env, sb)
+            line += analyze_log('sb-%s.log' % sb)
+            breakdowns += analyze_breakdown('sb-%s.log' % sb)
+            print(sb + ' SB Done')
         open('res.csv', 'a').write('\t'.join(map(str, line)) + '\n')
+        open('breakdowns.csv', 'a').write('\t'.join(map(str, breakdowns)) + '\n')
 
 if __name__ == '__main__':
-    print(run_cpu(env = 'N=64'))
-    print(run_sb(env = 'N=64', sb = 'origin'))
+    print('Nothing to be done yet...')
 
