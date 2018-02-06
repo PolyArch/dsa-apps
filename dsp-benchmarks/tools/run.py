@@ -68,6 +68,8 @@ def run_cpu(env = ''):
 
 def run(cases, template, softbrains):
     run_shell('make ultraclean')
+    open('breakdowns.csv', 'w').write(' '.join(map(lambda x: template % x, cases)) + '\n')
+    open('breakdowns.csv', 'a').write('OoO ' + ' '.join(map(lambda x: 'sb-%s' % x, softbrains)) + '\n')
     for i in cases:
         run_shell('make clean')
         line = []

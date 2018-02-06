@@ -1,0 +1,10 @@
+*/stats/*
+*/m5out/*
+*/viz/*
+*/verif/*
+*/viz/*
+*/*.data
+*/*.o
+*/*.log
+*/*.exe
+*/*.csv
