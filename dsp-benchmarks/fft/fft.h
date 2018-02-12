@@ -16,6 +16,6 @@ struct complex_t {
   float imag;
 };
 
-complex<float> *fft(complex<float> *, complex<float> *, complex<float> *);
+void fft(complex<float> *, complex<float> *);
 
 #endif

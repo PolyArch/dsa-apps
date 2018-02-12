@@ -9,6 +9,9 @@ $(DFG_HEADERS): %.dfg.h: %.dfg
 	$(SS_TOOLS)/bin/sb_sched --verbose $(SBCONFIG) $< 
 
 IFLAGS=-I../../common/include -I../../../ss-tools/include -I../common/
+INTELI=-I /opt/intel/include 
+CFLAGS=-O3 -std=c++11
+LMKL=-L"/opt/intel/mkl/lib" -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -ldl -lm
 
 CC=riscv64-unknown-elf-g++
 
@@ -21,13 +24,16 @@ input.data ref.data: gen.py
 	python $< $(SCALE)
 
 $(OBJS): %.o: %.cc
-	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
+	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) $(CFLAGS)
 
 physical.exe: main.cc optimized.cc
-	g++ $^ -o $@ $(MACROS) $(IFLAGS) -std=c++11 -O3
+	g++ $^ -o $@ $(MACROS) $(IFLAGS) $(CFLAGS)
 
-physical.log: physical.exe input.data ref.data
-	./physical.exe 2>&1 | tee $@
+physical.log mkl.log: %.log: %.exe input.data ref.data
+	./$^ 2>&1 | tee $@
+
+mkl.exe: mkl.cc
+	icc $^ -o $@ $(LMKL) $(CFLAGS) $(MACROS) $(IFLAGS) $(INTELI)
 	
 
 ooo.log: optimized.exe input.data ref.data
@@ -41,7 +47,7 @@ $(LOGS): %.log: %.exe input.data ref.data
 	| tee $@
 	
 $(EXEC): %.exe: %.o main.cc
-	$(CC) main.cc $(basename $@).o -o $@ -lm -O3 $(MACROS) $(IFLAGS)
+	$(CC) main.cc $(basename $@).o -o $@ -lm $(CFLAGS) $(MACROS) $(IFLAGS)
 
 cleandata:
 	rm -f input.data ref.data

@@ -57,8 +57,8 @@ void fft(complex<float> *_a, complex<float> *w, int n, bool conj) {
   }
 }
 
-//static complex<float> a[N + M << 1];
-//static complex<float> b[N + M << 1];
+//static complex<float> a[_N_ + _M_ << 1];
+//static complex<float> b[_N_ + _M_ << 1];
 
 void filter(
     int n, int m,

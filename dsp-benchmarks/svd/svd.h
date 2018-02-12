@@ -11,7 +11,7 @@
 #include <iomanip>
 
 #define BN 4
-#define NN (N + BN - 1)
+#define NN (_N_ + BN - 1)
 
 #define eps 1e-5
 using std::complex;

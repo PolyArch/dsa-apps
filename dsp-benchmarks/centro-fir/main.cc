@@ -10,7 +10,7 @@
 
 using std::complex;
 
-complex<float> a[N], b[M], c[N], cc[N], w[N + M];
+complex<float> a[_N_], b[_M_], c[_N_], cc[_N_], w[_N_ + _M_];
 
 int main() {
   FILE *input_data = fopen("input.data", "r"), *ref_data = fopen("ref.data", "r");
@@ -19,22 +19,22 @@ int main() {
     return 1;
   }
 
-  read_n_float_complex(input_data, N, a);
-  read_n_float_complex(input_data, M, b);
+  read_n_float_complex(input_data, _N_, a);
+  read_n_float_complex(input_data, _M_, b);
 
   int n;
-  for (n = 1; n < N + M; n <<= 1);
+  for (n = 1; n < _N_ + _M_; n <<= 1);
   for (int i = 0; i < n / 2; ++i) {
     w[i] = complex<float>(cos(2 * PI * i / n), sin(2 * PI * i / n));
   }
 
-  filter(N, M, a, b, cc, w);
+  filter(_N_, _M_, a, b, cc, w);
   begin_roi();
-  filter(N, M, a, b, c, w);
+  filter(_N_, _M_, a, b, c, w);
   end_roi();
   sb_stats();
 
-  if (!compare_n_float_complex(ref_data, N - M + 1, c))
+  if (!compare_n_float_complex(ref_data, _N_ - _M_ + 1, c))
     return 1;
 
   puts("result correct!");

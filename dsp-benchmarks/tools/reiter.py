@@ -14,7 +14,7 @@ if __name__ == '__main__':
             print
         elif 'output:' in line:
             print 'Output:',
-            print ('(%.5f %.5f)') % reiterpret(int(line[7:], 16))
+            print ('(%.5f %.5f)') % reiterpret(int(line[7:-10], 16))
         else:
             elems = line.split()
             if not elems:

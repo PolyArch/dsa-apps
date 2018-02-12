@@ -4,7 +4,7 @@
 #include <iostream>
 #include "sim_timing.h"
 
-complex<float> a[N * N], L[N * N], aa[N * N];
+complex<float> a[_N_ * _N_], L[_N_ * _N_], aa[_N_ * _N_];
 
 int main() {
   FILE *input_data = fopen("input.data", "r"), *ref_data = fopen("ref.data", "r");
@@ -13,7 +13,7 @@ int main() {
     return 1;
   }
 
-  read_n_float_complex(input_data, N * N, a);
+  read_n_float_complex(input_data, _N_ * _N_, a);
 
   cholesky(aa, aa);
   begin_roi();
@@ -21,7 +21,7 @@ int main() {
   end_roi();
   sb_stats();
 
-  if (!compare_n_float_complex(ref_data, N * N, L))
+  if (!compare_n_float_complex(ref_data, _N_ * _N_, L))
       return 1;
 
   puts("result correct!");

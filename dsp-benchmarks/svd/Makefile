@@ -1,5 +1,5 @@
 ifndef N
-N=12
+N=32
 endif
 
 
@@ -7,7 +7,7 @@ DFG = vmc.dfg vv.dfg mvc.dfg vvc.dfg vm.dfg lmm2x2.dfg
 
 SCALE=$(N)
 
-MACROS=-D N=$(N)
+MACROS=-D _N_=$(N)
 
 SOFTBRAINS = sb-origin sb-new
 

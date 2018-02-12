@@ -1,7 +1,7 @@
 #include "svd.h"
 #include "matvec.h"
 
-static complex<float> f[N], d[N], r[N * N], temp[N], another[N];
+static complex<float> f[_N_], d[_N_], r[_N_ * _N_], temp[_N_], another[_N_];
 
 void household(complex<float> *v, int n, complex<float> &alpha) {
   float norm0 = complex_norm(v[0]), norm1 = 0;
@@ -75,8 +75,8 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
   complex<float> a(complex_norm(d[0]) - mu), b(complex_conj_mul(f[0], d[0])), alpha;
   household2(a, b, alpha);
   outer2(a, b, m0, m1);
-  for (int i = 0; i < N; ++i) {
-    lmm2x2(m0, m1, v[i], v[i + N]);
+  for (int i = 0; i < _N_; ++i) {
+    lmm2x2(m0, m1, v[i], v[i + _N_]);
   }
   a = d[0];
   b = complex<float>(0, 0);
@@ -99,8 +99,8 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
     rmm2x2(a, f[i], m0, m1);
     b = complex<float>(complex_conj_mul(m1, d[i + 1]));
     d[i + 1] = complex<float>(complex_mul_cons(d[i + 1], -m0));
-    for (int j = 0; j < N; ++j) {
-      lmm2x2(m0, m1, v[i * N + j], v[(i + 1) * N + j]);
+    for (int j = 0; j < _N_; ++j) {
+      lmm2x2(m0, m1, v[i * _N_ + j], v[(i + 1) * _N_ + j]);
     }
     household2(a, b, d[i]);
     outer2(a, b, m0, m1);
@@ -113,8 +113,8 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
 }
 
 void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
-  for (int i = 0; i < N - 1; ++i) {
-    int len = N - i;
+  for (int i = 0; i < _N_ - 1; ++i) {
+    int len = _N_ - i;
     complex<float> hv[len], alpha;
     for (int j = 0; j < len; ++j)
       hv[j] = (i ? r : a)[j * len];
@@ -130,7 +130,7 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
       }
     }
 
-    if (i != N - 2) {
+    if (i != _N_ - 2) {
       --len;
       for (int j = 0; j < len; ++j)
         hv[j] = r[j];
@@ -141,58 +141,58 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
 
       if (!i) {
         v[0] = complex<float>(1, 0);
-        for (int j = 1; j < N; ++j) {
-          v[j] = v[j * N] = complex<float>(0, 0);
-          for (int k = 1; k < N; ++k) {
+        for (int j = 1; j < _N_; ++j) {
+          v[j] = v[j * _N_] = complex<float>(0, 0);
+          for (int k = 1; k < _N_; ++k) {
             complex<float> delta(complex_conj_mul(hv[j - 1], hv[k - 1]));
             complex<float> diag(j == k, 0);
             complex<float> val(delta.real() * 2, delta.imag() * 2);
-            v[j * N + k] = complex<float>(complex_sub(diag, val));
+            v[j * _N_ + k] = complex<float>(complex_sub(diag, val));
           }
         }
       } else {
-        CPUvec_mul_mat(v + (i + 1) * N + 1, len, N - 1, N, hv, false, temp + 1);
-        //CPUsub_outerx2(v + (i + 1) * N + 1, len, N - 1, N, temp + 1, hv, true, v + (i + 1) * N + 1, N);
-        for (int j = i + 1; j < N; ++j) {
-          for (int k = 1; k < N; ++k) {
+        CPUvec_mul_mat(v + (i + 1) * _N_ + 1, len, _N_ - 1, _N_, hv, false, temp + 1);
+        //CPUsub_outerx2(v + (i + 1) * _N_ + 1, len, _N_ - 1, _N_, temp + 1, hv, true, v + (i + 1) * _N_ + 1, _N_);
+        for (int j = i + 1; j < _N_; ++j) {
+          for (int k = 1; k < _N_; ++k) {
             complex<float> delta(std::conj(hv[j - i - 1]) * temp[k]);
             delta *= 2;
-            v[j * N + k] -= delta;
+            v[j * _N_ + k] -= delta;
           }
         }
       }
     }
   }
-  f[N - 2] = r[0];
-  d[N - 1] = r[1];
+  f[_N_ - 2] = r[0];
+  d[_N_ - 1] = r[1];
   for (bool next = true; next; ) {
     next = false;
     int i = 0;
-    while (i < N - 1) {
+    while (i < _N_ - 1) {
       int j = i;
-      while (j < N - 1 && (fabs(f[j].real()) > eps || fabs(f[j].imag()) > eps))
+      while (j < _N_ - 1 && (fabs(f[j].real()) > eps || fabs(f[j].imag()) > eps))
         ++j;
       if (i != j) {
-        implicit_kernel(d + i, f + i, v + i * N, j - i + 1);
+        implicit_kernel(d + i, f + i, v + i * _N_, j - i + 1);
         next = true;
       }
       i = j + 1;
     }
   }
-  for (int i = 0; i < N; ++i) {
+  for (int i = 0; i < _N_; ++i) {
     s[i] = sqrt(complex_norm(d[i]));
   }
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < N; ++j) {
+  for (int i = 0; i < _N_; ++i) {
+    for (int j = 0; j < _N_; ++j) {
       complex<float> sum(0, 0);
-      for (int k = 0; k < N; ++k)
-        sum += complex<float>(complex_conj_mul(v[j * N + k], a[i * N + k]));
-      u[i * N + j] = sum;
+      for (int k = 0; k < _N_; ++k)
+        sum += complex<float>(complex_conj_mul(v[j * _N_ + k], a[i * _N_ + k]));
+      u[i * _N_ + j] = sum;
     }
   }
-  for (int i = 0; i < N; ++i) {
-    for (int j = 0; j < N; ++j) {
-      u[i * N + j] /= s[j];
+  for (int i = 0; i < _N_; ++i) {
+    for (int j = 0; j < _N_; ++j) {
+      u[i * _N_ + j] /= s[j];
     }
   }
 }

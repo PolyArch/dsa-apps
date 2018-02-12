@@ -16,37 +16,37 @@
 
 #define complex_norm(a) ((a).real * (a).real + (a).imag * (a).imag)
 
-complex_t tmp0[N * N];
-complex_t tmp1[N * N];
-complex_t sub_q[N * N];
+complex_t tmp0[_N_ * _N_];
+complex_t tmp1[_N_ * _N_];
+complex_t sub_q[_N_ * _N_];
 //double buffering
-complex_t rbuffer0[N * N];
-complex_t rbuffer1[N * N];
+complex_t rbuffer0[_N_ * _N_];
+complex_t rbuffer1[_N_ * _N_];
 
 #define h(x, y) (((x) >= i) && ((y) >= i) ? (((x) == (y)) - v[x] * v[y] * 2.) : (x) == (y))
 void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
   int i, j, k, x, y;
-  for (i = 0; i < N * N; ++i) {
-    sub_q[i] = i % N == i / N ? (complex_t){1, 0} : (complex_t){0, 0};
+  for (i = 0; i < _N_ * _N_; ++i) {
+    sub_q[i] = i % _N_ == i / _N_ ? (complex_t){1, 0} : (complex_t){0, 0};
   }
 
   complex_t *r = rbuffer0, *_r = rbuffer1;
-  for (i = 0; i < N; ++i) {
-    for (j = 0; j < N; ++j) {
-      r[j * N + i] = (complex_t){a[i * N + j].real(), a[i * N + j].imag()};
-      //r[j * N + i] = a[i * N + j];
+  for (i = 0; i < _N_; ++i) {
+    for (j = 0; j < _N_; ++j) {
+      r[j * _N_ + i] = (complex_t){a[i * _N_ + j].real(), a[i * _N_ + j].imag()};
+      //r[j * _N_ + i] = a[i * _N_ + j];
     }
   }
 
-  for (i = 0; i < N; ++i) {
-    int len = N - i;
+  for (i = 0; i < _N_; ++i) {
+    int len = _N_ - i;
     complex_t v[len];
     {
       complex_t *vp = v, *rp = r;
       *vp = *rp;
       float norm0 = complex_norm(*vp), norm1 = 0;
       ++vp; ++rp;
-      for (j = i + 1; j < N; ++j) {
+      for (j = i + 1; j < _N_; ++j) {
         *vp = *rp;
         norm1 += complex_norm(*vp); //vp->real * vp->real + vp->imag * vp->imag;
         ++vp;
@@ -63,7 +63,7 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
       //printf("%f\n", sqrt(norm1));
       norm1 = 1. / sqrt(norm1);
       vp = v;
-      for (j = i; j < N; ++j) {
+      for (j = i; j < _N_; ++j) {
         vp->real *= norm1;
         vp->imag *= norm1;
         ++vp;
@@ -101,7 +101,7 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
         tmpxq->real = tmpxq->imag = tmpxr->real = tmpxr->imag = 0;
         complex_t *vk = v;
         complex_t *rk = r + x * len;
-        for (k = i; k < N; ++k) {
+        for (k = i; k < _N_; ++k) {
           complex_t delta = complex_conj_mul(*vk, *rk);
           *tmpxr = complex_add(*tmpxr, delta);
 
@@ -128,10 +128,10 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
         complex_t *vx = v;
         {
           complex_t val = complex_conj_mul(*vx, *tmpxq);
-          Q[y * N + i] = complex<float>(qx->real - val.real, qx->imag - val.imag);
+          Q[y * _N_ + i] = complex<float>(qx->real - val.real, qx->imag - val.imag);
           ++qx;
           ++vx;
-          //q[y * N + x] -= tmp[y * N + x] * std::conj(v[x - i]) * 2;
+          //q[y * _N_ + x] -= tmp[y * _N_ + x] * std::conj(v[x - i]) * 2;
         }
         for (x = 1; x < len; ++x) {
           complex_t val = complex_conj_mul(*vx, *tmpxq);
@@ -139,7 +139,7 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
           ++nxt;
           ++qx;
           ++vx;
-          //q[y * N + x] -= tmp[y * N + x] * std::conj(v[x - i]) * 2;
+          //q[y * _N_ + x] -= tmp[y * _N_ + x] * std::conj(v[x - i]) * 2;
         }
         tmpxq++;
       }
@@ -150,55 +150,55 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
         complex_t *read = r;
         {
           complex_t delta = complex_mul(*tmpxr, *vy);
-          R[i * N + i] = complex<float>(
+          R[i * _N_ + i] = complex<float>(
               read[0].real - delta.real,
               read[0].imag - delta.imag
           );
           ++tmpxr;
-          //r[x * N + y] -= tmp[y * N + x] * 2 * v[y - i];
+          //r[x * _N_ + y] -= tmp[y * _N_ + x] * 2 * v[y - i];
         }
         complex_t *vx = v;
         {
           complex_t val = complex_conj_mul(*vx, *tmpxq);
-          Q[i * N + i] = complex<float>(qx->real - val.real, qx->imag - val.imag);
+          Q[i * _N_ + i] = complex<float>(qx->real - val.real, qx->imag - val.imag);
           ++qx;
           ++vx;
-          //q[y * N + x] -= tmp[y * N + x] * std::conj(v[x - i]) * 2;
+          //q[y * _N_ + x] -= tmp[y * _N_ + x] * std::conj(v[x - i]) * 2;
         }
-        for (x = i + 1; x < N; ++x) {
+        for (x = i + 1; x < _N_; ++x) {
           complex_t val = complex_conj_mul(*vx, *tmpxq);
           *nxt = complex_sub(*qx, val);
           ++nxt;
           ++qx;
           ++vx;
-          //q[y * N + x] -= tmp[y * N + x] * std::conj(v[x - i]) * 2;
+          //q[y * _N_ + x] -= tmp[y * _N_ + x] * std::conj(v[x - i]) * 2;
 
           val = complex_mul(*tmpxr, *vy);
-          R[i * N + x] = complex<float>(
+          R[i * _N_ + x] = complex<float>(
               read[len * (x - i)].real - val.real,
               read[len * (x - i)].imag - val.imag
           );
           ++tmpxr;
-          //r[x * N + y] -= tmp[y * N + x] * 2 * v[y - i];
+          //r[x * _N_ + y] -= tmp[y * _N_ + x] * 2 * v[y - i];
         }
         ++vy;
         tmpxq++;
       }
       complex_t *tmpyr = tmp1 + 1;
       complex_t *write = r;
-      for (y = i + 1; y < N; ++y) {
+      for (y = i + 1; y < _N_; ++y) {
         complex_t *vx = v;
         {
           complex_t val = complex_conj_mul(*vx, *tmpxq);
-          Q[y * N + i] = complex<float>(qx->real - val.real, qx->imag - val.imag);
+          Q[y * _N_ + i] = complex<float>(qx->real - val.real, qx->imag - val.imag);
           ++qx;
           ++vx;
-          //q[y * N + x] -= tmp[y * N + x] * std::conj(v[x - i]) * 2;
+          //q[y * _N_ + x] -= tmp[y * _N_ + x] * std::conj(v[x - i]) * 2;
         }
 
         complex_t *read = r + (y - i) * len + 1;
         complex_t *tmpxr = tmp1 + 1;
-        for (x = i + 1; x < N; ++x) {
+        for (x = i + 1; x < _N_; ++x) {
           complex_t val = complex_conj_mul(*vx, *tmpxq);
           *nxt = complex_sub(*qx, val);
           ++nxt;
@@ -210,7 +210,7 @@ void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
           ++read;
           ++vx;
 
-          //q[y * N + x] -= tmp[y * N + x] * std::conj(v[x - i]) * 2;
+          //q[y * _N_ + x] -= tmp[y * _N_ + x] * std::conj(v[x - i]) * 2;
         }
         //++vy;
         tmpxq++;

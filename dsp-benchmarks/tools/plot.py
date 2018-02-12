@@ -9,14 +9,15 @@ colors = [
 ]
 
 legends = [
-    '', 'CONFIG', 'ISSUED', 'CONST_FILL', 'SCR_FILL',
-    'DMA_FILL', 'REC_WAIT', 'CORE_WAIT', 'SCR_WAIT',
-    'CMD_QUEUE', 'CGRA_BACK', 'OTHER', 'WIERD',
-    'DRAIN', 'NO_ACTIVITY', 'NOT_IN_USE'
+    '',
+    'CONFIG', 'ISSUED', 'ISSUED_MULTI', 'CONST_FILL',
+    'SCR_FILL', 'DMA_FILL', 'REC_WAIT', 'CORE_WAIT', 
+    'SCR_BAR_WAIT', 'CMD_QUEUE', 'CGRA_BACK', 'DRAIN', 
+    'NOT_IN_USE'
 ]
 
 raw = open('breakdowns.csv', 'r').readlines()
-size = raw[0].split()
+size = raw[0].strip().split('|')
 arch = raw[1].split()
 
 raw = raw[2:]
@@ -30,17 +31,18 @@ fig.tight_layout(pad = 0.1)
 
 bar_width = 0.2
 
+fields = 14
+
 for no in xrange(n):
     line = np.array(raw[no])
-    m = 1 + (len(line) - 1) / 16
+    m = 1 + (len(line) - 1) / fields
     ax[no].set_title(size[no])
-    ax[no].bar([0], line[0], bar_width, color = 'r', label = 'OoO')
+    ax[no].bar([0], line[0], bar_width, color = 'r', label = 'MKL')
     ind = (bar_width + 0.01) * np.arange(1, m)
-    bars = np.array(line[1::16])
-    for i in xrange(15, 0, -1):
+    bars = np.array(line[1::fields])
+    for i in xrange(fields - 1, 0, -1):
         ax[no].bar(ind, bars, bar_width, color = colors[i], label = legends[i])
-        #print legends[i], bars, line[i+1::16]
-        bars = bars - line[1::16] * line[i+1::16]
+        bars = bars - line[1::fields] * line[i+1::fields]
     if no == n - 1:
         ax[no].legend(loc = 1, ncol = 2)
     ax[no].set_xticks(bar_width * np.arange(m))

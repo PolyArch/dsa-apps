@@ -2,13 +2,13 @@ ifndef N
 N=12
 endif
 
-DFG = compute.dfg writeback.dfg compute_dual.dfg offload.dfg finalize.dfg
+DFG = compute.dfg writeback.dfg multi.dfg
 
 SCALE=$(N)
 
-MACROS=-D N=$(N)
+MACROS=-D_N_=$(N)
 
-SOFTBRAINS = sb-origin sb-new sb-scr sb-spec sb-multi
+SOFTBRAINS = sb-origin sb-new sb-spec
 
 include ../common/Makefile.inc
 
@@ -16,20 +16,8 @@ include ../common/Makefile.inc
 sb-origin.o: sb-origin.cc compute.dfg.h writeback.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
-# The cholesky implemented in Softbrain with new control instructions.
-# Also use recurrence to get rid of unnecessary induction memory IO.
-sb-new.o: sb-new.cc compute_dual.dfg.h finalize.dfg.h
-	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
-
-# Based on the last one, move memory IO to spad IO.
-sb-scr.o: sb-scr.cc compute.dfg.h writeback.dfg.h
-	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
-
-# Based on the last one, add data streaming between CGRAs.
-sb-multi.o: sb-multi.cc compute_dual.dfg.h writeback.dfg.h
-	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
-
-# Based on the last one, add aggressive FU, like sqrter and 1/x divider to CGRA
-sb-spec.o: sb-spec.cc compute_dual.dfg.h writeback.dfg.h offload.dfg.h
+# On REVEL, using multi-DFG-single-CGRA tech gives pretty promissing
+# acceleration.
+sb-new.o: sb-new.cc multi.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 

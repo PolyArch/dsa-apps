@@ -7,7 +7,7 @@ SOFTBRAINS = sb-origin sb-new
 DFG = dot.dfg mulconj.dfg finalize.dfg multi.dfg fused1.dfg fused2.dfg
 SCALE=$(N)
 
-MACROS=-D N=$(N)
+MACROS=-D_N_=$(N)
 
 include ../common/Makefile.inc
 

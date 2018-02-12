@@ -1,61 +1,53 @@
 #include <complex>
+#include <iostream>
 #include <cmath>
 #include <algorithm>
 #include "sb_insts.h"
-#include "compute0.dfg.h"
-#include "compute1.dfg.h"
-
-#define complex_mul(a, b) (a).real() * (b).real() - (a).imag() * (b).imag(), \
-  (a).real() * (b).imag() + (a).imag() * (b).real()
-
-#define complex_conj_mul(a, b) (a).real() * (b).real() + (a).imag() * (b).imag(), \
-  (a).real() * (b).imag() - (a).imag() * (b).real()
-
-#define complex_add(a, b) (a).real() + (b).real(), (a).imag() + (b).imag()
-
-#define complex_sub(a, b) (a).real() - (b).real(), (a).imag() - (b).imag()
-
-#define complex_norm(a) ((a).real() * (a).real() + (a).imag() * (a).imag())
+#include "sim_timing.h"
+#include "compute.dfg.h"
+#include "subadd.dfg.h"
 
 using std::complex;
-#define PI 3.14159265358979303
 
-complex<float> *fft(complex<float> *from, complex<float> *to, complex<float> *w) {
-  SB_CONFIG(compute0_config, compute0_size);
+void fft(complex<float> *a, complex<float> *w) {
+  SB_CONFIG(compute_config, compute_size);
 
-  int blocks = N / 2;
-  int span = N / blocks;
-  for ( ; blocks != 1; blocks >>= 1, span <<= 1) {
-    SB_DMA_READ(from,          2 * blocks * 8, blocks * 8, span / 2, P_compute0_L);
-    SB_DMA_READ(from + blocks, 2 * blocks * 8, blocks * 8, span / 2, P_compute0_R);
-
-    for (int j = 0; j < span / 2; ++j) {
-      SB_CONST(P_compute0_W, *((unsigned long long*)(w + j * blocks)), blocks / 2);
-      /*for (int i = 0; i < blocks; ++i) {
-        //printf("%d %d %d\n", blocks, j, i);
-        complex<float> &L = from[2 * j + i];
-        complex<float> &R = from[2 * j + i + blocks];
-        complex<float> tmp(complex_mul(w[j], R));
-        to[i + j] = complex<float>(complex_add(L, tmp));
-        to[i + j + span / 2 * blocks] = complex<float>(complex_sub(L, tmp));
-      }*/
+  int N = _N_;
+  int span = N >> 1, blocks = 1;
+  for ( ; span > 1; span >>= 1, blocks <<= 1) {
+    SB_DMA_READ(a, 16 * span, 8 * span, N / span / 2, P_compute_L);
+    SB_DMA_READ(a + span, 16 * span, 8 * span, N / span / 2, P_compute_R);
+    SB_DMA_WRITE(P_compute_A, 16 * span, 8 * span, N / span / 2, a);
+    SB_DMA_WRITE(P_compute_B, 16 * span, 8 * span, N / span / 2, a + span);
+    for (int j = 0; j < blocks; ++j) {
+      SB_DMA_READ(w, blocks * 8, 8, span, P_compute_W);
     }
-
-    SB_DMA_WRITE(P_compute0_A, 8, 8, N / 2, to);
-    SB_DMA_WRITE(P_compute0_B, 8, 8, N / 2, to + N / 2);
-
     SB_WAIT_ALL();
-    swap(from, to);
+    //for (int j = 0; j < N; ++j)
+      //std::cout << a[j] << (j == N - 1 ? "\n" : " ");
+    /*
+    for (int odd = span, even; odd < N; ++odd) {
+      odd |= span;
+      even = odd ^ span;
+
+      complex<float> temp = a[even] + a[odd];
+      a[odd]  = a[even] - a[odd];
+      a[even] = temp;
+
+      int index = (even << _log) & (N - 1);
+      if (index) {
+        a[odd] *= w[index];
+        //printf("[%d] %d\n", span, index);
+      }
+    }
+    */
   }
 
-  SB_CONFIG(compute1_config, compute1_size);
-  SB_DMA_READ(from,     16, 8, N / 2, P_compute1_L)
-  SB_DMA_READ(from + 1, 16, 8, N / 2, P_compute1_R)
-  SB_DMA_READ(w, 8, 8, N / 2, P_compute1_W);
-  SB_DMA_WRITE(P_compute1_A, 8, 8, N / 2, to);
-  SB_DMA_WRITE(P_compute1_B, 8, 8, N / 2, to + N / 2);
+  SB_CONFIG(subadd_config, subadd_size);
+  SB_DMA_READ(a, 16 * span, 8 * span, N / span / 2, P_subadd_L);
+  SB_DMA_READ(a + span, 16 * span, 8 * span, N / span / 2, P_subadd_R);
+  SB_DMA_WRITE(P_subadd_A, 16 * span, 8 * span, N / span / 2, a);
+  SB_DMA_WRITE(P_subadd_B, 16 * span, 8 * span, N / span / 2, a + span);
   SB_WAIT_ALL();
-  //swap(from, to);
 
-  return to;
 }

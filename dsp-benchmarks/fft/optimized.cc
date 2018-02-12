@@ -2,38 +2,28 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
-
-#define complex_mul(a, b) (a).real() * (b).real() - (a).imag() * (b).imag(), \
-  (a).real() * (b).imag() + (a).imag() * (b).real()
-
-#define complex_conj_mul(a, b) (a).real() * (b).real() + (a).imag() * (b).imag(), \
-  (a).real() * (b).imag() - (a).imag() * (b).real()
-
-#define complex_add(a, b) (a).real() + (b).real(), (a).imag() + (b).imag()
-
-#define complex_sub(a, b) (a).real() - (b).real(), (a).imag() - (b).imag()
-
-#define complex_norm(a) ((a).real() * (a).real() + (a).imag() * (a).imag())
+#include "sim_timing.h"
 
 using std::complex;
 
-complex<float> *fft(complex<float> *from, complex<float> *to, complex<float> *w) {
-  for (int blocks = N / 2; blocks; blocks >>= 1) {
-    int span = N / blocks;
-    for (int j = 0; j < span / 2 * blocks; j += blocks) {
-      for (int i = 0; i < blocks; ++i) {
-        //printf("%d %d %d\n", blocks, j, i);
-        complex<float> &L = from[2 * j + i];
-        complex<float> &R = from[2 * j + i + blocks];
-        complex<float> tmp(complex_mul(w[j], R));
-        to[i + j] = complex<float>(complex_add(L, tmp));
-        to[i + j + span / 2 * blocks] = complex<float>(complex_sub(L, tmp));
+void fft(complex<float> *a, complex<float> *w) {
+  int N = _N_;
+  for (int span = N >> 1, _log = 0; span; span >>= 1, ++_log) {
+    for (int odd = span, even; odd < N; ++odd) {
+      odd |= span;
+      even = odd ^ span;
+
+      complex<float> temp = a[even] + a[odd];
+      a[odd]  = a[even] - a[odd];
+      a[even] = temp;
+
+      int index = (even << _log) & (N - 1);
+      if (index) {
+        a[odd] *= w[index];
+        //printf("[%d] %d\n", span, index);
       }
     }
     //for (int j = 0; j < N; ++j)
-      //std::cout << to[j] << "\n";
-    //std::cout << "\n";
-    swap(from, to);
+      //std::cout << a[j] << (j == N - 1 ? "\n" : " ");
   }
-  return from;
 }

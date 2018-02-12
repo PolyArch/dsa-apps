@@ -9,10 +9,10 @@
 
 using std::complex;
 
-complex<float> a[N * N], U[N * N], V[N * N], tmp[N * N], res[N * N];
-complex<float> ss[N];
-float S[N];
-complex<float> aa[N * N];
+complex<float> a[_N_ * _N_], U[_N_ * _N_], V[_N_ * _N_], tmp[_N_ * _N_], res[_N_ * _N_];
+complex<float> ss[_N_];
+float S[_N_];
+complex<float> aa[_N_ * _N_];
 
 int main() {
   FILE *input_data = fopen("input.data", "r");
@@ -23,7 +23,7 @@ int main() {
     return 1;
   }
 
-  read_n_float_complex(input_data, N * N, a);
+  read_n_float_complex(input_data, _N_ * _N_, a);
 
   //svd(aa, aa, aa, aa);
   begin_roi();
@@ -31,25 +31,25 @@ int main() {
   end_roi();
   sb_stats();
 
-  for (int i = 0; i < N; ++i)
-    for (int j = 0; j < N; ++j)
-      tmp[i * N + j] = U[i * N + j] * S[j];
+  for (int i = 0; i < _N_; ++i)
+    for (int j = 0; j < _N_; ++j)
+      tmp[i * _N_ + j] = U[i * _N_ + j] * S[j];
 
-  for (int i = 0; i < N; ++i)
-     for (int j = 0; j < N; ++j)
-      for (int k = 0; k < N; ++k)
-        res[i * N + j] += tmp[i * N + k] * V[k * N + j];
+  for (int i = 0; i < _N_; ++i)
+     for (int j = 0; j < _N_; ++j)
+      for (int k = 0; k < _N_; ++k)
+        res[i * _N_ + j] += tmp[i * _N_ + k] * V[k * _N_ + j];
 
-  std::sort(S, S + N, [](float a, float b) { return a > b; });
-  for (int i = 0; i < N; ++i)
+  std::sort(S, S + _N_, [](float a, float b) { return a > b; });
+  for (int i = 0; i < _N_; ++i)
     ss[i] = S[i];
 
-  if (!compare_n_float_complex(ref_data, N, ss)) {
+  if (!compare_n_float_complex(ref_data, _N_, ss)) {
     puts("singular value error!");
     return 0;
   }
 
-  if (!compare_n_float_complex(ref_data, N * N, res)) {
+  if (!compare_n_float_complex(ref_data, _N_ * _N_, res)) {
     puts("origin matrix error!");
     return 0;
   }

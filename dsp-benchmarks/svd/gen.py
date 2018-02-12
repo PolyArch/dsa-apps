@@ -3,9 +3,9 @@ output = imp.load_source('output', '../common/output.py')
 
 numpy.set_printoptions(precision = 4, suppress = True, threshold = 1000, linewidth = 200)
 
-N = int(sys.argv[1])
+_N_ = int(sys.argv[1])
 
-_a = numpy.random.rand(N, N) + 1j * numpy.random.rand(N, N)
+_a = numpy.random.rand(_N_, _N_) + 1j * numpy.random.rand(_N_, _N_)
 a = _a.copy()
 output.print_complex_array('input.data', a.flatten())
 
@@ -13,7 +13,7 @@ ans = numpy.linalg.svd(a, compute_uv = False)
 
 output.print_complex_array('ref.data', numpy.concatenate((ans, a.flatten())))
 
-V = numpy.identity(N, dtype = 'complex128')
+V = numpy.identity(_N_, dtype = 'complex128')
 
 def household(v):
     if numpy.linalg.norm(v) < 1e-5:
@@ -27,11 +27,11 @@ def household(v):
 f,d = [],[]
 r = a.copy()
 
-for i in range(N - 1):
+for i in range(_N_ - 1):
     alpha, hv = household(r[:,0].copy())
     r = r[:,1:] - 2 * numpy.outer(hv, numpy.dot(numpy.conj(hv), r[:,1:]))
     d.append(-alpha)
-    if i != N - 2:
+    if i != _N_ - 2:
         alpha, hv = household(r[0,:].copy())
         r = r[1:,:] - 2 * numpy.outer(numpy.dot(r[1:,:], numpy.conj(hv)), hv)
         V[i+1:,1:] = V[i+1:,1:] - 2 * numpy.outer(numpy.conj(hv), numpy.dot(hv, V[i+1:,1:]))
@@ -87,9 +87,9 @@ def implicit_kernel(d, f, V):
 while True:
     i = 0
     called = False
-    while i < N - 1:
+    while i < _N_ - 1:
         j = i
-        while j < N - 1 and (abs(f[j].real) > 1e-5 or abs(f[j].imag) > 1e-5):
+        while j < _N_ - 1 and (abs(f[j].real) > 1e-5 or abs(f[j].imag) > 1e-5):
             j += 1
         if i != j:
             implicit_kernel(d[i:j+1], f[i:j], V[i:j+1,:])
@@ -125,22 +125,22 @@ except:
 print 'Singular value:', sv
 
 U = numpy.dot(_a, numpy.conj(V).transpose())
-for i in range(N):
+for i in range(_N_):
     U[:,i] /= sv[i]
 
 
 """ check pass!
 numpy.testing.assert_allclose(
     numpy.dot(numpy.conj(U).transpose(), U),
-    numpy.identity(N, dtype = 'complex128'),
+    numpy.identity(_N_, dtype = 'complex128'),
     atol = 1e-5, rtol = 1e-5
 )
 """
 
 #verify code:
 
-sigma = numpy.zeros((N, N), dtype = 'complex128')
-for i in range(N):
+sigma = numpy.zeros((_N_, _N_), dtype = 'complex128')
+for i in range(_N_):
     sigma[i, i] = sv[i]
 
 try:
@@ -152,5 +152,5 @@ try:
 except:
     print 'WARN: Precision loss too much!'
 
-print 'AVG ERROR: %.6f' % (abs(numpy.dot(numpy.dot(U, sigma), V) - _a).sum() / (N * N))
+print 'AVG ERROR: %.6f' % (abs(numpy.dot(numpy.dot(U, sigma), V) - _a).sum() / (_N_ * _N_))
 

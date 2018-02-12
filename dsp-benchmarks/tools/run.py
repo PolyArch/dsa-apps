@@ -20,15 +20,20 @@ def find_line_val(s, raw):
         print(tmp)
         raise Exception('More than one line with the same prefix')
     return float(tmp[0].strip(s).split()[0])
-    
+
+def extract_ticks(s):
+    assert not s.startswith('sb-')
+    raw = open(s, 'r').readlines()
+    for i in raw:
+        if 'ticks:' in i:
+            return int(i.split(':')[1])
+    raise Exception('No ticks found!')
+
+
+
 
 def analyze_log(s):
     raw = open(s, 'r').readlines()
-
-    if s == 'ooo.log' or s == 'physical.log':
-        for i in raw:
-            if 'ticks:' in i:
-                return [int(i.split(':')[1])]
 
     res = []
     cycles = find_line_val('Cycles:', raw)
@@ -59,17 +64,21 @@ def analyze_breakdown(s):
 
 
 def run_cpu(env = ''):
-    #run_shell(env + ' make physical.log')
-    run_shell(env + ' make ooo.log')
-    res = []
-    #res += analyze_log('physical.log')
-    res += analyze_log('ooo.log')
-    return res
+    try:
+        total_ticks = 0
+        for i in range(10):
+            run_shell(env + ' make mkl.log')
+            total_ticks += extract_ticks('mkl.log')
+        return [total_ticks / 10.]
+    except:
+        run_shell(env + ' make ooo.log')
+        return [extract_ticks('ooo.log')]
+
 
 def run(cases, template, softbrains):
     run_shell('make ultraclean')
-    open('breakdowns.csv', 'w').write(' '.join(map(lambda x: template % x, cases)) + '\n')
-    open('breakdowns.csv', 'a').write('OoO ' + ' '.join(map(lambda x: 'sb-%s' % x, softbrains)) + '\n')
+    open('breakdowns.csv', 'w').write('|'.join(map(lambda x: template % x, cases)) + '\n')
+    open('breakdowns.csv', 'a').write('MKL ' + ' '.join(map(lambda x: 'sb-%s' % x, softbrains)) + '\n')
     for i in cases:
         run_shell('make clean')
         line = []

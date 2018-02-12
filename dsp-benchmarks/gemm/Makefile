@@ -1,5 +1,5 @@
 ifndef N
-N=8
+N=120
 endif
 
 ifndef M
@@ -16,7 +16,7 @@ SOFTBRAINS = sb-origin sb-new
 
 SCALE=$(N) $(M) $(P)
 
-MACROS=-DN=$(N) -DM=$(M) -DP=$(P)
+MACROS=-D_N_=$(N) -D_M_=$(M) -D_P_=$(P)
 
 include ../common/Makefile.inc
 

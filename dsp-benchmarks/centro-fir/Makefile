@@ -14,7 +14,7 @@ SCALE = $(N) $(M)
 
 SOFTBRAINS = sb-new sb-origin sb-spad
 
-MACROS=-D N=$(N) -D M=$(M)
+MACROS=-D_N_=$(N) -D_M_=$(M)
 
 include ../common/Makefile.inc
 
