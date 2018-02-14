@@ -4,8 +4,8 @@ output = imp.load_source('output', '../common/output.py')
 
 n = int(sys.argv[1])
 
-#_a = numpy.random.rand(n).astype('complex64') + 1j * numpy.random.rand(n).astype('complex64')
-_a = numpy.arange(1, n + 1).astype('complex64')
+_a = numpy.random.rand(n).astype('complex64') + 1j * numpy.random.rand(n).astype('complex64')
+#_a = numpy.array(range(1, n + 1)).astype('complex64')
 
 output.print_complex_array('input.data', _a.flatten())
 
@@ -39,7 +39,7 @@ def non_recursive(_a):
         blocks /= 2
     return a
 
-numpy.testing.assert_allclose(non_recursive(a), brute_force(a), atol = 1e-4, rtol = 1e-4)
+numpy.testing.assert_allclose(non_recursive(a), brute_force(a), atol = 1e-4)
 print 'check pass!'
 
 output.print_complex_array('ref.data', non_recursive(a).flatten())

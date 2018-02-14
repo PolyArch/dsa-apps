@@ -190,7 +190,7 @@
         C      = P_suboutercx2_C; \
         O      = P_suboutercx2_O; \
       } \
-      int pad = get_pad((m_width), 4); \
+      int pad = get_pad((m_width), 2); \
       if (_m != NULL) { \
         SB_FILL_MODE(STRIDE_DISCARD_FILL); \
         SB_DMA_READ(m, 8 * (m_stride), 8 * (m_width), (m_height), A); \
@@ -200,7 +200,7 @@
         SB_CONST(A, 1065353216, 1); \
         SB_FILL_MODE(STRIDE_DISCARD_FILL); \
       } \
-      SB_REPEAT_PORT(((m_width) + pad) / 4); \
+      SB_REPEAT_PORT(((m_width) + pad) / 2); \
       SB_DMA_READ(a, 8, 8, (m_height), B); \
       SB_DMA_READ(b, 0, 8 * (m_width), m_height, C); \
       SB_DMA_WRITE(O, 8 * (res_stride), 8 * (m_width), m_height, res); \
