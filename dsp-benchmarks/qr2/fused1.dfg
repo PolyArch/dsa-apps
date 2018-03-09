@@ -1,0 +1,42 @@
+Input: M
+Input: W
+Input: TAU
+Input: reset
+Input: HEAD
+
+MVR = FMul32x2(W, M)
+MVI = FMulX32x2(W, M)
+W   = FAddSub32x2(MVR, MVI)
+ACC = FAcc32x2(W, reset)
+V   = CplxMulCons(ACC, TAU)
+FIN = FSub32x2(HEAD, V)
+
+Output: V
+Output: FIN
+
+----
+
+Input: A
+Input: B
+Input: C
+
+RAB = FMul32x2(A, B)
+
+IAB = FMulX32x2(A, B)
+
+AB  = FSubAdd32x2(RAB, IAB)
+
+RES = FSub32x2(C, AB)
+
+Output: RES
+
+----
+
+Input: IN
+
+OUTspad = IN
+OUTmem  = IN
+
+Output: OUTspad
+Output: OUTmem
+

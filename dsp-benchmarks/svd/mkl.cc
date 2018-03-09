@@ -50,6 +50,6 @@ int main() {
   end_roi();
   sb_stats();
 
-  puts("I hope the result is correct, because the interface of QR is weird...");
+  puts("I hope the result is correct, because MKL has different results...");
   return 0;
 }

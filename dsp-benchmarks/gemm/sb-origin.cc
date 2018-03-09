@@ -2,7 +2,7 @@
 #include <stdint.h>
 #include <cmath>
 #include <algorithm>
-#include "ss-config/fixed_point.h"
+#include "fixed_point.h"
 #include "compute.dfg.h"
 #include "sb_insts.h"
 

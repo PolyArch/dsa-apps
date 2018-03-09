@@ -25,11 +25,13 @@ using std::complex;
 
 void gemm(int n, int m, int p, complex<int16_t> *a, complex<int16_t> *b, complex<int16_t> *c) {
   SB_CONFIG(compute_config, compute_size);
+  SB_DMA_SCRATCH_LOAD(b, 0, 8 * m * p / 2, 1, 0);
+  SB_WAIT_SCR_WR();
   for (int i = 0; i < n; ++i) {
     SB_CONST(P_compute_C, 0, p / 2);
     SB_RECURRENCE(P_compute_O, P_compute_C, (p / 2) * (m / 2 - 1));
-    SB_DMA_READ(b    , 8 * p, 4 * p, m / 2, P_compute_BE);
-    SB_DMA_READ(b + p, 8 * p, 4 * p, m / 2, P_compute_BO);
+    SB_SCR_PORT_STREAM(0    , 8 * p, 4 * p, m / 2, P_compute_BE);
+    SB_SCR_PORT_STREAM(p * 4, 8 * p, 4 * p, m / 2, P_compute_BO);
     SB_DMA_WRITE(P_compute_O, 0, 4 * p, 1, c + i * p);
     SB_REPEAT_PORT(p / 4);
     SB_DMA_READ(a + i * m, 0, 4 * m, 1, P_compute_A);

@@ -6,7 +6,7 @@ endif
 DFG_HEADERS = $(DFG:.dfg=.dfg.h)
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
-	$(SS_TOOLS)/bin/sb_sched --verbose $(SBCONFIG) $< 
+	$(SS_TOOLS)/bin/sb_sched --max-iters=100000 --verbose $(SBCONFIG) $< 
 
 IFLAGS=-I../../common/include -I../../../ss-tools/include -I../common/
 INTELI=-I /opt/intel/include 
@@ -38,12 +38,13 @@ mkl.exe: mkl.cc
 
 ooo.log: optimized.exe input.data ref.data
 	SBCONFIG=$(SBCONFIG) \
-	gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=detailed --l1d_size=64kB --l1i_size=16kB --l2_size=1024kB --caches --cmd=./$< \
+	gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=detailed --l1d_size=64kB --l1i_size=16kB --l2_size=1024kB --caches --l2cache --cmd=./$< \
 	| tee $@
 
 $(LOGS): %.log: %.exe input.data ref.data
 	SBCONFIG=$(SBCONFIG) \
-	gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=minor --l1d_size=64kB --l1i_size=16kB --l2_size=1024kB --caches --cmd=./$< \
+	gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=minor \
+	--l1d_size=2048kB --l1d_assoc=32 --l1i_size=16kB --l2_size=1024kB --caches --cmd=./$< \
 	| tee $@
 	
 $(EXEC): %.exe: %.o main.cc

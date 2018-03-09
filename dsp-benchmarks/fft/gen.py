@@ -39,8 +39,8 @@ def non_recursive(_a):
         blocks /= 2
     return a
 
-numpy.testing.assert_allclose(non_recursive(a), brute_force(a), atol = 1e-4)
-print 'check pass!'
+#numpy.testing.assert_allclose(non_recursive(a), brute_force(a), atol = 1e-4)
+#print 'check pass!'
 
 output.print_complex_array('ref.data', non_recursive(a).flatten())
 print 'output generated!'

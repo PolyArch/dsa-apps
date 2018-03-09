@@ -18,8 +18,8 @@
 using std::complex;
 
 complex<float> *fft(complex<float> *from, complex<float> *to, complex<float> *w) {
-  for (int blocks = N / 2; blocks; blocks >>= 1) {
-    int span = N / blocks;
+  for (int blocks = _N_ / 2; blocks; blocks >>= 1) {
+    int span = _N_ / blocks;
     for (int j = 0; j < span / 2 * blocks; j += blocks) {
       for (int i = 0; i < blocks; ++i) {
         //printf("%d %d %d\n", blocks, j, i);
@@ -30,7 +30,7 @@ complex<float> *fft(complex<float> *from, complex<float> *to, complex<float> *w)
         to[i + j + span / 2 * blocks] = complex<float>(complex_sub(L, tmp));
       }
     }
-    //for (int j = 0; j < N; ++j)
+    //for (int j = 0; j < _N_; ++j)
       //std::cout << to[j] << "\n";
     //std::cout << "\n";
     swap(from, to);

@@ -3,4 +3,4 @@ import imp
 
 run = imp.load_source('run', '../tools/run.py')
 
-run.run([12, 24, 48, 120], 'N=%d M=16 P=64 ', ['origin', 'new'])
+run.run([12, 24, 48], 'N=%d M=16 P=64 ', ['origin', 'new'])

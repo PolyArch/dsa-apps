@@ -1,6 +1,7 @@
 #include "fft.h"
 #include "fileop.h"
 #include <string.h>
+#include <iostream>
 #include <complex>
 #include <stdlib.h>
 #include <stdio.h>
@@ -10,8 +11,8 @@
 
 using std::complex;
 
-complex<float> a[N], _a[N], w[N / 2];
-complex<float> b[N], _b[N];
+complex<float> a[_N_], _a[_N_], w[_N_];
+complex<float> b[_N_], _b[_N_];
 
 int main() {
   FILE *input_data = fopen("input.data", "r"), *ref_data = fopen("ref.data", "r");
@@ -20,19 +21,27 @@ int main() {
     return 1;
   }
 
-  read_n_float_complex(input_data, N, a);
+  read_n_float_complex(input_data, _N_, a);
 
-  for (int i = 0; i < N / 2; ++i) {
-    w[i] = complex<float>(cos(2 * PI * i / N), sin(2 * PI * i / N));
+  for (int i = 0; i < _N_ / 2; ++i) {
+    w[i] = complex<float>(cos(2 * PI * i / _N_), sin(2 * PI * i / _N_));
+  }
+
+  complex<float> *_w = w + _N_ / 2;
+  for (int i = 2; i < _N_; i <<= 1) {
+    for (int j = 0; j < _N_ / 2; j += i) {
+      _w[j / i] = w[j];
+    }
+    _w += _N_ / 2 / i;
   }
 
   fft(_a, _b, w);
-  begin_roi();
+  //begin_roi();
   complex<float> *res = fft(a, b, w);
-  end_roi();
+  //end_roi();
   sb_stats();
 
-  if (!compare_n_float_complex(ref_data, N, res)) {
+  if (!compare_n_float_complex(ref_data, _N_, res)) {
     puts("Error result!");
     return 1;
   }
