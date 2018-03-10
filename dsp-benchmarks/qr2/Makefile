@@ -4,7 +4,7 @@ endif
 
 SOFTBRAINS = sb-origin sb-new
 
-DFG = nmlz.dfg finalize.dfg norm.dfg hh.dfg fused1.dfg
+DFG = nmlz.dfg finalize.dfg norm.dfg hh.dfg fused1.dfg fused2.dfg
 SCALE=$(N)
 
 MACROS=-D_N_=$(N)
@@ -17,6 +17,6 @@ SOFTBRAINS = sb-origin
 sb-origin.o: sb-origin.cc finalize.dfg.h nmlz.dfg.h norm.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
-sb-new.o: sb-new.cc hh.dfg.h finalize.dfg.h nmlz.dfg.h norm.dfg.h fused1.dfg.h
+sb-new.o: sb-new.cc hh.dfg.h fused1.dfg.h fused2.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 

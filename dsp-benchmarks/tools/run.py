@@ -26,7 +26,7 @@ def extract_ticks(s):
     raw = open(s, 'r').readlines()
     for i in raw:
         if 'ticks:' in i:
-            return int(i.split(':')[1])
+            return int(i.strip('ticks:'))
     raise Exception('No ticks found!')
 
 
@@ -66,12 +66,17 @@ def analyze_breakdown(s):
 def run_cpu(env = ''):
     try:
         total_ticks = 0
-        for i in range(10):
+        run_shell(env + ' make mkl.log')
+        for i in range(100):
             run_shell(env + ' make mkl.log')
-            total_ticks += extract_ticks('mkl.log')
-        return [total_ticks / 10.]
+            ticks = extract_ticks('mkl.log')
+            total_ticks += ticks
+            print('%d: %d' % (i, ticks))
+            os.remove('mkl.log')
+        return [total_ticks / 100.]
     except:
         run_shell(env + ' make ooo.log')
+        print('Run MKL failed do OoO instead!')
         return [extract_ticks('ooo.log')]
 
 

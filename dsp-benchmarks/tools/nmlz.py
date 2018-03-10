@@ -17,21 +17,21 @@ labels = [
 ]
 
 val = [
-    [(2, 0.78), (8.0, 5.31), (7, 1.99), (39.0, 82.89), (2.0 / 50, 0.45)],
-    [(8, 6.09), (34.0, 33.52), (27, 23.28), (252, 496.63), (121.0 / 50, 8.27)]
+    [(3.45, 0.86), (10.81, 5.12), (7.38, 2.07), (39.0, 82.89), (5.57 / 25, 0.5)],
+    [(9.98, 6.16), (38.98, 31.56), (26.7, 7.44), (252, 496.63), (177.27 / 25, 7.22)]
 ]
 
 fig, ax = plt.subplots(1, 2)
 n = len(labels)
 
-arch = ['MKL', 'SB/REVEL']
+arch = ['MKL', 'PRLM/REVEL']
 
 for i in xrange(2):
     for j in xrange(2):
         ax[i].bar(numpy.arange(n) + j * 0.3, [(a[j] / a[0]) if j == 0 else a[0] / a[j] for a in val[i]], width = 0.28, label = arch[j])
     ax[i].set_xticks(numpy.arange(n))
     ax[i].set_xticklabels(labels, rotation = 75)
-    ax[i].set_ylim(0, 4)
+    ax[i].set_ylim(0, 4.05)
 
 ax[0].set_title('Small')
 ax[1].set_title('Large')

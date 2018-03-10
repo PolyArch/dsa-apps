@@ -22,11 +22,9 @@ int main() {
 
   read_n_float_complex(input_data, _N_ * _N_, a);
 
-  //qr(aa, aa);
-  //unitary(aa, aa, aa);
+  qr(aa, aa, aa);
   begin_roi();
-  qr(a, tau);
-  //unitary(a, tau, q);
+  qr(a, q, tau);
   end_roi();
   sb_stats();
   
@@ -40,10 +38,10 @@ int main() {
     return 1;
   }
 
-  /*if (!compare_n_float_complex(ref_data, _N_ * _N_, q)) {
+  if (!compare_n_float_complex(ref_data, _N_ * _N_, q)) {
     puts("error q");
     return 1;
-  }*/
+  }
 
   puts("result correct!");
   return 0;

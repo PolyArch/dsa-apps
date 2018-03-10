@@ -16,7 +16,6 @@ struct complex_t {
   float imag;
 };
 
-void qr(complex<float> *, complex<float> *);
-void unitary(complex<float> *, complex<float> *, complex<float> *);
+void qr(complex<float> *, complex<float> *, complex<float> *);
 
 #endif

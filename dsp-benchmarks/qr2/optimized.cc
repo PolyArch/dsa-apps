@@ -6,7 +6,7 @@
 
 complex<float> buffer[1024];
 
-void qr(complex<float> *a, complex<float> *tau) {
+void qr(complex<float> *a, complex<float> *q, complex<float> *tau) {
   int N = _N_;
   complex<float> *w = buffer;
   complex<float> *v = buffer + N;
@@ -38,13 +38,7 @@ void qr(complex<float> *a, complex<float> *tau) {
       }
     }
   }
-}
 
-void unitary(complex<float> *a, complex<float> *tau, complex<float> *q) {
-  int N = _N_;
-  q[N * N - 1] = 1.0f;
-  complex<float> *w = buffer;
-  complex<float> *v = buffer + N;
   for (int i = N - 2; i >= 0; --i) {
     int n = N - i;
     for (int j = i + 1; j < N; ++j)

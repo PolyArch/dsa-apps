@@ -10,8 +10,8 @@ colors = [
 
 legends = [
     'Scratch Pad (%.2f mm$^2$)',
-    #'FMul/Div/Sqrt (%.2f mm$^2$)',
     'INT-ADD/MUL (%.2f mm$^2$)',
+    #'FMul/Div/Sqrt (%.2f mm$^2$)',
     #'F-ADD/MUL (%.2f mm$^2$)',
     'Network (%.2f mm$^2$)',
     'RISCV (%.2f mm$^2$)',
@@ -21,8 +21,8 @@ legends = [
 
 explode = [
     0.0,
-    #0.1,
     0.1,
+    #0.1,
     #0.1,
     0.0,
     0.0,
@@ -33,10 +33,10 @@ explode = [
 
 val = [
     0.11,
+    0.06 + 0.15,
     #0.34,
-    0.06 + 0.25,
-    #0.35 + 0.39,
-    0.30,
+    #0.25 + 0.22,
+    0.34,
     0.16,
     0.02,
     0.03
@@ -50,7 +50,7 @@ val = map(lambda x: x / total * 100, val)
 
 fig, ax = plt.subplots(1, 1)
 
-ax.pie(val, labels = labels, shadow = True, explode = explode)
+ax.pie(val, labels = labels, shadow = False, explode = explode)
 ax.axis('equal')
 
 plt.show()

@@ -13,6 +13,7 @@ output.print_complex_array('input.data', a.flatten())
 print("%d x %d Input generated!" % (n, n))
 
 tau = numpy.zeros((n - 1, ), dtype = 'complex128')
+q = numpy.identity(n, dtype = 'complex128')
 
 for i in xrange(n - 1):
     w = a[i:,i].copy()
@@ -29,14 +30,16 @@ for i in xrange(n - 1):
     a[i,i+1:]    -= v
     a[i+1:,i+1:] -= numpy.outer(w[1:], v)
 
-q = numpy.identity(n, dtype = 'complex128')
-for i in xrange(n - 2, -1, -1):
-    w = a[i+1:,i]
-    v = numpy.dot(numpy.conj(w), q[i+1:,i+1:])
-    q[i,i] = 1 - tau[i]
-    q[i,i+1:] = -tau[i] * v
-    q[i+1:,i+1:] -= tau[i] * numpy.outer(w, v)
-    q[i+1:,i] = a[i+1:,i] * -tau[i]
+    v = numpy.dot(q[:,i:], w)
+    q[:,i:] -= tau[i] * numpy.outer(v, numpy.conj(w))
+
+#for i in xrange(n - 2, -1, -1):
+#    w = a[i+1:,i]
+#    v = numpy.dot(numpy.conj(w), q[i+1:,i+1:])
+#    q[i,i] = 1 - tau[i]
+#    q[i,i+1:] = -tau[i] * v
+#    q[i+1:,i+1:] -= tau[i] * numpy.outer(w, v)
+#    q[i+1:,i] = a[i+1:,i] * -tau[i]
 
 #print a
 #print numpy.dot(numpy.conj(q.transpose()), origin)

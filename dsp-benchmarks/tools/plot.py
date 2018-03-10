@@ -11,15 +11,15 @@ colors = [
     '#FF69B4', '#BDB76B', '#FF7F50', '#DDA0DD',
     '#4B0082', '#4B0082', '#006400', '#008080',
     '#00CED1', '#00008B', '#A9A9A9', '#DC143C',
-    '#DAA520', '#4169E1'
+    '#DAA520', '#4169E1', '#DDDDDD'
 ]
 
 legends = [
     '',
     'CONFIG', 'ISSUED', 'ISSUED_MULTI', 'CONST_FILL',
     'SCR_FILL', 'DMA_FILL', 'REC_WAIT', 'CORE_WAIT', 
-    'SCR_BAR_WAIT', 'CMD_QUEUE', 'CGRA_BACK', 'DRAIN', 
-    'NOT_IN_USE'
+    'SCR_BAR_WAIT', 'DMA_WRITE', 'CMD_QUEUE',
+    'CGRA_BACK', 'DRAIN', 'NOT_IN_USE'
 ]
 
 raw = open('breakdowns.csv', 'r').readlines()
@@ -37,7 +37,7 @@ fig.tight_layout(pad = 0.1)
 
 bar_width = 0.2
 
-fields = 14
+fields = len(legends)
 
 for no in xrange(n):
     line = np.array(raw[no])
