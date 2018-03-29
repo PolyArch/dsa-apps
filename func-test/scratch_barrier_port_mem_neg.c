@@ -5,6 +5,7 @@ static uint64_t output[AWORDS];
 static uint64_t answer[AWORDS];
 
 int main(int argc, char* argv[]) {
+  printf("%d\n",AWORDS);
   for(int i=0; i < AWORDS; ++i) {
     input[i]=i;
     output[i]=0;
@@ -17,7 +18,7 @@ int main(int argc, char* argv[]) {
   SB_WAIT_SCR_WR();
 
   //SB_SCRATCH_READ(ABYTES, ABYTES, P_none_in);
-  SB_SCR_PORT_STREAM_STRETCH(ABYTES, -8,-8,0,AWORDS, P_none_in)
+  SB_SCR_PORT_STREAM_STRETCH(ABYTES-16, -16, 16, 0, AWORDS/2, P_none_in)
 
   SB_DMA_WRITE(P_none_out,ABYTES,ABYTES,1,&output[0]);
   SB_WAIT_ALL();
