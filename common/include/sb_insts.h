@@ -11,8 +11,8 @@
   __asm__ __volatile__("sb_fill_mode t0, t0, %0" : : "i"(mode));
 
 //Mask for accessing shared scratchpad
-#define SHARED_SP 0x10000
-#define SHARED_SP_INDEX 16
+#define SHARED_SP 0x100
+#define SHARED_SP_INDEX 8
 
 // This sets the context -- ie. which cores the following commands apply to
 #define SB_CONTEXT(bitmask) \

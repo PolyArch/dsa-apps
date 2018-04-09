@@ -1,5 +1,5 @@
 import sys, imp, numpy
-from math import sin, cos, pi 
+from math import sin, cos, pi , log
 output = imp.load_source('output', '../common/output.py')
 
 n = int(sys.argv[1])
@@ -44,3 +44,5 @@ def non_recursive(_a):
 
 output.print_complex_array('ref.data', non_recursive(a).flatten())
 print 'output generated!'
+print 'ASIC Ideal:', int(log(n) / log(2)) * (n / 8 + 2)
+print 'ASIC Latency:', int(log(n) / log(2)) * ((n - 1) / 8 + 3)

@@ -10,6 +10,14 @@
 
 using std::complex;
 
+#ifndef NUM_OMP_THREADS
+#define NUM_OMP_THREADS 1
+#endif
+
+#ifndef NUM_PTHREADS
+#define NUM_PTHREADS    1
+#endif
+
 complex<float> a[_N_ * _N_], U[_N_ * _N_], V[_N_ * _N_], tmp[_N_ * _N_], res[_N_ * _N_];
 complex<float> aa[_N_ * _N_];
 complex<float> _one(1), _zero(0);
@@ -27,6 +35,8 @@ int main() {
 
   read_n_float_complex(input_data, n * n, a);
   memcpy(aa, a, sizeof a);
+
+  mkl_set_num_threads_local(NUM_OMP_THREADS);
 
   LAPACKE_cgesvd(
       CblasRowMajor, 'A', 'A',

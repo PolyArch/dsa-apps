@@ -33,3 +33,9 @@ print "Correctness check pass!"
 output.print_complex_array('ref.data', a.flatten()) #numpy.concatenate((Q.flatten(), R.flatten())));
 print "New data generated!"
 
+hh = sum((n - i) + (n - i - 1) + 40 for i in xrange(n))
+gemm_r = 0 #sum(n - i + (n - i) * (n - i) for i in xrange(n)) + 4 - 1
+#gemm_q = sum(((n - i - 1) / 2 + 1) * n + n for i in xrange(n))
+gemm_q = sum(((n - i - 1) + 1) * n for i in xrange(n))
+print 'ASIC Ideal:', hh + gemm_q + gemm_r
+

@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.font_manager import FontProperties
+import matplotlib
 
 colors = [
     '#FF69B4', '#BDB76B', '#FF7F50', '#DDA0DD',
@@ -11,8 +13,8 @@ colors = [
 legends = [
     'Scratch Pad (%.2f mm$^2$)',
     'INT-ADD/MUL (%.2f mm$^2$)',
-    #'FMul/Div/Sqrt (%.2f mm$^2$)',
-    #'F-ADD/MUL (%.2f mm$^2$)',
+    'FMul/Div/Sqrt (%.2f mm$^2$)',
+    'F-ADD/MUL (%.2f mm$^2$)',
     'Network (%.2f mm$^2$)',
     'RISCV (%.2f mm$^2$)',
     'Stream Engine (%.2f mm$^2$)',
@@ -21,9 +23,9 @@ legends = [
 
 explode = [
     0.0,
+    0.0,
     0.1,
-    #0.1,
-    #0.1,
+    0.1,
     0.0,
     0.0,
     0.0,
@@ -32,11 +34,11 @@ explode = [
 
 
 val = [
-    0.11,
-    0.06 + 0.15,
-    #0.34,
-    #0.25 + 0.22,
-    0.34,
+    0.284398,
+    0.03 + 0.13,
+    0.07,
+    0.19 + 0.19,
+    0.16,
     0.16,
     0.02,
     0.03
@@ -45,10 +47,13 @@ val = [
 labels = [legends[i] % val[i] for i in xrange(len(val))]
 
 total = sum(val)
+print total
 
 val = map(lambda x: x / total * 100, val)
 
 fig, ax = plt.subplots(1, 1)
+
+matplotlib.rcParams['font.size'] = 15
 
 ax.pie(val, labels = labels, shadow = False, explode = explode)
 ax.axis('equal')

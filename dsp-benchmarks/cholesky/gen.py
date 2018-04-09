@@ -18,12 +18,25 @@ L = numpy.identity(n).astype('complex')
 
 origin = a.copy()
 
+simd = 0
+starting = 0
+finish   = 0
+compute  = 0
+
 for i in xrange(n):
     l = numpy.identity(n).astype('complex')
     div = cmath.sqrt(a[i, i])
     l[i, i] = div
     b = a[i, i + 1:]
     l[i + 1:, i] = b / l[i, i]
+
+    sub = n - i
+    simd += sub / 4 + sub % 4
+    simd += sum(j / 4 + j % 4 for j in xrange(1, sub)) * 4
+
+    compute += (sub - 1) * (sub - 2) / 2
+    starting += sub + 12
+    finish  = max(finish, starting + (sub - 1) * (sub - 2) / 2)
 
     aa = a.copy()
     aa[i, i] = 1
@@ -42,3 +55,7 @@ print "Correctness check pass!"
 output.print_complex_array('ref.data', L.flatten())
 print "New data generated!"
 
+init = 12 * n
+print 'ASIC Ideal:', init + compute
+print 'ASIC Latency:', finish
+print 'SIMD Ideal:', init + simd

@@ -13,10 +13,11 @@ static __inline__ uint64_t rdtsc(void) {
 static uint64_t ticks;
 
 static void begin_roi() {
-  ticks=rdtsc();
 
 #ifndef __x86_64__
   __asm__ __volatile__("add x0, x0, 1");
+#else
+  ticks=rdtsc();
 #endif
 
 }
@@ -26,10 +27,11 @@ static void end_roi()   {
 
 #ifndef __x86_64__
   __asm__ __volatile__("add x0, x0, 2");
-#endif
-
+#else
   ticks=(rdtsc()-ticks);
   printf("ticks: %lu\n", ticks);
+#endif
+
 }
 
 static void sb_stats()   {
