@@ -6,13 +6,15 @@
 #include <stdio.h>
 #include <time.h> 
 #include "sim_timing.h"
+#include <cstring>
 
 using std::complex;
 
 complex<float> a[_N_ * _N_], U[_N_ * _N_], V[_N_ * _N_], tmp[_N_ * _N_], res[_N_ * _N_];
 complex<float> ss[_N_];
-float S[_N_];
-complex<float> aa[_N_ * _N_];
+float S[_N_], SS[_N_];
+
+complex<float> aa[_N_ * _N_], bb[_N_ * _N_];
 
 int main() {
   FILE *input_data = fopen("input.data", "r");
@@ -25,7 +27,12 @@ int main() {
 
   read_n_float_complex(input_data, _N_ * _N_, a);
 
-  //svd(aa, aa, aa, aa);
+  memset(V, 0, sizeof V);
+  for (int i = 0; i < _N_; ++i)
+    V[i * _N_ + i] = 1.0f;
+
+  memcpy(aa, a, sizeof a);
+  svd(aa, bb, SS, bb);
   begin_roi();
   svd(a, U, S, V);
   end_roi();

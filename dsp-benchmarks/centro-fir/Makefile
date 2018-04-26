@@ -12,13 +12,18 @@ DFG_HEADERS=$(DFG:.dfg=.h)
 
 SCALE = $(N) $(M)
 
-SOFTBRAINS = sb-new sb-origin sb-spad
+SOFTBRAINS = sb-new sb-origin sb-ideal sb-latency
 
 MACROS=-D_N_=$(N) -D_M_=$(M)
+
+ifneq ($(N), 1024)
+MACROS += -DLATENCY
+endif
 
 include ../common/Makefile.inc
 
 
 # New instructions remove control overhead
-sb-origin.o sb-new.o sb-spad.o: %.o: %.cc compute.dfg.h
+sb-origin.o sb-new.o sb-ideal.o sb-latency.o: %.o: %.cc compute.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
+

@@ -1,320 +1,539 @@
 #include "svd.h"
-#include "sb_insts.h"
 #include "matvec.h"
-#include "vmc.dfg.h"
-#include "vv.dfg.h"
-#include "mvc.dfg.h"
-#include "vvc.dfg.h"
-#include "vm.dfg.h"
-#include "lmm2x2.dfg.h"
+#include "sb_insts.h"
+#include "aplygvs.dfg.h"
+#include "fused.dfg.h"
+#include "hhr.dfg.h"
+#include "finalize.dfg.h"
+#include "sim_timing.h"
 
-complex<float> f[_N_], d[_N_], r[_N_ * _N_], temp[_N_];
+#define FINALIZE   1
+#define INITIALIZE 2
+#define FURTHER    3
+#define ITERATION  4
+#define GRABSIN    5
+#define GRABCOS    6
+
+complex<float> f[_N_], d[_N_], _s[_N_];
+complex<float> hh[_N_], vec[_N_], r[_N_ * _N_], calc[_N_];
 complex<float> _one(1, 0), _zero(0, 0);
 
-union _reiter_t {
-  float a[2];
-  uint64_t val;
-};
-
-void household(complex<float> *v, int n, complex<float> &alpha) {
-  float norm0 = complex_norm(v[0]), norm1 = 0;
-  for (int j = 1; j < n; ++j) {
-    norm1 += complex_norm(v[j]);
-  }
-  float _alpha = sqrt(1 + norm1 / norm0);
-  alpha = complex<float>(-v->real() * _alpha, -v->imag() * _alpha);
-  float rate = 1 + _alpha;
-  v[0] = complex<float>(v->real() * rate, v->imag() * rate);
-  norm1 += complex_norm(*v);
-  norm1 = 1. / sqrt(norm1);
-  for (int j = 0; j < n; ++j) {
-    v[j] = complex<float>(v[j].real() * norm1, v[j].imag() * norm1);
-  }
-}
-
-void household2(complex<float> &a, complex<float> &b, complex<float> &alpha) {
+void givens(complex<float> &a, complex<float> &b, complex<float> &alpha) {
   float norm0 = complex_norm(a), norm1 = complex_norm(b);
-
-  _reiter_t ri = {1 + norm1 / norm0, 0};
-  //SB_CONST(P_lmm2x2_VAL, ri.val, 1);
-  //SB_RECV(P_lmm2x2_sqrt, ri.val); //It is forever stuck here
-
-  float _alpha = sqrt(1 + norm1 / norm0);
-  alpha = complex<float>(-a.real() * _alpha, -a.imag() * _alpha);
-  float rate = 1 + _alpha;
-  a = complex<float>(a.real() * rate, a.imag() * rate);
-  norm1 += complex_norm(a);
-
-  //ri.a[0] = norm1;
-  //ri.a[1] = 0;
-  //SB_CONST(P_lmm2x2_VAL, ri.val, 1);
-  //SB_RECV(P_lmm2x2_sqrt, ri.val); //It is forever stuck here
-
-  norm1 = 1 / sqrt(norm1);
-
-  a = complex<float>(a.real() * norm1, a.imag() * norm1);
-  b = complex<float>(b.real() * norm1, b.imag() * norm1);
+  float r = sqrt(norm1 + norm0);
+  complex<float> c(std::conj(a) / r);
+  complex<float> s(std::conj(b) / r);
+  alpha = r;
+  a = c;
+  b = s;
 }
 
-#define outer2(a, b, m0, m1) \
-  do { \
-    m0 = 1 - complex_norm(a) * 2; \
-    m1 = complex<float>(complex_conj_mul(b, a)); \
-    m1 = complex<float>(complex_mul_cons(m1, -2)); \
-  } while(false)
-
-/* Outer MM
- * (m0        m1) (a)
- * (m1.conj  -m0) (b)
+/* L Givens Rotation
+ * (c        s     ) (a)
+ * (s.conj  -c.conj) (b)
  * */
-#define lmm2x2(m0, m1, a, b) \
+#define apply_givens(c, s, a, b) \
   do { \
     complex<float> \
-      l0(complex_mul_cons(a, m0)), \
-      r0(complex_mul(m1, b)), \
-      l1(complex_conj_mul(m1, a)), \
-      r1(complex_mul_cons(b, -m0)); \
-    a = complex<float>(complex_add(l0, r0)); \
-    b = complex<float>(complex_add(l1, r1)); \
-  } while(false)
-
-/*  Outer MM
- *  (a b) (m0       m1)
- *        (m1.conj -m0)
- * */
-#define rmm2x2(a, b, m0, m1) \
-  do { \
-    complex<float> \
-      l0(complex_mul_cons(a, m0)), \
-      r0(complex_conj_mul(m1, b)), \
-      l1(complex_mul(a, m1)), \
-      r1(complex_mul_cons(b, -m0)); \
-    a = complex<float>(complex_add(l0, r0)); \
-    b = complex<float>(complex_add(l1, r1)); \
+      resa((c) * (a) + (s) * (b)), \
+      resb(std::conj(s) * (a) - std::conj(c) * (b)); \
+    a = resa; \
+    b = resb; \
   } while(false)
 
 void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, int n) {
-  float mu = complex_norm(d[n - 1]);
-  float m0;
-  complex<float> m1;
-  complex<float> a(complex_norm(d[0]) - mu), b(complex_conj_mul(f[0], d[0])), alpha;
-  SB_CONFIG(lmm2x2_config, lmm2x2_size);
-  household2(a, b, alpha);
-  outer2(a, b, m0, m1);
-  _reiter_t ri_m0 = {m0, m0};
-  SB_CONST(P_lmm2x2_M0, ri_m0.val, _N_);
-  SB_CONST(P_lmm2x2_M1, *((uint64_t*)&m1), _N_);
-  SB_DMA_READ(v, 8, 8, _N_, P_lmm2x2_A);
-  SB_DMA_READ(v + _N_, 8, 8, _N_, P_lmm2x2_B);
-  SB_DMA_WRITE(P_lmm2x2_O0, 8, 8, _N_, v);
-  SB_DMA_WRITE(P_lmm2x2_O1, 8, 8, _N_, v + _N_);
+  int N = _N_;
+  SB_CONFIG(aplygvs_config, aplygvs_size);
+
+  /* Initialization of Implicit QR
+   * Input: d[0], f[0], d[n - 1], d[1]
+   * Finalize d[0]
+   * Output: 
+   * reg[0] = cosine for potential f[1]
+   * reg[1] = sine for potential f[1]
+   * reg[2] = finalized f[0] (n = 2); o.w. f[0] to be used
+   * reg[3] = finalized d[1] (n = 2); o.w. d[1] to be used
+   * */
+
+  SB_CONST(P_aplygvs_F, *((uint64_t*) f), 1);
+  SB_CONST(P_aplygvs_D, *((uint64_t*) d), 1);
+  SB_CONST(P_aplygvs_F, *((uint64_t*) d + n - 1), 3);
+  SB_CONST(P_aplygvs_D, *((uint64_t*) d + 1), 3);
+  SB_CONST(P_aplygvs_Inst, INITIALIZE, 4);
+
+  SB_REPEAT_PORT(N);
+  SB_RECURRENCE(P_aplygvs_RES, P_aplygvs_C, 1);
+  SB_REPEAT_PORT(N);
+  SB_RECURRENCE(P_aplygvs_RES, P_aplygvs_S, 1);
+  SB_DMA_WRITE(P_aplygvs_RES, 0, 8, 1, d);
+
+  //float mu = complex_norm(d[n - 1]);
+  //complex<float> a(complex_norm(d[0]) - mu), b(complex_conj_mul(f[0], d[0])), alpha;
+  //complex<float> c, s, extra;
+  //givens(a, b, alpha);
+
+  /* Recurrence cosine and sine to corresponding GeMM port */
+  //c = a; s = b;
+  //SB_CONST(P_aplygvs_C, *((uint64_t*)&c), _N_);
+  //SB_CONST(P_aplygvs_S, *((uint64_t*)&s), _N_);
+  SB_DMA_READ(v, 8, 8, _N_, P_aplygvs_A);
+  SB_DMA_READ(v + _N_, 8, 8, _N_, P_aplygvs_B);
+  SB_DMA_WRITE(P_aplygvs_O0, 8, 8, _N_, v);
+  SB_DMA_WRITE(P_aplygvs_O1, 8, 8, _N_, v + _N_);
   SB_WAIT_ALL();
   //for (int i = 0; i < _N_; ++i) {
-  //  lmm2x2(m0, m1, v[i], v[i + _N_]);
+  //  apply_givens(c, s, v[i], v[i + _N_]);
   //}
 
-  a = d[0];
-  b = complex<float>(0, 0);
-  rmm2x2(a, f[0], m0, m1);
-  rmm2x2(b, d[1], m0, m1);
-  household2(a, b, d[0]);
-  outer2(a, b, m0, m1);
-  lmm2x2(m0, m1, f[0], d[1]);
+  //a = d[0] * c + f[0] * std::conj(s);
+  //f[0] = d[0] * s - f[0] * std::conj(c);
+
+  //b = d[1] * std::conj(s);
+  //d[1] *= -std::conj(c);
+
+  //givens(a, b, d[0]);
+  //apply_givens(a, b, f[0], d[1]);
+  /* End of initilization */
+
   if (n != 2) {
-    b = complex<float>(complex_mul(m1, f[1]));
-    f[1] = complex<float>(complex_mul_cons(f[1], -m0));
-  }
-  for (int i = 1; i < n - 1; ++i) {
-    a = std::conj(f[i - 1]);
-    b = std::conj(b);
-    household2(a, b, alpha);
-    f[i - 1] = std::conj(alpha);
-    outer2(a, b, m0, m1);
-    a = d[i];
-    rmm2x2(a, f[i], m0, m1);
-    b = complex<float>(complex_conj_mul(m1, d[i + 1]));
-    d[i + 1] = complex<float>(complex_mul_cons(d[i + 1], -m0));
-    ri_m0 = (_reiter_t) {m0, m0};
-    SB_CONST(P_lmm2x2_M0, ri_m0.val, _N_);
-    SB_CONST(P_lmm2x2_M1, *((uint64_t*)&m1), _N_);
-    SB_DMA_READ(v + i * _N_, 8, 8, _N_, P_lmm2x2_A);
-    SB_DMA_READ(v + i * _N_ + _N_, 8, 8, _N_, P_lmm2x2_B);
-    SB_DMA_WRITE(P_lmm2x2_O0, 8, 8, _N_, v + i * _N_);
-    SB_DMA_WRITE(P_lmm2x2_O1, 8, 8, _N_, v + i * _N_ + _N_);
-    //for (int j = 0; j < _N_; ++j) {
-    //  lmm2x2(m0, m1, v[i * _N_ + j], v[(i + 1) * _N_ + j]);
-    //}
-    household2(a, b, d[i]);
-    outer2(a, b, m0, m1);
-    lmm2x2(m0, m1, f[i], d[i + 1]);
-    if (i != n - 2) {
-      b = complex<float>(complex_mul(m1, f[i + 1]));
-      f[i + 1] = complex<float>(complex_mul_cons(f[i + 1], -m0));
-    }
+    /* Prepare for next iteration
+     * Input: f[1] (if applicable)
+     * Output:
+     * reg[0]: f[0]
+     * reg[1]: VALUE to be resolved next iteration
+     * reg[2]: d[1]
+     * reg[3]: f[1]
+     */
+    SB_CONST(P_aplygvs_D, 0, 1);
+    SB_CONST(P_aplygvs_F, *((uint64_t*) f + 1), 1);
+    SB_CONST(P_aplygvs_Inst, FURTHER, 1);
+    //b *= f[1];
+    //f[1] *= -std::conj(a);
+  } else {
+    /* Finalize f[0]
+     * Finalize d[1]
+     */
+    SB_CONST(P_aplygvs_D, 0, 2);
+    SB_CONST(P_aplygvs_F, 0, 2);
+    SB_CONST(P_aplygvs_Inst, FINALIZE, 2);
+    SB_DMA_WRITE(P_aplygvs_RES, 0, 8, 1, f);
+    SB_DMA_WRITE(P_aplygvs_RES, 0, 8, 1, d + 1);
     SB_WAIT_ALL();
+    return ;
   }
+
+  for (int i = 1; i < n - 1; ++i) {
+    /* Input: d[i+1]
+     * Output:
+     * Finalize f[i-1]
+     * Finalize d[i]
+     * reg[0]: cosine for potential f[i+1]
+     * reg[1]: sine for potential f[i+1]
+     * reg[2]: f[i]
+     * reg[3]: d[i+1]
+     * */
+    SB_CONST(P_aplygvs_D, *((uint64_t*)d + i + 1), 6);
+    if (i != n - 2) {
+      SB_CONST(P_aplygvs_F, *((uint64_t*)f + i + 1), 6);
+    } else {
+      SB_CONST(P_aplygvs_F, 0, 6);
+    }
+    SB_CONST(P_aplygvs_Inst, ITERATION, 5);
+    SB_DMA_WRITE(P_aplygvs_RES, 0, 8, 1, f + i - 1);
+    
+    SB_REPEAT_PORT(N);
+    SB_RECURRENCE(P_aplygvs_RES, P_aplygvs_C, 1);
+    SB_REPEAT_PORT(N);
+    SB_RECURRENCE(P_aplygvs_RES, P_aplygvs_S, 1);
+
+    //a = f[i - 1];
+    //givens(a, b, f[i - 1]);
+    //c = a; s = b;
+    //a = d[i];
+
+    //a = d[i] * c + f[i] * s;
+    //f[i] = d[i] * std::conj(s) - f[i] * std::conj(c);
+    //b = d[i + 1] * s;
+    //d[i + 1] *= -std::conj(c);
+
+    /* Recurrence cosine and sine to corresponding GeMM port */
+    SB_DMA_READ(v + i * _N_, 8, 8, _N_, P_aplygvs_A);
+    SB_DMA_READ(v + i * _N_ + _N_, 8, 8, _N_, P_aplygvs_B);
+    SB_DMA_WRITE(P_aplygvs_O0, 8, 8, _N_, v + i * _N_);
+    SB_DMA_WRITE(P_aplygvs_O1, 8, 8, _N_, v + i * _N_ + _N_);
+    //for (int j = 0; j < _N_; ++j) {
+    //  apply_givens(c, std::conj(s), v[i * _N_ + j], v[(i + 1) * _N_ + j]);
+    //}
+
+    SB_DMA_WRITE(P_aplygvs_RES, 0, 8, 1, d + i);
+    //givens(a, b, d[i]);
+    //c = a; s = b;
+    //apply_givens(c, s, f[i], d[i + 1]);
+
+    if (i != n - 2) {
+      /* Prepare for next iteration
+       * Input: f[i+1]
+       * Output:
+       * reg[0]: f[i]
+       * reg[1]: VALUE to be resolved next iteration
+       * reg[2]: d[i+1]
+       * reg[3]: f[i+1]
+       */
+      SB_CONST(P_aplygvs_Inst, FURTHER, 1);
+      //b = s * f[i + 1];
+      //f[i + 1] *= -std::conj(c);
+    } else {
+      /* Finalize: f[i]
+       * Finalize: d[i+1]
+       */
+      SB_CONST(P_aplygvs_D, 0, 1);
+      SB_CONST(P_aplygvs_F, 0, 1);
+      SB_CONST(P_aplygvs_Inst, FINALIZE, 2);
+      SB_DMA_WRITE(P_aplygvs_RES, 0, 8, 1, f + i);
+      SB_DMA_WRITE(P_aplygvs_RES, 0, 8, 1, d + i + 1);
+    }
+  }
+  SB_WAIT_ALL();
+}
+
+//The most horrible kernel so far
+void bidiagonalize(complex<float> *a, complex<float> *f, complex<float> *d, complex<float> *q) {
+  int N = _N_;
+  const int w_spad = 8;
+  const int r_trans_spad = N * 8;
+  const int horizon_vec  = 8192;
+  const int q_spad = N * 8;
+
+  SB_CONTEXT(2);
+  SB_CONFIG(fused_config, fused_size);
+  SB_DMA_SCRATCH_LOAD(&_one, 8, 8, 1, 0);
+
+  SB_CONTEXT(1);
+  SB_CONFIG(hhr_config, hhr_size);
+  SB_DMA_SCRATCH_LOAD(&_one, 8, 8, 1, 0);
+  SB_DMA_READ(a + N, 8 * N, 8, N - 1, P_hhr_A);
+  SB_DMA_READ(a + N, 8 * N, 8, N - 1, P_hhr_B);
+  SB_CONST(P_hhr_Coef, 1065353216, N - 1);
+  SB_CONST(P_hhr_reset, 2, N - 2);
+  SB_CONST(P_hhr_reset, 1, 1);
+  SB_REPEAT_PORT(3);
+  SB_RECURRENCE(P_hhr_O, P_hhr_NORM, 1);
+  SB_REPEAT_PORT(3);
+  SB_DMA_READ(a, 8, 8, 1, P_hhr_HEAD);
+  SB_CONST(P_hhr_Inst, 0, 1);
+  SB_CONST(P_hhr_Inst, 1, 1);
+  SB_CONST(P_hhr_Inst, 2, 1);
+
+  SB_DMA_WRITE(P_hhr_RES, 8, 8, 1, d); //alpha
+  SB_REPEAT_PORT(N - 1);
+  SB_RECURRENCE(P_hhr_RES, P_hhr_B, 1); //normalize
+  SB_CONST(P_hhr_Coef, 1065353216, N - 1);
+  SB_REPEAT_PORT(N * (N - 1));
+  SB_RECURRENCE(P_hhr_RES, P_hhr_Coef, 1); //tau
+  SB_DMA_READ(a + N, 8 * N, 8, N - 1, P_hhr_A);
+  SB_CONST(P_hhr_reset, 1, N - 1);
+
+  SB_SCR_WRITE(P_hhr_O, 8 * (N - 1), w_spad);
+  SB_WAIT_SCR_WR();
+
+  SB_SCR_PORT_STREAM(w_spad - 8, 0, 8 * N, N - 1, P_hhr_B);
+  SB_2D_CONST(P_hhr_reset, 2, N - 1, 1, 1, N - 1);
+  //SB_DMA_WRITE(P_hhr_O, 8, 8, N - 1, buffer + N); test pass!
+  //SB_GARBAGE(P_hhr_O, N - 1); test pass!
+  for (int i = 1; i < N; ++i) {
+    SB_DMA_READ(a + i, 8 * N, 8, N, P_hhr_A);
+  }
+
+  SB_REPEAT_PORT(N);
+  SB_RECURRENCE(P_hhr_O, P_hhr_RA, N - 1);
+  SB_SCR_PORT_STREAM(w_spad - 8, 0, 8 * N, N - 1, P_hhr_RB);
+  SB_2D_CONST(P_hhr_RSignal, 1, 1, 0, N - 1, N - 1);
+  //SB_DMA_WRITE(P_hhr_R_MEM, 8, 8, N - 1, a + 1);
+  SB_SCR_WRITE(P_hhr_R_MEM, 8 * (N - 1), horizon_vec);
+  SB_SCR_WRITE(P_hhr_R_SPAD, 8 * (N - 1) * (N - 1), r_trans_spad);
+  for (int i = 1; i < N; ++i) {
+    SB_DMA_READ(a + i, 8 * N, 8, N, P_hhr_RC);
+  }
+
+  SB_WAIT_SCR_WR();
+
+  SB_SCRATCH_READ(horizon_vec + 8, 8 * (N - 2), P_hhr_A);
+  SB_SCRATCH_READ(horizon_vec + 8, 8 * (N - 2), P_hhr_B);
+  SB_CONST(P_hhr_Coef, 1065353216, N - 2);
+  SB_CONST(P_hhr_reset, 2, N - 3);
+  SB_CONST(P_hhr_reset, 1, 1);
+  SB_REPEAT_PORT(3);
+  SB_RECURRENCE(P_hhr_O, P_hhr_NORM, 1);
+  SB_REPEAT_PORT(3);
+  SB_SCRATCH_READ(horizon_vec, 8, P_hhr_HEAD);
+  SB_CONST(P_hhr_Inst, 0, 1);
+  SB_CONST(P_hhr_Inst, 1, 1);
+  SB_CONST(P_hhr_Inst, 2, 1);
+  SB_DMA_WRITE(P_hhr_RES, 8, 8, 1, f);
+  SB_REPEAT_PORT(N - 2);
+  SB_RECURRENCE(P_hhr_RES, P_hhr_B, 1);
+  SB_SCRATCH_READ(horizon_vec + 8, 8 * (N - 2), P_hhr_A);
+  SB_CONST(P_hhr_Coef, 1065353216, N - 2);
+  SB_CONST(P_hhr_reset, 1, N - 2);
+  SB_RECURRENCE(P_hhr_O, P_hhr_IN, N - 2);
+  SB_RECURRENCE(P_hhr_RES, P_hhr_IN, 1);
+  SB_SCR_WRITE(P_hhr_OUTlocal, 8 * (N - 2), w_spad);
+  //SB_DMA_WRITE(P_hhr_OUTremote, 0, 8 * (N - 2), 1, buffer); //DEBUG PASS!
+  //SB_GARBAGE(P_hhr_OUTremote, N - 2); //TODO: xfer it to Q kernel later
+  SB_XFER_RIGHT(P_hhr_OUTremote, P_fused_IN, N - 2);
+  SB_CONTEXT(2);
+  SB_SCR_WRITE(P_fused_OUT, 8 * (N - 2), w_spad);
+  SB_DMA_SCRATCH_LOAD(&_one, 0, 8, 1, 0);
+  SB_CONTEXT(1);
+  SB_REPEAT_PORT((N - 1) * (N - 1));
+  SB_RECURRENCE(P_hhr_OUTlocal, P_hhr_Coef_, 1);
+  SB_REPEAT_PORT(N - 1);
+  SB_XFER_RIGHT(P_hhr_OUTremote, P_fused_QTAU, 1);
+  //SB_GARBAGE(P_hhr_OUTremote, 1); //TODO: xfer it to Q kernel later
+  SB_WAIT_SCR_WR();
+  SB_REPEAT_PORT(N - 1);
+  SB_SCRATCH_READ(0, 8 * (N - 1), P_hhr_B_);
+  SB_SCRATCH_READ(r_trans_spad, 8 * (N - 1) * (N - 1), P_hhr_A_);
+  SB_CONST(P_hhr_ACC_, 0, N - 1);
+  SB_RECURRENCE(P_hhr_O_, P_hhr_ACC_, (N - 1) * (N - 2));
+  SB_SCR_WRITE(P_hhr_O_, 8 * (N - 1), horizon_vec);
+  SB_WAIT_SCR_WR();
+  //DEBUG INFO
+  //SB_SCRATCH_DMA_STORE(0, 0, 8 * (N - 1), 1, hh);
+  //SB_SCRATCH_DMA_STORE(horizon_vec, 0, 8 * (N - 1), 1, vec);
+  //SB_SCRATCH_DMA_STORE(r_trans_spad, 0, 8 * (N - 1) * (N - 1), 1, r);
+  SB_SCRATCH_READ(r_trans_spad, 8 * (N - 1) * (N - 1), P_hhr_RC);
+  SB_SCR_PORT_STREAM(horizon_vec, 0, 8 * (N - 1), (N - 1), P_hhr_RB);
+  SB_REPEAT_PORT(N - 1);
+  SB_SCRATCH_READ(0, 8 * (N - 1), P_hhr_RA);
+  SB_CONST(P_hhr_RSignal, 0, (N - 1) * (N - 1));
+  SB_SCR_WRITE(P_hhr_R_SPAD, 8 * (N - 1) * (N - 1), r_trans_spad);
+  //SB_WAIT_SCR_WR();
+  //DEBUG INFO
+  //SB_SCRATCH_DMA_STORE(r_trans_spad, 0, 8 * (N - 1) * (N - 1), 1, r);
+
+  SB_CONTEXT(2);
+  SB_WAIT_SCR_WR();
+  SB_SCR_PORT_STREAM(0, 8, 8, N - 1, P_fused_QW);
+  SB_CONST(P_fused_QM, 1065353216, N - 1);
+  SB_CONST(P_fused_Qreset, 1, N - 1);
+  SB_REPEAT_PORT(N - 1);
+  SB_RECURRENCE(P_fused_QV, P_fused_QA, N - 1);
+  //SB_SCR_PORT_STREAM(0, 8, 8, N, P_fused_QA);
+  SB_SCR_PORT_STREAM(0, 0, 8 * (N - 1), N - 1, P_fused_QB);
+  SB_2D_CONST(P_fused_QC, 1065353216, 1, 0, N - 1, N - 2);
+  SB_CONST(P_fused_QC, 1065353216, 1);
+  SB_2D_CONST(P_fused_QSignal, 1, 1, 0, N - 2, N - 1);
+  SB_DMA_WRITE(P_fused_Q_MEM, 0, 8 * (N - 1), 1, q + N + 1);
+  SB_SCR_WRITE(P_fused_Q_SPAD, 8 * (N - 1) * (N - 2), q_spad);
+
+  for (int i = 1; i < N - 1; ++i) {
+    int n = N - i;
+    SB_CONTEXT(1);
+    SB_WAIT_SCR_WR();
+
+    SB_SCRATCH_READ(r_trans_spad + 8, 8 * (n - 1), P_hhr_A);
+    SB_SCRATCH_READ(r_trans_spad + 8, 8 * (n - 1), P_hhr_B);
+    SB_CONST(P_hhr_Coef, 1065353216, n - 1);
+    SB_CONST(P_hhr_reset, 2, n - 2);
+    SB_CONST(P_hhr_reset, 1, 1);
+
+    SB_REPEAT_PORT(3);
+    SB_RECURRENCE(P_hhr_O, P_hhr_NORM, 1);
+    SB_REPEAT_PORT(3);
+    SB_SCRATCH_READ(r_trans_spad, 8, P_hhr_HEAD);
+    SB_CONST(P_hhr_Inst, 0, 1);
+    SB_CONST(P_hhr_Inst, 1, 1);
+    SB_CONST(P_hhr_Inst, 2, 1);
+    
+    SB_SCRATCH_READ(r_trans_spad + 8, 8 * (n - 1), P_hhr_A);
+    SB_DMA_WRITE(P_hhr_RES, 8, 8, 1, d + i); //alpha
+    SB_REPEAT_PORT(n - 1);
+    SB_RECURRENCE(P_hhr_RES, P_hhr_B, 1); //normalize
+    SB_CONST(P_hhr_Coef, 1065353216, n - 1);
+    SB_REPEAT_PORT(n * (n - 1));
+    SB_RECURRENCE(P_hhr_RES, P_hhr_Coef, 1); //tau
+    SB_CONST(P_hhr_reset, 1, n - 1);
+    
+    SB_SCR_WRITE(P_hhr_O, 8 * (n - 1), w_spad);
+    SB_WAIT_SCR_WR();
+
+    SB_SCR_PORT_STREAM(w_spad - 8, 0, 8 * n, n - 1, P_hhr_B);
+    SB_2D_CONST(P_hhr_reset, 2, n - 1, 1, 1, n - 1);
+    SB_SCRATCH_READ(r_trans_spad + 8 * n, 8 * (n - 1) * n, P_hhr_A);
+
+    SB_REPEAT_PORT(n);
+    SB_RECURRENCE(P_hhr_O, P_hhr_RA, n - 1);
+    SB_SCR_PORT_STREAM(w_spad - 8, 0, 8 * n, n - 1, P_hhr_RB);
+    SB_2D_CONST(P_hhr_RSignal, 1, 1, 0, n - 1, n - 1);
+    SB_SCRATCH_READ(r_trans_spad + 8 * n, 8 * (n - 1) * n, P_hhr_RC);
+    if (n - 1 != 1) {
+      SB_SCR_WRITE(P_hhr_R_MEM, 8 * (n - 1), horizon_vec);
+      SB_SCR_WRITE(P_hhr_R_SPAD, 8 * (n - 1) * (n - 1), r_trans_spad);
+    } else {
+      SB_DMA_WRITE(P_hhr_R_MEM, 0, 8, 1, f + i);
+      SB_DMA_WRITE(P_hhr_R_SPAD, 0, 8, 1, d + i + 1);
+    }
+
+    SB_WAIT_SCR_WR();
+
+    //SB_SCRATCH_DMA_STORE(0, 0, 8 * n, 1, hh);
+    //SB_WAIT_ALL();
+    //for (int j = 0; j < n; ++j) std::cout << hh[j] << " "; std::cout << "\n";
+
+    if (n > 2) {
+      SB_SCRATCH_READ(horizon_vec + 8, 8 * (n - 2), P_hhr_A);
+      SB_SCRATCH_READ(horizon_vec + 8, 8 * (n - 2), P_hhr_B);
+      SB_CONST(P_hhr_Coef, 1065353216, n - 2);
+      SB_CONST(P_hhr_reset, 2, n - 3);
+      SB_CONST(P_hhr_reset, 1, 1);
+      SB_REPEAT_PORT(3);
+      SB_RECURRENCE(P_hhr_O, P_hhr_NORM, 1);
+      SB_REPEAT_PORT(3);
+      SB_SCRATCH_READ(horizon_vec, 8, P_hhr_HEAD);
+      SB_CONST(P_hhr_Inst, 0, 1);
+      SB_CONST(P_hhr_Inst, 1, 1);
+      SB_CONST(P_hhr_Inst, 2, 1);
+      SB_DMA_WRITE(P_hhr_RES, 8, 8, 1, f + i);
+      SB_REPEAT_PORT(n - 2);
+      SB_RECURRENCE(P_hhr_RES, P_hhr_B, 1);
+      SB_SCRATCH_READ(horizon_vec + 8, 8 * (n - 2), P_hhr_A);
+      SB_CONST(P_hhr_Coef, 1065353216, n - 2);
+      SB_CONST(P_hhr_reset, 1, n - 2);
+      SB_RECURRENCE(P_hhr_O, P_hhr_IN, n - 2);
+      SB_RECURRENCE(P_hhr_RES, P_hhr_IN, 1);
+      SB_SCR_WRITE(P_hhr_OUTlocal, 8 * (n - 2), w_spad);
+      //SB_DMA_WRITE(P_hhr_OUTremote, 0, 8 * (n - 2), 1, hh); //DEBUG PASS!
+      //SB_GARBAGE(P_hhr_OUTremote, n - 2); //TODO: xfer it to Q kernel later
+      SB_XFER_RIGHT(P_hhr_OUTremote, P_fused_IN, n - 2);
+      SB_CONTEXT(2);
+      SB_WAIT_SCR_WR();
+      SB_SCR_WRITE(P_fused_OUT, 8 * (n - 2), w_spad);
+      SB_CONTEXT(1);
+      SB_REPEAT_PORT((n - 1) * (n - 1));
+      SB_RECURRENCE(P_hhr_OUTlocal, P_hhr_Coef_, 1);
+      SB_REPEAT_PORT((n - 1) * (N - 1));
+      SB_XFER_RIGHT(P_hhr_OUTremote, P_fused_QTAU, 1);
+      //SB_GARBAGE(P_hhr_OUTremote, 1); //TODO: xfer it to Q kernel later
+      SB_WAIT_SCR_WR();
+      SB_REPEAT_PORT(n - 1);
+      SB_SCRATCH_READ(0, 8 * (n - 1), P_hhr_B_);
+      SB_SCRATCH_READ(r_trans_spad, 8 * (n - 1) * (n - 1), P_hhr_A_);
+      SB_CONST(P_hhr_ACC_, 0, n - 1);
+      SB_RECURRENCE(P_hhr_O_, P_hhr_ACC_, (n - 1) * (n - 2));
+      SB_SCR_WRITE(P_hhr_O_, 8 * (n - 1), horizon_vec);
+      SB_WAIT_SCR_WR();
+      //DEBUG INFO
+      //SB_SCRATCH_DMA_STORE(0, 0, 8 * (n - 1), 1, hh);
+      //SB_SCRATCH_DMA_STORE(horizon_vec, 0, 8 * (n - 1), 1, vec);
+      //SB_SCRATCH_DMA_STORE(r_trans_spad, 0, 8 * (n - 1) * (n - 1), 1, r);
+      SB_SCRATCH_READ(r_trans_spad, 8 * (n - 1) * (n - 1), P_hhr_RC);
+      SB_SCR_PORT_STREAM(horizon_vec, 0, 8 * (n - 1), (n - 1), P_hhr_RB);
+      SB_REPEAT_PORT(n - 1);
+      SB_SCRATCH_READ(0, 8 * (n - 1), P_hhr_RA);
+      SB_CONST(P_hhr_RSignal, 0, (n - 1) * (n - 1));
+      SB_SCR_WRITE(P_hhr_R_SPAD, 8 * (n - 1) * (n - 1), r_trans_spad);
+      //DEBUG INFO
+      SB_WAIT_SCR_WR();
+
+      /* It fixes the timing */
+      SB_SCRATCH_DMA_STORE(r_trans_spad, 0, 8 * (n - 1) * (n - 1), 1, r);
+      SB_WAIT_ALL();
+      //for (int j = 0; j < n - 1; ++j) std::cout << hh[j] << " "; std::cout << "\n";
+      //std::cout << i << "\n";
+      //std::cout << "r:\n";
+      //for (int j = 0; j < n - 1; ++j) {
+      //  for (int k = 0; k < n - 1; ++k)
+      //    std::cout << r[k * (n - 1) + j] << " ";
+      //  std::cout << "\n";
+      //}
+      /* It fixes the timing */
+
+      SB_CONTEXT(2);
+      SB_WAIT_SCR_WR();
+      SB_SCR_PORT_STREAM(0, 0, 8 * (n - 1), N - 1, P_fused_QW);
+      SB_SCRATCH_READ(q_spad, 8 * (N - 1) * (n - 1), P_fused_QM);
+      SB_2D_CONST(P_fused_Qreset, 2, n - 2, 1, 1, N - 1);
+      SB_REPEAT_PORT(n - 1);
+      SB_RECURRENCE(P_fused_QV, P_fused_QA, N - 1);
+      SB_SCR_PORT_STREAM(0, 0, 8 * (n - 1), N - 1, P_fused_QB);
+      SB_SCRATCH_READ(q_spad, 8 * (N - 1) * (n - 1), P_fused_QC);
+      SB_2D_CONST(P_fused_QSignal, 1, 1, 0, n - 2, N - 1);
+      SB_DMA_WRITE(P_fused_Q_MEM, 0, 8 * (N - 1), 1, q + (i + 1) * N + 1);
+      if (n - 2 != 1) {
+        SB_SCR_WRITE(P_fused_Q_SPAD, 8 * (N - 1) * (n - 2), q_spad);
+      } else {
+        SB_DMA_WRITE(P_fused_Q_SPAD, 0, 8 * (N - 1), 1, q + (i + 2) * N + 1);
+      }
+    }
+  }
+  SB_CONTEXT(3);
+  SB_WAIT_ALL();
+  //for (int i = 0; i < N - 1; ++i) std::cout << f[i] << " "; std::cout << "\n";
+  //for (int i = 0; i < N; ++i) std::cout << d[i] << " "; std::cout << "\n";
+  //for (int i = 0; i < N; ++i) {
+  //  for (int j = 0; j < N; ++j)
+  //    std::cout << q[i * N + j] << " ";
+  //  std::cout << "\n";
+  //}
+}
+
+void implicit_iteration(complex<float> *d, complex<float> *f, complex<float> *v) {
+  int left = 0, right = _N_ - 1;
+  while (left < right) {
+    //printf("%d %d\n", left, right);
+    while (left < _N_ - 1 && fabs(f[left].real()) < eps && fabs(f[left].imag()) < eps)
+      ++left;
+    while (right >= 1 && fabs(f[right - 1].real()) < eps && fabs(f[right - 1].imag()) < eps)
+      --right;
+    if (right - left >= 1) {
+      //std::cout << left << " " << right << "\n";
+      implicit_kernel(d + left, f + left, v + left * _N_, right - left + 1);
+      //for (int i = left; i < right; ++i) std::cout << f[i] << " "; std::cout << "\n";
+      //for (int i = left; i < right + 1; ++i) std::cout << d[i] << " "; std::cout << "\n";
+    }
+  }
+
 }
 
 void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
-  for (int i = 0; i < _N_ - 1; ++i) {
-    int len = _N_ - i;
-    complex<float> hv[len], alpha;
-    for (int j = 0; j < len; ++j)
-      hv[j] = (i ? r : a)[j * len];
-    household(hv, len, d[i]);
+  bidiagonalize(a, f, d, v);
 
-    REVELvec_mul_mat(0, len, 1, len, len, hv, true, (i ? r : a), temp + 1);
+  int N = _N_;
+  SB_CONTEXT(1);
+  implicit_iteration(d, f, v);
+  //implicit_kernel(d, f, v, N);
+  //for (int i = 0; i < N - 1; ++i)
+  //  std::cout << f[i] << "\n";
+  //for (int i = 0; i < N; ++i)
+  //  std::cout << d[i] << "\n";
+  /*for (int i = 0; i < N; ++i) {
+    for (int j = 0; j < N; ++j)
+      std::cout << v[i * N + j] << " ";
+    std::cout << "\n";
+  }*/
+ 
+  d[N - 1] = sqrt(complex_norm(d[N - 1]));
+  SB_CONFIG(finalize_config, finalize_size);
+  SB_DMA_READ(d, 0, 8 * _N_, 1, P_finalize_D);
+  SB_SCR_WRITE(P_finalize_SINV, 8 * _N_, 0);
+  SB_WAIT_SCR_WR();
 
-    //for (int j = 1; j < len; ++j) std::cout << temp[j] << " "; std::cout << "\n";
-
-    //for (int j = 1; j < len; ++j)
-    //  temp[j] = 0;
-    //for (int k = 0; k < len; ++k) {
-    //  for (int j = 1; j < len; ++j) {
-    //    temp[j] += complex<float>(complex_conj_mul(hv[k], (i ? r : a)[k * len + j]));
-    //  }
-    //}
-
-    SB_CONFIG(vv_config, vv_size);
-    SB_DMA_READ((i ? r : a) + 1, 8 * len, 8 * (len - 1), len, P_vv_C);
-    SB_DMA_READ(temp + 1, 0, 8 * (len - 1), len, P_vv_A);
-    SB_DMA_WRITE(P_vv_O, 8, 8, (len - 1) * len, r);
-    SB_REPEAT_PORT(len - 1);
-    SB_DMA_READ(hv, 8, 8, len, P_vv_B);
-    SB_WAIT_ALL();
-    
-    //for (int j = 1; j < len; ++j)
-    //  temp[j] = complex<float>(temp[j].real() * 2, temp[j].imag() * 2);
-    //for (int j = 0; j < len; ++j) {
-    //  for (int k = 1; k < len; ++k) {
-    //    complex<float> delta(complex_mul(temp[k], hv[j]));
-    //    r[j * (len - 1) + (k - 1)] = complex<float>(complex_sub((i ? r : a)[j * len + k], delta));
-    //  }
-    //}
-    //for (int j = 0; j < len; ++j) { for (int k = 0; k < len - 1; ++k) std::cout << r[j * (len - 1) + k] << " "; std::cout << "\n"; }
-
-    if (i != _N_ - 2) {
-      --len;
-      for (int j = 0; j < len; ++j)
-        hv[j] = r[j];
-      household(hv, len, f[i]);
-      
-      REVELmat_mul_vec(1, len, 0, len, len, r, hv, true, temp);
-      //for (int j = 0; j < len; ++j) {
-      //  temp[j] = 0;
-      //  for (int k = 0; k < len; ++k) {
-      //    complex<float> delta(complex_conj_mul(hv[k], r[(j + 1) * len + k]));
-      //    temp[j] = complex<float>(complex_add(temp[j], delta));
-      //  }
-      //}
-
-      SB_CONFIG(vv_config, vv_size);
-      SB_DMA_READ(r + len, 8, 8, len * len, P_vv_C);
-      SB_DMA_READ(hv, 0, 8 * len, len, P_vv_A);
-      SB_DMA_WRITE(P_vv_O, 8, 8, len * len, r);
-      SB_REPEAT_PORT(len);
-      SB_DMA_READ(temp, 8, 8, len, P_vv_B);
-      SB_WAIT_ALL();
-      //for (int j = 0; j < len; ++j) {
-      //  for (int k = 0; k < len; ++k) {
-      //    complex<float> delta(complex_mul(temp[j], hv[k]));
-      //    delta = complex<float>(complex_mul_cons(delta, 2));
-      //    r[j * len + k] = complex<float>(complex_sub(r[(j + 1) * len + k], delta));
-      //  }
-      //}
-      
-      if (!i) {
-        v[0] = complex<float>(1, 0);
-        SB_CONFIG(vvc_config, vvc_size);
-        SB_DMA_READ(hv, 0, 8 * (_N_ - 1), _N_ - 1, P_vvc_B);
-        SB_DMA_WRITE(P_vvc_O, 8 * _N_, 8 * (_N_ - 1), _N_ - 1, v + _N_ + 1);
-        SB_REPEAT_PORT(_N_ - 1);
-        SB_DMA_READ(hv, 8, 8, _N_ - 1, P_vvc_A);
-        SB_2D_CONST(P_vvc_C, *((uint64_t*)&_one), 1, *((uint64_t*)&_zero), _N_ - 1, _N_ - 2);
-        SB_CONST(P_vvc_C, *((uint64_t*)&_one), 1);
-        for (int j = 1; j < _N_; ++j) {
-          v[j] = v[j * _N_] = complex<float>(0, 0);
-        }
-        SB_WAIT_ALL();
-        //for (int j = 1; j < _N_; ++j) {
-        //  v[j] = v[j * _N_] = complex<float>(0, 0);
-        //  for (int k = 1; k < _N_; ++k) {
-        //    complex<float> delta(complex_conj_mul(hv[j - 1], hv[k - 1]));
-        //    complex<float> diag(j == k, 0);
-        //    complex<float> val(delta.real() * 2, delta.imag() * 2);
-        //    v[j * _N_ + k] = complex<float>(complex_sub(diag, val));
-        //  }
-        //}
-      } else {
-        //REVELvec_mul_mat(i + 1, len, 1, _N_ - 1, _N_, hv, false, v, temp + 1);
-        SB_CONFIG(vm_config, vm_size);
-        SB_CONST(P_vm_C, *((uint64_t*)&_zero), _N_ - 1);
-        SB_DMA_READ(v + _N_ * (i + 1) + 1, 8 * _N_, 8 * (_N_ - 1), len, P_vm_B);
-        SB_RECURRENCE(P_vm_O, P_vm_C, (_N_ - 1) * (len - 1));
-        SB_DMA_WRITE(P_vm_O, 8, 8, _N_ - 1, temp + 1);
-        for (int j = i + 1; j < _N_; ++j) {
-          SB_CONST(P_vm_A, hv + j - i - 1, _N_ - 1);
-        }
-        SB_WAIT_ALL();
-        //for (int k = 1; k < _N_; ++k)
-        //  temp[k] = 0;
-        //for (int j = i + 1; j < _N_; ++j) {
-        //  for (int k = 1; k < _N_; ++k) {
-        //    complex<float> delta(complex_mul(hv[j - i - 1], v[j * _N_ + k]));
-        //    temp[k] = complex<float>(complex_add(temp[k], delta));
-        //  }
-        //}
-        SB_CONFIG(vvc_config, vvc_size);
-        SB_DMA_READ(temp + 1, 0, 8 * (_N_ - 1), len, P_vvc_B);
-        SB_DMA_READ(v + _N_ * (i + 1) + 1, 8 * _N_, 8 * (_N_ - 1), len, P_vvc_C);
-        SB_DMA_WRITE(P_vvc_O, 8 * _N_, 8 * (_N_ - 1), len, v + _N_ * (i + 1) + 1);
-        SB_REPEAT_PORT(_N_ - 1);
-        SB_DMA_READ(hv, 8, 8, len, P_vvc_A);
-        SB_WAIT_ALL();
-        //for (int k = 1; k < _N_; ++k)
-        //  temp[k] = complex<float>(temp[k].real() * 2, temp[k].imag() * 2);
-        //for (int k = 1; k < _N_; ++k) {
-        //  for (int j = i + 1; j < _N_; ++j) {
-        //    complex<float> delta(complex_conj_mul(hv[j - i - 1], temp[k]));
-        //    v[j * _N_ + k] -= delta;
-        //  }
-        //}
-      }
-    }
-  }
-  f[_N_ - 2] = r[0];
-  d[_N_ - 1] = r[1];
-  for (bool next = true; next; ) {
-    next = false;
-    int i = 0;
-    while (i < _N_ - 1) {
-      int j = i;
-      while (j < _N_ - 1 && (fabs(f[j].real()) > eps || fabs(f[j].imag()) > eps))
-        ++j;
-      if (i != j) {
-        implicit_kernel(d + i, f + i, v + i * _N_, j - i + 1);
-        next = true;
-      }
-      i = j + 1;
-    }
-  }
+  SB_DMA_READ(v, 0, 8 * _N_ * _N_, _N_, P_finalize_A);
+  SB_RECURRENCE(P_finalize_O, P_finalize_U, _N_ * _N_);
+  SB_2D_CONST(P_finalize_reset, 2, _N_ / 4 - 1, 1, 1, _N_ * _N_);
+  SB_REPEAT_PORT(_N_);
+  SB_SCRATCH_READ(0, 8 * _N_, P_finalize_INV);
+  SB_DMA_WRITE(P_finalize_RES, 0, 8 * _N_ * _N_, 1, u);
   for (int i = 0; i < _N_; ++i) {
-    s[i] = sqrt(complex_norm(d[i]));
-  }
-
-  SB_CONFIG(mvc_config, mvc_size);
-  SB_DMA_READ(v, 0, 8 * _N_ * _N_, _N_, P_mvc_A);
-  for (int i = 0; i < _N_; ++i) {
-    SB_DMA_READ(v + i * _N_, 0, 8 * _N_, _N_, P_mvc_B);
-    for (int j = 0; j < _N_; ++j) {
-      SB_CONST(P_mvc_reset, 0, _N_ - 1)
-      SB_CONST(P_mvc_reset, 1, 1)
-      SB_GARBAGE(P_mvc_O, _N_ - 1);
-      SB_DMA_WRITE(P_mvc_O, 0, 8, 1, u + i * _N_ + j);
-    }
+    SB_DMA_READ(a + i * _N_, 0, 8 * _N_, _N_, P_finalize_B);
+    s[i] = d[i].real();
   }
   SB_WAIT_ALL();
 
+  //for (int i = 0; i < _N_; ++i) {
+  //  s[i] = sqrt(complex_norm(d[i]));
+  //}
   //for (int i = 0; i < _N_; ++i) {
   //  for (int j = 0; j < _N_; ++j) {
   //    complex<float> sum(0, 0);
@@ -323,9 +542,9 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
   //    u[i * _N_ + j] = sum;
   //  }
   //}
-  for (int i = 0; i < _N_; ++i) {
-    for (int j = 0; j < _N_; ++j) {
-      u[i * _N_ + j] /= s[j];
-    }
-  }
+  //for (int i = 0; i < _N_; ++i) {
+  //  for (int j = 0; j < _N_; ++j) {
+  //    u[i * _N_ + j] /= s[j];
+  //  }
+  //}
 }

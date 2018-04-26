@@ -36,6 +36,8 @@ int main() {
   }
 
   fft(_a, _b, w);
+  begin_roi();
+  end_roi();
   //begin_roi();
   complex<float> *res = fft(a, b, w);
   //end_roi();

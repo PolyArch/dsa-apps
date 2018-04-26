@@ -29,11 +29,17 @@ void cholesky(complex<float> *a, complex<float> *L) {
     SB_DMA_READ_STRETCH(a + 1, 8, 8 * (_N_ - 1), -8, _N_ - 1, P_multi_B);
   }
   int addr = 0;
+  int array = 512;
   for (int i = 1; i < _N_; ++i) {
     int total = _N_ - i - 1;
     SB_RECURRENCE(P_multi_O, P_multi_VAL, 1);
     SB_SCR_WRITE(P_multi_O, total * 8, addr);
-    SB_RECURRENCE(P_multi_O, P_multi_Z, total * (_N_ - i) / 2);
+
+    //SB_RECURRENCE(P_multi_O, P_multi_Z, total * (_N_ - i) / 2);
+    SB_SCR_WRITE(P_multi_O, total * (_N_ - i) * 4, array);
+    SB_WAIT_SCR_WR();
+    SB_SCRATCH_READ(array, total * (_N_ - i) * 4, P_multi_Z);
+
     SB_DMA_WRITE(P_multi_sqrt, 0, 8, 1, L + i * _N_ + i);
     SB_REPEAT_PORT(total);
     SB_RECURRENCE(P_multi_invsqrt, P_multi_DIV, 1);
@@ -45,7 +51,7 @@ void cholesky(complex<float> *a, complex<float> *L) {
     SB_SCR_PORT_STREAM_STRETCH(addr, 8, 8 * total, -8, total, P_multi_B);
     SB_CONFIG_PORT(total, -1);
     SB_SCR_PORT_STREAM(addr, 8, 8, total, P_multi_A);
-    addr += total;
+    addr ^= 256;
   }
   SB_WAIT_ALL();
 }

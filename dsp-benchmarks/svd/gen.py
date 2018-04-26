@@ -1,11 +1,19 @@
 import numpy, cmath, sys, imp
 output = imp.load_source('output', '../common/output.py')
 
-numpy.set_printoptions(precision = 4, suppress = True, threshold = 1000, linewidth = 200)
 
-_N_ = int(sys.argv[1])
+numpy.set_printoptions(precision = 4, suppress = True, threshold = 1000, linewidth = 150)
 
-_a = numpy.random.rand(_N_, _N_) + 1j * numpy.random.rand(_N_, _N_)
+n = int(sys.argv[1])
+
+ideal = 0
+
+_a = numpy.random.rand(n, n) + 1j * numpy.random.rand(n, n)
+#_a = numpy.zeros((n, n), dtype = 'complex64')
+#for i in xrange(n):
+#    for j in xrange(n):
+#        _a[i, j] = ((j - i + n) % n + 1) + 1j * ((j - (n - 1 - i) + n) % n + 1)
+#_a *= 0.1
 a = _a.copy()
 output.print_complex_array('input.data', a.flatten())
 
@@ -13,29 +21,44 @@ ans = numpy.linalg.svd(a, compute_uv = False)
 
 output.print_complex_array('ref.data', numpy.concatenate((ans, a.flatten())))
 
-V = numpy.identity(_N_, dtype = 'complex128')
+V = numpy.identity(n, dtype = 'complex128')
 
 def household(v):
-    if numpy.linalg.norm(v) < 1e-5:
-        return v[0], numpy.ones((len(v)), dtype = 'complex128') / cmath.sqrt(len(v))
-    hv = v.copy()
-    alpha = cmath.exp(1j * cmath.phase(hv[0])) * numpy.linalg.norm(hv)
-    hv[0] += alpha
-    hv /= numpy.linalg.norm(hv)
-    return alpha, hv
+    global ideal
+    ideal += len(v) + 24
+    w = v.copy()
+    normx = numpy.linalg.norm(w)
+    s = -w[0] / cmath.sqrt(w[0].conjugate() * w[0])
+    u1 = w[0] - s * normx
+    w /= u1
+    w[0] = 1 + 0j
+    alpha = s * normx
+    tau = -s.conjugate() * u1 /normx
+    return alpha, tau, w
 
 f,d = [],[]
 r = a.copy()
 
-for i in range(_N_ - 1):
-    alpha, hv = household(r[:,0].copy())
-    r = r[:,1:] - 2 * numpy.outer(hv, numpy.dot(numpy.conj(hv), r[:,1:]))
-    d.append(-alpha)
-    if i != _N_ - 2:
-        alpha, hv = household(r[0,:].copy())
-        r = r[1:,:] - 2 * numpy.outer(numpy.dot(r[1:,:], numpy.conj(hv)), hv)
-        V[i+1:,1:] = V[i+1:,1:] - 2 * numpy.outer(numpy.conj(hv), numpy.dot(hv, V[i+1:,1:]))
-        f.append(-alpha)
+for i in range(n - 1):
+    #print i
+    alpha, tau, w = household(r[:,0].copy())
+    #print tau
+    #print 'w', w
+    r = r[:,1:] - tau * numpy.outer(w, numpy.dot(numpy.conj(w), r[:,1:]))
+    ideal += r.shape[0] * r.shape[1] + r.shape[0]
+    #print r[1:,:]
+    d.append(alpha)
+    if i != n - 2:
+        alpha, tau, w = household(r[0,:].copy())
+        #print 'w\'', w
+        r = r[1:,:] - tau * numpy.outer(numpy.dot(r[1:,:], numpy.conj(w)), w)
+        ideal += r.shape[0] * r.shape[1] + r.shape[0]
+        V[i+1:,1:] = V[i+1:,1:] - tau * numpy.outer(numpy.conj(w), numpy.dot(w, V[i+1:,1:]))
+        ideal += (n - i - 1) * (n - 1) + (n - 1)
+        f.append(alpha)
+    #print r
+
+#print V
 
 d.append(r[1,0])
 f.append(r[0,0])
@@ -43,60 +66,104 @@ f.append(r[0,0])
 d = numpy.array(d)
 f = numpy.array(f)
 
-TOTAL = 0
+print f
+print d
+
+implicit_log = []
+
+def givens(a, b):
+    r = cmath.sqrt(a.conjugate() * a + b.conjugate() * b)
+    c = a.conjugate() / r
+    s = b.conjugate() / r
+    global ideal
+    ideal += 12
+    return (r, c, s)
 
 def implicit_kernel(d, f, V):
-    global TOTAL
-    TOTAL += 1
     n = len(d)
     assert n > 1
 
     mu = d[-1].conjugate() * d[-1]
-    alpha, hv = household(numpy.array([d[0] * d[0].conjugate() - mu, d[0] * f[0].conjugate()]))
-    m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
-    d[0], f[0], extra, d[1] = d[0] * m[0,0] + f[0] * m[1,0], d[0] * m[0,1] + f[0] * m[1,1], d[1] * m[1,0], d[1] * m[1,1]
-    V[:2,:] = numpy.dot(m, V[:2,:])
+    alpha, c, s = givens(d[0] * d[0].conjugate() - mu, d[0] * f[0].conjugate())
 
-    alpha, hv = household(numpy.array([d[0],extra]))
-    m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
-    d[0] = -alpha
-    f[0], d[1] = m[0,0] * f[0] + m[0,1] * d[1], m[1,0] * f[0] + m[1,1] * d[1]
+    d[0], f[0], extra, d[1] = d[0] * c + f[0] * s.conjugate(), d[0] * s - f[0] * c.conjugate(), d[1] * s.conjugate(), d[1] * -c.conjugate()
+    V[:2,:] = numpy.dot([[c, s], [s.conjugate(), -c.conjugate()]], V[:2,:])
+
+    alpha, c, s = givens(d[0], extra)
+    d[0] = alpha
+    f[0], d[1] = c * f[0] + s * d[1], s.conjugate() * f[0] - c.conjugate() * d[1]
     if n != 2:
-        extra = m[0, 1] * f[1]
-        f[1]  = m[1, 1] * f[1]
+        extra = s * f[1]
+        f[1]  = -c.conjugate() * f[1]
+        #print "f[0]:", f[0]
+        #print "extra:", extra
+        #print "d[1]:", d[1]
+        #print "f[1]:", f[1], '\n'
+    else:
+        pass
+        #print "[FIN]", f[0], d[1]
 
     for i in range(1, n - 1):
-        alpha, hv = household(numpy.array([f[i-1].conjugate(), extra.conjugate()]))
-        m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
-        f[i-1] = -alpha.conjugate()
-        d[i], f[i] = d[i] * m[0,0] + f[i] * m[1,0], d[i] * m[0,1] + f[i] * m[1,1]
-        extra  = d[i+1] * m[1,0]
-        d[i+1] = d[i+1] * m[1,1]
-        V[i:i+2,:] = numpy.dot(m, V[i:i+2,:])
+        alpha, c, s = givens(f[i - 1], extra)
 
-        alpha, hv = household(numpy.array([d[i],extra]))
-        m = numpy.identity(2, dtype = 'complex128') - 2 * numpy.outer(hv, numpy.conj(hv))
+        f[i-1] = alpha
+        d[i], f[i] = d[i] * c + f[i] * s, d[i] * s.conjugate() - f[i] * c.conjugate()
+        extra  = d[i+1] * s
+        d[i+1] = d[i+1] * -c.conjugate()
+        V[i:i+2,:] = numpy.dot([[c, s.conjugate()], [s, -c.conjugate()]], V[i:i+2,:])
 
-        d[i]   = -alpha
-        f[i], d[i+1] = m[0,0] * f[i] + m[0,1] * d[i+1], m[1,0] * f[i] + m[1,1] * d[i+1]
+        #print '[FIN]', alpha
+        alpha, c, s = givens(d[i], extra)
+        #print '[FIN]', alpha, '\n'
+
+        d[i]   = alpha
+        f[i], d[i+1] = c * f[i] + s * d[i+1], s.conjugate() * f[i] - c.conjugate() * d[i+1]
+        #print 'cos', c
+        #print 'sin', s
+        #print 'f[i]', f[i]
+        #print 'd[i+1]', d[i+1], '\n'
         if i != n - 2:
-            extra  = m[0, 1] * f[i+1]
-            f[i+1] = m[1, 1] * f[i+1]
+            extra  = s * f[i+1]
+            f[i+1] = -c.conjugate() * f[i+1]
+            #print "f[i]:", f[i]
+            #print "extra:", extra
+            #print "d[i+1]:", d[i+1]
+            #print "f[i+1]:", f[i+1], '\n'
+        else:
+            pass
+            #print "[FIN]", f[i], d[i+1]
+    print f
+    print d
+    print '====================================='
 
+l, r = 0, n - 1
+while l < r:
+    while l < n - 1 and abs(f[l].real) < 1e-5 and abs(f[l].imag) < 1e-5:
+        l += 1
+    while r >= 1 and abs(f[r - 1].real) < 1e-5 and abs(f[r - 1].imag) < 1e-5:
+        r -= 1
+    if r - l >= 1:
+        implicit_kernel(d[l:r+1], f[l:r], V[l:r+1,:])
+        implicit_log.append((l, r))
+        ideal += max(14 * (r - l + 1), n * (r - l + 1))
 
-while True:
-    i = 0
-    called = False
-    while i < _N_ - 1:
-        j = i
-        while j < _N_ - 1 and (abs(f[j].real) > 1e-5 or abs(f[j].imag) > 1e-5):
-            j += 1
-        if i != j:
-            implicit_kernel(d[i:j+1], f[i:j], V[i:j+1,:])
-            called = True
-        i = j + 1
-    if not called:
-        break
+#while True:
+#    i = 0
+#    called = False
+#    while i < n - 1:
+#        j = i
+#        while j < n - 1 and (abs(f[j].real) > 1e-5 or abs(f[j].imag) > 1e-5):
+#            j += 1
+#        if i != j:
+#            implicit_kernel(d[i:j+1], f[i:j], V[i:j+1,:])
+#            implicit_log.append((i, j))
+#            ideal += 14 * (j - i + 1)
+#            ideal += n * (j - i + 1)
+#            called = True
+#        i = j + 1
+#    implicit_log.append('=====')
+#    if not called:
+#        break
 
 
 """ check pass!
@@ -109,8 +176,10 @@ numpy.testing.assert_allclose(
 )
 """
 
-print "Total iteration: %d" % TOTAL
+print "Total iteration: %d" % sum(i != '=====' for i in implicit_log)
+print '\n'.join(str(i) for i in implicit_log)
 sv = d
+print d
 sv = numpy.real(numpy.sqrt(sv * numpy.conj(sv)))
 
 try:
@@ -122,25 +191,28 @@ except:
     print ans
     quit()
 
-print 'Singular value:', sv
+print 'Singular value:\n', sv
 
+print V
 U = numpy.dot(_a, numpy.conj(V).transpose())
-for i in range(_N_):
+ideal += n * n * n / 4
+for i in range(n):
     U[:,i] /= sv[i]
+ideal += n + 12 - 1
 
 
 """ check pass!
 numpy.testing.assert_allclose(
     numpy.dot(numpy.conj(U).transpose(), U),
-    numpy.identity(_N_, dtype = 'complex128'),
+    numpy.identity(n, dtype = 'complex128'),
     atol = 1e-5, rtol = 1e-5
 )
 """
 
 #verify code:
 
-sigma = numpy.zeros((_N_, _N_), dtype = 'complex128')
-for i in range(_N_):
+sigma = numpy.zeros((n, n), dtype = 'complex128')
+for i in range(n):
     sigma[i, i] = sv[i]
 
 try:
@@ -152,5 +224,7 @@ try:
 except:
     print 'WARN: Precision loss too much!'
 
-print 'AVG ERROR: %.6f' % (abs(numpy.dot(numpy.dot(U, sigma), V) - _a).sum() / (_N_ * _N_))
+print 'AVG ERROR: %.6f' % (abs(numpy.dot(numpy.dot(U, sigma), V) - _a).sum() / (n * n))
+print 'ASIC Ideal:', ideal
+print 'ASIC Latency:', ideal
 

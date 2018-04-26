@@ -5,7 +5,8 @@
 #include "mvc.dfg.h"
 #include "vvc.dfg.h"
 #include "vm.dfg.h"
-#include "lmm2x2.dfg.h"
+#include "aplygvs.dfg.h"
+#include "finalize.dfg.h"
 
 #define complex_mul(a, b) (a).real() * (b).real() - (a).imag() * (b).imag(), \
   (a).real() * (b).imag() + (a).imag() * (b).real()
@@ -40,117 +41,91 @@ void household(complex<float> *v, int n, complex<float> &alpha) {
   }
 }
 
-void household2(complex<float> &a, complex<float> &b, complex<float> &alpha) {
+void givens(complex<float> &a, complex<float> &b, complex<float> &alpha) {
   float norm0 = complex_norm(a), norm1 = complex_norm(b);
-  float _alpha = sqrt(1 + norm1 / norm0);
-  alpha = complex<float>(-a.real() * _alpha, -a.imag() * _alpha);
-  float rate = 1 + _alpha;
-  a = complex<float>(a.real() * rate, a.imag() * rate);
-  norm1 += complex_norm(a);
-  norm1 = 1 / sqrt(norm1);
-  a = complex<float>(a.real() * norm1, a.imag() * norm1);
-  b = complex<float>(b.real() * norm1, b.imag() * norm1);
+  float r = sqrt(norm1 + norm0);
+  complex<float> c(std::conj(a) / r);
+  complex<float> s(std::conj(b) / r);
+  alpha = r;
+  a = c;
+  b = s;
 }
 
-#define outer2(a, b, m0, m1) \
-  do { \
-    m0 = 1 - complex_norm(a) * 2; \
-    m1 = complex<float>(complex_conj_mul(b, a)); \
-    m1 = complex<float>(complex_mul_cons(m1, -2)); \
-  } while(false)
-
-/* Outer MM
- * (m0        m1) (a)
- * (m1.conj  -m0) (b)
+/* L Givens Rotation
+ * (c        s     ) (a)
+ * (s.conj  -c.conj) (b)
  * */
-#define lmm2x2(m0, m1, a, b) \
+#define apply_givens(c, s, a, b) \
   do { \
     complex<float> \
-      l0(complex_mul_cons(a, m0)), \
-      r0(complex_mul(m1, b)), \
-      l1(complex_conj_mul(m1, a)), \
-      r1(complex_mul_cons(b, -m0)); \
-    a = complex<float>(complex_add(l0, r0)); \
-    b = complex<float>(complex_add(l1, r1)); \
-  } while(false)
-
-/*  Outer MM
- *  (a b) (m0       m1)
- *        (m1.conj -m0)
- * */
-#define rmm2x2(a, b, m0, m1) \
-  do { \
-    complex<float> \
-      l0(complex_mul_cons(a, m0)), \
-      r0(complex_conj_mul(m1, b)), \
-      l1(complex_mul(a, m1)), \
-      r1(complex_mul_cons(b, -m0)); \
-    a = complex<float>(complex_add(l0, r0)); \
-    b = complex<float>(complex_add(l1, r1)); \
+      resa((c) * (a) + (s) * (b)), \
+      resb(std::conj(s) * (a) - std::conj(c) * (b)); \
+    a = resa; \
+    b = resb; \
   } while(false)
 
 void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, int n) {
   float mu = complex_norm(d[n - 1]);
-  float m0;
-  complex<float> m1;
   complex<float> a(complex_norm(d[0]) - mu), b(complex_conj_mul(f[0], d[0])), alpha;
-  household2(a, b, alpha);
-  outer2(a, b, m0, m1);
-  union _reiter_t {
-    float a[2];
-    uint64_t val;
-  } ri_m0 = {m0, m0};
-  SB_CONFIG(lmm2x2_config, lmm2x2_size);
-  SB_CONST(P_lmm2x2_M0, ri_m0.val, _N_);
-  SB_CONST(P_lmm2x2_M1, *((uint64_t*)&m1), _N_);
-  SB_DMA_READ(v, 8, 8, _N_, P_lmm2x2_A);
-  SB_DMA_READ(v + _N_, 8, 8, _N_, P_lmm2x2_B);
-  SB_DMA_WRITE(P_lmm2x2_O0, 8, 8, _N_, v);
-  SB_DMA_WRITE(P_lmm2x2_O1, 8, 8, _N_, v + _N_);
-  SB_WAIT_ALL();
+  complex<float> c, s, extra;
+  givens(a, b, alpha);
+
+  c = a; s = b;
+  SB_CONFIG(aplygvs_config, aplygvs_size);
+  SB_CONST(P_aplygvs_C, *((uint64_t*)&c), _N_);
+  SB_CONST(P_aplygvs_S, *((uint64_t*)&s), _N_);
+  SB_DMA_READ(v, 8, 8, _N_, P_aplygvs_A);
+  SB_DMA_READ(v + _N_, 8, 8, _N_, P_aplygvs_B);
+  SB_DMA_WRITE(P_aplygvs_O0, 8, 8, _N_, v);
+  SB_DMA_WRITE(P_aplygvs_O1, 8, 8, _N_, v + _N_);
+  //SB_WAIT_ALL();
   //for (int i = 0; i < _N_; ++i) {
   //  lmm2x2(m0, m1, v[i], v[i + _N_]);
   //}
-  a = d[0];
-  b = complex<float>(0, 0);
-  rmm2x2(a, f[0], m0, m1);
-  rmm2x2(b, d[1], m0, m1);
-  household2(a, b, d[0]);
-  outer2(a, b, m0, m1);
-  lmm2x2(m0, m1, f[0], d[1]);
+
+  a = d[0] * c + f[0] * std::conj(s);
+  f[0] = d[0] * s - f[0] * std::conj(c);
+  b = d[1] * std::conj(s);
+  d[1] *= -std::conj(c);
+
+  givens(a, b, d[0]);
+  apply_givens(a, b, f[0], d[1]);
   if (n != 2) {
-    b = complex<float>(complex_mul(m1, f[1]));
-    f[1] = complex<float>(complex_mul_cons(f[1], -m0));
+    b *= f[1];
+    f[1] *= -std::conj(a);
   }
+
   for (int i = 1; i < n - 1; ++i) {
-    a = std::conj(f[i - 1]);
-    b = std::conj(b);
-    household2(a, b, alpha);
-    f[i - 1] = std::conj(alpha);
-    outer2(a, b, m0, m1);
+    a = f[i - 1];
+    givens(a, b, f[i - 1]);
+    c = a; s = b;
     a = d[i];
-    rmm2x2(a, f[i], m0, m1);
-    b = complex<float>(complex_conj_mul(m1, d[i + 1]));
-    d[i + 1] = complex<float>(complex_mul_cons(d[i + 1], -m0));
-    ri_m0 = (_reiter_t) {m0, m0};
-    SB_CONST(P_lmm2x2_M0, ri_m0.val, _N_);
-    SB_CONST(P_lmm2x2_M1, *((uint64_t*)&m1), _N_);
-    SB_DMA_READ(v + i * _N_, 8, 8, _N_, P_lmm2x2_A);
-    SB_DMA_READ(v + i * _N_ + _N_, 8, 8, _N_, P_lmm2x2_B);
-    SB_DMA_WRITE(P_lmm2x2_O0, 8, 8, _N_, v + i * _N_);
-    SB_DMA_WRITE(P_lmm2x2_O1, 8, 8, _N_, v + i * _N_ + _N_);
+
+    a = d[i] * c + f[i] * s;
+    f[i] = d[i] * std::conj(s) - f[i] * std::conj(c);
+    b = d[i + 1] * s;
+    d[i + 1] *= -std::conj(c);
+
+    SB_CONST(P_aplygvs_C, *((uint64_t*)&c), _N_);
+    SB_CONST(P_aplygvs_S, *((uint64_t*)&s), _N_);
+    SB_DMA_READ(v + i * _N_, 8, 8, _N_, P_aplygvs_A);
+    SB_DMA_READ(v + i * _N_ + _N_, 8, 8, _N_, P_aplygvs_B);
+    SB_DMA_WRITE(P_aplygvs_O0, 8, 8, _N_, v + i * _N_);
+    SB_DMA_WRITE(P_aplygvs_O1, 8, 8, _N_, v + i * _N_ + _N_);
     //for (int j = 0; j < _N_; ++j) {
     //  lmm2x2(m0, m1, v[i * _N_ + j], v[(i + 1) * _N_ + j]);
     //}
-    household2(a, b, d[i]);
-    outer2(a, b, m0, m1);
-    lmm2x2(m0, m1, f[i], d[i + 1]);
+
+    givens(a, b, d[i]);
+    c = a; s = b;
+    apply_givens(c, s, f[i], d[i + 1]);
+
     if (i != n - 2) {
-      b = complex<float>(complex_mul(m1, f[i + 1]));
-      f[i + 1] = complex<float>(complex_mul_cons(f[i + 1], -m0));
+      b = s * f[i + 1];
+      f[i + 1] *= -std::conj(c);
     }
-    SB_WAIT_ALL();
   }
+  SB_WAIT_ALL();
 }
 
 void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
@@ -165,9 +140,11 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
     SB_CONST(P_vmc_C, *((uint64_t*)&_zero), len - 1);
     SB_DMA_READ((i ? r : a) + 1, 8 * len, 8 * (len - 1), len, P_vmc_B);
     SB_RECURRENCE(P_vmc_O, P_vmc_C, (len - 1) * (len - 1));
-    for (int k = 0; k < len; ++k) {
-      SB_CONST(P_vmc_A, *((uint64_t*)(hv + k)), len - 1);
-    }
+    SB_REPEAT_PORT(len - 1);
+    SB_DMA_READ(hv, 8, 8, len, P_vmc_A);
+    //for (int k = 0; k < len; ++k) {
+    //  SB_CONST(P_vmc_A, *((uint64_t*)(hv + k)), len - 1);
+    //}
     SB_DMA_WRITE(P_vmc_O, 8, 8, len - 1, temp + 1);
     SB_WAIT_ALL();
 
@@ -302,33 +279,34 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
   }
   f[_N_ - 2] = r[0];
   d[_N_ - 1] = r[1];
-  for (bool next = true; next; ) {
-    next = false;
-    int i = 0;
-    while (i < _N_ - 1) {
-      int j = i;
-      while (j < _N_ - 1 && (fabs(f[j].real()) > eps || fabs(f[j].imag()) > eps))
-        ++j;
-      if (i != j) {
-        implicit_kernel(d + i, f + i, v + i * _N_, j - i + 1);
-        next = true;
-      }
-      i = j + 1;
+
+  int left = 0, right = _N_ - 1;
+  while (left < right) {
+    while (left < _N_ - 1 && fabs(f[left].real()) < eps && fabs(f[left].imag()) < eps)
+      ++left;
+    while (right >= 1 && fabs(f[right - 1].real()) < eps && fabs(f[right - 1].imag()) < eps)
+      --right;
+    if (right - left >= 1) {
+      //std::cout << left << " " << right << "\n";
+      implicit_kernel(d + left, f + left, v + left * _N_, right - left + 1);
+      //for (int i = left; i < right; ++i) std::cout << f[i] << " "; std::cout << "\n";
+      //for (int i = left; i < right + 1; ++i) std::cout << d[i] << " "; std::cout << "\n";
     }
   }
-  for (int i = 0; i < _N_; ++i) {
-    s[i] = sqrt(complex_norm(d[i]));
-  }
 
-  SB_CONFIG(mvc_config, mvc_size);
-  SB_DMA_READ(v, 0, 8 * _N_ * _N_, _N_, P_mvc_A);
+  int N = _N_;
+
+  d[N - 1] = sqrt(complex_norm(d[N - 1]));
+
+  SB_CONFIG(finalize_config, finalize_size);
   for (int i = 0; i < _N_; ++i) {
-    SB_DMA_READ(v + i * _N_, 0, 8 * _N_, _N_, P_mvc_B);
     for (int j = 0; j < _N_; ++j) {
-      SB_CONST(P_mvc_reset, 0, _N_ - 1)
-      SB_CONST(P_mvc_reset, 1, 1)
-      SB_GARBAGE(P_mvc_O, _N_ - 1);
-      SB_DMA_WRITE(P_mvc_O, 0, 8, 1, u + i * _N_ + j);
+      SB_DMA_READ(v + j * _N_, 8, 8, _N_, P_finalize_A);
+      SB_DMA_READ(a + i * _N_, 8, 8, _N_, P_finalize_B);
+      SB_CONST(P_finalize_reset, 0, _N_ / 4 - 1)
+      SB_CONST(P_finalize_reset, 1, 1)
+      SB_GARBAGE(P_finalize_O, _N_ / 4 - 1);
+      SB_DMA_WRITE(P_finalize_O, 0, 8, 1, u + i * _N_ + j);
     }
   }
   SB_WAIT_ALL();

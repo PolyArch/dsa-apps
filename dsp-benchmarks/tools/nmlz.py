@@ -11,14 +11,15 @@ colors = [
 labels = [
     'Cholesky',
     'QR',
+    'QR-single',
     'GeMM',
     'SVD',
     'FFT'
 ]
 
 val = [
-    [(3.45, 0.86), (10.81, 5.12), (7.38, 2.07), (39.0, 82.89), (5.57 / 25, 0.5)],
-    [(9.98, 6.16), (38.98, 31.56), (26.7, 7.44), (252, 496.63), (177.27 / 25, 7.22)]
+    [(3.45, 0.86), (10.81, 2.06), (10.81, 5.12), (7.38, 2.07), (39.0, 82.89), (5.57 / 25, 0.347)],
+    [(9.98, 6.16), (38.98, 21.01),(38.98, 31.56), (26.7, 7.44), (252, 496.63), (177.27 / 25, 5.32)]
 ]
 
 fig, ax = plt.subplots(1, 2)
@@ -31,7 +32,7 @@ for i in xrange(2):
         ax[i].bar(numpy.arange(n) + j * 0.3, [(a[j] / a[0]) if j == 0 else a[0] / a[j] for a in val[i]], width = 0.28, label = arch[j])
     ax[i].set_xticks(numpy.arange(n))
     ax[i].set_xticklabels(labels, rotation = 75)
-    ax[i].set_ylim(0, 4.05)
+    ax[i].set_ylim(0, 5.3)
 
 ax[0].set_title('Small')
 ax[1].set_title('Large')

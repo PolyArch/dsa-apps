@@ -23,12 +23,12 @@ for i in xrange(n - 1):
     w /= u1
     w[0] = 1 + 0j
     a[i, i] = s * normx
-    a[i+1:,i] = w[1:]
+    #a[i+1:,i] = w[1:]
+    a[i+1:,i] = numpy.zeros(n - i - 1)
     tau[i] = -s.conjugate() * u1 / normx
 
     v = tau[i] * numpy.dot(numpy.conj(w), a[i:,i+1:])
-    a[i,i+1:]    -= v
-    a[i+1:,i+1:] -= numpy.outer(w[1:], v)
+    a[i:,i+1:] -= numpy.outer(w, v)
 
     v = numpy.dot(q[:,i:], w)
     q[:,i:] -= tau[i] * numpy.outer(v, numpy.conj(w))
@@ -48,3 +48,24 @@ output.print_complex_array('ref.data', numpy.concatenate((a.flatten(), tau, q.fl
 
 print "New data generated!"
 
+ideal = 0
+simd  = 0
+last_h = 0
+for i in xrange(n - 1):
+    r_kernel = n - i + (n - i) * n
+    simd    += ((n - i) / 4 + (n - i) % 4) * n * 5
+    q_kernel = n - i + (n - i) * (n - i)
+    simd    += ((n - i) / 4 + (n - i) % 4) * (n - i) * 5
+    if i == 0:
+        ideal += (n - i) + (n - i - 1) + 40
+    else:
+        ideal += max(0, 5 + (n - i) * 2 + (n - i - 1) + 40 - diff)
+    ideal += max(r_kernel, q_kernel)
+    diff   = abs(r_kernel - q_kernel)
+    simd  += ((n - i) / 4 + (n - i) % 4) * 3 + 40
+
+ideal += diff
+
+print 'ASIC Latency:', ideal
+print 'ASIC Ideal:', ideal
+print 'SIMD Ideal:', simd

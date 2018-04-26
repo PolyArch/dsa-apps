@@ -6,6 +6,7 @@
 #include "sim_timing.h"
 #include "fileop.h"
 #include <iostream>
+
 #define PI 3.14159265358979303
 
 using std::complex;
@@ -28,11 +29,13 @@ int main() {
     w[i] = complex<float>(cos(2 * PI * i / n), sin(2 * PI * i / n));
   }
 
-  filter(_N_, _M_, a, b, cc, w);
+  filter(_N_, _M_, cc, cc, cc, w);
   begin_roi();
   filter(_N_, _M_, a, b, c, w);
   end_roi();
   sb_stats();
+
+  //for (int i = 0; i < _N_ - _M_ + 1; ++i) std::cout << c[i]; std::cout << "\n";
 
   if (!compare_n_float_complex(ref_data, _N_ - _M_ + 1, c))
     return 1;

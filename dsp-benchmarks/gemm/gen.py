@@ -15,3 +15,7 @@ print 'input generated'
 c = numpy.dot(a, b)
 output.print_complex_array('ref.data', c.flatten())
 print 'output generated!'
+
+print 'ASIC Ideal:', (n * m * p - 1) / 8 + 1
+print 'ASIC Latency:', ((n / 8) * m * p - 1) / 8 + 1 + 1
+print 'VM Ideal:', (n * m * p - 1) / 8 * 4

@@ -3,6 +3,14 @@ $(warning SBCONFIG is undefined, using default)
 SBCONFIG=$(SS_TOOLS)/configs/revel.sbmodel
 endif
 
+ifndef OMP_NUM_THREADS
+OMP_NUM_THREADS=1
+endif
+
+ifndef NUM_PTHREADS
+NUM_PTHREADS=1
+endif
+
 DFG_HEADERS = $(DFG:.dfg=.dfg.h)
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
@@ -19,9 +27,10 @@ BENCHMARKS = optimized
 OBJS = $(BENCHMARKS:=.o)
 LOGS = $(SOFTBRAINS:=.log)
 EXEC = $(BENCHMARKS:=.exe) $(SOFTBRAINS:=.exe)
+THREAD_MACROS = -DNUM_PTHREADS=$(NUM_PTHREADS) -DOMP_NUM_THREADS=$(OMP_NUM_THREADS)
 
 input.data ref.data: gen.py
-	python $< $(SCALE)
+	python $< $(SCALE) > gen.log
 
 $(OBJS): %.o: %.cc
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) $(CFLAGS)
@@ -33,8 +42,7 @@ physical.log mkl.log: %.log: %.exe input.data ref.data
 	./$^ 2>&1 | tee $@
 
 mkl.exe: mkl.cc
-	icc $^ -o $@ $(LMKL) $(CFLAGS) $(MACROS) $(IFLAGS) $(INTELI)
-	
+	icc $^ -o $@ $(LMKL) $(CFLAGS) $(MACROS) $(THREAD_MACROS) $(IFLAGS) $(INTELI)
 
 ooo.log: optimized.exe input.data ref.data
 	SBCONFIG=$(SBCONFIG) \
@@ -61,4 +69,5 @@ clean: cleandata
 	rm -rf stats gams m5out viz verif
 
 ultraclean: clean cleandfg
-	rm  -f *.csv
+	rm -f *.csv
+	rm -rf log_*

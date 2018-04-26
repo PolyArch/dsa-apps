@@ -1,0 +1,37 @@
+Input: C
+Input: S
+Input: A
+Input: B
+
+CAR = FMul32x2(C, A)
+CAI = FMulX32x2(C, A)
+CA  = FSubAdd32x2(CAR, CAI)
+
+SBR = FMul32x2(S, B)
+SBI = FMulX32x2(S, B)
+SB  = FSubAdd32x2(SBR, SBI)
+
+O0 = FAdd32x2(CA, SB)
+
+SAR = FMul32x2(A, S)
+SAI = FMulX32x2(A, S)
+SA  = FAddSub32x2(SAR, SAI)
+
+CBR = FMul32x2(C, B)
+CBI = FMulX32x2(C, B)
+CB  = FAddSub32x2(CBR, CBI)
+
+O1 = FSub32x2(SA, CB)
+
+Output: O0
+Output: O1
+
+----
+
+Input: D
+Input: F
+Input: Inst
+
+RES = ImplicitQR(D, F, Inst)
+
+Output: RES
