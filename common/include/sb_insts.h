@@ -1,6 +1,9 @@
 #ifndef SB_INSTS_H
 #define SB_INSTS_H
 
+// Magic sentinal for matchhing
+#define SENTINAL (((uint64_t)1)<<63)
+
 // For bottom two bits:
 #define NO_FILL        0
 #define POST_ZERO_FILL 1

@@ -16,59 +16,74 @@ void mm_mult(std::pair<SBDT, SBDT> *matrix1, int* row_ptr1, int nrows1, int nnz1
   SBDT *col_ind3;
   SBDT *val3;
   int *row_ptr3;
+  //printf("%d %d\n",nrows1,ncols2); 
+  max_size = 600*600;
   val3 = (SBDT*)malloc(max_size*sizeof(SBDT));
   col_ind3 = (SBDT*)malloc(max_size*sizeof(SBDT));
   row_ptr3 = (int*)malloc(nrows1*sizeof(int));
 
-  int last = -1;
+  int last = 0;
   int ptr1, ptr2, end1, end2;
 
   begin_roi();
   SB_CONFIG(merge2way_config,merge2way_size);
 
   // for (int i=0; i<nrows1; i++){
-  for (int i=0; i<2; i++){
+  SB_2D_CONST(P_merge2way_done,2,ncols2-1,1,1,nrows1);
+
+  for (int i=0; i<nrows1; i++){
     row_ptr3[i] = -1; // instead of -1 use INF value because unsigned not allowed in softbrain
     // for (int j=0; j<ncols2; j++){
-    for (int j=0; j<1; j++){
+
+
+    ptr1 = row_ptr1[i];
+    end1 = i<nrows1-1 ? row_ptr1[i+1] : nnz1-1;
+
+    //printf("%p %p %p\n",val3,&val3[last],val3+last);
+
+    SB_DMA_WRITE(P_merge2way_Val, 8, 8, 10000000, &val3[last]);
+    SB_DMA_WRITE(P_merge2way_Index, 8, 8, 10000000, &col_ind3[last]);
+    //SB_DMA_WRITE(P_merge2way_R, 8, 8, 1, &row_ind3[i]);
+
+    for (int j=0; j<ncols2; j++){
       //c[i][j] pass through col_ind1[row_ptr1[i]], row_ind2[col_ptr2[j]]
 
       // Index-matching step--------------------------------------------------
       // these can be hidden using stream abstraction
-      ptr1 = row_ptr1[i];
-      end1 = i<nrows1-1 ? row_ptr1[i+1] : nnz1-1;
       ptr2 = col_ptr2[j];
       end2 = j<ncols2-1 ? col_ptr2[j+1] : nnz2-1;
 
-      if(ptr1 == -1 || ptr2 == -1 || end1 < ptr1 || end2 < ptr2)
-        continue;
+      //if(ptr1 == -1 || ptr2 == -1 || end1 < ptr1 || end2 < ptr2)
+      //  continue;
 
       SB_DMA_READ(&matrix1[ptr1], 8*2, 8*2, end1-ptr1+1, P_merge2way_A);
       SB_DMA_READ(&matrix2[ptr2], 8*2, 8*2, end2-ptr2+1, P_merge2way_B);
       // SB_CONST(P_merge2way_A, 100, 2);
       // SB_CONST(P_merge2way_B, 100, 2);
-      SB_CONST(P_merge2way_A, 98239, 2);
-      SB_CONST(P_merge2way_B, 98239, 2);
+      SB_CONST(P_merge2way_A, SENTINAL, 2);
+      SB_CONST(P_merge2way_B, SENTINAL, 2);
 
+      SB_CONST(P_merge2way_I, j, 1);
 
-      SB_DMA_WRITE(P_merge2way_R, 8, 8, 1, &val3[++last]);
-
-      SB_WAIT_MEM_WR();
-      SB_RESET();
-      SB_WAIT_ALL(); 
-
-      if(val3[last]==0){
-          --last;
-      }
-      else{
-          cout << "i: " << i << " j: " << j << endl;
-          col_ind3[last]=j; //matrix3 without pair?
-          if(row_ptr3[i]==-1)
-              row_ptr3[i] = last;
-      }
+      //if(val3[last]==0){
+      //    --last;
+      //}
+      //else{
+      //    //cout << "i: " << i << " j: " << j << endl;
+      //    //col_ind3[last]=j; //matrix3 without pair?
+      //    if(row_ptr3[i]==-1)
+      //        row_ptr3[i] = last;
+      //}
     }
+
+    int nz_count;
+    SB_RECV(P_merge2way_nz_count,nz_count);
+    SB_RESET();
+    SB_WAIT_ALL(); 
+    last+=nz_count;
+    row_ptr3[i]=last;
   }
-      
+
   end_roi();
 
   cout<<"printing the output non-zero values"<<endl;
@@ -141,9 +156,11 @@ int main(int argc, char** argv){
             // matrix1[id2].first--;
             matrix1[id2] = std::make_pair(t1-1, t2);
             // row_ptr1[id1]--;
-            if(row_ptr1[row_id]==-1){
+            if(row_ptr1[row_id]==-1 || (row_id > 0 && row_ptr1[row_id]==row_ptr1[row_id-1])){
                 // cout << "assigning row_ptr: " << id2 << " at row_id: " << row_id << endl;
                 row_ptr1[row_id] = id2;
+                if(row_id<nrows1-1)
+                  row_ptr1[row_id+1] = id2;
             }
        }
     }
