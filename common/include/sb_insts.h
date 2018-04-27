@@ -137,7 +137,9 @@
 #define SB_SCR_WRITE(output_port, num_bytes, scr_addr) \
   __asm__ __volatile__("sb_wr_scr   %0, %1, %2"   : : "r"(scr_addr), "r"(num_bytes), "i"(output_port)); 
 
-
+// Do atomic stream update in scratchpad (NEW INSTRUCTION)
+#define SB_ATOMIC_SCR_OP(addr_port, val_port, offset, iters, opcode) \
+  __asm__ __volatile__("sb_atom_op %0, %1, %2" : : "r"(offset), "r"(iters), "i"((addr_port<<7) | (val_port<<2) | opcode));
 
 
 // Unused Instructions
