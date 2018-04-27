@@ -122,6 +122,7 @@
 
 
 //Write to DMA, but throw away all but the last 16-bits from each word
+//TODO: make these work with types defined for indirection
 #define SB_DMA_WRITE_SHF16(output_port, stride, access_size, num_strides, mem_addr) \
   __asm__ __volatile__("sb_stride   %0, %1, 0" : : "r"(stride), "r"(access_size)); \
   __asm__ __volatile__("sb_wr_dma   %0, %1, %2"   : : "r"(mem_addr),  "r"(num_strides), "i"(output_port|0x40)); 
@@ -162,6 +163,8 @@
 
 
 // This tells the port to repeat a certain number of times before consuming
+// This is only really associated with the next command, as this information is forgotten as soon as
+// a command is issued.
 #define SB_CONFIG_PORT(repeat_times, stretch) \
   __asm__ __volatile__("sb_cfg_port %0, t0, %1" : : "r"(repeat_times), "i"(stretch));
 
@@ -185,24 +188,31 @@
   __asm__ __volatile__("sb_wr_rd %0, %1" : : "r"(num_strides), "i"( -2048 + (0<<10 |  (input_port<<5) | (output_port))) );
 
 
+// Datatype Encodings
+#define T64 0
+#define T32 1
+#define T16 2
+#define T08 3
+
+//configure the type of indirection -- here multiplier has to be less than 2^7
+//Currently DTYPE MUST be 64 bits
+#define SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,offset_list)  \
+  __asm__ __volatile__("sb_cfg_ind %0, t0, %1" : : "r"(offset_list), "i"( (itype<<10)  |  ((dtype<<8)&0x3)  |  mult));
+#define  SB_CONFIG_INDIRECT(itype,dtype,mult)             SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,0) 
+#define SB_CONFIG_INDIRECT1(itype,dtype,mult,o1)          SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,o1) 
+#define SB_CONFIG_INDIRECT2(itype,dtype,mult,o1,o2)       SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,o1 | o2 << 8) 
+#define SB_CONFIG_INDIRECT3(itype,dtype,mult,o1,o2,o3)    SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,o1 | o2 << 8 | o3 << 16) 
+#define SB_CONFIG_INDIRECT4(itype,dtype,mult,o1,o2,o3,o4) SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,o1 | o2 << 8 | o3 << 16 | o4 << 24) 
+
+
 //Write from output to input port  (type -- 3:8-bit,2:16-bit,1:32-bit,0:64-bit)
-#define SB_INDIRECT(ind_port, addr_offset, type, num_elem, input_port) \
-  __asm__ __volatile__("sb_ind %0, %1, %2" : : "r"(addr_offset), "r"(num_elem),\
-                                               "i"((type<<10)|(input_port<<5) | (ind_port)));
-//64-bit indicies, 64-bit values
-#define SB_INDIRECT64(ind_port, addr_offset, num_elem, input_port) \
-  SB_INDIRECT(ind_port, addr_offset, 0, num_elem, input_port)
+#define SB_INDIRECT(ind_port, addr_offset, num_elem, input_port) \
+  __asm__ __volatile__("sb_ind    %0, %1, %2" : : "r"(addr_offset), "r"(num_elem),\
+                                                  "i"((input_port<<5) | (ind_port)));
 
-// THIS DOES NOT WORK DO NOT USE THIS : )
-#define SB_INDIRECT32(ind_port, addr_offset, input_port) \
-  SB_INDIRECT(ind_port, addr_offset, 12231, input_port)
-
-#define SB_INDIRECT_WR(ind_port, addr_offset, type, num_elem, output_port) \
+#define SB_INDIRECT_WR(ind_port, addr_offset, num_elem, output_port) \
   __asm__ __volatile__("sb_ind_wr %0, %1, %2" : : "r"(addr_offset), "r"(num_elem),\
-                                       "i"((type<<10)|(output_port<<5) | (ind_port)));
-//64-bit indicies, 64-bit values
-#define SB_INDIRECT64_WR(ind_port, addr_offset, num_elem, output_port) \
-  SB_INDIRECT_WR(ind_port, addr_offset, 0, num_elem, output_port)
+                                                  "i"((output_port<<5) | (ind_port)));
 
 //Wait with custom bit vector -- probably don't need to use
 #define SB_WAIT(bit_vec) \
@@ -218,7 +228,7 @@
 
 //wait for everything except outputs to be complete. (useful for debugging)
 #define SB_WAIT_COMPUTE() \
-  __asm__ __volatile__("sb_wait t0, t0, 2"); \
+  __asm__ __volatile__("sb_wait t0, t0, 2" : : : "memory"); \
 
 //wait for all prior scratch reads to be complete
 #define SB_WAIT_SCR_RD() \
