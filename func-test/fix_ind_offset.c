@@ -14,8 +14,8 @@ int main(int argc, char* argv[]) {
   init();
 
   uint64_t ind_array[LEN];
-  uint64_t known[LEN*2];
-  uint64_t output[LEN*2];
+  uint64_t known[LEN*3];
+  uint64_t output[LEN*3];
 
 
   for(int i = 0; i<LEN; ++i) {
@@ -27,10 +27,12 @@ int main(int argc, char* argv[]) {
     ind_array[i]=LEN-i-1;
 
     //assume offsets 1 and 4
-    known[2*i+0]=(LEN-i-1)+1;
-    known[2*i+1]=(LEN-i-1)+4;
-    output[2*i+0]=-1;
-    output[2*i+1]=-1;
+    known[3*i+0]=(LEN-i-1)+1;
+    known[3*i+1]=(LEN-i-1)+3;
+    known[3*i+2]=(LEN-i-1)+4;
+    output[3*i+0]=-1;
+    output[3*i+1]=-1;
+    output[3*i+2]=-1;
   }
 
   SB_CONFIG(none_config,none_size);
@@ -38,10 +40,11 @@ int main(int argc, char* argv[]) {
   begin_roi();
   SB_DMA_READ(&ind_array[0],8,8,LEN,P_IND_1);
 
-  SB_CONFIG_INDIRECT1(T64,T64,sizeof(item_array), 24); //itype, dtype, mult, offset
+  //itype, dtype, mult, offset
+  SB_CONFIG_INDIRECT2(T64,T64,sizeof(item_array)/8, 2, 3);  //2 offsets for item 3 and item 4
   SB_INDIRECT(P_IND_1,&array[0],LEN,P_none_in);
 
-  SB_DMA_WRITE(P_none_out,8,8,LEN*2,&output[0]);
+  SB_DMA_WRITE(P_none_out,8,8,LEN*3,&output[0]);
   SB_WAIT_ALL();
   end_roi();
 

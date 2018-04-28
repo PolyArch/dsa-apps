@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
 
   SB_DMA_READ(&ind_array[0],8,8,AWORDS,P_IND_1);
 
-  SB_CONFIG_INDIRECT(T64,T64,8); //itype, dtype, mult
+  SB_CONFIG_INDIRECT(T64,T64,1); //itype, dtype, mult
   SB_INDIRECT(P_IND_1,&data_array[0],AWORDS,P_none_in);
 
   SB_DMA_WRITE(P_none_out,8,8,AWORDS,&output[0]);
