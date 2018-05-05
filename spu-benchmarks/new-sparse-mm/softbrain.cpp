@@ -28,13 +28,15 @@ void mm_mult(std::pair<SBDT, SBDT> *matrix1, int* row_ptr1, int nrows1, int nnz1
   begin_roi();
   SB_CONFIG(merge2way_config,merge2way_size);
 
+  // SB_2D_CONST(P_merge2way_done,4,ncols2-1,0,1,nrows1);
+  // SB_2D_CONST(P_merge2way_done,4,1,0,1,2); // 4-4-0-4-4-0
+  SB_2D_CONST(P_merge2way_done,4,2,0,1,2); // 4-4-0-4-4-0
+  // SB_CONST(P_merge2way_done,4,2);
+  // SB_CONST(P_merge2way_done,0,1);
+
   // for (int i=0; i<nrows1; i++){
-  SB_2D_CONST(P_merge2way_done,2,ncols2-1,1,1,nrows1);
-
-  for (int i=0; i<nrows1; i++){
-    row_ptr3[i] = -1; // instead of -1 use INF value because unsigned not allowed in softbrain
-    // for (int j=0; j<ncols2; j++){
-
+  for (int i=0; i<2; i++){
+    row_ptr3[i] = -1; 
 
     ptr1 = row_ptr1[i];
     end1 = i<nrows1-1 ? row_ptr1[i+1] : nnz1-1;
@@ -43,43 +45,36 @@ void mm_mult(std::pair<SBDT, SBDT> *matrix1, int* row_ptr1, int nrows1, int nnz1
 
     SB_DMA_WRITE(P_merge2way_Val, 8, 8, 10000000, &val3[last]);
     SB_DMA_WRITE(P_merge2way_Index, 8, 8, 10000000, &col_ind3[last]);
-    //SB_DMA_WRITE(P_merge2way_R, 8, 8, 1, &row_ind3[i]);
 
-    for (int j=0; j<ncols2; j++){
-      //c[i][j] pass through col_ind1[row_ptr1[i]], row_ind2[col_ptr2[j]]
+    // for (int j=0; j<ncols2; j++){
+    for (int j=0; j<3; j++){
 
-      // Index-matching step--------------------------------------------------
-      // these can be hidden using stream abstraction
       ptr2 = col_ptr2[j];
       end2 = j<ncols2-1 ? col_ptr2[j+1] : nnz2-1;
 
-      //if(ptr1 == -1 || ptr2 == -1 || end1 < ptr1 || end2 < ptr2)
-      //  continue;
+      cout << "i: " << i << " j: " << j << " 1: " << row_ptr1[i] << " 2: " << col_ptr2[j] << endl;
+      cout << "List 1 params: " << ptr1 << " " << end1 << "\n"; 
+      cout << "List 2 params: " << ptr2 << " " << end2 << "\n"; 
 
-      SB_DMA_READ(&matrix1[ptr1], 8*2, 8*2, end1-ptr1+1, P_merge2way_A);
+      // SB_DMA_READ(&matrix1[ptr1], 8*2, 8*2, end1-ptr1+1, P_merge2way_A);
+      SB_DMA_READ(&matrix1[ptr1], 8*2, 8*2, end1-ptr1, P_merge2way_A);
       SB_DMA_READ(&matrix2[ptr2], 8*2, 8*2, end2-ptr2+1, P_merge2way_B);
-      // SB_CONST(P_merge2way_A, 100, 2);
-      // SB_CONST(P_merge2way_B, 100, 2);
-      SB_CONST(P_merge2way_A, SENTINAL, 2);
-      SB_CONST(P_merge2way_B, SENTINAL, 2);
+      // SB_DMA_READ(&matrix2[ptr2], 8*2, 8*2, end2-ptr2, P_merge2way_B);
+      SB_2D_CONST(P_merge2way_A, SENTINAL, 1, 0, 1, 1);
+      SB_2D_CONST(P_merge2way_B, SENTINAL, 1, 0, 1, 1);
 
       SB_CONST(P_merge2way_I, j, 1);
 
-      //if(val3[last]==0){
-      //    --last;
-      //}
-      //else{
-      //    //cout << "i: " << i << " j: " << j << endl;
-      //    //col_ind3[last]=j; //matrix3 without pair?
-      //    if(row_ptr3[i]==-1)
-      //        row_ptr3[i] = last;
-      //}
     }
 
+    // int nz_count = i;
     int nz_count;
+    // I need option in accum to do +1(input is constant) and not discard.
     SB_RECV(P_merge2way_nz_count,nz_count);
+    // wait on this output?: continue when 'only' this output is available
     SB_RESET();
     SB_WAIT_ALL(); 
+    cout << "COMPLETED COMPUTATION OF I: " << i << " with nz_count= " << nz_count << endl;
     last+=nz_count;
     row_ptr3[i]=last;
   }
