@@ -1,0 +1,40 @@
+Input: A
+Input: dr
+Input: C
+Input: vr
+Input: const
+Input: c1vr
+Input: c2vr
+
+B = ICmpEQ(dr,0)
+D = ICmpEQ(vr,0)
+
+C1 = A
+C2 = And(Not(A),B)
+temp = Not(Or(A,B))
+C3 = And(temp,And(C,D))
+C4 = And(temp,And(C,Not(D)))
+C5 = And(temp,Not(C))
+
+S00 = And(C3,C5)
+S01 = And(C1,C5)
+
+O0 = const
+O1 = dr
+O2 = Mul64(dr,vr)
+O3 = Div16x4(O2,c1vr)
+
+temp1 = Select(S00, O0, O1)
+temp2 = Select(S00, O2, O3)
+c0dr = Select(S01, temp1, temp2)
+
+S10 = And(C4,C5)
+
+O31 = Div16x4(O2,c2vr)
+
+temp3 = Select(S10, O0, O1)
+temp4 = Select(S11, O2, O31)
+c1dr = Select(S11, temp3, temp4)
+
+Output: c0dr
+Output: c1dr
