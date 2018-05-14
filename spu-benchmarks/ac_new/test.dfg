@@ -10,7 +10,6 @@ B = ICmpEQ(dr,0)
 D = ICmpEQ(vr,0)
 
 C1 = A
-C2 = And(Not(A),B)
 temp = Not(Or(A,B))
 C3 = And(temp,And(C,D))
 C4 = And(temp,And(C,Not(D)))
@@ -29,6 +28,7 @@ temp2 = Select(S00, O2, O3)
 c0dr = Select(S01, temp1, temp2)
 
 S10 = And(C4,C5)
+S11 = And(C1,And(C4,C5))
 
 O31 = Div16x4(O2,c2vr)
 

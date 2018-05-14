@@ -2,12 +2,11 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <time.h>
+#include "test.dfg.h"
+#include "../../common/include/sb_insts.h"
+#include "../../common/include/sim_timing.h"
+#include <inttypes.h>
 
-/* Reads an .ac file by argument and calculates the circuit output and 
- * partial derivatives for every node.
- * The circuit is stored in an adjacency list.
- * Each non-leaf node storess its children in a separate array.
- */
 
 /* Node Structure
    Children and flag only apply to non-leaf nodes*/
@@ -49,8 +48,8 @@ void backpropogation(struct node**circuit, int index){
   SB_INDIRECT1(P_IND_1, &circuit[0]->vr, index+1, P_test_c1vr);
   SB_INDIRECT1(P_IND_2, &circuit[0]->vr, index+1, P_test_c2vr);
 
-  SB_INDIRECT_WR(P_IND_1, &circuit[0]->dr, index+1, P_test_c0dr));
-  SB_INDIRECT_WR(P_IND_2, &circuit[1]->dr, index+1, P_test_c1dr));
+  SB_INDIRECT_WR(P_IND_1, &circuit[0]->dr, index+1, P_test_c0dr);
+  SB_INDIRECT_WR(P_IND_2, &circuit[1]->dr, index+1, P_test_c1dr);
 
   SB_WAIT_ALL();
   sb_stats();
