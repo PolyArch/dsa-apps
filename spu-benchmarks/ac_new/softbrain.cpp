@@ -44,9 +44,9 @@ void backpropogation(struct node**circuit, int index){
   SB_DMA_READ(&circuit[0]->child[0],8,8*sizeof(struct node*),index+1,P_IND_1);
   SB_DMA_READ(&circuit[0]->child[1],8,8*sizeof(struct node*),index+1,P_IND_2);
   SB_CONST(P_test_const,0,index+1);
-  SB_INDIRECT_CONFIG(T64,T64,1);
-  SB_INDIRECT1(P_IND_1, &circuit[0]->vr, index+1, P_test_c1vr);
-  SB_INDIRECT1(P_IND_2, &circuit[0]->vr, index+1, P_test_c2vr);
+  SB_CONFIG_INDIRECT(T64,T64,1);
+  SB_INDIRECT(P_IND_1, &circuit[0]->vr, index+1, P_test_c1vr);
+  SB_INDIRECT(P_IND_2, &circuit[0]->vr, index+1, P_test_c2vr);
 
   SB_INDIRECT_WR(P_IND_1, &circuit[0]->dr, index+1, P_test_c0dr);
   SB_INDIRECT_WR(P_IND_2, &circuit[1]->dr, index+1, P_test_c1dr);

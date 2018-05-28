@@ -11,7 +11,7 @@ all: $(TESTS)
 #CPP=riscv32-unknown-elf-g++
 CPP=riscv64-unknown-elf-g++
 
-DFGS=test.dfg
+DFGS=test_new.dfg
 
 DFG_HEADERS=$(DFGS:.dfg=.h)
 
@@ -19,7 +19,7 @@ DFG_HEADERS=$(DFGS:.dfg=.h)
 #${info $(DFG_HEADERS)}
 
 $(DFG_HEADERS): %.h: %.dfg
-	$(SS_TOOLS)/bin/sb_sched $(SBCONFIG) $< 
+	$(SS_TOOLS)/bin/sb_sched --verbose $(SBCONFIG) $< 
 
 OPT?=-O3
 CFLAGS=$(OPT) -g -ggdb -gdwarf-3 

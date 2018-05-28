@@ -1,0 +1,8 @@
+Input: A
+Input: const
+
+node_id = A
+offset = ICmpNE(A, const)
+
+Output: node_id
+Output: offset

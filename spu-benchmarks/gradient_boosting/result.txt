@@ -1,0 +1,2084 @@
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled May 25 2018 21:13:35
+gem5 started May 26 2018 22:14:08
+gem5 executing on octa, pid 24561
+command line: ../../../gem5/build/RISCV/gem5.opt /home/vidushi/Documents/ss-stack/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=64kB --l1i_size=16kB --l2_size=1024kB --caches --cmd=softbrain
+
+Global frequency set at 1000000000000 ticks per second
+FIFO_LEN:15
+Loading SB Config (env SBCONFIG): "/home/vidushi/Documents/ss-stack/ss-tools/configs/spu_merge_test.sbmodel"
+**** REAL SIMULATION ****
+Start reading file!
+Done reading file!
+Starting process for a node
+OPV_O lat:5
+OPV_O lat:5
+OPV_O lat:6
+OPV_O lat:6
+Final value of inst: :Copy is: 0
+ with input: 0 = 0
+Final value of inst: :Add64 Imm:64 is: 64
+ with input: 0 = 64
+Final value of inst: :Copy is: 0
+ with input: 0 = 0
+scr_addr: 0 and loc is: 0
+scr_addr: 512 and loc is: 64
+Final value of inst: :Copy is: 6
+ with input: 6 = 6
+Final value of inst: :Add64 Imm:64 is: 70
+ with input: 6 = 70
+Final value of inst: :Copy is: 0
+ with input: 0 = 0
+scr_addr: 48 and loc is: 6
+scr_addr: 560 and loc is: 70
+Final value of inst: :Copy is: 1
+ with input: 1 = 1
+Final value of inst: :Add64 Imm:64 is: 65
+ with input: 1 = 65
+Final value of inst: :Copy is: 0
+ with input: 0 = 0
+scr_addr: 8 and loc is: 1
+scr_addr: 520 and loc is: 65
+Final value of inst: :Copy is: 0
+ with input: 0 = 0
+Final value of inst: :Add64 Imm:64 is: 64
+ with input: 0 = 64
+Final value of inst: :Copy is: 0
+ with input: 0 = 0
+scr_addr: 0 and loc is: 0
+scr_addr: 512 and loc is: 64
+Final value of inst: :Copy is: 30
+ with input: 30 = 30
+Final value of inst: :Add64 Imm:64 is: 94
+ with input: 30 = 94
+Final value of inst: :Copy is: 0
+ with input: 0 = 0
+scr_addr: 240 and loc is: 30
+scr_addr: 752 and loc is: 94
+OPV_O lat:10
+OPV_O lat:29
+OPV_O lat:29
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 0
+ with input: 0 = 0
+Final value of inst: :Acc64 is: 2
+ with input: 2 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 2
+ with input: 0 = 2
+Final value of inst: :Acc64 is: 4
+ with input: 2 = 4
+Final value of inst: :Acc64 is: 6
+ with input: 2 = 6
+Final value of inst: :Acc64 is: 7
+ with input: 1 = 7
+Final value of inst: :Acc64 is: 7
+ with input: 0 = 7
+Final value of inst: :Acc64 is: 7
+ with input: 0 = 7
+Final value of inst: :Acc64 is: 7
+ with input: 0 = 7
+Final value of inst: :Acc64 is: 7
+ with input: 0 = 7
+Final value of inst: :Acc64 is: 8
+ with input: 1 = 8
+Final value of inst: :Acc64 is: 8
+ with input: 0 = 8
+Final value of inst: :Acc64 is: 8
+ with input: 0 = 8
+Final value of inst: :Mul64 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 262144
+ with input: 512 = 262144
+Final value of inst: :Div64 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 505
+ with input: 512 = 505
+Final value of inst: :Mul64 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 262144
+ with input: 512 = 262144
+Final value of inst: :Div64 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 505
+ with input: 512 = 505
+Final value of inst: :Mul64 is: 0
+ with input: 0 = 0
+Final value of inst: :Div64 is: 519
+ with input: 262144 = 519
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 262144
+ with input: 512 = 262144
+Final value of inst: :Acc64 is: 1
+ with input: 1 = 1
+Final value of inst: :Div64 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 505
+ with input: 512 = 505
+Final value of inst: :Mul64 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Div64 is: 519
+ with input: 262144 = 519
+Final value of inst: :Add64 is: 519
+ with input: 0 = 519
+Final value of inst: :Mul64 is: 262144
+ with input: 512 = 262144
+Final value of inst: :Acc64 is: 2
+ with input: 1 = 2
+Final value of inst: :Div64 is: 0
+ with input: 0 = 0
+Final value of inst: :Mul64 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Sub64 is: 505
+ with input: 512 = 505
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 1 = 0
+Final value of inst: :Div64 is: 519
+ with input: 262144 = 519
+Final value of inst: :Mul64 is: 262144
+ with input: 512 = 262144
+Final value of inst: :Add64 is: 519
+ with input: 0 = 519
+Final value of inst: :ICmpG is: 1
+ with input: 519 = 1
+Final value of inst: :Div64 is: 0
+ with input: 0 = 0
+Final value of inst: :Mul64 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Sub64 is: 505
+ with input: 512 = 505
+Final value of inst: :Acc64 is: 3
+ with input: 1 = 3
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 2 = 0
+Final value of inst: :Mul64 is: 262144
+ with input: 512 = 262144
+Final value of inst: :Div64 is: 519
+ with input: 262144 = 519
+Final value of inst: :Add64 is: 519
+ with input: 0 = 519
+Final value of inst: :ICmpG is: 0
+ with input: 519 = 0
+Final value of inst: :LShf64 Imm:1 is: 2
+ with input: 1 = 2
+Final value of inst: :Div64 is: 0
+ with input: 0 = 0
+Final value of inst: :Mul64 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Sub64 is: 504
+ with input: 512 = 504
+Final value of inst: :Acc64 is: 4
+ with input: 1 = 4
+Final value of inst: :Mul64 is: 262144
+ with input: 512 = 262144
+Final value of inst: :Div64 is: 519
+ with input: 262144 = 519
+Final value of inst: :Add64 is: 519
+ with input: 0 = 519
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Or is: 2
+ with input: 2 = 2
+Final value of inst: :Div64 is: 0
+ with input: 0 = 0
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Sub64 is: 504
+ with input: 512 = 504
+Final value of inst: :Mul64 is: 262144
+ with input: 512 = 262144
+Final value of inst: :Div64 is: 520
+ with input: 262144 = 520
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Hold is: 1
+ with input: 1 = 1 and discard!
+Final value of inst: :Hold is: 519
+ with input: 519 = 519 and discard!
+Final value of inst: :Div64 is: 0
+ with input: 0 = 0
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Sub64 is: 504
+ with input: 512 = 504
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 520
+ with input: 262144 = 520
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 4 = 0
+Final value of inst: :Acc64 is: 5
+ with input: 1 = 5
+Final value of inst: :ICmpG is: 0
+ with input: 519 = 0
+Final value of inst: :Add64 is: 519
+ with input: 0 = 519
+Final value of inst: :Hold is: 1
+ with input: 2 = 1 and discard!
+Final value of inst: :Hold is: 519
+ with input: 519 = 519 and discard!
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 520
+ with input: 262144 = 520
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 5 = 0
+Final value of inst: :Acc64 is: 6
+ with input: 1 = 6
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 519 = 0
+Final value of inst: :Add64 is: 520
+ with input: 0 = 520
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Hold is: 1
+ with input: 4 = 1 and discard!
+Final value of inst: :Hold is: 519
+ with input: 519 = 519 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 6 = 0
+Final value of inst: :Acc64 is: 7
+ with input: 1 = 7
+Final value of inst: :Hold is: 1
+ with input: 5 = 1 and discard!
+Final value of inst: :Hold is: 519
+ with input: 519 = 519 and discard!
+Final value of inst: :ICmpG is: 1
+ with input: 520 = 1
+Final value of inst: :Add64 is: 520
+ with input: 0 = 520
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 7 = 0
+Final value of inst: :Acc64 is: 8
+ with input: 1 = 8
+Final value of inst: :LShf64 Imm:1 is: 2
+ with input: 1 = 2
+Final value of inst: :ICmpG is: 0
+ with input: 520 = 0
+Final value of inst: :Add64 is: 520
+ with input: 0 = 520
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 2
+ with input: 2 = 2
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 6 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 520 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 8 = 0
+Final value of inst: :Acc64 is: 9
+ with input: 1 = 9
+Final value of inst: :Hold is: 6
+ with input: 7 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 520 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 520 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 9 = 0
+Final value of inst: :Acc64 is: 10
+ with input: 1 = 10
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 8 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 520 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 10 = 0
+Final value of inst: :Acc64 is: 11
+ with input: 1 = 11
+Final value of inst: :Hold is: 6
+ with input: 9 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 11 = 0
+Final value of inst: :Acc64 is: 12
+ with input: 1 = 12
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 10 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 12 = 0
+Final value of inst: :Acc64 is: 13
+ with input: 1 = 13
+Final value of inst: :Hold is: 6
+ with input: 11 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 13 = 0
+Final value of inst: :Acc64 is: 14
+ with input: 1 = 14
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 12 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 14 = 0
+Final value of inst: :Acc64 is: 15
+ with input: 1 = 15
+Final value of inst: :Hold is: 6
+ with input: 13 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 15 = 0
+Final value of inst: :Acc64 is: 16
+ with input: 1 = 16
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 14 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 16 = 0
+Final value of inst: :Acc64 is: 17
+ with input: 1 = 17
+Final value of inst: :Hold is: 6
+ with input: 15 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 17 = 0
+Final value of inst: :Acc64 is: 18
+ with input: 1 = 18
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 16 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 18 = 0
+Final value of inst: :Acc64 is: 19
+ with input: 1 = 19
+Final value of inst: :Hold is: 6
+ with input: 17 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 19 = 0
+Final value of inst: :Acc64 is: 20
+ with input: 1 = 20
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 18 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 20 = 0
+Final value of inst: :Acc64 is: 21
+ with input: 1 = 21
+Final value of inst: :Hold is: 6
+ with input: 19 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 21 = 0
+Final value of inst: :Acc64 is: 22
+ with input: 1 = 22
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 20 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 22 = 0
+Final value of inst: :Acc64 is: 23
+ with input: 1 = 23
+Final value of inst: :Hold is: 6
+ with input: 21 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 23 = 0
+Final value of inst: :Acc64 is: 24
+ with input: 1 = 24
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 22 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 24 = 0
+Final value of inst: :Acc64 is: 25
+ with input: 1 = 25
+Final value of inst: :Hold is: 6
+ with input: 23 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 25 = 0
+Final value of inst: :Acc64 is: 26
+ with input: 1 = 26
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 511
+ with input: 512 = 511
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 24 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 26 = 0
+Final value of inst: :Acc64 is: 27
+ with input: 1 = 27
+Final value of inst: :Hold is: 6
+ with input: 25 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 509
+ with input: 260100 = 509
+Final value of inst: :Div64 is: 4
+ with input: 4 = 4
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 27 = 0
+Final value of inst: :Acc64 is: 28
+ with input: 1 = 28
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 26 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 28 = 0
+Final value of inst: :Acc64 is: 29
+ with input: 1 = 29
+Final value of inst: :Hold is: 6
+ with input: 27 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 29 = 0
+Final value of inst: :Acc64 is: 30
+ with input: 1 = 30
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 513
+ with input: 4 = 513
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 28 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 30 = 0
+Final value of inst: :Acc64 is: 31
+ with input: 1 = 31
+Final value of inst: :Hold is: 6
+ with input: 29 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 513 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 31 = 0
+Final value of inst: :Acc64 is: 32
+ with input: 1 = 32
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 30 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 513 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 32 = 0
+Final value of inst: :Acc64 is: 33
+ with input: 1 = 33
+Final value of inst: :Hold is: 6
+ with input: 31 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 33 = 0
+Final value of inst: :Acc64 is: 34
+ with input: 1 = 34
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 32 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 34 = 0
+Final value of inst: :Acc64 is: 35
+ with input: 1 = 35
+Final value of inst: :Hold is: 6
+ with input: 33 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 35 = 0
+Final value of inst: :Acc64 is: 36
+ with input: 1 = 36
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 34 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 36 = 0
+Final value of inst: :Acc64 is: 37
+ with input: 1 = 37
+Final value of inst: :Hold is: 6
+ with input: 35 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 37 = 0
+Final value of inst: :Acc64 is: 38
+ with input: 1 = 38
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 36 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 38 = 0
+Final value of inst: :Acc64 is: 39
+ with input: 1 = 39
+Final value of inst: :Hold is: 6
+ with input: 37 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 39 = 0
+Final value of inst: :Acc64 is: 40
+ with input: 1 = 40
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 38 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 40 = 0
+Final value of inst: :Acc64 is: 41
+ with input: 1 = 41
+Final value of inst: :Hold is: 6
+ with input: 39 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 41 = 0
+Final value of inst: :Acc64 is: 42
+ with input: 1 = 42
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 40 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 42 = 0
+Final value of inst: :Acc64 is: 43
+ with input: 1 = 43
+Final value of inst: :Hold is: 6
+ with input: 41 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 43 = 0
+Final value of inst: :Acc64 is: 44
+ with input: 1 = 44
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 42 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 44 = 0
+Final value of inst: :Acc64 is: 45
+ with input: 1 = 45
+Final value of inst: :Hold is: 6
+ with input: 43 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 45 = 0
+Final value of inst: :Acc64 is: 46
+ with input: 1 = 46
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 44 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 46 = 0
+Final value of inst: :Acc64 is: 47
+ with input: 1 = 47
+Final value of inst: :Hold is: 6
+ with input: 45 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 47 = 0
+Final value of inst: :Acc64 is: 48
+ with input: 1 = 48
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 46 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 48 = 0
+Final value of inst: :Acc64 is: 49
+ with input: 1 = 49
+Final value of inst: :Hold is: 6
+ with input: 47 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 49 = 0
+Final value of inst: :Acc64 is: 50
+ with input: 1 = 50
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 48 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 50 = 0
+Final value of inst: :Acc64 is: 51
+ with input: 1 = 51
+Final value of inst: :Hold is: 6
+ with input: 49 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 51 = 0
+Final value of inst: :Acc64 is: 52
+ with input: 1 = 52
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 50 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 52 = 0
+Final value of inst: :Acc64 is: 53
+ with input: 1 = 53
+Final value of inst: :Hold is: 6
+ with input: 51 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 510
+ with input: 512 = 510
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 53 = 0
+Final value of inst: :Acc64 is: 54
+ with input: 1 = 54
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 508
+ with input: 512 = 508
+Final value of inst: :Mul64 is: 4
+ with input: 2 = 4
+Final value of inst: :Mul64 is: 260100
+ with input: 510 = 260100
+Final value of inst: :Hold is: 6
+ with input: 52 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 54 = 0
+Final value of inst: :Acc64 is: 55
+ with input: 1 = 55
+Final value of inst: :Hold is: 6
+ with input: 53 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 55 = 0
+Final value of inst: :Acc64 is: 56
+ with input: 1 = 56
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Mul64 is: 16
+ with input: 4 = 16
+Final value of inst: :Mul64 is: 258064
+ with input: 508 = 258064
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Hold is: 6
+ with input: 54 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 56 = 0
+Final value of inst: :Acc64 is: 57
+ with input: 1 = 57
+Final value of inst: :Hold is: 6
+ with input: 55 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 57 = 0
+Final value of inst: :Acc64 is: 58
+ with input: 1 = 58
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Sub64 is: 512
+ with input: 512 = 512
+Final value of inst: :Div64 is: 504
+ with input: 258064 = 504
+Final value of inst: :Div64 is: 0
+ with input: 16 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Hold is: 6
+ with input: 56 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 58 = 0
+Final value of inst: :Acc64 is: 59
+ with input: 1 = 59
+Final value of inst: :Hold is: 6
+ with input: 57 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Div64 is: 508
+ with input: 260100 = 508
+Final value of inst: :Div64 is: 0
+ with input: 4 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 59 = 0
+Final value of inst: :Acc64 is: 60
+ with input: 1 = 60
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Hold is: 6
+ with input: 58 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 60 = 0
+Final value of inst: :Acc64 is: 61
+ with input: 1 = 61
+Final value of inst: :Hold is: 6
+ with input: 59 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 504
+ with input: 0 = 504
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 61 = 0
+Final value of inst: :Acc64 is: 62
+ with input: 1 = 62
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 504 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Hold is: 6
+ with input: 60 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 62 = 0
+Final value of inst: :Acc64 is: 63
+ with input: 1 = 63
+Final value of inst: :Hold is: 6
+ with input: 61 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 504 = 520 and discard!
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Add64 is: 508
+ with input: 0 = 508
+Final value of inst: :ICmpEQ Imm:63 is: 1
+ with input: 63 = 1
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :ICmpG is: 0
+ with input: 508 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Hold is: 6
+ with input: 62 = 6 and discard!
+Final value of inst: :Hold is: 520
+ with input: 508 = 520 and discard!
+Final value of inst: :Or is: 1
+ with input: 0 = 1
+Final value of inst: :ICmpEQ Imm:63 is: 0
+ with input: 3 = 0
+Final value of inst: :Hold is: 6
+ with input: 63 = 6
+Final value of inst: :Hold is: 520
+ with input: 508 = 520
+Final value of inst: :ICmpG is: 0
+ with input: 519 = 0
+Final value of inst: :LShf64 Imm:1 is: 0
+ with input: 0 = 0
+Final value of inst: :Or is: 0
+ with input: 0 = 0
+Final value of inst: :Hold is: 0
+ with input: 3 = 0 and discard!
+Final value of inst: :Hold is: 0
+Phase 1  and 2 done
+ with input: 519 = 0 and discard!
+Exiting @ tick 707905500 because exiting with last active thread context

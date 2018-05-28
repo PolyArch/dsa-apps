@@ -1,0 +1,10 @@
+Input: A[2]
+Input: const
+
+C0 = Add64(A0,0)
+C1 = Add64(A0,64)
+D0 = Add64(A1,0)
+D1 = Add64(const,0)
+
+Output: C[2]
+Output: D[2]

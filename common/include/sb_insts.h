@@ -1,7 +1,7 @@
 #ifndef SB_INSTS_H
 #define SB_INSTS_H
 
-// Magic sentinal for matchhing
+// Magic sentinal for matching
 #define SENTINAL (((uint64_t)1)<<63)
 
 // For bottom two bits:
@@ -91,12 +91,12 @@
 #define SB_DMA_READ_SIMP(mem_addr, num_strides, port ) \
   __asm__ __volatile__("sb_dma_rd    %0, %1, %2" : : "r"(mem_addr), "r"(num_strides), "i"(port)); 
 
-//Throw away some outputs.  We will add a proper instruction for this at some point, rather then writing to memory
+//Throw away some outputs.  We will add a proper instruction for this at some point, rather than writing to memory
 #define SB_GARBAGE(output_port, num_elem) \
   __asm__ __volatile__("sb_stride   %0, %1, 0" : : "r"(8), "r"(8)); \
   __asm__ __volatile__("sb_wr_dma   %0, %1, %2"   : : "r"(0), "r"(num_elem), "i"(output_port|0x100)); 
 
-//Throw away some outputs.  We will add a proper instruction for this at some point, rather then writing to memory
+//Throw away some outputs.  We will add a proper instruction for this at some point, rather than writing to memory
 #define SB_GARBAGE_SIMP(output_port, num_elem) \
   __asm__ __volatile__("sb_wr_dma   %0, %1, %2"   : : "r"(0), "r"(num_elem), "i"(output_port|0x100)); 
 
@@ -141,9 +141,14 @@
 #define SB_SCR_WRITE(output_port, num_bytes, scr_addr) \
   __asm__ __volatile__("sb_wr_scr   %0, %1, %2"   : : "r"(scr_addr), "r"(num_bytes), "i"(output_port)); 
 
-// Do atomic stream update in scratchpad (NEW INSTRUCTION)
+// Do atomic stream update in scratchpad
 #define SB_ATOMIC_SCR_OP(addr_port, val_port, offset, iters, opcode) \
   __asm__ __volatile__("sb_atom_op %0, %1, %2" : : "r"(offset), "r"(iters), "i"((addr_port<<7) | (val_port<<2) | opcode));
+
+// Send a constant value, repeated num_elements times to scratchpad
+#define SB_CONST_SCR(scr_addr, val, num_elements) \
+  __asm__ __volatile__("sb_set_iter %0 " : : "r"(num_elements)); \
+  __asm__ __volatile__("sb_const_scr %0, %1" : : "r"(scr_addr), "r"(val));
 
 
 // Unused Instructions
@@ -151,7 +156,7 @@
 //  __asm__ __volatile__("sb_dma_addr_p %0, %1, " #output_port : : "r"(mem_addr), "r"(stride_size)); 
 //  __asm__ __volatile__("sb_dma_wr   %0, " : : "r"(num_strides)); 
 
-//Send a constant value, repetated num_elements times to a port
+//Send a constant value, repeated num_elements times to a port
 #define SB_CONST(port, val, num_elements) \
   __asm__ __volatile__("sb_const %0, %1, %2 " : : "r"(val), "r"(num_elements), "i"(port)); 
 
