@@ -145,6 +145,7 @@
 #define SB_ATOMIC_SCR_OP(addr_port, val_port, offset, iters, opcode) \
   __asm__ __volatile__("sb_atom_op %0, %1, %2" : : "r"(offset), "r"(iters), "i"((addr_port<<7) | (val_port<<2) | opcode));
 
+
 // Send a constant value, repeated num_elements times to scratchpad
 #define SB_CONST_SCR(scr_addr, val, num_elements) \
   __asm__ __volatile__("sb_set_iter %0 " : : "r"(num_elements)); \
@@ -204,10 +205,15 @@
 #define T16 2
 #define T08 3
 
+// currently output and data should be of same type
+#define SB_CONFIG_ATOMIC_SCR_OP(addr_type, val_type, output_type) \
+  __asm__ __volatile__("sb_cfg_atom_op t0, t0, %0" : : "i"( ((val_type<<4)&0x1ADB0 | (output_type<<2)&0x44C | (addr_type)&0x3)));
+  
 //configure the type of indirection -- here multiplier has to be less than 2^7
 //Currently DTYPE MUST be 64 bits
 #define SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,offset_list)  \
   __asm__ __volatile__("sb_cfg_ind %0, t0, %1" : : "r"(offset_list), "i"( (itype<<10)  |  ((dtype<<8)&0x3)  |  mult));
+
 #define  SB_CONFIG_INDIRECT(itype,dtype,mult)             SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,0) 
 #define SB_CONFIG_INDIRECT1(itype,dtype,mult,o1)          SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,o1) 
 #define SB_CONFIG_INDIRECT2(itype,dtype,mult,o1,o2)       SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,o1 | o2 << 8) 
