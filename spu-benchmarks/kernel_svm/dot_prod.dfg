@@ -1,0 +1,10 @@
+Input: A
+Input: B
+Input: C
+Input: D
+
+P = Index_match(A,B)
+E = BackMul64(C,D,P)
+R = Acc64(E,P)
+
+Output: R

@@ -10,7 +10,7 @@ all: $(TESTS)
 
 CPP=riscv64-unknown-elf-g++
 
-DFGS=none.dfg test.dfg map.dfg
+DFGS=none.dfg test.dfg final_redn.dfg map.dfg
 
 DFG_HEADERS=$(DFGS:.dfg=.h)
 

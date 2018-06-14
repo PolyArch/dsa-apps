@@ -19,7 +19,7 @@ cur_entr = Add64(t12,t22)
 ctrl1 = ICmpG(cur_entr)
 
 cur_thres = Acc64(const1,const2)
-done = ICmpEQ(cur_thres,16)
+done = ICmpEQ(cur_thres,63)
 
 ctrl = Or(LShf64(ctrl1,1),done)
 
