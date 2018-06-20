@@ -17,11 +17,24 @@ endif
 CC = g++
 RCC= riscv64-unknown-elf-g++
 CFLAGS = -std=c++0x -O3
+LFLAGS = -lm
 #CFLAGS = -std=c++0x
 MACROS = -DN=$(N) -DM=$(M) -DS0=$(S0) -DS1=$(S1)
 
-main.exe: main.cc
-	$(CC) $(CFLAGS) $(MACROS) $< -o $@
+ifdef DEBUG
+MACROS += -DDEBUG
+endif
+
+input.data output.data: gen.py
+	python $< $(N) $(M) $(S0) $(S1)
+
+main.exe: main.cc input.data output.data
+	$(CC) $(CFLAGS) $(MACROS) $< -o $@ $(LFLAGS)
+
+cleandata:
+	rm -f input.data output.data
 
 clean:
-	rm main.exe
+	rm -f main.exe
+
+ultraclean: cleandata clean
