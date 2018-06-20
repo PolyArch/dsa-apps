@@ -1,0 +1,24 @@
+Input: nodeType
+Input: dr
+Input: flag
+Input: vr
+Input: c1vr
+Input: c2vr
+
+C = And(ICmpEQ(vr,0),flag)
+
+CM = Mul64(dr,vr)
+phi_ip1 = Keep(CM,1,pred=And(Not(C),nodeType))
+
+Idiv1 = And(C,nodeType)
+phi_ip2 = Div64(CM,c1vr,pred=Idiv1)
+
+phi_ip3 = Keep(dr,1,pred=Not(nodeType))
+
+c0dr = Phi(phi_ip1,phi_ip2,phi_ip3)
+
+D2 = Div64(CM,c2vr,pred=ICmpNE(c2vr))
+c1dr = Select(dr,D2,nodeType)
+
+Output: c0dr
+Output: c1dr
