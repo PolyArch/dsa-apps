@@ -27,11 +27,10 @@ void dump(int n, const Sparse *a) {
 #ifdef __x86_64__
 
 void spmv(int n_a, const Sparse *a, int n_b, const Sparse *b, uint16_t *c) {
-  dump(n_a, a);
   //printf("%d %d\n", (int)a[0].delta, (int)a[0].val);
   for (int i = 0, ja = 0; i < N; ++i) {
     int jb, idx_a, idx_b;
-    for (jb = 0, idx_a = a[ja].delta, idx_b = a[jb].delta;
+    for (jb = 0, idx_a = a[ja].delta, idx_b = b[jb].delta;
           a[ja].delta != INT16MAX && b[jb].delta != INT16MAX; ) {
       if (idx_a < idx_b) {
         idx_a += a[++ja].delta;
@@ -104,7 +103,7 @@ int main() {
   }
 #undef total
   
-  dump(total_a, a);
+  //dump(total_a, a);
   spmv(total_a, a, total_b, b, c);
   begin_roi();
   spmv(total_a, a, total_b, b, c);
