@@ -16,8 +16,12 @@ endif
 
 CC = g++
 RCC= riscv64-unknown-elf-g++
-CFLAGS = -std=c++0x -O2 -Wall
+CFLAGS = -std=c++0x -O3
+#CFLAGS = -std=c++0x
 MACROS = -DN=$(N) -DM=$(M) -DS0=$(S0) -DS1=$(S1)
 
 main.exe: main.cc
 	$(CC) $(CFLAGS) $(MACROS) $< -o $@
+
+clean:
+	rm main.exe
