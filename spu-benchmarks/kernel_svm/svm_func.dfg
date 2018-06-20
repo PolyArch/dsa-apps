@@ -1,0 +1,10 @@
+Input: alpha
+Input: y
+Input: gram_mat
+Input: const
+
+prod = Mul64(gram_mat, Mul64(alpha,y))
+
+output = Acc64(prod, const)
+
+Output: output

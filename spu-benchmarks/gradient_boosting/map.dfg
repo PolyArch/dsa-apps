@@ -1,8 +1,10 @@
-Input: A
-Input: const
+Input: feat_val
+Input: split_thres
+Input: child1_offset
+Input: child2_offset
 
-node_id = A
-offset = ICmpNE(A, const)
+cond = ICmp(feat_val, split_thres)
 
-Output: node_id
+offset = Select(child1_offset, child2_offset, cond)
+
 Output: offset

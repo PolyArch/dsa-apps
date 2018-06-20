@@ -1,0 +1,23 @@
+Input: nval
+Input: nind
+Input: sval
+Input: sind
+Input: Kx
+Input: Nx
+Input: init_addr
+
+p1 = Div16x4(sind,Kx)
+p2 = Mul16x4(Mod16x4(sind,Kx),Nx)
+s1 = Add16x4(p1,p2)
+
+s = Sub16x4(s1,nind)
+
+rec = Add16x4(s,init_addr)
+
+C = rec
+
+D = Mul16x4(nval,sval)
+
+Output: C
+Output: D
+Output: rec
