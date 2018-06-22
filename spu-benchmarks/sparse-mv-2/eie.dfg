@@ -4,15 +4,15 @@ Input: R2
 Input: R3
 Input: V
 
-prdct0 = MatchIndex2(R0, V)
-prdct1 = MatchIndex2(R1, V)
-prdct2 = MatchIndex2(R2, V)
-prdct3 = MatchIndex2(R3, V)
+match0 = MatchIndex2(R0, V)
+match1 = MatchIndex2(R1, V)
+match2 = MatchIndex2(R2, V)
+match3 = MatchIndex2(R3, V)
 
-mac0 = MacRed16x2(R0, V, prdct0)
-mac1 = MacRed16x2(R1, V, prdct1)
-mac2 = MacRed16x2(R2, V, prdct2)
-mac3 = MacRed16x2(R3, V, prdct3)
+mac0 = MacRed16x2(match0)
+mac1 = MacRed16x2(match1)
+mac2 = MacRed16x2(match2)
+mac3 = MacRed16x2(match3)
 
 left32  = Concatenate16To32(mac0, mac1)
 right32 = Concatenate16To32(mac2, mac3)
