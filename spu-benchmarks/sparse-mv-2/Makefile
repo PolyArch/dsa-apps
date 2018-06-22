@@ -1,17 +1,21 @@
 ifndef N
-N=4096
+N=16
 endif
 
 ifndef M
-M=1024
+M=16
 endif
 
 ifndef S0
-S0=0.1
+S0=0.64
 endif
 
 ifndef S1
-S1=1
+S1=0.66
+endif
+
+ifndef SBCONFIG
+SBCONFIG=$(SS_TOOLS)/configs/spu_merge_test.sbmodel
 endif
 
 CC = g++
@@ -25,16 +29,31 @@ ifdef DEBUG
 MACROS += -DDEBUG
 endif
 
+DFG = eie.dfg
+DFG_HEADERS = $(DFG:.dfg=.dfg.h)
+
+$(DFG_HEADERS): %.dfg.h: %.dfg
+	$(SS_TOOLS)/bin/sb_sched --max-iters=100000 --verbose $(SBCONFIG) $< 
+
 input.data output.data: gen.py
 	python $< $(N) $(M) $(S0) $(S1)
 
 main.exe: main.cc input.data output.data
 	$(CC) $(CFLAGS) $(MACROS) $< -o $@ $(LFLAGS)
 
+softbrain.exe: main.cc input.data output.data $(DFG_HEADERS)
+	$(RCC) $(CFLAGS) $(MACROS) $< -o $@ $(LFLAGS)
+
 cleandata:
 	rm -f input.data output.data
 
-clean:
-	rm -f main.exe
+cleandfg:
+	rm -f *.dfg.h
 
-ultraclean: cleandata clean
+clean:
+	rm -f *.exe
+
+ultraclean: cleandata clean cleandfg
+	rm -f *.log
+
+

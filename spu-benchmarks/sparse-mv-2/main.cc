@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdlib>
 #include "../../common/include/sim_timing.h"
+#include "../../common/include/sb_insts.h"
 
 #ifndef FxPnt
 #define FxPnt 8
@@ -34,11 +35,20 @@ void dump(int n, const Sparse *a) {
 
 
 #ifdef __x86_64__
+ 
+#ifdef DEBUG
+int profile_wei = 0;
+int profile_act = 0;
+#endif
 
-void spmv(int n_a, const Sparse *a, int n_b, const Sparse *b, int16_t *c) {
+void spmv(int n_a, const Sparse *a, Sparse **a_head, int n_b, const Sparse *b, int16_t *c) {
   //printf("%d %d\n", (int)a[0].delta, (int)a[0].val);
   for (int i = 0, ja = 1; i < N; ++i) {
-    for (int jb = 1, idx_a = a[ja - 1].delta + a[ja].delta, idx_b = b[0].delta + b[1].delta;
+#ifndef DEBUG
+    ja = (a_head[i] - a) + 1;
+#endif
+    int jb, idx_a, idx_b;
+    for (jb = 1, idx_a = a[ja - 1].delta + a[ja].delta, idx_b = b[0].delta + b[1].delta;
           a[ja].delta != INT16MAX && b[jb].delta != INT16MAX; ) {
       if (idx_a - a[ja].delta == idx_b) {
         c[i] += fx_mul(a[ja - 1].val, b[jb].val);
@@ -66,31 +76,57 @@ void spmv(int n_a, const Sparse *a, int n_b, const Sparse *b, int16_t *c) {
       }
     }
     //printf("%d %d %d %d\n", ja, (int) a[ja].delta, jb, (int) b[jb].delta);
-    while(a[ja].delta != INT16MAX)
-      ja += 2;
 #ifdef DEBUG
+    while(a[ja].delta != INT16MAX) {
+      ja += 2;
+      profile_wei++;
+    }
+    profile_act += (n_b - jb) / 2;
     //printf("row %d done\n", i);
     assert (a[ja - 1].delta == INT16MAX);
     if (i != N - 1) {
       assert(a[ja + 1].delta != INT16MAX);
     }
-#endif
     ja += 2;
+#endif
   }
 }
 
 #else
-// Write softbrain version later
+
+#include "eie.dfg.h"
+#include "../../common/include/sb_insts.h"
+
+void spmv(int n_a, const Sparse *a, Sparse **a_head, int n_b, const Sparse *b, int16_t *c) {
+  SB_CONFIG(eie_config, eie_size);
+  SB_DMA_WRITE(P_eie_O, 0, N * 2, 1, c);
+  SB_DMA_READ(b, 0, 4 * n_b, N / 4, P_eie_V);
+  //SB_DMA_WRITE(P_eie_O, 8, 8, N / 4, c);
+  //printf("%d\n", n_b);
+  for (int i = 0; i < N; i += 4) {
+    //printf("%d %d %d %d %d\n", i, (a_head[i + 1] - a_head[i + 0]), (a_head[i + 2] - a_head[i + 1]),
+        //(a_head[i + 3] - a_head[i + 2]), (a_head[i + 4] - a_head[i + 3]));
+    SB_DMA_READ(a_head[i + 0], 0, 4 * (a_head[i + 1] - a_head[i + 0]), 1, P_eie_R0);
+    SB_DMA_READ(a_head[i + 1], 0, 4 * (a_head[i + 2] - a_head[i + 1]), 1, P_eie_R1);
+    SB_DMA_READ(a_head[i + 2], 0, 4 * (a_head[i + 3] - a_head[i + 2]), 1, P_eie_R2);
+    SB_DMA_READ(a_head[i + 3], 0, 4 * (a_head[i + 4] - a_head[i + 3]), 1, P_eie_R3);
+  }
+  SB_WAIT_ALL();
+}
+
 #endif
 
-Sparse a[(int)(N * M * S0 * 1.5)], b[M + 10];
-int16_t c[N];
+Sparse a[(int)(N * M * S0 * 1.5)];
+Sparse *a_head[N + 10];
+Sparse b[M + 10];
+int16_t c[N * 4];
 int total_a = 0, total_b = 0;
 
-void input_data() {
+void input_data(int &total_a, Sparse *a, Sparse **a_head, int &total_b, Sparse *b) {
   FILE* input = fopen("input.data", "r");
 #define total total_a
   for (int i = 0; i < N; ++i) {
+    a_head[i] = a + total_a;
     int delta;
     float val;
     while (true) {
@@ -106,6 +142,7 @@ void input_data() {
       }
     }
   }
+  a_head[N] = a + total;
 #undef total
 
 #define total total_b
@@ -136,20 +173,23 @@ void check_correctness() {
       //assert(false);
     }
   }
+  printf("Empty runs of Weight: %d\n", profile_wei);
+  printf("Empty runs of Activation: %d\n", profile_act);
 #else
   printf("Non-debug mode, correctness check skipped!\n");
 #endif
 }
 
 int main() {
-  input_data();
+  input_data(total_a, a, a_head, total_b, b);
 
 #ifndef DEBUG
-  spmv(total_a, a, total_b, b, c);
+  spmv(total_a, a, a_head, total_b, b, c);
 #endif
   begin_roi();
-  spmv(total_a, a, total_b, b, c);
+  spmv(total_a, a, a_head, total_b, b, c);
   end_roi();
+  sb_stats();
 
   check_correctness();
 
