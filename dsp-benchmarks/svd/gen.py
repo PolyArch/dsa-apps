@@ -66,8 +66,8 @@ f.append(r[0,0])
 d = numpy.array(d)
 f = numpy.array(f)
 
-print f
-print d
+print(f)
+print(d)
 
 implicit_log = []
 
@@ -132,9 +132,9 @@ def implicit_kernel(d, f, V):
         else:
             pass
             #print "[FIN]", f[i], d[i+1]
-    print f
-    print d
-    print '====================================='
+    print(f)
+    print(d)
+    print('=====================================')
 
 l, r = 0, n - 1
 while l < r:
@@ -176,26 +176,26 @@ numpy.testing.assert_allclose(
 )
 """
 
-print "Total iteration: %d" % sum(i != '=====' for i in implicit_log)
-print '\n'.join(str(i) for i in implicit_log)
+print("Total iteration: %d" % sum(i != '=====' for i in implicit_log))
+print('\n'.join(str(i) for i in implicit_log))
 sv = d
-print d
+print(d)
 sv = numpy.real(numpy.sqrt(sv * numpy.conj(sv)))
 
 try:
     numpy.testing.assert_allclose(numpy.sort(sv)[::-1], ans, atol = 1e-5, rtol = 1e-5)
-    print "Check pass!"
+    print("Check pass!")
 except:
-    print "ERROR: SV not computed correctly"
-    print sv
-    print ans
+    print("ERROR: SV not computed correctly")
+    print(sv)
+    print(ans)
     quit()
 
-print 'Singular value:\n', sv
+print('Singular value:\n', sv)
 
-print V
+print(V)
 U = numpy.dot(_a, numpy.conj(V).transpose())
-ideal += n * n * n / 4
+ideal += n * n * n // 4
 for i in range(n):
     U[:,i] /= sv[i]
 ideal += n + 12 - 1
@@ -222,9 +222,9 @@ try:
         atol = 1e-4, rtol = 1e-4
     )
 except:
-    print 'WARN: Precision loss too much!'
+    print('WARN: Precision loss too much!')
 
-print 'AVG ERROR: %.6f' % (abs(numpy.dot(numpy.dot(U, sigma), V) - _a).sum() / (n * n))
-print 'ASIC Ideal:', ideal
-print 'ASIC Latency:', ideal
+print('AVG ERROR: %.6f' % (abs(numpy.dot(numpy.dot(U, sigma), V) - _a).sum() / (n * n)))
+print('ASIC Ideal:', ideal)
+print('ASIC Latency:', ideal)
 

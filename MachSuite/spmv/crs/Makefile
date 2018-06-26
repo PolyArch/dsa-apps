@@ -23,7 +23,7 @@ SB_CONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 DFGS=mm_lanes.dfg
 DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 
-$(DFG_HEADERS): %.dfg.h: %.h
+$(DFG_HEADERS): %.dfg.h: %.dfg
 	$(SS_TOOLS)/bin/sb_sched $(SB_CONFIG) $<
 
 $(KERN_SB): $(SB_FILES) ../../common/harness.c $(DFG_HEADERS) 

@@ -1,4 +1,4 @@
-InputVec: V [0, 1, 2, 3]
+Input: V [4]
 Input: reset
 
 A = FMul32x2(V0, V0)
@@ -16,7 +16,7 @@ Output: NORM2
 
 ----
 
-InputVec: VEC [0, 1, 2, 3]
+Input: VEC [4]
 Input: norm
 
 O0 = FMul32x2(VEC0, norm)
@@ -24,5 +24,5 @@ O1 = FMul32x2(VEC1, norm)
 O2 = FMul32x2(VEC2, norm)
 O3 = FMul32x2(VEC3, norm)
 
-OutputVec: O [0, 1, 2, 3]
+Output: O [4]
 

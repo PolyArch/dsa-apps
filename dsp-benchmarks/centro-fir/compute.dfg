@@ -1,6 +1,6 @@
-InputVec: AL [0, 1, 2, 3]
-InputVec: AR [0, 1, 2, 3]
-InputVec: C  [0, 1, 2, 3]
+Input: AL [4]
+Input: AR [4]
+Input: C  [4]
 Input: B
 
 A0 = FAdd32x2(AL0, AR0)
@@ -26,4 +26,4 @@ O1 = FAdd32x2(C1, DELTA1)
 O2 = FAdd32x2(C2, DELTA2)
 O3 = FAdd32x2(C3, DELTA3)
 
-OutputVec: O [0, 1, 2, 3]
+Output: O [4]

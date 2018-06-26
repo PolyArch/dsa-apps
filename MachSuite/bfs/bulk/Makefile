@@ -30,7 +30,8 @@ $(KERN_SB): $(SB_FILES) ../../common/harness.c $(DFG_HEADERS)
 		$(SB_CPP) $(CFLAGS) -I../../common -o $(KERN_SB) $(SB_SRCS) ../../common/harness.c -DSB
 
 run_sb: $(KERN_SB) input.data check.data
-	SBCONFIG=$(SB_CONFIG) spike  --ic=128:4:64 --dc=128:4:64 --l2=1024:8:64  --extension=softbrain $(SS_TOOLS)/riscv64-unknown-elf/bin/pk  ./$(KERN_SB) input.data check.data
+	SBCONFIG=$(SB_CONFIG)  \
+	gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=minor --l1d_size=1024kB --l1d_assoc=8 --l1i_size=16kB --caches --cmd=./$(KERN_SB)
 
 run_r5: $(KERN_R5) input.data check.data
 	SBCONFIG=$(SB_CONFIG) spike  --ic=128:4:64 --dc=128:4:64 --l2=1024:8:64  --extension=softbrain $(SS_TOOLS)/riscv64-unknown-elf/bin/pk ./$(KERN_R5) input.data check.data

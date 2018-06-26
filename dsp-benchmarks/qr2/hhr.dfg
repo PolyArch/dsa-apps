@@ -1,13 +1,3 @@
-Input: NORM
-Input: HEAD
-Input: Inst
-
-RES = HouseHolder(NORM, HEAD, Inst)
-
-Output: RES
-
-----
-
 Input: A
 Input: B
 Input: Coef
@@ -48,4 +38,43 @@ OUTremote = IN
 
 Output: OUTlocal
 Output: OUTremote
+
+----
+
+#pragma group temporal
+Input: NORM
+Input: HEAD
+
+#normx = sqrt(normx);
+#float norm0 = 1. / sqrt(complex_norm(w[0]));
+#complex<float> s = -w[0] * norm0;
+norm2_ = FMul32x2(HEAD, HEAD)
+norm2  = FRed32x2(norm2_)
+
+normx2 = FAdd32x2(NORM, norm2)
+normx  = RealSqrt(normx2)
+
+headnorm = RealSqrt(norm2)
+s = CplxDivCons(HEAD, headnorm)
+
+#a[i * N + i] = s * normx;
+alpha = CplxMulCons(s, normx)
+ALPHA = CplxMulCons(alpha, 140723521323008)
+
+#complex<float> u1 = 1.0f / (w[0] - s * normx);
+u1    = FSub32x2(HEAD, ALPHA)
+U1INV = CplxInvConj(u1)
+
+#tau[i] = -std::conj(s) / u1 / normx;
+real = FMul32x2(u1, s)
+imag = FMulX32x2(u1, s)
+temp = FAddSub32x2(real, imag)
+normxinv = RealInv(normx)
+TAU0 = CplxMulCons(temp, normxinv)
+TAU1 = TAU0
+
+Output: ALPHA
+Output: U1INV
+Output: TAU0
+Output: TAU1
 

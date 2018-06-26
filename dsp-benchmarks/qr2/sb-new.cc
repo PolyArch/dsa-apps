@@ -27,20 +27,20 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *tau) {
   SB_CONST(P_hhr_Coef, 1065353216, N - 1);
   SB_CONST(P_hhr_reset, 2, N - 2);
   SB_CONST(P_hhr_reset, 1, 1);
-  SB_REPEAT_PORT(4);
+  //SB_REPEAT_PORT(4);
   SB_RECURRENCE(P_hhr_O, P_hhr_NORM, 1);
-  SB_REPEAT_PORT(4);
+  //SB_REPEAT_PORT(4);
   SB_DMA_READ(a, 8, 8, 1, P_hhr_HEAD);
-  SB_CONST(P_hhr_Inst, 0, 1);
-  SB_CONST(P_hhr_Inst, 1, 1);
-  SB_CONST(P_hhr_Inst, 2, 1);
-  SB_CONST(P_hhr_Inst, 2, 1);
+  //SB_CONST(P_hhr_Inst, 0, 1);
+  //SB_CONST(P_hhr_Inst, 1, 1);
+  //SB_CONST(P_hhr_Inst, 2, 1);
+  //SB_CONST(P_hhr_Inst, 2, 1);
 
-  SB_DMA_WRITE(P_hhr_RES, 8, 8, 1, a); //alpha
+  SB_DMA_WRITE(P_hhr_ALPHA, 8, 8, 1, a); //alpha
   SB_REPEAT_PORT(N - 1);
-  SB_RECURRENCE(P_hhr_RES, P_hhr_B, 1); //normalize
-  SB_RECURRENCE(P_hhr_RES, P_hhr_IN, 1); //tau
-  SB_DMA_WRITE(P_hhr_RES, 8, 8, 1, tau);
+  SB_RECURRENCE(P_hhr_U1INV, P_hhr_B, 1); //normalize
+  SB_RECURRENCE(P_hhr_TAU0, P_hhr_IN, 1); //tau
+  SB_DMA_WRITE(P_hhr_TAU1, 8, 8, 1, tau);
   SB_CONST(P_hhr_Coef, 1065353216, N - 1);
   SB_DMA_READ(a + N, 8 * N, 8, N - 1, P_hhr_A);
   SB_CONST(P_hhr_reset, 1, N - 1);
@@ -109,22 +109,22 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *tau) {
     SB_CONST(P_hhr_reset, 2, n - 2);
     SB_CONST(P_hhr_reset, 1, 1);
 
-    SB_REPEAT_PORT(4);
+    //SB_REPEAT_PORT(4);
     SB_RECURRENCE(P_hhr_O, P_hhr_NORM, 1);
-    SB_REPEAT_PORT(4);
+    //SB_REPEAT_PORT(4);
     SB_SCRATCH_READ(r_trans_spad, 8, P_hhr_HEAD);
 
-    SB_CONST(P_hhr_Inst, 0, 1);
-    SB_CONST(P_hhr_Inst, 1, 1);
-    SB_CONST(P_hhr_Inst, 2, 1);
-    SB_CONST(P_hhr_Inst, 2, 1);
+    //SB_CONST(P_hhr_Inst, 0, 1);
+    //SB_CONST(P_hhr_Inst, 1, 1);
+    //SB_CONST(P_hhr_Inst, 2, 1);
+    //SB_CONST(P_hhr_Inst, 2, 1);
 
-    SB_DMA_WRITE(P_hhr_RES, 8, 8, 1, a + i * N + i); //alpha
+    SB_DMA_WRITE(P_hhr_ALPHA, 8, 8, 1, a + i * N + i); //alpha
 
     SB_REPEAT_PORT(n - 1);
-    SB_RECURRENCE(P_hhr_RES, P_hhr_B, 1); //normalize
-    SB_DMA_WRITE(P_hhr_RES, 8, 8, 1, tau + i);
-    SB_RECURRENCE(P_hhr_RES, P_hhr_IN, 1); //tau
+    SB_RECURRENCE(P_hhr_U1INV, P_hhr_B, 1); //normalize
+    SB_DMA_WRITE(P_hhr_TAU0, 8, 8, 1, tau + i);
+    SB_RECURRENCE(P_hhr_TAU1, P_hhr_IN, 1); //tau
     SB_CONST(P_hhr_Coef, 1065353216, n - 1);
     SB_SCRATCH_READ(r_trans_spad + 8, 8 * (n - 1), P_hhr_A);
     SB_CONST(P_hhr_reset, 1, n - 1);

@@ -1,6 +1,6 @@
-InputVec: A [0, 1]
+Input: A [2]
 Input: B
-InputVec: C [0, 1]
+Input: C [2]
 
 _B = FMul32x2(B, 4611686019501129728)
 
@@ -16,7 +16,7 @@ VAL1 = FAddSub32x2(REAL1, IMAG1)
 O0 = FSub32x2(A0, VAL0)
 O1 = FSub32x2(A1, VAL1)
 
-OutputVec: O [0, 1]
+Output: O [2]
 
 ----
 

@@ -27,6 +27,11 @@ __attribute__ ((noinline))  void end_roi()   {
 #endif
 
 
+static void sb_stats()   {
+#ifndef __x86_64__
+  __asm__ __volatile__("add x0, x0, 3");
+#endif
+}
 
 //static __inline__ uint64_t rdtsc(void) {
 //  unsigned a, d;
