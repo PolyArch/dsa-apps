@@ -1,0 +1,11 @@
+Input: A
+Input: label
+Input: const
+
+C0 = A
+C1 = Add16x4(A,64)
+D0 = label
+D1 = const
+
+Output: C[2]
+Output: D[2]

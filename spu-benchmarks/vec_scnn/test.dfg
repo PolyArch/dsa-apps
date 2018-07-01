@@ -1,0 +1,14 @@
+Input: nval
+Input: nind
+Input: sval
+Input: init_addr
+
+rec = Add16x4(nind,init_addr)
+
+C = rec
+
+D = Mul16x4(nval,sval)
+
+Output: C
+Output: D
+Output: rec
