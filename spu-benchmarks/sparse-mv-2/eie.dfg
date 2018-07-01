@@ -2,20 +2,36 @@ Input: R0
 Input: R1
 Input: R2
 Input: R3
+Input: R4
+Input: R5
+Input: R6
+Input: R7
 Input: V
 
-prdct0 = MatchIndex2(R0, V)
-prdct1 = MatchIndex2(R1, V)
-prdct2 = MatchIndex2(R2, V)
-prdct3 = MatchIndex2(R3, V)
+match0 = MatchIndex2(R0, V)
+match1 = MatchIndex2(R1, V)
+match2 = MatchIndex2(R2, V)
+match3 = MatchIndex2(R3, V)
+match4 = MatchIndex2(R4, V)
+match5 = MatchIndex2(R5, V)
+match6 = MatchIndex2(R6, V)
+match7 = MatchIndex2(R7, V)
 
-mac0 = MacRed16x2(R0, V, prdct0)
-mac1 = MacRed16x2(R1, V, prdct1)
-mac2 = MacRed16x2(R2, V, prdct2)
-mac3 = MacRed16x2(R3, V, prdct3)
+mac0 = MacRed16x2(match0)
+mac1 = MacRed16x2(match1)
+mac2 = MacRed16x2(match2)
+mac3 = MacRed16x2(match3)
+mac4 = MacRed16x2(match4)
+mac5 = MacRed16x2(match5)
+mac6 = MacRed16x2(match6)
+mac7 = MacRed16x2(match7)
 
-left32  = Concatenate16To32(mac0, mac1)
-right32 = Concatenate16To32(mac2, mac3)
-O = Concatenate32To64(left32, right32)
+left32_0  = Concatenate16To32(mac0, mac1)
+right32_0 = Concatenate16To32(mac2, mac3)
+O0 = Concatenate32To64(left32_0, right32_0)
 
-Output: O
+left32_1  = Concatenate16To32(mac4, mac5)
+right32_1 = Concatenate16To32(mac6, mac7)
+O1 = Concatenate32To64(left32_1, right32_1)
+
+Output: O [2]

@@ -1,5 +1,5 @@
 ifndef N
-N=12
+N=4
 endif
 
 SOFTBRAINS = sb-origin sb-new

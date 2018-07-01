@@ -28,7 +28,7 @@ int main() {
   end_roi();
   sb_stats();
 
-  for (int i = 0; i < _N_; ++i) {
+  /*for (int i = 0; i < _N_; ++i) {
     for (int j = 0; j < _N_; ++j) {
       complex<float> sum(0);
       for (int k = 0; k < _N_; ++k)
@@ -56,7 +56,7 @@ int main() {
   if (!compare_n_float_complex(ref_data, _N_ * _N_, aa)) {
     puts("error origin matrix");
     return 1;
-  }
+  }*/
   /*if (!compare_n_float_complex(ref_data, _N_ * _N_, R)) {
     puts("error r");
     return 1;

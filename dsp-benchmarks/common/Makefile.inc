@@ -11,14 +11,19 @@ ifndef NUM_PTHREADS
 NUM_PTHREADS=1
 endif
 
+ifndef FIFO_DEPTH
+FIFO_DEPTH=15
+endif
+
 DFG_HEADERS = $(DFG:.dfg=.dfg.h)
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
-	$(SS_TOOLS)/bin/sb_sched --max-iters=100000 --verbose $(SBCONFIG) $< 
+	$(SS_TOOLS)/bin/sb_sched --max-iters 20000 -d $(FIFO_DEPTH) --verbose $(SBCONFIG) $< 
 
 IFLAGS=-I../../common/include -I../../../ss-tools/include -I../common/
 INTELI=-I /opt/intel/include 
-CFLAGS=-O3 -std=c++11
+#CFLAGS=-O3 -std=c++11
+CFLAGS=-Ofast -std=c++11
 LMKL=-L"/opt/intel/mkl/lib" -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -ldl -lm
 
 CC=riscv64-unknown-elf-g++
@@ -28,6 +33,14 @@ OBJS = $(BENCHMARKS:=.o)
 LOGS = $(SOFTBRAINS:=.log)
 EXEC = $(BENCHMARKS:=.exe) $(SOFTBRAINS:=.exe)
 THREAD_MACROS = -DNUM_PTHREADS=$(NUM_PTHREADS) -DOMP_NUM_THREADS=$(OMP_NUM_THREADS)
+
+MAT_DFG = ../common/mmv.dfg ../common/mmvc.dfg ../common/suboutercx2.dfg ../common/subouterx2.dfg ../common/vcmm.dfg ../common/vmm.dfg
+MAT_HEADS = $(MAT_DFG:.dfg=.dfg.h)
+
+$(MAT_HEADS): %.dfg.h: %.dfg
+	$(SS_TOOLS)/bin/sb_sched --max-iters 20000 -d $(FIFO_DEPTH) --verbose $(SBCONFIG) $< 
+
+matutils: $(MAT_HEADS)
 
 input.data ref.data: gen.py
 	python $< $(SCALE) > gen.log
@@ -51,7 +64,8 @@ ooo.log: optimized.exe input.data ref.data
 
 $(LOGS): %.log: %.exe input.data ref.data
 	SBCONFIG=$(SBCONFIG) \
-	gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=minor \
+	FU_FIFO_LEN=$(FIFO_DEPTH) \
+	gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=MinorCPU \
 	--l1d_size=2048kB --l1d_assoc=32 --l1i_size=16kB --l2_size=1024kB --caches --cmd=./$< \
 	| tee $@
 	
@@ -67,6 +81,9 @@ cleandfg:
 clean: cleandata
 	rm -f *.o *.log *.exe
 	rm -rf stats gams m5out viz verif
+
+cleanmat:
+	rm -rf ../common/*.dfg.h
 
 ultraclean: clean cleandfg
 	rm -f *.csv

@@ -1,6 +1,7 @@
 #include "viterbi.h"
 #include "viterbi_sb.dfg.h"
 #include "../../../common/include/sb_insts.h"
+#include "../../../common/include/sim_timing.h"
 
 int viterbi( tok_t obs[N_OBS], prob_t init[N_STATES], prob_t transition[N_STATES*N_STATES], prob_t emission[N_STATES*N_TOKENS], state_t path[N_OBS] )
 {
@@ -16,8 +17,7 @@ int viterbi( tok_t obs[N_OBS], prob_t init[N_STATES], prob_t transition[N_STATES
   L_init: for( s=0; s<N_STATES; s++ ) {
     llike[0][s] = init[s] + emission[s*N_TOKENS+obs[0]];
     L_timestep_fake: for( t=1; t<N_OBS; t++ ) { //TONY ADDED B/C OF SIMULATOR TROUBLE
-      llike[t][s] = 0;
-    }
+      llike[t][s] = 0; }
   }
 
   //TONY ADDED BECAUSE MACHSUITE IS BAD

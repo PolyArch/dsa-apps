@@ -6,8 +6,8 @@ SC 2008
 */
 
 #include "stencil.h"
-#include "stencil_sb.h"
-#include "../../../common/include/sb_insts.dfg.h"
+#include "stencil_sb.dfg.h"
+#include "../../../common/include/sb_insts.h"
 
 void stencil3d(TYPE C[2], TYPE orig[SIZE], TYPE sol[SIZE]) {
     int i, j, k;

@@ -4,8 +4,8 @@
 //------------SB Related-------------//
 
 //ROI functions
-void begin_roi();
-void end_roi();
+//void begin_roi();
+//void end_roi();
 
 void* my_aligned_malloc(uint64_t align, uint64_t bytes);
 //------------SB Related-------------//

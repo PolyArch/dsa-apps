@@ -17,5 +17,5 @@ SOFTBRAINS = sb-origin
 sb-access.o sb-origin.o: %.o: %.cc mulconj.dfg.h finalize.dfg.h dot.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
-sb-new.o: sb-new.cc multi.dfg.h fused1.dfg.h fused2.dfg.h
+sb-new.o: sb-new.cc multi.dfg.h fused1.dfg.h fused2.dfg.h matutils
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3

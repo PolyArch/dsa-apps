@@ -14,7 +14,7 @@ a = (numpy.dot(a, numpy.conj(a.transpose())))
 output.print_complex_array('input.data', a.flatten())
 print("%d x %d Input generated!" % (n, n))
 
-L = numpy.identity(n).astype('complex')
+L = numpy.zeros((n, n)).astype('complex64')
 
 origin = a.copy()
 
@@ -23,7 +23,7 @@ starting = 0
 finish   = 0
 compute  = 0
 
-for i in xrange(n):
+for i in range(n):
     l = numpy.identity(n).astype('complex')
     div = cmath.sqrt(a[i, i])
     l[i, i] = div
@@ -31,12 +31,12 @@ for i in xrange(n):
     l[i + 1:, i] = b / l[i, i]
 
     sub = n - i
-    simd += sub / 4 + sub % 4
-    simd += sum(j / 4 + j % 4 for j in xrange(1, sub)) * 4
+    simd += sub // 4 + sub % 4
+    simd += sum(j // 4 + j % 4 for j in range(1, sub)) * 4
 
-    compute += (sub - 1) * (sub - 2) / 2
+    compute += (sub - 1) * (sub - 2) // 2
     starting += sub + 12
-    finish  = max(finish, starting + (sub - 1) * (sub - 2) / 2)
+    finish  = max(finish, starting + (sub - 1) * (sub - 2) // 2)
 
     aa = a.copy()
     aa[i, i] = 1
@@ -50,12 +50,12 @@ for i in xrange(n):
     a = aa
 
 numpy.testing.assert_allclose(origin, numpy.dot(numpy.conj(L), L.transpose()), rtol = 1e-4)
-print "Correctness check pass!"
+print("Correctness check pass!")
 
 output.print_complex_array('ref.data', L.flatten())
-print "New data generated!"
+print("New data generated!")
 
 init = 12 * n
-print 'ASIC Ideal:', init + compute
-print 'ASIC Latency:', finish
-print 'SIMD Ideal:', init + simd
+print('ASIC Ideal:', init + compute)
+print('ASIC Latency:', finish)
+print('SIMD Ideal:', init + simd)

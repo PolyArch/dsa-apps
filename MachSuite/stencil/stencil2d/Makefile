@@ -24,7 +24,7 @@ DFGS=stencil_sb.dfg
 DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
-	$(SS_TOOLS)/bin/sb_sched $(SB_CONFIG) $<
+	$(SS_TOOLS)/bin/sb_sched --verbose $(SB_CONFIG) $<
 
 $(KERN_SB): $(SB_FILES) ../../common/harness.c $(DFG_HEADERS) 
 		$(SB_CPP) $(CFLAGS) -I../../common -o $(KERN_SB) $(SB_SRCS) ../../common/harness.c

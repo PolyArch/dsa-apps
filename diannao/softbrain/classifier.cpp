@@ -48,40 +48,50 @@ int classifier_layer(VTYPE (&synapse)[Nn][Ni], VTYPE (&neuron_i)[Ni], VTYPE (&ne
 // CGRA Pipe
 #define PIPEWIDTH 8 // adders at mouth of 1 CGRA pipe
 #define PIPEDEPTH 32 // approx. depth of CGRA pipeline
-int classifier_layer_sb(VTYPE (&synapse)[Nn][Ni], VTYPE (&neuron_i)[Ni], VTYPE (&neuron_n)[Nn]) {
+int classifier_layer_sb(VTYPE (&synapse)[Nn][Ni], VTYPE (&neuron_i)[Ni], VTYPE (&neuron_n)[Nn], bool profiling = false) {
   // Fits in scratchpad? (should be true for our benches)
-  if(Ni > SCRATCHSIZE){
-    cout << "Error: inputs do not fit in scratch for classifier layer" << endl;
-    return -1;
-  }     
+  //if(Ni > SCRATCHSIZE){
+  //  cout << "Error: inputs do not fit in scratch for classifier layer" << endl;
+  //  return -1;
+  //}     
 
   // Handle class3, Nn = 32  -- not sure what this does
-  int pipedepth = PIPEDEPTH;
-  if(Nn < PIPEDEPTH){
-    pipedepth = Nn;
-  }
+  int pipedepth = PIPEDEPTH < Nn ? PIPEDEPTH : Nn;
+  //if(Nn < PIPEDEPTH){
+  //  pipedepth = Nn;
+  //}
 
   // Stream in CGRA config (do this somewhere else?) 
+  if (profiling)
+    begin_roi();
   SB_CONFIG(red32to1sig_config, red32to1sig_size);
 
   // Stream in inputs to scratch
   SB_DMA_SCRATCH_LOAD(&neuron_i, sizeof(VTYPE)*4, sizeof(VTYPE)*4, Ni/4, 0); 
-  SB_WAIT_ALL();
+  SB_WAIT_SCR_WR();
 
+  int Tail = Ni % (PIPEDEPTH * 4);
+  int Ni_ = Ni - Tail;
   for(int n = 0; n < Nn; n += pipedepth){
     SB_CONST(P_red32to1sig_acc, 0, pipedepth); 
 
-    for(int i = 0; i < Ni; i+= PIPEWIDTH*4){
+    for(int i = 0; i < Ni_; i+= PIPEWIDTH*4){
       // Enable sigmoid on final itr
-      if(i + PIPEWIDTH*4 < Ni){   
+      //if(i + PIPEWIDTH*4 < Ni){   
         SB_CONST(P_red32to1sig_pred, 0, pipedepth); 
         SB_RECURRENCE(P_red32to1sig_out, P_red32to1sig_acc, pipedepth);
-      } else {
-        SB_CONST(P_red32to1sig_pred, 1, pipedepth); 
-      }
+      //} else {
+        //SB_CONST(P_red32to1sig_pred, 1, pipedepth); 
+      //}
       
       SB_DMA_READ(&synapse[n][i],  sizeof(VTYPE)*Ni, 4*sizeof(VTYPE)*PIPEWIDTH, pipedepth, P_red32to1sig_S); //Read Synapses 
       SB_SCR_PORT_STREAM(i*sizeof(VTYPE), 0, 4*sizeof(VTYPE)*PIPEWIDTH, pipedepth, P_red32to1sig_N); //Read Neurons
+    }
+
+    if (Ni_ != Ni) {
+      SB_CONST(P_red32to1sig_pred, 1, pipedepth); 
+      SB_DMA_READ(&synapse[n][Ni_],  sizeof(VTYPE)*Ni, 4*sizeof(VTYPE)*PIPEWIDTH, pipedepth, P_red32to1sig_S); //Read Synapses 
+      SB_SCR_PORT_STREAM(Ni_*sizeof(VTYPE), 0, 4*sizeof(VTYPE)*PIPEWIDTH, pipedepth, P_red32to1sig_N); //Read Neurons
     }
 
     // write completed outputs out to memory
@@ -89,7 +99,8 @@ int classifier_layer_sb(VTYPE (&synapse)[Nn][Ni], VTYPE (&neuron_i)[Ni], VTYPE (
   } 
 
   SB_WAIT_ALL();
-
+  if (profiling)
+    end_roi();
   return 0;
 }
 
@@ -104,8 +115,7 @@ void fill_classifier(VTYPE (&synapse)[Nn][Ni], VTYPE (&neuron_i)[Ni],
   for(int i = 0; i < Ni; ++i) {
     neuron_i[i] = rand()%16; //i;
   }
-  for(int n = 0; n < Nn; ++n) {
-    neuron_n[n] = 0; //i;
+  for(int n = 0; n < Nn; ++n) { neuron_n[n] = 0; //i;
     neuron_n2[n] = 0; //i;
   }
 }
@@ -145,32 +155,34 @@ int main(int argc, char** argv) {
   if(argc==3) {
   
   } else if(argc==2) {
-    begin_roi();
+    //begin_roi();
     #ifdef SB
     int calc = classifier_layer_sb(synapse,neuron_i,neuron_n);  
     #else
     int calc = classifier_layer_blocked(synapse,neuron_i,neuron_n);  
     #endif
-    end_roi();
+    //end_roi();
 
     if(calc > 0) {
       cout << "calc: " << calc << "\n";
     }
     //cout << "Perf Run Complete\n";
   } else {
-    int calc  = classifier_layer(synapse,neuron_i,neuron_n);
+    //int calc  = classifier_layer(synapse,neuron_i,neuron_n);
 
-    begin_roi();
+    classifier_layer_sb(synapse,neuron_i,neuron_n2,false);
+    //begin_roi();
     #ifdef SB
-    int calc2 = classifier_layer_sb(synapse,neuron_i,neuron_n2);  
+    int calc2 = classifier_layer_sb(synapse,neuron_i,neuron_n2,true);
     #else
     int calc2 = classifier_layer_blocked(synapse,neuron_i,neuron_n2);  
     #endif
-    end_roi();
+    //end_roi();
+    sb_stats();
  
-    cout << "C1: " << calc << " C2: " << calc2 << "\n";
+    //cout << "C1: " << calc << " C2: " << calc2 << "\n";
   
-    compare(neuron_n,neuron_n2,Nn);
+    //compare(neuron_n,neuron_n2,Nn);
   
     cout << "mults: " << Nn*Ni <<  " sigmoids: " << Nn << "\n";
   }

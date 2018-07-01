@@ -30,7 +30,7 @@ DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 all: $(RUN)
 
 
-$(DFG_HEADERS): %dfg.h: %.dfg
+$(DFG_HEADERS): %.dfg.h: %.dfg
 ifeq ($(RUN), sim)
 	$(SS_TOOLS)/bin/sb_sched $(SB_CONFIG) $<
 else

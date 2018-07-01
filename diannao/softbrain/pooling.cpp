@@ -425,6 +425,7 @@ int test_layer(VTYPE (&neuron_i)[NYPAD][NXPAD][Ni],
    pooling_layer_blocked(neuron_i,neuron_n);
 #endif
   end_roi();
+  sb_stats();
 }
 
 
@@ -469,18 +470,18 @@ int main(int argc, char** argv) {
     //cout << "Perf Run Complete\n";
   } else {
     cout << "initializing arrays\n";
-    fill_pooling(*neuron_i,*neuron_n,*neuron_n2);
+    //fill_pooling(*neuron_i,*neuron_n,*neuron_n2);
     cout << "starting computation\n";
 
     int calc = 0;
-    pooling_layer(*neuron_i,*neuron_n);
+    //pooling_layer(*neuron_i,*neuron_n);
     test_layer(*neuron_i,*neuron_n2);
     cout << "computation complete!\n";  
 
     if(calc > 0) {
       cout << "calc: " << calc << "\n";
     }
-    compare_short((VTYPE*)*neuron_n,(VTYPE*)*neuron_n2,NYSCL*NXSCL*Ni);
+    //compare_short((VTYPE*)*neuron_n,(VTYPE*)*neuron_n2,NYSCL*NXSCL*Ni);
     cout << "adds: " << NYSCL*NXSCL*Ni*Ky*Kx <<  "\n";
     cout << "argc:" << argc << "\n";
 //  cout << "mult-block:  " << calc.first   << " sigmoid-block: " << calc.second  << "\n";

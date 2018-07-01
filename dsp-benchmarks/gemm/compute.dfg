@@ -1,7 +1,7 @@
 Input: A
-InputVec: BE [0, 1]
-InputVec: BO [0, 1]
-InputVec: C [0, 1]
+Input: BE [2]
+Input: BO [2]
+Input: C [2]
 
 R = DupHigh32(A)
 L = DupLow32(A)
@@ -27,5 +27,5 @@ SUM1 = FxAdd16x4(TMP01, TMP11)
 O0 = FxAdd16x4(SUM0, C0)
 O1 = FxAdd16x4(SUM1, C1)
 
-OutputVec: O [0, 1]
+Output: O [2]
 

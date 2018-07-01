@@ -62,7 +62,7 @@ SB_CONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
-	$(SS_TOOLS)/bin/sb_sched $(SB_CONFIG) $< 
+	$(SS_TOOLS)/bin/sb_sched --max-iters=100000 --verbose $(SB_CONFIG) $< 
 
 #conv1  Nx=500, Ny=375, Kx=9,  Ky=9,  Ni=32,  No=48,  priv=False
 #conv2  Nx=200, Ny=200, Kx=18, Ky=18, Ni=8,   No=8,   priv=True 
@@ -79,7 +79,7 @@ $(DFG_HEADERS): %.dfg.h: %.dfg
 
 #padded versions
 
-TF=-DTn=16 -DTi=16 -DTii=32 -DTnn=32 -DTx=16 -DTy=16
+TF=#-DTn=16 -DTi=16 -DTii=32 -DTnn=32 -DTx=16 -DTy=16
 
 #Tii not in convolution
 conv1p: convolution.cpp $(HEADERS)
@@ -92,14 +92,14 @@ conv3p: convolution.cpp $(HEADERS)
 	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=32  -DNy=32  -DKx=4  -DKy=4  -DNi=128 -DNn=224 -DSHARED=1      -DTi=64 -DTx=4
 
 conv4p: convolution.cpp $(HEADERS)
-	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=32  -DNy=32  -DKx=7  -DKy=7  -DNi=16  -DNn=512 -DSHARED=1      -DTnn=64 -DTn=64 -DTx=8
+	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=32  -DNy=32  -DKx=7  -DKy=7  -DNi=16  -DNn=512 -DSHARED=0      -DTnn=64 -DTn=64 -DTx=8
 
 conv5p: convolution.cpp $(HEADERS)
 	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=8 -DNy=8 -DKx=11 -DKy=11 -DNi=256 -DNn=384 -DSHARED=0      -DTnn=64 -DTi=64 -DTx=8 -DTy=8
 #	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=256 -DNy=256 -DKx=11 -DKy=11 -DNi=256 -DNn=384 -DSHARED=0      -DTnn=64 -DTi=64 -DTx=8 -DTy=8
 
 pool1p: pooling.cpp $(HEADERS)
-	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=492 -DNy=368 -DKx=2  -DKy=2  -DNi=16     -DTii=16 -DTx=2 -DTy=2
+	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=492 -DNy=368 -DKx=2  -DKy=2  -DNi=16     -DTii=16 -DTi=16 -DTx=2 -DTy=2
                                                                                                  
 pool3p: pooling.cpp  $(HEADERS)                                                                             
 	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=32  -DNy=32  -DKx=4  -DKy=4  -DNi=128    -DTii=64 -DTi=32 -DTx=2 -DTy=2
@@ -118,7 +118,7 @@ class3p: classifier.cpp $(HEADERS)
 # ---------------------------------------------------------------------------------------------------------
 
 conv1sb: convolution.cpp $(CONV_DFG_HEADERS) $(HEADERS)
-	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=10  -DNy=25  -DKx=9  -DKy=9  -DNi=32  -DNn=64  -DSHARED=1      -DTnn=64 -DTn=64 -DTx=10 -DTy=25 -DTi=32 -DSB
+	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=10  -DNy=25  -DKx=9  -DKy=9  -DNi=32  -DNn=64  -DSHARED=0      -DTnn=64 -DTn=64 -DTx=10 -DTy=25 -DTi=32 -DSB
 #	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=500 -DNy=375 -DKx=9  -DKy=9  -DNi=32  -DNn=64  -DSHARED=1      -DTnn=64 -DTn=32 -DTx=10 -DTy=25 -DTi=32
 
 
@@ -128,12 +128,12 @@ conv2sb: convolution.cpp $(CONV_DFG_HEADERS) $(HEADERS)
 
 
 conv3sb: convolution.cpp $(CONV_DFG_HEADERS) $(HEADERS)
-	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=4  -DNy=4  -DKx=4  -DKy=4  -DNi=128  -DNn=64  -DSHARED=1      -DTi=32 -DTx=4 -DTy=4 -DTn=64  -DTii=32 -DTnn=64   -DSB    #Nx=32, Ny=32, Nn=224
+	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=4  -DNy=4  -DKx=4  -DKy=4  -DNi=128  -DNn=64  -DSHARED=0      -DTi=32 -DTx=4 -DTy=4 -DTn=64  -DTii=32 -DTnn=64   -DSB    #Nx=32, Ny=32, Nn=224
 #	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=32 -DNy=32 -DKx=4  -DKy=4  -DNi=128 -DNn=224 -DSHARED=1      -DTi=32 -DTx=4 -DTy=4     -DSB
 
 
 conv4sb: convolution.cpp $(CONV_DFG_HEADERS) $(HEADERS)
-	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=8  -DNy=8  -DKx=7  -DKy=7  -DNi=16  -DNn=512 -DSHARED=1      -DTnn=64 -DTn=64 -DTx=8  -DTy=8 -DTii=16   -DSB
+	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=8  -DNy=8  -DKx=7  -DKy=7  -DNi=16  -DNn=512 -DSHARED=0      -DTnn=64 -DTi=16 -DTn=64 -DTx=8  -DTy=8 -DTii=16   -DSB
 #	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=32  -DNy=32  -DKx=7  -DKy=7  -DNi=16  -DNn=512 -DSHARED=1      -DTnn=64 -DTn=64 -DTx=8 -DSB
 
 
@@ -145,7 +145,7 @@ conv5sb: convolution.cpp $(CONV_DFG_HEADERS) $(HEADERS)
 
 
 pool1sb: pooling.cpp  $(POOL_DFG_HEADERS) $(HEADERS)
-	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=512 -DNy=368 -DKx=2  -DKy=2  -DNi=16     -DTii=16 -DTx=64 -DTy=16 -DSB 
+	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=512 -DNy=368 -DKx=2  -DKy=2  -DNi=16     -DTii=16 -DTi=16 -DTx=64 -DTy=16 -DSB 
 
 pool3sb: pooling.cpp  $(POOL_DFG_HEADERS) $(HEADERS) 
 	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=32  -DNy=32  -DKx=4  -DKy=4  -DNi=128    -DTii=64 -DTi=32 -DTx=16 -DTy=4 -DSB
@@ -154,10 +154,10 @@ pool5sb: pooling.cpp  $(HEADERS) $(POOL_DFG_HEADERS)
 	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=256 -DNy=256 -DKx=2  -DKy=2  -DNi=256    -DTii=256 -DTi=32 -DTx=16 -DTy=8 -DSB 
 
 class1sb: classifier.cpp $(CLASS_DFG_HEADERS) $(HEADERS)
-	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNi=960 -DNn=20     -DTii=32 -DTi=32 -DTx=2 -DTy=4 -DSB
+	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNi=960 -DNn=20     -DTn=16 -DTnn=32 -DTii=32 -DTi=32 -DTx=2 -DTy=4 -DSB
 
 class3sb: classifier.cpp $(CLASS_DFG_HEADERS) $(HEADERS)
-	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNi=224 -DNn=128    -DTii=32 -DTi=32 -DTx=2 -DTy=4 -DSB
+	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNi=224 -DNn=128    -DTn=16 -DTnn=32 -DTii=32 -DTi=32 -DTx=2 -DTy=4 -DSB
 
 
 # --------------------------------------------------------------------------------------------------------------------------------
@@ -198,5 +198,10 @@ class3: classifier.cpp  $(HEADERS)
 
 
 clean:
-	@rm -f $(MODULE) convolution pooling classifier $(DFG_HEADERS)
+	rm -f $(MODULE) convolution pooling classifier $(DFG_HEADERS)
+cleansb:
+	rm -f conv*sb pool*sb class*sb
+
+ultraclean: clean cleansb
+	rm -f *.log
 

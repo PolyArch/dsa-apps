@@ -15,7 +15,7 @@ print("%d x %d Input generated!" % (n, n))
 tau = numpy.zeros((n - 1, ), dtype = 'complex128')
 q = numpy.identity(n, dtype = 'complex128')
 
-for i in xrange(n - 1):
+for i in range(n - 1):
     w = a[i:,i].copy()
     normx = numpy.linalg.norm(w)
     s = -w[0] / cmath.sqrt(w[0].conjugate() * w[0])
@@ -26,6 +26,11 @@ for i in xrange(n - 1):
     #a[i+1:,i] = w[1:]
     a[i+1:,i] = numpy.zeros(n - i - 1)
     tau[i] = -s.conjugate() * u1 / normx
+    print('norm', normx)
+    print('alpha', a[i, i])
+    print('u1inv', 1.0 / u1)
+    print('tau', tau[i])
+    print()
 
     v = tau[i] * numpy.dot(numpy.conj(w), a[i:,i+1:])
     a[i:,i+1:] -= numpy.outer(w, v)
@@ -43,29 +48,28 @@ for i in xrange(n - 1):
 
 #print a
 #print numpy.dot(numpy.conj(q.transpose()), origin)
-
 output.print_complex_array('ref.data', numpy.concatenate((a.flatten(), tau, q.flatten())))
 
-print "New data generated!"
+print("New data generated!")
 
 ideal = 0
 simd  = 0
 last_h = 0
-for i in xrange(n - 1):
+for i in range(n - 1):
     r_kernel = n - i + (n - i) * n
-    simd    += ((n - i) / 4 + (n - i) % 4) * n * 5
+    simd    += ((n - i) // 4 + (n - i) % 4) * n * 5
     q_kernel = n - i + (n - i) * (n - i)
-    simd    += ((n - i) / 4 + (n - i) % 4) * (n - i) * 5
+    simd    += ((n - i) // 4 + (n - i) % 4) * (n - i) * 5
     if i == 0:
         ideal += (n - i) + (n - i - 1) + 40
     else:
         ideal += max(0, 5 + (n - i) * 2 + (n - i - 1) + 40 - diff)
     ideal += max(r_kernel, q_kernel)
     diff   = abs(r_kernel - q_kernel)
-    simd  += ((n - i) / 4 + (n - i) % 4) * 3 + 40
+    simd  += ((n - i) // 4 + (n - i) % 4) * 3 + 40
 
 ideal += diff
 
-print 'ASIC Latency:', ideal
-print 'ASIC Ideal:', ideal
-print 'SIMD Ideal:', simd
+print('ASIC Latency:', ideal)
+print('ASIC Ideal:', ideal)
+print('SIMD Ideal:', simd)

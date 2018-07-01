@@ -39,6 +39,7 @@ using namespace std;
 #ifndef Tnn
   //Tiling Sizes
   #define Tnn 32
+  #define Tii 32
   //#define Tn  25
   //#define Ti  16
   #define Tn  16
@@ -835,6 +836,7 @@ std::pair<int,int>  test_layer(
     convolution_layer_blocked(synapse,neuron_i,neuron_n);
 #endif
   end_roi();
+  sb_stats();
 }
 
 
@@ -855,9 +857,9 @@ int main(const int argc, const char** argv) {
   cout << "initializing arrays\n";
 
   #if SHARED == 1
-  fill_convolution_shared_simple(*synapse,*neuron_i);
+  //fill_convolution_shared_simple(*synapse,*neuron_i);
   #else
-  fill_convolution_private(*synapse,*neuron_i);
+  //fill_convolution_private(*synapse,*neuron_i);
   #endif
 
   cout << "starting computation\n";
@@ -869,11 +871,11 @@ int main(const int argc, const char** argv) {
     test_layer(*synapse,*neuron_i,*neuron_n2);
     //cout << "Perf Run Complete\n";
   } else {
-    convolution_layer(*synapse,*neuron_i,*neuron_n);
+    //convolution_layer(*synapse,*neuron_i,*neuron_n);
     test_layer(*synapse,*neuron_i,*neuron_n2);
     cout << "computation complete!\n";  
 
-    compare((VTYPE*)*neuron_n,(VTYPE*)*neuron_n2,NYSCL*NXSCL*Nn);
+    //compare((VTYPE*)*neuron_n,(VTYPE*)*neuron_n2,NYSCL*NXSCL*Nn);
 
     int n_outputs= Ny/Sy * Ny/Sx * Nn;
     cout << "mults: " << n_outputs*Ni*Kx*Ky << " sigmoids: "  << n_outputs << "\n";
