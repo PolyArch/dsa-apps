@@ -19,15 +19,17 @@
 
 // This sets the context -- ie. which cores the following commands apply to
 #define SB_CONTEXT(bitmask) \
-  __asm__ __volatile__("sb_ctx %0, t0, 0" : : "r"(bitmask));
+  __asm__ __volatile__("sb_ctx %0, x0, 0" : : "r"(bitmask));
 
 //This is the same as SB_CONTEXT butwith
 #define SB_SET_ACCEL(core_id) \
   SB_CONTEXT(1<<core_id)
 
-
 #define SB_CONTEXT_I(bitmask) \
-  __asm__ __volatile__("sb_ctx t0, t0, %0" : : "i"(bitmask));
+  __asm__ __volatile__("sb_ctx x0, x0, %0" : : "i"(bitmask));
+
+#define SB_CONTEXT_OFFSET(bitmask,offset) \
+  __asm__ __volatile__("sb_ctx x0, %0, %1" : : "r"(offset), "i"(bitmask));
 
 //Stream in the Config
 #define SB_CONFIG(mem_addr, size) \
