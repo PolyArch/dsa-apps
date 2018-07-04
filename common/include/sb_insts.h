@@ -3,6 +3,7 @@
 
 // Magic sentinal for matching
 #define SENTINAL (((uint64_t)1)<<63)
+#define SENTINAL32 (((uint32_t)1)<<31)
 
 // For bottom two bits:
 #define NO_FILL        0
