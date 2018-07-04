@@ -1,14 +1,14 @@
-#include <iostream>
 #include <stdio.h>
-#include <vector>
 #include <stdlib.h>
+#include <cstdlib>
 #include <stdbool.h>
 #include <time.h>
-#include "test.dfg.h"
-#include "../../common/include/sb_insts.h"
-#include "../../common/include/sim_timing.h"
-#include <inttypes.h>
+#include <string>
 #include <sstream>
+#include <inttypes.h>
+
+#define d1 3
+#define d2 6
 
 struct tree {
   uint64_t* nodeType; 
@@ -20,39 +20,40 @@ struct tree {
   uint64_t* flag;
 };
 
-void backpropagation(tree circuit, int index, int nodes_at_level[d2-d1]){
-  // 2 parents, overwrite the value? how is this done? but should not be the
-  // problem in my example
-  int n_times = 0;
+void backpropagation(tree circuit, int index, int cum_nodes_at_level[d2-d1]){
+  // pid is parent id
+  int c0_id, c1_id;
+  // index is the leaf node here? should start from root
+  for (int i = 0; i < index; i+=cum_nodes_at_level[i]) {
+    for(int pid = i; pid < cum_nodes_at_level[i+1]; pid++) {
+      c0_id = circuit.child0[pid];
+      c1_id = circuit.child1[pid];
 
-  SB_CONFIG(test_config,test_size);
-
-  int i=0;
-  for (int d = 0; d < (d2-d1-1); d++) {
-    // start with i
-    n_times = nodes_at_level[d];
-    // std::cout << "number of elements at the level: " << n_times << std::endl;
-    SB_DMA_READ(&circuit.nodeType[i], 8, 8, n_times, P_test_nodeType);
-    SB_DMA_READ(&circuit.dr[i], 8, 8, n_times, P_test_dr);
-    SB_DMA_READ(&circuit.flag[i], 8, 8, n_times, P_test_flag);
-    SB_DMA_READ(&circuit.vr[i], 8, 8, n_times, P_test_vr);
-    SB_DMA_READ(&circuit.child0[i], 8, 8, n_times, P_IND_DOUB0);
-    SB_DMA_READ(&circuit.child1[i], 8, 8, n_times, P_IND_1);
-    SB_DMA_READ(&circuit.child1[i], 8, 8, n_times,P_IND_2);
-    SB_CONFIG_INDIRECT(T64,T64,1);
-    SB_INDIRECT(P_IND_DOUB0, &circuit.vr[i], n_times, P_test_c1vr);
-    SB_CONFIG_INDIRECT(T64,T64,1);
-    SB_INDIRECT(P_IND_1, &circuit.vr[i], n_times, P_test_c2vr);
-
-    SB_CONFIG_INDIRECT(T64,T64,1);
-    SB_INDIRECT_WR(P_IND_DOUB1, &circuit.dr[i], n_times, P_test_c0dr);
-    SB_CONFIG_INDIRECT(T64,T64,1);
-    SB_INDIRECT_WR(P_IND_2, &circuit.dr[i], n_times, P_test_c1dr);
-
-    SB_WAIT_ALL();
-    i+=nodes_at_level[d];
+      if (circuit.nodeType[pid] == 0) {
+        circuit.dr[c0_id] = circuit.dr[pid];
+        circuit.dr[c1_id] = circuit.dr[pid];
+      }
+      else if (circuit.nodeType[pid] == 1) {
+        if (circuit.dr[pid] == 0) {
+          circuit.dr[c0_id] = 0;
+          circuit.dr[c1_id] = 0;
+        } else if (circuit.flag[pid]) {
+	      if (circuit.vr[c0_id] == 0) {
+            circuit.dr[c0_id] = circuit.dr[pid] * circuit.vr[pid];
+            circuit.dr[c1_id] = 0;
+	      } else {
+	        circuit.dr[c0_id] = circuit.dr[pid] * (circuit.vr[pid] / circuit.vr[c0_id]);
+            circuit.dr[c1_id] = 0;
+	      }
+        } else {
+          circuit.dr[c0_id] = circuit.dr[pid] * (circuit.vr[pid] / circuit.vr[c0_id]);
+          circuit.dr[c1_id] = circuit.dr[pid] * (circuit.vr[pid] / circuit.vr[c1_id]);
+        }
+      }
+    }
   }
 }
+
 
 int main() {
   FILE *ac_file;
@@ -103,8 +104,8 @@ int main() {
         } else {
           arith_ckt.nodeType[index]=0;
         }
-        arith_ckt.vr[index] = 1 + rand()/RAND_MAX; // What is uint? I want double, right?
-        arith_ckt.dr[index] = 1 + rand()/RAND_MAX;
+        arith_ckt.vr[index] = rand();
+        arith_ckt.dr[index] = rand();
         arith_ckt.flag[index] = rand()%2;
         index++;
     }
@@ -120,12 +121,11 @@ int main() {
   }
   
   printf("Done reading file!\n");
- 
+
   printf("Starting backpropagation with number of nodes: %d\n", index);
-  begin_roi();
-  backpropagation(arith_ckt, index, nodes_at_level);
-  end_roi();
-  sb_stats();
+  // begin_roi();
+  backpropagation(arith_ckt, index, cum_nodes_at_level);
+  // end_roi();
   printf("Backpropagation done!\n");
   return 0;
 }
