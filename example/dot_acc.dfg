@@ -1,7 +1,7 @@
 #R = A . B
 
-InputVec: A [0, 1, 2, 3] 
-InputVec: B [0, 1, 2, 3] 
+InputVec: A [4] 
+InputVec: B [4] 
 Input: reset
 
 M0 =Mul16x4(A0 , B0 )
