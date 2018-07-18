@@ -5,7 +5,7 @@
 #include "../common/include/sim_timing.h"
 #include <inttypes.h>
 
-#define ALEN 65536
+#define ALEN 32768
 
 uint16_t array1[ALEN]={};
 uint16_t array2[ALEN]={};
@@ -32,6 +32,8 @@ int main(int argc, char* argv[]) {
   }
   //end_roi(); 
 
+
+
   //Version 1:                                                                                                                      
   begin_roi();                                                                                                                      
   SB_CONFIG(dot_config,dot_size);                                                                                                   
@@ -46,6 +48,7 @@ int main(int argc, char* argv[]) {
                                                                                                                                     
   SB_WAIT_ALL();                                                                                                                    
   end_roi();          
+
 
 
   //Version 2:  (has scratchpad)
@@ -66,7 +69,6 @@ int main(int argc, char* argv[]) {
     SB_WAIT_ALL();
   }
 
-
   //Version 3: (uses accumulator)
   SB_CONFIG(dot_acc_config,dot_acc_size);
 
@@ -86,9 +88,9 @@ int main(int argc, char* argv[]) {
 
   sum3 = accum16[0] + accum16[1] + accum16[2] + accum16[3];
 
-  printf("dot product (original): %d\n",sum0);
-  printf("dot product (sb version 1): %d\n",sum1);
-  printf("dot product (sb version 2): %d\n",sum2);
-  printf("dot product (sb version 3): %d\n",sum3);
+  printf("dot product (original): %d\n", (int)sum0);
+  printf("dot product (sb version 1): %d\n",(int)sum1);
+  printf("dot product (sb version 2): %d\n",(int)sum2);
+  printf("dot product (sb version 3): %d\n",(int)sum3);
 
 }

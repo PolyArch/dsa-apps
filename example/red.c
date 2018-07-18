@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "red.h"
+#include "red.dfg.h"
 #include "../common/include/sb_insts.h"
 #include "../common/include/sim_timing.h"
 #include <inttypes.h>

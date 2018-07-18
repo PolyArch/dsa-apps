@@ -3,7 +3,7 @@ $(warning SBCONFIG is undefined, using default)
 SBCONFIG=$(SS_TOOLS)/configs/revel.sbmodel
 endif
 
-TESTS=dotp red
+TESTS=dotp #red
 TESTC=$(TESTS:=.c)
 
 all: $(TESTS) bin
@@ -11,7 +11,7 @@ all: $(TESTS) bin
 #CPP=riscv32-unknown-elf-g++
 CPP=riscv64-unknown-elf-g++
 
-DFGS=dot.dfg dot_acc.dfg red.dfg
+DFGS=dot.dfg dot_acc.dfg #red.dfg
 
 DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 
@@ -19,7 +19,7 @@ DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 #${info $(DFG_HEADERS)}
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
-	$(SS_TOOLS)/bin/sb_sched $(SBCONFIG) $< 
+	$(SS_TOOLS)/bin/sb_sched --verbose $(SBCONFIG) $< 
 
 OPT?=-O3
 CFLAGS=$(OPT) -g -ggdb -gdwarf-3 

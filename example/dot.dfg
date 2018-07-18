@@ -1,7 +1,7 @@
 #R = A . B + carry
 
-Input: A [4] 
-Input: B [4] 
+Input: A[4] 
+Input: B[4] 
 Input: carry
 
 M0 =Mul16x4(A0 , B0 )
