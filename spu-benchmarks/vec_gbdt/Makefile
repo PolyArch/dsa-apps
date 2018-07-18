@@ -1,9 +1,9 @@
 ifndef N
-N=100
+N=1000
 endif
 
 ifndef Mt
-Mt=32
+Mt=4
 endif
 
 ifndef k
@@ -15,7 +15,7 @@ ratio=0.5
 endif
 
 ifndef M
-M=8
+M=4
 endif
 
 
@@ -32,7 +32,7 @@ all: $(TESTS)
 CPP=riscv64-unknown-elf-g++
 MACROS = -DN=$(N) -DMt=$(Mt) -Dk=$(k) -Dratio=$(ratio) -DM=$(M)
 
-DFGS=none.dfg test.dfg final_redn.dfg map.dfg
+DFGS=none.dfg test.dfg final_redn.dfg map.dfg stall_none.dfg
 
 DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 
@@ -52,6 +52,13 @@ $(DFG_HEADERS): %.dfg.h: %.dfg
 
 $(TESTS): % :%.cpp $(DFG_HEADERS) input.data
 	 $(CPP) $< $(LIB) $(CFLAGS) $(MACROS) -static -o $@ $(LFLAGS)
+
+run:
+	BACKCGRA=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=4096kB --l1i_size=16kB --l2_size=4096kB --caches --cmd=softbrain
+
+run-debug:
+	BACKCGRA=1 gdb --args gem5.debug $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=64kB --l1i_size=16kB --l2_size=1024kB --caches --cmd=softbrain
+
 
 cleandata:
 	rm -f input.data inst_id.data

@@ -1,0 +1,22 @@
+Input: nodeType
+Input: c1vf [2]
+Input: c2vf [2]
+
+s1 = Add64(0,c1vf0)
+s2 = Select(s1,0,c1vf1)
+s3 = Add64(s2,c2vf0)
+s4 = Select(s3,s2,c2vf1)
+out1 = s4
+
+m1 = Mul64(1,c1vf0)
+m2 = Select(m1,1,c1vf1)
+m3 = Mul64(m2,c2vf0)
+m4 = Select(m3,m2,c2vf1)
+cond0 = Or(And(ICmpNE(c1vf0,0),c1vf1),And(ICmpNE(c2vf0,0),c2vf1))
+out2 = Select(0,m4,cond0)
+
+vr = Select(out1,out2,nodeType)
+flag = And3(nodeType,Xor(c1vf0,c2vf0))
+
+Output: vr
+Output: flag

@@ -1,0 +1,25 @@
+Input: A
+Input: feat_ind [4]
+Input: node_ind [4]
+Input: label
+Input: const
+
+
+ctrl0 = IndexMatch(feat_ind0, node_ind0)
+ctrl1 = IndexMatch(feat_ind1, node_ind1)
+ctrl2 = IndexMatch(feat_ind2, node_ind2)
+ctrl3 = IndexMatch(feat_ind3, node_ind3)
+
+O0 = Keep16(extract(A,16,0), ctrl0, control=ctrl0{2:b1})
+O1 = Keep16(extract(A,16,1), ctrl1, control=ctrl1{2:b1})
+O2 = Keep16(extract(A,16,2), ctrl2, control=ctrl2{2:b1})
+O4 = Keep16(extract(A,16,3), ctrl3, control=ctrl3{2:b1})
+
+C0 = concat(O0,O1,O2,O3)
+C1 = Add16x4(C0,64)
+
+D0 = label
+D1 = const
+
+Output: C[2]
+Output: D[2]
