@@ -4,11 +4,13 @@
 #include <assert.h>
 #include "test.dfg.h"
 #include "none.dfg.h"
+#include "stall_none.dfg.h"
 #include "final_redn.dfg.h"
 #include "map.dfg.h"
 #include "../../common/include/sb_insts.h"
 #include "../../common/include/sim_timing.h"
 #include <inttypes.h>
+#include <sstream>
 #define iters 63
 // #define ITYPE double
 #define ITYPE uint64_t
@@ -84,6 +86,7 @@ class DecisionTree {
     cur_nodes.push_back(node);
     // cout << "Current nodes in queue are: " << cur_nodes.size() << " depth is: " << depth << "\n";
     uint64_t offset = (k*0 | k*2 << 16 | (k*4 & 0xFFFFFFFFFFFFFFFF) << 32 | (k*6 & 0xFFFFFFFFFFFFFFFF) << 48);
+    uint64_t local_offset = (k | k << 16 | (k & 0xFFFFFFFFFFFFFFFF) << 32 | (k & 0xFFFFFFFFFFFFFFFF) << 48);
     for(unsigned node_id=0; node_id<cur_nodes.size() && depth < max_depth; ++node_id){
       // cout << "Node_id we are working on: " << node_id << "\n";
       max_entr = 0.0;
@@ -102,32 +105,66 @@ class DecisionTree {
       // can parallelize across features
       // for(uint64_t j=0; j<M; ++j) {
       begin_roi();
+      // for(int j=0; j<1; ++j) {
       for(int j=0; j<1; ++j) {
         // 4 feat values at a time
 
-        SB_CONST_SCR(0, 0, (64*8));
-        SB_WAIT_SCR_RD(); // should prevent write because my atomic scr is both rd and wr but in wr controller?
-        SB_WAIT_SCR_WR();
+        // SB_CONST_SCR(0, 0, (64*8));
+        // SB_WAIT_SCR_RD(); // should prevent write because my atomic scr is both rd and wr but in wr controller?
+        // SB_WAIT_SCR_WR();
 
-        SB_CONFIG(none_config,none_size);
+
+
+        SB_CONFIG(stall_none_config,stall_none_size);
                 
+
+        // SB_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_1);
+        // SB_CONFIG_INDIRECT2(T64, T64, M+2, M-j, M+1-j);
+        // SB_INDIRECT(P_IND_1, &data[0][j], n, P_stall_none_A);
+        // SB_INDIRECT(P_IND_1, &data[0][j], n, P_stall_none_label);
+        // SB_INDIRECT(P_IND_1, &data[0][j], n, P_stall_none_const);
+        // TODO: I can use offset list here now
         SB_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_TRIP0);
         SB_CONFIG_INDIRECT(T64, T64, M+2);
-        SB_INDIRECT(P_IND_TRIP0, &data[0][j], n, P_none_A);
+        SB_INDIRECT(P_IND_TRIP0, &data[0][j], n, P_stall_none_A);
         
         SB_CONFIG_INDIRECT(T64, T64, M+2);
-        SB_REPEAT_PORT(4);
-        SB_INDIRECT(P_IND_TRIP1, &data[0][M], n, P_none_label);
+        SB_INDIRECT(P_IND_TRIP1, &data[0][M], n, P_stall_none_label);
 
         SB_CONFIG_INDIRECT(T64, T64, M+2);
-        SB_REPEAT_PORT(4);
-        SB_INDIRECT(P_IND_TRIP2, &data[0][M+1], n, P_none_const);
+        SB_INDIRECT(P_IND_TRIP2, &data[0][M+1], n, P_stall_none_const);
 
+        SB_CONST(P_stall_none_local_offset, local_offset, n);
 
         SB_CONFIG_ATOMIC_SCR_OP(T16, T64, T64);
-        SB_ATOMIC_SCR_OP(P_none_C, P_none_D, offset, 2*n*4, 0);
+        SB_ATOMIC_SCR_OP(P_stall_none_C, P_stall_none_D, offset, 2*n*4, 0);
+        SB_WAIT_SCR_WR();
         SB_WAIT_ALL();
 
+
+
+
+        // SB_CONFIG(none_config,none_size);
+        //         
+        // SB_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_TRIP0);
+        // SB_CONFIG_INDIRECT(T64, T64, M+2);
+        // SB_INDIRECT(P_IND_TRIP0, &data[0][j], n, P_none_A);
+        // 
+        // SB_CONFIG_INDIRECT(T64, T64, M+2);
+        // SB_REPEAT_PORT(4);
+        // SB_INDIRECT(P_IND_TRIP1, &data[0][M], n, P_none_label);
+
+        // SB_CONFIG_INDIRECT(T64, T64, M+2);
+        // SB_REPEAT_PORT(4);
+        // SB_INDIRECT(P_IND_TRIP2, &data[0][M+1], n, P_none_const);
+
+        // SB_CONST(P_none_local_offset, local_offset, n);
+
+        // SB_CONFIG_ATOMIC_SCR_OP(T16, T64, T64);
+        // SB_ATOMIC_SCR_OP(P_none_C, P_none_D, offset, 2*n*4, 0);
+        // SB_WAIT_ALL();
+
+        /*
         SB_CONFIG(test_config,test_size);
 
         for(int f=0; f<4; ++f){
@@ -161,25 +198,32 @@ class DecisionTree {
           SB_WAIT_SCR_WR();
           SB_WAIT_ALL();
         }
-        
+       */ 
       }
       SB_WAIT_ALL();
+      // end_roi();
+      // sb_stats();
+      /*
+      int m=8;
       SB_CONFIG(final_redn_config, final_redn_size);
-      SB_SCR_PORT_STREAM(64*2, 8*2, 8, (M-1), P_final_redn_cur_entr);
-      SB_CONST(P_final_redn_const1, 1, M-1);
-      SB_CONST(P_final_redn_const2, 0, M-1);
+      SB_SCR_PORT_STREAM(64*2, 8*2, 8, (m-1), P_final_redn_cur_entr);
+      SB_CONST(P_final_redn_const1, 1, m-1);
+      SB_CONST(P_final_redn_const2, 0, m-1);
       // let's write it in dma
-      SB_SCR_WRITE(P_final_redn_split_feat_id, 8*1, 64*2+M+1);
+      SB_SCR_WRITE(P_final_redn_split_feat_id, 8*1, 64*2+m+1);
       SB_WAIT_SCR_WR();
+      SB_WAIT_SCR_RD();
       // could have stored directly to dram
-      SB_SCRATCH_DMA_STORE(64*2+M+1, 8, 8, 1, &node->info.split_feat_id);
+      SB_SCRATCH_DMA_STORE(64*2+m+1, 8, 8, 1, &node->info.split_feat_id);
       SB_WAIT_ALL();
       SB_SCRATCH_DMA_STORE(64*2+node->info.split_feat_id*2+1, 8, 8, 1, &node->info.thres);
       SB_WAIT_ALL();
 
       double split_thres = node->info.thres; 
       int feat_id = node->info.split_feat_id;
+      */
 
+      /*
       // ideally should be in different scratchpad
       SB_CONFIG(map_config, map_size);
 
@@ -200,6 +244,7 @@ class DecisionTree {
       // indirect port? (weird): should i remove that condition?
       // SB_INDIRECT_WR(P_map_offset, 0, n, P_map_id); // it is not mapping correct value as the output...need to see
       SB_WAIT_ALL();
+      */
 
 
       end_roi();
@@ -246,7 +291,7 @@ int main() {
   while(fgets(lineToRead, 5000, train_file) != NULL) {
     // sscanf(lineToRead, "%ld %ld %ld %ld %ld %ld %ld %ld %lf", &temp.f[0], &temp.f[1], &temp.f[2], &temp.f[3], &temp.f[4], &temp.f[5], &temp.f[6], &temp.f[7], &t.output);
     
-      sscanf(lineToRead, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %lf %lf", &temp2[0], &temp2[1], &temp2[2], &temp2[3], &temp2[4], &temp2[5], &temp2[6], &temp2[7], &temp2[8], &temp2[9], &temp2[10], &temp2[11], &temp2[12], &temp2[13], &temp2[14],&temp2[15], &temp2[16], &temp2[17], &temp2[18], &temp2[19], &temp2[20], &temp2[21], &temp2[22], &temp2[23], &temp2[24],&temp2[25], &temp2[26], &temp2[27], &temp2[28], &temp2[29], &temp2[30], &temp2[31], &t.output, &grad.output);
+     //  sscanf(lineToRead, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %d %lf %lf", &temp2[0], &temp2[1], &temp2[2], &temp2[3], &temp2[4], &temp2[5], &temp2[6], &temp2[7], &temp2[8], &temp2[9], &temp2[10], &temp2[11], &temp2[12], &temp2[13], &temp2[14],&temp2[15], &temp2[16], &temp2[17], &temp2[18], &temp2[19], &temp2[20], &temp2[21], &temp2[22], &temp2[23], &temp2[24],&temp2[25], &temp2[26], &temp2[27], &temp2[28], &temp2[29], &temp2[30], &temp2[31], &t.output, &grad.output);
       // for( int i=0; i<2*M; ++i){
       /*
       for( int i=0; i<Mt; ++i){
@@ -257,13 +302,20 @@ int main() {
       sscanf(lineToRead, "%lf ", &grad.output);
       */
       // cout << t.output << " " << grad.output << "\n";
+      std::string raw(lineToRead);
+      std::istringstream iss(raw.c_str());
+      char ignore;
 
-    for(int i=0; i<M; ++i){
+      for(int i=0; i<M; i++){
+          iss >> temp2[i];
+      }
+      iss >> t.output >> ignore >> grad.output;
+
+
+
+    for(int i=0; i<M/4; ++i){
       tree.data[id][i] = (temp2[i*4] | temp2[i*4+1] << 16 | (temp2[i*4+2] & 0xFFFFFFFFFFFFFFFF) << 32 | (temp2[i*4+3] & 0xFFFFFFFFFFFFFFFF) << 48);
-      // cout << (tree.data[id][i] & 0xFFFF) << " " << ((tree.data[id][i] >> 16) & 0xFFFF) << " " << ((tree.data[id][i] >> 32) & 0xFFFF) << " " << ((tree.data[id][i] >> 48) & 0xFFFF) << " ";
-      // tree.data[id][i] = (temp2[i*4] | (temp2[i*4+1] & 0xFFFFFFFFFFFFFFFF)<< 16 | (temp2[i*4+2] & 0xFFFFFFFFFFFFFFFF) << 32 | (temp2[i*4+3] & 0xFFFFFFFFFFFFFFFF) << 48);
     }
-    // cout << "\n";
     tree.data[id][M] = t.out;
     tree.data[id][M+1] = grad.out;
     id++;
@@ -303,4 +355,3 @@ int main() {
 
   return 0;
 }
-

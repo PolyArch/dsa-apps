@@ -6,7 +6,13 @@ Input: const
 C0 = A
 C1 = Add16x4(A,local_offset)
 D0 = label
-D1 = const
+D1 = label
+D2 = label
+D3 = label
+D4 = const
+D5 = const
+D6 = const
+D7 = const
 
 Output: C[2]
-Output: D[2]
+Output: D[8]
