@@ -1,5 +1,5 @@
 #!/bin/bash
-export SBCONFIG=$SS_TOOLS/configs/revel.sbmodel
+export SBCONFIG=$SS_TOOLS/configs/revel-temporal.sbmodel
 
 
 #export LD_LIBRARY_PATH=~/ss-stack/ss_tools/lib
@@ -33,7 +33,7 @@ if [ -z "$1" ]; then
 
   echo "Test all the cases!"
   #for i in `ls ind*.c | grep -v fix | grep -v unalign`; do
-  for i in `ls *.c | grep -v fix | grep -v unalign`; do
+  for i in `ls *.c | grep -v "fix_" | grep -v "back_"   | grep -v unalign`; do
     for l in 4 12 32 500 2048; do
       test=bin/`basename $i .c`_$l
       run_test $test

@@ -1,0 +1,11 @@
+Input: in
+
+out_normal   = in:16:0 in:16:1 in:16:2 in:16:3
+out_reverse  = in:16:3 in:16:2 in:16:1 in:16:0
+out_red_add1 = Add64(Add32(Add16(in:16:3,in:16:1),Add16(in:16:0,in:16:2)), 1)
+out_upper    = in:32:1 
+
+Output: out_normal
+Output: out_reverse
+Output: out_red_add1
+Output: out_upper

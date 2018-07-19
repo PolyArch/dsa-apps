@@ -1,6 +1,6 @@
 ifndef SBCONFIG
 $(warning SBCONFIG is undefined, using default)
-SBCONFIG=$(RISCV)/configs/revel.sbmodel
+SBCONFIG=$(RISCV)/configs/revel-temporal.sbmodel
 endif
 
 TESTN=$(wildcard fix*.c)
@@ -29,7 +29,7 @@ bin:
 	mkdir -p bin
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
-	$(RISCV)/bin/sb_sched $(SBCONFIG) $<
+	$(RISCV)/bin/sb_sched -a sa $(SBCONFIG) $<
 
 OPT?=-O3
 CFLAGS=$(OPT) -g -ggdb -gdwarf-3 -static
