@@ -1,19 +1,23 @@
 Input: A
-Input: B
+Input: B [2]
 Input: V
-Input: Z
+Input: Z [2]
 
-ab_real = FMul32x2(A, B)
-ab_imag = FMulX32x2(A, B)
-conj_ab = FAddSub32x2(ab_real, ab_imag)
+VA = CplxMulCons(A, V)
 
-vab_real = FMul32x2(V, conj_ab)
-vab_imag = FMulX32x2(V, conj_ab)
-vab = FSubAdd32x2(vab_real, vab_imag)
+R_AB0 = FMul32x2(VA, B0)
+R_AB1 = FMul32x2(VA, B1)
 
-O = FSub32x2(Z, vab)
+I_AB0 = FMulX32x2(VA, B0)
+I_AB1 = FMulX32x2(VA, B1)
 
-Output: O
+C_AB0 = FAddSub32x2(R_AB0, I_AB0)
+C_AB1 = FAddSub32x2(R_AB1, I_AB1)
+
+O0 = FSub32x2(Z0, C_AB0)
+O1 = FSub32x2(Z1, C_AB1)
+
+Output: O [2]
 
 ----
 

@@ -4,7 +4,7 @@ Input: R2
 Input: R3 
 Input: R4
 
-InputVec: P [0, 1, 2, 3] 
+Input: P [4] 
 
 I0 =Add16x4(R0, R1)
 I1 =Add16x4(R1, R2)
@@ -21,7 +21,7 @@ O1=RShf2_16x4(H1)
 O2=RShf2_16x4(H2)
 O3=RShf2_16x4(H3)
 
-OutputVec: I [0, 1, 2, 3]
+Output: I [4]
 
 Output: O0
 Output: O1

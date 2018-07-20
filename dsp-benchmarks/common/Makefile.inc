@@ -18,7 +18,7 @@ endif
 DFG_HEADERS = $(DFG:.dfg=.dfg.h)
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
-	$(SS_TOOLS)/bin/sb_sched --max-iters 20000 -d $(FIFO_DEPTH) --verbose $(SBCONFIG) $< 
+	$(SS_TOOLS)/bin/sb_sched -a sa --max-iters 20000 -d $(FIFO_DEPTH) --verbose $(SBCONFIG) $< 
 
 IFLAGS=-I../../common/include -I../../../ss-tools/include -I../common/
 INTELI=-I /opt/intel/include 
@@ -38,7 +38,7 @@ MAT_DFG = ../common/mmv.dfg ../common/mmvc.dfg ../common/suboutercx2.dfg ../comm
 MAT_HEADS = $(MAT_DFG:.dfg=.dfg.h)
 
 $(MAT_HEADS): %.dfg.h: %.dfg
-	$(SS_TOOLS)/bin/sb_sched --max-iters 20000 -d $(FIFO_DEPTH) --verbose $(SBCONFIG) $< 
+	$(SS_TOOLS)/bin/sb_sched -a sa --max-iters 20000 -d $(FIFO_DEPTH) --verbose $(SBCONFIG) $< 
 
 matutils: $(MAT_HEADS)
 

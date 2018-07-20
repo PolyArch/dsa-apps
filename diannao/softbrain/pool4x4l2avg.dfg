@@ -4,9 +4,9 @@ Input: R2
 Input: R3 
 Input: R4
 
-InputVec:  Xa [0, 1] 
-InputVec:  Xb [0, 1] 
-InputVec:  Xc [0, 1] 
+Input:  Xa [2] 
+Input:  Xb [2] 
+Input:  Xc [2] 
 
 R12=Add16x4(R1, R2)
 R123=Add16x4(R12, R3)
@@ -35,9 +35,9 @@ Ob1=Xc1
 Oc0=R0123
 Oc1=R1234
 
-OutputVec:  Oa [0, 1] 
-OutputVec:  Ob [0, 1] 
-OutputVec:  Oc [0, 1] 
+Output:  Oa [2] 
+Output:  Ob [2] 
+Output:  Oc [2] 
 
 Output: O0
 Output: O1

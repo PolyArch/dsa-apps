@@ -3,6 +3,7 @@
 
 //------------SB Related-------------//
 
+#include "../../common/include/sim_timing.h"
 //ROI functions
 //void begin_roi();
 //void end_roi();

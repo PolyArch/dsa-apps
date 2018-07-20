@@ -53,9 +53,52 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *r) {
     SB_GARBAGE(P_multi_O, pad);
     SB_WAIT_ALL();
  
-    REVELvec_mul_mat(a, _N_, _N_, _N_, hv, true, temp0);
-    REVELsub_outerx2(a, _N_, _N_, _N_, hv, temp0, false, r, _N_);
-    REVELsub_outerx2(NULL, _N_, _N_, -1, hv, hv, true, q, _N_);
+    //REVELvec_mul_mat(a, _N_, _N_, _N_, hv, true, temp0);
+#define N _N_
+    SB_CONFIG(fused1_config, fused1_size);
+    {
+      int n = N;
+      int pad = get_pad(n, 2);
+      SB_FILL_MODE(STRIDE_ZERO_FILL);
+      SB_DMA_READ(a, 8 * n, 8 * n, n, P_fused1_A);
+      SB_CONST(P_fused1_C, 0, n + pad);
+      SB_RECURRENCE(P_fused1_O, P_fused1_C, (n + pad) * (n - 1));
+      SB_REPEAT_PORT((n + pad) / 2);
+      SB_DMA_READ(hv, 8, 8, n, P_fused1_B);
+      SB_DMA_WRITE(P_fused1_O, 8, 8, n, temp0);
+      SB_GARBAGE(P_fused1_O, pad);
+      SB_WAIT_ALL();
+    }
+
+    SB_CONFIG(fused2_config, fused2_size);
+    //REVELsub_outerx2(a, _N_, _N_, _N_, hv, temp0, false, r, _N_);
+    {
+      int n = N;
+      SB_DMA_READ(a, 8 * n, 8 * n, n, P_fused2_A_);
+      SB_REPEAT_PORT(n);
+      SB_DMA_READ(hv, 8, 8, n, P_fused2_B_);
+      SB_DMA_READ(temp0, 0, 8 * n, n, P_fused2_C_);
+      SB_DMA_WRITE(P_fused2_O_, 8 * n, 8 * n, n, r);
+    }
+
+    //REVELsub_outerx2(NULL, _N_, _N_, -1, hv, hv, true, q, _N_);
+    {
+      int n = N;
+      int pad = get_pad(n, 2);
+      SB_FILL_MODE(NO_FILL);
+      SB_2D_CONST(P_fused2_A, 1065353216, 1, 0, n, n - 1);
+      SB_CONST(P_fused2_A, 1065353216, 1);
+      //SB_DMA_READ(q + i, 8 * n, 8 * n, n, P_fused2_A);
+      SB_FILL_MODE(STRIDE_DISCARD_FILL);
+      SB_REPEAT_PORT((n + pad) / 2);
+      SB_DMA_READ(temp1, 8, 8, n, P_fused2_B);
+      SB_DMA_READ(hv, 0, 8 * n, n, P_fused2_C);
+      SB_DMA_WRITE(P_fused2_O, 8 * n, 8 * n, n, q);
+      SB_WAIT_ALL();
+    }
+
+#undef N
+
   }
   for (int i = 1; i < _N_ - 1; ++i) {
     int n  = _N_ - i;

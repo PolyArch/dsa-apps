@@ -4,4 +4,4 @@ import imp
 
 sched = imp.load_source('run', '../../../common/sched.py')
 
-sched.run_scheduler(['mm_lanes.dfg'])
+sched.schedule_and_simulate("crs.log", "spmv_sb", ["mm_lanes.dfg"], "$SS_TOOLS/configs/diannao_simd64.sbmodel")

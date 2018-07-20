@@ -37,17 +37,18 @@ int main() {
 
   fft(_a, _b, w);
   begin_roi();
-  end_roi();
-  //begin_roi();
   complex<float> *res = fft(a, b, w);
-  //end_roi();
+  end_roi();
   sb_stats();
-
+#ifdef __x86__
   if (!compare_n_float_complex(ref_data, _N_, res)) {
     puts("Error result!");
     return 1;
   }
-
   puts("result correct!");
+#else
+  puts("result check skipped!");
+#endif
+
   return 0;
 }

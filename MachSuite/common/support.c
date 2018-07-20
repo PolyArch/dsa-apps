@@ -12,34 +12,34 @@
 
 //SB Related
 
-#ifdef __x86_64__
-
-static __inline__ uint64_t rdtsc(void) {
-  unsigned a, d;
-  //asm("cpuid");
-  asm volatile("rdtsc" : "=a" (a), "=d" (d));
-
-  return (((uint64_t)a) | (((uint64_t)d) << 32));
-}
-
-uint64_t ticks;
-__attribute__ ((noinline))  void begin_roi() {
-  ticks=rdtsc();
-}
-__attribute__ ((noinline))  void end_roi()   {
-  ticks=(rdtsc()-ticks);
-  printf("ticks: %ld\n",ticks);
-}
-
-
-#else
-__attribute__ ((noinline))  void begin_roi() {
-  __asm__ __volatile__("add x0, x0, 1"); \
-}
-__attribute__ ((noinline))  void end_roi()   {
-   __asm__ __volatile__("add x0, x0, 2"); \
-}
-#endif
+//#ifdef __x86_64__
+//
+//static __inline__ uint64_t rdtsc(void) {
+//  unsigned a, d;
+//  //asm("cpuid");
+//  asm volatile("rdtsc" : "=a" (a), "=d" (d));
+//
+//  return (((uint64_t)a) | (((uint64_t)d) << 32));
+//}
+//
+//uint64_t ticks;
+//__attribute__ ((noinline))  void begin_roi() {
+//  ticks=rdtsc();
+//}
+//__attribute__ ((noinline))  void end_roi()   {
+//  ticks=(rdtsc()-ticks);
+//  printf("ticks: %ld\n",ticks);
+//}
+//
+//
+//#else
+//__attribute__ ((noinline))  void begin_roi() {
+//  __asm__ __volatile__("add x0, x0, 1"); \
+//}
+//__attribute__ ((noinline))  void end_roi()   {
+//   __asm__ __volatile__("add x0, x0, 2"); \
+//}
+//#endif
 
 void* my_aligned_malloc(uint64_t align, uint64_t bytes)  {
   size_t mask = (align-1)^((size_t)-1);

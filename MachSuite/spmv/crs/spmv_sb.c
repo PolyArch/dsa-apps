@@ -14,7 +14,7 @@ void spmv(TYPE val[NNZ], int64_t cols[NNZ], int64_t rowDelimiters[N+1], TYPE vec
 
     SB_DMA_READ(&val[0],  0, NNZ * sizeof(TYPE),1,P_mm_lanes_Val);
     SB_DMA_READ(&cols[0], 0, NNZ * sizeof(TYPE),1,P_IND_1);
-    SB_INDIRECT64(P_IND_1,&vec[0],NNZ,P_mm_lanes_Vec);
+    SB_INDIRECT(P_IND_1,&vec[0],NNZ,P_mm_lanes_Vec);
 
     SB_STRIDE(8,8); //for making later commands simpler
 

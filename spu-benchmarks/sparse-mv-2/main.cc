@@ -162,10 +162,12 @@ void input_data(int &total_a, Sparse *a, Sparse **a_head, int &total_b, Sparse *
     }
   }
 #undef total
+  puts("Data input done...");
 }
 
 void check_correctness() {
 #ifdef DEBUG
+
   FILE *output = fopen("output.data", "r");
   for (int i = 0; i < N; ++i) {
     float _c = fx_to_flt(c[i]);
@@ -176,8 +178,11 @@ void check_correctness() {
       //assert(false);
     }
   }
+#ifdef __x86_64__
   printf("Empty runs of Weight: %d\n", profile_wei);
   printf("Empty runs of Activation: %d\n", profile_act);
+#endif
+
 #else
   printf("Non-debug mode, correctness check skipped!\n");
 #endif

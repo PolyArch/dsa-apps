@@ -11,11 +11,5 @@ stats/
 m5out/
 bin/
 
-*/stats/*
-*/verif/*
-*/viz/*
-*/m5out/*
-*/bin/*
-
 *.pyc
 *.dot

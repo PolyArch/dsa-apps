@@ -92,7 +92,7 @@ conv3p: convolution.cpp $(HEADERS)
 	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=32  -DNy=32  -DKx=4  -DKy=4  -DNi=128 -DNn=224 -DSHARED=1      -DTi=64 -DTx=4
 
 conv4p: convolution.cpp $(HEADERS)
-	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=32  -DNy=32  -DKx=7  -DKy=7  -DNi=16  -DNn=512 -DSHARED=0      -DTnn=64 -DTn=64 -DTx=8
+	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=32  -DNy=32  -DKx=7  -DKy=7  -DNi=16  -DNn=512 -DSHARED=1      -DTnn=64 -DTn=64 -DTx=8
 
 conv5p: convolution.cpp $(HEADERS)
 	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=8 -DNy=8 -DKx=11 -DKy=11 -DNi=256 -DNn=384 -DSHARED=0      -DTnn=64 -DTi=64 -DTx=8 -DTy=8
@@ -118,7 +118,7 @@ class3p: classifier.cpp $(HEADERS)
 # ---------------------------------------------------------------------------------------------------------
 
 conv1sb: convolution.cpp $(CONV_DFG_HEADERS) $(HEADERS)
-	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=10  -DNy=25  -DKx=9  -DKy=9  -DNi=32  -DNn=64  -DSHARED=0      -DTnn=64 -DTn=64 -DTx=10 -DTy=25 -DTi=32 -DSB
+	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=10  -DNy=25  -DKx=9  -DKy=9  -DNi=32  -DNn=64  -DSHARED=1      -DTnn=64 -DTn=64 -DTx=10 -DTy=25 -DTi=32 -DSB
 #	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=500 -DNy=375 -DKx=9  -DKy=9  -DNi=32  -DNn=64  -DSHARED=1      -DTnn=64 -DTn=32 -DTx=10 -DTy=25 -DTi=32
 
 
@@ -128,12 +128,12 @@ conv2sb: convolution.cpp $(CONV_DFG_HEADERS) $(HEADERS)
 
 
 conv3sb: convolution.cpp $(CONV_DFG_HEADERS) $(HEADERS)
-	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=4  -DNy=4  -DKx=4  -DKy=4  -DNi=128  -DNn=64  -DSHARED=0      -DTi=32 -DTx=4 -DTy=4 -DTn=64  -DTii=32 -DTnn=64   -DSB    #Nx=32, Ny=32, Nn=224
+	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=4  -DNy=4  -DKx=4  -DKy=4  -DNi=128  -DNn=64  -DSHARED=1      -DTi=32 -DTx=4 -DTy=4 -DTn=64  -DTii=32 -DTnn=64   -DSB    #Nx=32, Ny=32, Nn=224
 #	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=32 -DNy=32 -DKx=4  -DKy=4  -DNi=128 -DNn=224 -DSHARED=1      -DTi=32 -DTx=4 -DTy=4     -DSB
 
 
 conv4sb: convolution.cpp $(CONV_DFG_HEADERS) $(HEADERS)
-	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=8  -DNy=8  -DKx=7  -DKy=7  -DNi=16  -DNn=512 -DSHARED=0      -DTnn=64 -DTi=16 -DTn=64 -DTx=8  -DTy=8 -DTii=16   -DSB
+	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=8  -DNy=8  -DKx=7  -DKy=7  -DNi=16  -DNn=512 -DSHARED=1      -DTnn=64 -DTi=16 -DTn=64 -DTx=8  -DTy=8 -DTii=16   -DSB
 #	$(CPP) $^ $(LIB) $(CFLAGS) $(TF) -static -o $@ -DNx=32  -DNy=32  -DKx=7  -DKy=7  -DNi=16  -DNn=512 -DSHARED=1      -DTnn=64 -DTn=64 -DTx=8 -DSB
 
 

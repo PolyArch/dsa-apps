@@ -5,6 +5,9 @@
 #define SENTINAL (((uint64_t)1)<<63)
 #define SENTINAL32 (((uint32_t)1)<<31)
 
+#define REPEAT_FXPNT_BITS (3)
+#define REPEAT_FXPNT_VAL (1<<REPEAT_FXPNT_BITS)
+
 // For bottom two bits:
 #define NO_FILL        0
 #define POST_ZERO_FILL 1
@@ -179,11 +182,16 @@
 // This tells the port to repeat a certain number of times before consuming
 // This is only really associated with the next command, as this information is forgotten as soon as
 // a command is issued.
-#define SB_CONFIG_PORT(repeat_times, stretch) \
+#define SB_CONFIG_PORT_EXPLICIT(repeat_times, stretch) \
   __asm__ __volatile__("sb_cfg_port %0, t0, %1" : : "r"(repeat_times), "i"(stretch));
 
+#define SB_CONFIG_PORT(repeat_times, stretch) \
+  do { \
+    SB_CONFIG_PORT_EXPLICIT((repeat_times)*REPEAT_FXPNT_VAL, (stretch)*REPEAT_FXPNT_VAL) \
+  } while(false)
+
 #define SB_REPEAT_PORT(times) \
-  SB_CONFIG_PORT(times,0);
+  SB_CONFIG_PORT_EXPLICIT((times)*(REPEAT_FXPNT_VAL),0);
 
 //Write to Scratch from a CGRA output port.  Note that only linear writes are currently allowed
 //#define SB_SCRATCH_WRITE(output_port, num_bytes, scratch_addr) 

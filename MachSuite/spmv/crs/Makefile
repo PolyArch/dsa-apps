@@ -55,3 +55,4 @@ hls: $(KERN).c $(KERN).h
 
 clean:
 	rm -f $(KERN) generate output.data
+	rm -f $(KERN_SB) *.dfg.h

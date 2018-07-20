@@ -4,7 +4,7 @@ Input: R2
 Input: R3 
 Input: R4
 
-InputVec: prev [0, 1, 2, 3] 
+Input: prev [4] 
 
 vsum0 =Add16x4(R0, R1)
 vsum1 =Add16x4(R1, R2)

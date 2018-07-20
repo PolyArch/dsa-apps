@@ -74,5 +74,4 @@ hls: $(KERN).c $(KERN).h
 
 clean:
 	rm -f $(KERN) generate output.data
-	#rm -rf mm_sb.h
-	rm -rf $(KERN_SB)
+	rm -rf *.dfg.h $(KERN_SB)

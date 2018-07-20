@@ -1,3 +1,13 @@
+#Input: R0
+#Input: V
+#
+#match0 = MatchIndex2(R0, V)
+#
+#mac0 = MacRed16x2(match0)
+#O = mac0
+#
+#Output: O
+
 Input: R0
 Input: R1
 Input: R2

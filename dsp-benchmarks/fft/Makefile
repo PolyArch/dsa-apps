@@ -1,10 +1,10 @@
 ifndef N
-N=64
+N=1024
 endif
 
-DFG = compute0.dfg compute1.dfg compute_rec.dfg compute.dfg manager.dfg fine2.dfg fine1.dfg manager8.dfg
+DFG = compute0.dfg compute1.dfg compute_rec.dfg compute.dfg manager.dfg fine2.dfg fine1.dfg manager8.dfg fine.dfg
 
-SOFTBRAINS = sb-origin sb-new sb-multi sb-reconfig
+SOFTBRAINS = sb-origin sb-new sb-multi sb-reconfig sb-256
 
 SCALE=$(N)
 
@@ -21,3 +21,5 @@ sb-reconfig.o sb-origin.o: %.o: %.cc compute0.dfg.h compute1.dfg.h
 sb-multi.o sb-new.o: %.o: %.cc manager.dfg.h compute.dfg.h fine2.dfg.h fine1.dfg.h manager8.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
+sb-256.o: %.o: %.cc compute.dfg.h fine.dfg.h
+	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3

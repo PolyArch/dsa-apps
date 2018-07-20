@@ -14,7 +14,7 @@ void ellpack(TYPE nzval[N*L], int64_t cols[N*L], TYPE vec[N], TYPE out[N])
     SB_CONFIG(ellpack_config,ellpack_size);
 
     SB_DMA_READ(&cols[0], 0, L * sizeof(TYPE),N,P_IND_1);
-    SB_INDIRECT64(P_IND_1,&vec[0],N*L,P_ellpack_Vec);
+    SB_INDIRECT(P_IND_1,&vec[0],N*L,P_ellpack_Vec);
     SB_DMA_READ(&nzval[0], 0, L * sizeof(TYPE),N,P_ellpack_Val);
 
     int steps_m1 = L/4-1; //2 lanes

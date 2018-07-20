@@ -1,5 +1,5 @@
-InputVec: Val [0, 1, 2, 3]
-InputVec: Vec [0, 1, 2, 3]
+Input: Val [4]
+Input: Vec [4]
 Input: reset
 
 M0 = Mul64(Val0, Vec0)

@@ -1,5 +1,5 @@
 Input: A
-InputVec: B [0, 1, 2, 3, 4, 5, 6, 7]
+Input: B [8]
 Input: reset
 
 M0 = Mul64(B0, A)
@@ -20,4 +20,4 @@ R5 = Acc64(M5, reset)
 R6 = Acc64(M6, reset)
 R7 = Acc64(M7, reset)
 
-OutputVec: R [0,1,2,3,4,5,6,7]
+Output: R [8]

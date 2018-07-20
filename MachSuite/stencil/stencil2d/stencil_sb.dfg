@@ -1,6 +1,6 @@
-InputVec: I [0, 1, 2, 3, 4, 5, 6, 7]      # Original Image  
-InputVec: F [0, 1, 2, 3]      # Filter
-InputVec: C [0, 1, 2, 3, 4, 5, 6, 7]      # Carry
+Input: I [8]      # Original Image  
+Input: F [4]      # Filter
+Input: C [8]      # Carry
 
 
 M0 = Mul64(I0, F0)
@@ -21,6 +21,6 @@ O5 = Add64(M5, C5)
 O6 = Add64(M6, C6)
 O7 = Add64(M7, C7)
 
-OutputVec: O [0, 1, 2, 3, 4, 5, 6 ,7]
+Output: O [8]
 
 

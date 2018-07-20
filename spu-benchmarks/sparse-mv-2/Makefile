@@ -1,9 +1,9 @@
 ifndef N
-N=128
+N=16
 endif
 
 ifndef M
-M=128
+M=16
 endif
 
 ifndef S0
