@@ -1,0 +1,184 @@
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled Jul 20 2018 16:13:00
+gem5 started Jul 20 2018 23:41:25
+gem5 executing on octa, pid 8228
+command line: gem5.opt /home/vidushi/Documents/ss-stack/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=4096kB --l1i_size=16kB --l2_size=4096kB --caches --cmd=softbrain
+
+Global frequency set at 1000000000000 ticks per second
+SB_DEBUG VAR: SB_COMP IS ON
+FIFO_LEN:15
+Loading SB Config (env SBCONFIG): "/home/vidushi/Documents/ss-stack/ss-tools/configs/spu_merge_test.sbmodel"
+**** REAL SIMULATION ****
+Start reading file!
+Done reading file!
+Starting process for a node
+number of instances belonging to this node: 4
+total sparse data numbers belonging to this feature: 4
+Using Schedule: "sched/sparse_none.sched"
+fifo:15 lat_mis:5
+ctrl0:IndexMatch16 (6): 3 4  = 1
+backpressure on 2nd input
+instruction valid
+ctrl1:IndexMatch16 (7): 1 0  = 2
+backpressure on 1st input
+instruction valid
+ctrl2:IndexMatch16 (8): 2 0  = 2
+backpressure on 1st input
+instruction valid
+ctrl3:IndexMatch16 (9): 3 0  = 2
+backpressure on 1st input
+instruction valid
+ctrl1:IndexMatch16 (7): 1 0  = 2
+backpressure on 1st input
+instruction valid
+ctrl2:IndexMatch16 (8): 2 0  = 2
+backpressure on 1st input
+instruction valid
+ctrl3:IndexMatch16 (9): 3 0  = 2
+backpressure on 1st input
+instruction valid
+C0:Keep16 (a): 31 1 0  = 31
+instruction valid
+C0:Keep16 (b): 11 2 0  = 11
+backpressure on 1st input
+instruction valid
+C0:Keep16 (c): 1a 2 0  = 1a
+backpressure on 1st input
+instruction valid
+C0:Keep16 (d): 14 2 0  = 14
+backpressure on 1st input
+instruction valid
+ctrl1:IndexMatch16 (7): 1 0  = 2
+backpressure on 1st input
+instruction valid
+ctrl2:IndexMatch16 (8): 2 0  = 2
+backpressure on 1st input
+instruction valid
+ctrl3:IndexMatch16 (9): 3 0  = 2
+backpressure on 1st input
+instruction valid
+C0:Keep16 (b): 11 2 0  = 11
+backpressure on 1st input
+instruction valid
+C0:Keep16 (c): 1a 2 0  = 1a
+backpressure on 1st input
+instruction valid
+C0:Keep16 (d): 14 2 0  = 14
+backpressure on 1st input
+instruction valid
+ctrl1:IndexMatch16 (7): 1 0  = 2
+backpressure on 1st input
+instruction valid
+ctrl2:IndexMatch16 (8): 2 0  = 2
+backpressure on 1st input
+instruction valid
+ctrl3:IndexMatch16 (9): 3 0  = 2
+backpressure on 1st input
+instruction valid
+C0:Keep16 (b): 11 2 0  = 11
+backpressure on 1st input
+instruction valid
+C0:Keep16 (c): 1a 2 0  = 1a
+backpressure on 1st input
+instruction valid
+C0:Keep16 (d): 14 2 0  = 14
+backpressure on 1st input
+instruction valid
+C0:Keep16 (b): 11 2 0  = 11
+backpressure on 1st input
+instruction valid
+C0:Keep16 (c): 1a 2 0  = 1a
+backpressure on 1st input
+instruction valid
+C0:Keep16 (d): 14 2 0  = 14
+backpressure on 1st input
+instruction valid
+ctrl1:IndexMatch16 (7): 1 0  = 2
+backpressure on 1st input
+instruction valid
+ctrl2:IndexMatch16 (8): 2 0  = 2
+backpressure on 1st input
+instruction valid
+ctrl3:IndexMatch16 (9): 3 8000  = 1
+backpressure on 2nd input
+instruction valid
+ctrl0:IndexMatch16 (6): 0 4  = 1
+backpressure on 2nd input
+instruction valid
+ctrl3:IndexMatch16 (9): 8000 8000  = 0
+instruction valid
+C0:Keep16 (b): 11 2 0  = 11
+backpressure on 1st input
+instruction valid
+C0:Keep16 (c): 1a 2 0  = 1a
+backpressure on 1st input
+instruction valid
+C0:Keep16 (d): 14 1 0  = 14
+instruction valid
+C0:Keep16 (a): 280 1 0  = 280
+instruction valid
+C0:Keep16 (d): 280 0 0  = 280
+instruction valid
+C1:Add16x4 (e): 14001a00110031 40004000400040  = 54005a00510071
+instruction valid
+C1:Add16x4 (e): 14001a00110280 40004000400040  = 54005a005102c0
+instruction valid
+
+*** ROI STATISTICS ***
+Simulator Time: 0 sec
+Cycles: 0
+Control Core Insts Issued: 44
+Control Core Discarded Insts Issued: 7
+Control Core Discarded Inst Stalls: 0.159
+Control Core Config Stalls: inf
+Control Core Wait Stalls:   inf (ALL)  
+
+ACCEL 0 STATS ***
+Commands Issued: 10
+CGRA Instances: 2 -- Activity Ratio: inf, DFGs / Cycle: inf
+CGRA Insts / Computation Instance: 19
+CGRA Insts / Cycle: inf (overall activity factor)
+Mapped DFG utilization: inf
+Data availability ratio: inf
+Percentage bank conflicts: -nan
+Allowed input port consumption rate: inf, inf, inf, inf, inf, inf, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, 
+percentage time we could not serve input ports: inf, inf, inf, inf, inf, inf, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, 
+Cycle Breakdown: CONFIG:-nan ISSUED:-nan ISSUED_MULTI:-nan TEMPORAL_ONLY:inf CONST_FILL:-nan SCR_FILL:-nan DMA_FILL:-nan REC_WAIT:-nan CORE_WAIT:inf SCR_BAR_WAIT:-nan DMA_WRITE:-nan CMD_QUEUE:-nan CGRA_BACK:-nan DRAIN:inf NOT_IN_USE:-nan 
+Bandwidth Table: (B/c=Bytes/cycle, B/r=Bytes/request) -- Breakdown (sources/destinatinos): 
+SP_READ:	(0 B/c, 0 B/r)  -- 
+SP_WRITE:	(0 B/c, 0 B/r)  -- 
+DMA_LOAD:	inf(infB/c, 20B/r)  -- PORT:inf(infB/c, 20B/r) 
+DMA_STORE:	(0 B/c, 0 B/r)  -- 
+REC_BUS_READ:	inf(infB/c, 20B/r)  -- PORT:inf(infB/c, 32B/r) CONST:inf(infB/c, 14B/r) 
+---- ACCEL 0 STATUS ----
+MEM REQs OUTSTANDING: 0
+Active SEs:
+Waiting SEs: (1 0 0)
+ write_barrier mask=0x1
+Ports:
+In Port 10:   Mem Size: 0  Num Ready: 0
+In Port 4:   Mem Size: 0  Num Ready: 0
+In Port 16:   Mem Size: 0  Num Ready: 0
+In Port 0:   Mem Size: 0  Num Ready: 0
+In Port 11:   Mem Size: 0  Num Ready: 0
+In Port 12:   Mem Size: 0  Num Ready: 0
+Ind In Port 25:   Mem Size: 0  Num Ready: 0
+Ind In Port 26:   Mem Size: 0  Num Ready: 0
+Ind In Port 27:   Mem Size: 0  Num Ready: 0
+Ind In Port 28:   Mem Size: 0  Num Ready: 0
+Ind In Port 29:   Mem Size: 0  Num Ready: 0
+Ind In Port 30:   Mem Size: 0  Num Ready: 0
+Ind In Port 31:   Mem Size: 0  Num Ready: 0
+Out Port 0:   In Flight: 0  Num Ready: 0  Mem Size: 0
+Out Port 1:   In Flight: 0  Num Ready: 0  Mem Size: 4
+ATOMIC SCR Stream Not Empty
+
+Cores used: 1bitmask: 1
+Total Memory Activity: inf
+
+ -- Parallelization Estimates --
+Multi-Pipeline Cycles (cores:cycles): 1:4 2:4 3:4 4:4 5:4 6:4 7:4 8:4 9:4 10:4 11:4 12:4 13:4 14:4 15:4 16:4 17:4 18:4 
+Multi-Pipeline Activity: (cores:cycles)1:0.5 2:0.25 3:0.166 4:0.125 5:0.0999 6:0.0833 7:0.0714 8:0.0625 9:0.0555 10:0.0499 11:0.0454 12:0.0416 13:0.0384 14:0.0357 15:0.0333 16:0.0312 17:0.0294 18:0.0277 
+
