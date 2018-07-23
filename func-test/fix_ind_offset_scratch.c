@@ -5,18 +5,19 @@
 #define SLEN 4
 
 struct item_array {
-  uint64_t item1;
-  uint64_t item2;
-  uint64_t item3;
-  uint64_t item4;
+  uint32_t item1;
+  uint32_t item2;
+  uint32_t item3;
+  uint32_t item4;
 } array[LEN];
 
 int main(int argc, char* argv[]) {
   init();
 
-  uint16_t ind_array[SLEN];
-  uint64_t known[SLEN*3];
-  uint64_t output[SLEN*3];
+  uint16_t ind_array[SLEN]; //16-bit ind type
+
+  uint32_t known[SLEN*3]; //32-bit data type
+  uint32_t output[SLEN*3];
 
   ind_array[0]=0;
   ind_array[1]=1;
@@ -29,6 +30,11 @@ int main(int argc, char* argv[]) {
     array[i].item3 = i*LEN+3;
     array[i].item4 = i*LEN+4;  
   }
+  //lets copy array to scratch
+  SB_DMA_SCRATCH_LOAD(array,8,8,sizeof(array)/8,0);
+  SB_WAIT_SCR_WR();
+
+
   for(int i = 0; i<SLEN; ++i) {
     int ind = ind_array[i];
 
@@ -47,12 +53,12 @@ int main(int argc, char* argv[]) {
   SB_DMA_READ(&ind_array[0],8,8,SLEN/4,P_IND_1);
 
   //itype, dtype, mult, offset
-  SB_CONFIG_INDIRECT2(T16,T64,sizeof(item_array), 2, 3);  //2 offsets for item 3 and item 4
-  SB_INDIRECT(P_IND_1,&array[0],SLEN,P_none_in);
+  SB_CONFIG_INDIRECT2(T16,T32,sizeof(item_array), 2, 3);  //2 offsets for item 3 and item 4
+  SB_INDIRECT_SCR(P_IND_1,0,SLEN,P_none_in);
 
-  SB_DMA_WRITE(P_none_out,8,8,SLEN*3,&output[0]);
+  SB_DMA_WRITE(P_none_out,8,8,SLEN*3/2,&output[0]);
   SB_WAIT_ALL();
   end_roi();
 
-  compare<uint64_t>(argv[0],output,known,(int)SLEN*3);
+  compare<uint32_t>(argv[0],output,known,(int)SLEN*3);
 }

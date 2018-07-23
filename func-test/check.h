@@ -12,7 +12,7 @@ void compare(char* test, T* array1, T* array2, int size) {
   if(error) {
     std::cerr << "ERROR ON: " << test << ", Printing Outputs\n";
     for(int i = 0; i < size; ++i) {
-      std::cout << i << " " << array1[i] << ":" << array2[i];;
+      std::cout << std::dec << i << std::hex << " " << array1[i] << ":" << array2[i];;
       if(array1[i] != array2[i]) {
         std::cerr << " \t\tERROR";
       }

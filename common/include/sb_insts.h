@@ -223,14 +223,13 @@
 //configure the type of indirection -- here multiplier has to be less than 2^7
 //Currently DTYPE MUST be 64 bits
 #define SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,offset_list)  \
-  __asm__ __volatile__("sb_cfg_ind %0, t0, %1" : : "r"(offset_list), "i"( (itype<<10)  |  ((dtype<<8)&0x3)  |  mult));
+  __asm__ __volatile__("sb_cfg_ind %0, t0, %1" : : "r"(offset_list), "i"( (itype<<2)  |  (dtype<<0)  |  (mult<<4))  );
 
-#define  SB_CONFIG_INDIRECT(itype,dtype,mult)             SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,0) 
+#define SB_CONFIG_INDIRECT( itype,dtype,mult)             SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,0) 
 #define SB_CONFIG_INDIRECT1(itype,dtype,mult,o1)          SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,o1) 
 #define SB_CONFIG_INDIRECT2(itype,dtype,mult,o1,o2)       SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,o1 | o2 << 8) 
 #define SB_CONFIG_INDIRECT3(itype,dtype,mult,o1,o2,o3)    SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,o1 | o2 << 8 | o3 << 16) 
 #define SB_CONFIG_INDIRECT4(itype,dtype,mult,o1,o2,o3,o4) SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,o1 | o2 << 8 | o3 << 16 | o4 << 24) 
-
 
 //Write from output to input port  (type -- 3:8-bit,2:16-bit,1:32-bit,0:64-bit)
 #define SB_INDIRECT(ind_port, addr_offset, num_elem, input_port) \
@@ -240,6 +239,15 @@
 #define SB_INDIRECT_WR(ind_port, addr_offset, num_elem, output_port) \
   __asm__ __volatile__("sb_ind_wr %0, %1, %2" : : "r"(addr_offset), "r"(num_elem),\
                                                   "i"((output_port<<5) | (ind_port)));
+
+//Write from output to input port  (type -- 3:8-bit,2:16-bit,1:32-bit,0:64-bit)
+#define SB_INDIRECT_SCR(ind_port, addr_offset, num_elem, input_port) \
+  __asm__ __volatile__("sb_ind    %0, %1, %2" : : "r"(addr_offset), "r"(num_elem),\
+                                                  "i"((1<<10) | (input_port<<5) | (ind_port)));
+
+#define SB_INDIRECT_WR_SCR(ind_port, addr_offset, num_elem, output_port) \
+  __asm__ __volatile__("sb_ind_wr %0, %1, %2" : : "r"(addr_offset), "r"(num_elem),\
+                                                  "i"((1<<10) | (output_port<<5) | (ind_port)));
 
 //Wait with custom bit vector -- probably don't need to use
 #define SB_WAIT(bit_vec) \

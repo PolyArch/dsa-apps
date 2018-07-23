@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
   SB_DMA_READ(&ind_array[0],8,8,LEN,P_IND_1);
 
   //itype, dtype, mult, offset
-  SB_CONFIG_INDIRECT2(T64,T64,sizeof(item_array)/8, 2, 3);  //2 offsets for item 3 and item 4
+  SB_CONFIG_INDIRECT2(T64,T64,sizeof(item_array), 2, 3);  //2 offsets for item 3 and item 4
   SB_INDIRECT(P_IND_1,&array[0],LEN,P_none_in);
 
   SB_DMA_WRITE(P_none_out,8,8,LEN*3,&output[0]);

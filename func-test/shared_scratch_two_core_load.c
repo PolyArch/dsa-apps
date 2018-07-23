@@ -16,6 +16,12 @@ int main(int argc, char* argv[]) {
 
   begin_roi();
 
+  //Description: Shared Core loads from memory into shared scratchpad.
+  //Then, two accelerator instances 
+  //  read from shread scratchpad to local
+  //  scratchpad write barrier
+  //  read from scratch and write to memory
+
   SB_CONTEXT(0x1);
 
   SB_CONTEXT(SHARED_SP);
