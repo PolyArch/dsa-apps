@@ -23,7 +23,6 @@ void mm_mult(std::pair<SBDT, double> *matrix1, int* col_ptr1, int ncols1, std::p
   col_ind3 = (SBDT*)malloc(max_size*sizeof(SBDT));
   // row_ptr3 = (int*)malloc(ncols1*sizeof(int));
 
-  // int last = 0;
   int ptr1, end1; // pt2, end1, end2;
 
   begin_roi();
@@ -35,9 +34,6 @@ void mm_mult(std::pair<SBDT, double> *matrix1, int* col_ptr1, int ncols1, std::p
   SB_2D_CONST(P_merge2way_done,2,ncols1-1,0,1,1);
   SB_DMA_WRITE(P_merge2way_Val, 8, 8, 10000000, &val3[0]);
   SB_DMA_WRITE(P_merge2way_Index, 8, 8, 10000000, &col_ind3[0]);
-  // read vector in scr and then do this
-  // SB_DMA_SCRATCH_LOAD(&(vector2[0].first), 8*2, 8, nnz2, 0);
-  // SB_DMA_SCRATCH_LOAD(&(vector2[0].second), 8*2, 8, nnz2, nnz2+1);
   
   for (int i=0; i<ncols1; i++){
     ptr1 = col_ptr1[i];
@@ -47,11 +43,6 @@ void mm_mult(std::pair<SBDT, double> *matrix1, int* col_ptr1, int ncols1, std::p
     SB_DMA_READ(&(vector2[0].first), 8*2, 8, nnz2, P_merge2way_B);
     SB_DMA_READ(&(matrix1[ptr1].second), 8*2, 8, end1-ptr1, P_merge2way_C);
     SB_DMA_READ(&(vector2[0].second), 8*2, 8, nnz2, P_merge2way_D);
-
-    // SB_SCRATCH_READ(0, nnz2*8, P_merge2way_B);
-    // SB_SCRATCH_READ(nnz2+1, nnz2*8, P_merge2way_D);
-
-
 
     SB_CONST(P_merge2way_A, SENTINAL, 1);
     SB_CONST(P_merge2way_B, SENTINAL, 1);
@@ -64,12 +55,7 @@ void mm_mult(std::pair<SBDT, double> *matrix1, int* col_ptr1, int ncols1, std::p
   SB_RESET();
   SB_WAIT_ALL(); 
   end_roi();
-/*
-  cout<<"printing the output non-zero values"<<endl;
-  for (int i=0; i<=last; i++){
-    cout<<val3[i]<<endl;
-  }
-*/
+
   sb_stats();
 
 }
@@ -97,9 +83,9 @@ int main(int argc, char** argv){
    // m1_file = fopen("datasets/protein_mod.mtx", "r");
    // m1_file = fopen("datasets/test.mtx", "r");
    // m1_file = fopen("datasets/dup_wy2010.mtx", "r");
-   m1_file = fopen("datasets/dup_pdb1HYS.mtx", "r");
+   // m1_file = fopen("datasets/dup_pdb1HYS.mtx", "r");
    // m1_file = fopen("datasets/ddup_pdb1HYS.mtx", "r");
-   // m1_file = fopen("small_dataset.mtx", "r");
+   m1_file = fopen("small_dataset.mtx", "r");
    // m1_file = fopen("datasets/wy2010.mtx", "r");
 
    if(!m1_file) {

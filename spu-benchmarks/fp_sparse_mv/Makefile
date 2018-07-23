@@ -13,12 +13,12 @@ CPP=riscv64-unknown-elf-g++
 
 DFGS=merge2way.dfg
 
-DFG_HEADERS=$(DFGS:.dfg=.h)
+DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 
 #${info $(DFGS)}
 #${info $(DFG_HEADERS)}
 
-$(DFG_HEADERS): %.h: %.dfg
+$(DFG_HEADERS): %.dfg.h: %.dfg
 	$(SS_TOOLS)/bin/sb_sched --verbose $(SBCONFIG) $< 
 
 OPT?=-O3
