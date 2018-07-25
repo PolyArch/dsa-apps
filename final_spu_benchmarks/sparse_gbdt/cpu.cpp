@@ -2,8 +2,6 @@
 #include <vector>
 #include <math.h>
 #include <assert.h>
-#include "sparse_none.dfg.h"
-#include "../../common/include/sb_insts.h"
 #include "../../common/include/sim_timing.h"
 #include <inttypes.h>
 #include <sstream>
@@ -36,7 +34,7 @@ struct featInfo {
 };
 
 struct TNode {
-  vector<uint64_t> inst_id;
+  vector<uint16_t> inst_id;
   struct TNode* child1;
   struct TNode* child2;
   vector<featInfo> feat_hists;
@@ -51,8 +49,10 @@ class DecisionTree {
     uint64_t depth = 0; // temp variable
     // vector<instance> data; // load directly from your data
     // instance data[N]; // load directly from your data
-    ITYPE data_val[N][int(M/Mt)]; // load directly from your data
-    ITYPE data_ind[N][int(M/Mt)]; // indexes
+    // ITYPE data_val[N][int(M/Mt)]; // load directly from your data
+    uint16_t data_val[N][M]; // load directly from your data
+    // ITYPE data_ind[N][int(M/Mt)]; // indexes
+    uint16_t data_ind[N][M]; // indexes
 	ITYPE labels[N][2];
     vector<ITYPE> common_inst_id; // indexes
 
@@ -73,7 +73,7 @@ class DecisionTree {
       hists.push_back(init_hists);
     }
 
-    vector<uint64_t> inst_id;
+    vector<uint16_t> inst_id;
     struct SplitInfo init_info = {0, 0, 0.0};
   
     TNode temp = {inst_id, nullptr, nullptr, hists, init_info};
@@ -128,61 +128,30 @@ class DecisionTree {
 
 	  std::cout << "number of instances belonging to this node: " << n << "\n";
 	  std::cout << "total sparse data numbers belonging to this feature: " << data_size << "\n";
-	  // std::cout << &data_ind[1][M/Mt-1]-&data_ind[0][0] << "\n";
 
       // can parallelize across features
       begin_roi();
+      for(int j=0; j<4; ++j) {
+		// For 1 feature
+		int ptr1 = 0;
+		int end1 = node->inst_id.size();
+		int ptr2 = 0;
+		int end2 = data_size-1;
 
-	  SB_CONST_SCR(0, 0, (64*8));
-      SB_WAIT_SCR_WR();
-
-      for(int j=0; j<1; ++j) {
-        // 4 feat values at a time
-        SB_CONFIG(sparse_none_config,sparse_none_size);
-                
-		// TODO: check chances of deadlock here
-		SB_DMA_READ(&node->inst_id[0], 8, 8, n, P_sparse_none_node_ind);
-		// SB_DMA_READ(&data_ind[0][0], 8, 8, data_size/4, P_sparse_none_feat_ind);
-		SB_DMA_READ(&data_ind[0][0], 8*(int(M/Mt)), 8, data_size, P_sparse_none_feat_ind);
-		SB_DMA_READ(&data_val[0][0], 8*(int(M/Mt)), 8, data_size, P_sparse_none_feat_val);
-
-		// dummy address value
-		SB_CONST(P_sparse_none_feat_val, dummy_addr, 1);
-		// SB_CONST(P_sparse_none_feat_val, dummy_addr, 10000);
-		SB_CONST(P_sparse_none_feat_ind, dummy_sentinal, 1);
-		SB_CONST(P_sparse_none_node_ind, node_sentinal, 1);
-	
-		// value to represent that the node stream has ended
-		// SB_CONST(P_sparse_none_feat_ind, SENTINAL, 1);
-		// SB_CONST(P_sparse_none_node_ind, SENTINAL, 1);
-		// for label, I will just do indirect read: would this be better than
-		// another level of index matching?
-        
-		SB_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_1);
-        // SB_CONFIG_INDIRECT1(T64, T64, 2, 1);
-        // SB_CONFIG_INDIRECT1(T64, T64, 2*8, 1*8);
-        SB_CONFIG_INDIRECT1(T64, T64, 16, 8);
-        SB_INDIRECT(P_IND_1, &labels[0][0], n, P_sparse_none_label);
-
-		// SB_DMA_READ(&x[0], 8, 8, 2*n, P_sparse_none_label);
-		SB_CONST(P_sparse_none_local_offset, local_offset, n);
-
-		// we don't know how many is required!: when all the addresses are
-		// dummy, I want to reset
-        SB_CONFIG_ATOMIC_SCR_OP(T16, T64, T64);
-        SB_ATOMIC_SCR_OP(P_sparse_none_C, P_sparse_none_D, offset, 2*n*4, 0);
-		SB_RECV(P_sparse_none_all_done, y);
-		SB_RESET();
-		// SB_WAIT_SCR_WR();
-        SB_WAIT_ALL();
-      }
-      // SB_WAIT_ALL();
-      
+		while(ptr1 <= end1 && ptr2 <= end2){
+		  int node_id = node->inst_id[ptr1];
+		  if(node_id == data_ind[ptr2]){
+			node->feat_hists[j].label_hist[data_val[ptr2]] += labels[node_id][0];
+			node->feat_hists[j].count_hist[data_val[ptr2]] += labels[node_id][0];
+		  } else {
+			if(node_id < data_ind[ptr2])
+			  ptr1++;
+			else
+			  ptr2++;
+		  }
+        }
       end_roi();
-      sb_stats();
-
     }
-    
   }
 };
 
@@ -216,21 +185,24 @@ int main() {
     char ignore;
 
     for(int i=0; i<Mt; i++){
-        iss >> temp_ind[i] >> ignore >> temp_val[i];
+        // iss >> temp_ind[i] >> ignore >> temp_val[i];
+        iss >> data_ind[id+i] >> ignore >> data_val[id+i];
     }
     // iss >> t.output >> ignore >> grad.output;
     // iss >> t.output  >> grad.output;
     // std::cout << t.output << " " << grad.output << "\n";
 
-    for(int i=0; i<Mt/4; ++i){
+	/*
+    for(int i=0; i<Mt; ++i){
       tree.data_val[id][i] = (temp_val[i*4] | temp_val[i*4+1] << 16 | (temp_val[i*4+2] & 0xFFFFFFFFFFFFFFFF) << 32 | (temp_val[i*4+3] & 0xFFFFFFFFFFFFFFFF) << 48);
       tree.data_ind[id][i] = (temp_ind[i*4] | temp_ind[i*4+1] << 16 | (temp_ind[i*4+2] & 0xFFFFFFFFFFFFFFFF) << 32 | (temp_ind[i*4+3] & 0xFFFFFFFFFFFFFFFF) << 48);
     }
+	*/
     // tree.data_val[id][M] = t.out;
     // tree.labels[id][0] = t.out;
     // tree.data_val[id][M+1] = grad.out;
     // tree.labels[id][1] = grad.out;
-    id++;
+    id+=4;
   }
 
   fclose(train_file);
@@ -258,7 +230,7 @@ int main() {
   }
   uint16_t x[4]; // = {0, 0, 0, 0};
   FILE* inst_file = fopen("inst_id.data", "r");
-  vector<uint64_t> inst_id;
+  vector<uint16_t> inst_id;
   uint16_t y;
   uint64_t temp;
   int ind=0;
@@ -271,23 +243,7 @@ int main() {
     // iss >> x[ind];
     // iss >> temp;
     iss >> y;
-	std::cout << "inst_id: " << y << std::endl;
-	temp = (y | (0 << 16) | ((0 & 0xFFFFFFFFFFFFFFFF) << 32) | ((0 & 0xFFFFFFFFFFFFFFFF) << 48));
-
-    temp = y & 0xFFFFFFFFFFFFFFFF;
-	// std::cout << "inst_id: " << (temp) << std::endl;
-	inst_id.push_back(temp);
-	tree.common_inst_id.push_back(temp);
-
-	// std::cout << x[ind] << " : " << ind << "\n";
-	// ind++;
-	// if(ind==4){
-	//   // std::cout << x[0] << " " << x[1] << " " << x[2] << " " << x[3] << "\n";
-    //   temp = (x[0] | (x[1] << 16) | ((x[2] & 0xFFFFFFFFFFFFFFFF) << 32) | ((x[3] & 0xFFFFFFFFFFFFFFFF) << 48));
-	//   inst_id.push_back(temp);
-	//   tree.common_inst_id.push_back(temp);
-	//   ind=0;
-	// }
+	inst_id.push_back(y);
   };
   /*
   for(unsigned i=0; i<n*ratio; ++i) {

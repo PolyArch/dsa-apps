@@ -1,5 +1,5 @@
 ifndef Tx
-Tx=32
+Tx=2
 #Tx=14
 endif
 
@@ -51,11 +51,14 @@ CFLAGS=$(OPT) -g -ggdb -gdwarf-3
 #--std=c++11 
 LFLAGS = -lm
 
-input_neuron.data: gen_neuron.py 
-	python $< $(Tx) $(neuron_sp) $(rle_width) $(Ni)
+output_neuron.data: gen_out_neuron.py
+	python $< $(Tx) $(Tn)
 
-input_synapse.data: gen_synapse.py 
-	python $< $(Kx) $(synapse_sp) $(Ni) $(Tn)
+# input_neuron.data: gen_neuron.py 
+# 	python $< $(Tx) $(neuron_sp) $(rle_width) $(Ni)
+# 
+# input_synapse.data: gen_synapse.py 
+# python $< $(Kx) $(synapse_sp) $(Ni) $(Tn)
 
 cpu: cpu.cpp
 	$(GCC) $< $(LIB) $(CFLAGS) $(MACROS) -o $(@) $(LFLAGS)
@@ -63,14 +66,15 @@ cpu: cpu.cpp
 $(DFG_HEADERS): %.dfg.h: %.dfg
 	$(SS_TOOLS)/bin/sb_sched --verbose $(SBCONFIG) $< 
 
-$(TESTS): % :%.cpp $(DFG_HEADERS) input_neuron.data input_synapse.data
+# $(TESTS): % :%.cpp $(DFG_HEADERS) input_neuron.data input_synapse.data
+$(TESTS): % :%.cpp $(DFG_HEADERS) output_neuron.data
 	 $(CPP) $< $(LIB) $(CFLAGS) $(MACROS) -static -o $@ $(LFLAGS)
 
 run:
 	BACKCGRA=1 MAPPING=ROW gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=2048kB --l1i_size=16kB --l2_size=4096kB --caches --cmd=$(TESTS)
 	
 cleandata:
-	rm -f input_neuron.data input_synapse.data
+	rm -f *.data
 
 cleancpu:
 	rm -f cpu

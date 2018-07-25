@@ -15,7 +15,7 @@ ratio=0.25
 endif
 
 ifndef M
-M=1
+M=4
 endif
 
 ifndef dep_ratio
