@@ -3,7 +3,7 @@
 #include "../../common/include/sim_timing.h"
 #include "test.dfg.h"
 #include <inttypes.h>
-#define N 5
+#define N 6
 
 
 void sum(uint64_t x[],uint64_t y[], int s) { //,uint64_t z[],int s){
@@ -26,7 +26,7 @@ void sum(uint64_t x[],uint64_t y[], int s) { //,uint64_t z[],int s){
   SB_CONFIG(test_config,test_size);
 
   // SB_DMA_READ(&ind1[0], 8, 8, N, P_IND_1);
-  SB_DMA_READ(&ind3[0], 8, 8, N, P_IND_1);
+  SB_DMA_READ(&ind3[0], 8, 8, N/2, P_IND_1);
   SB_DMA_READ(&ind2[0], 8, 8, N, P_IND_2);
   // SB_CONFIG_INDIRECT1(T64,T64,8,8);
   SB_CONFIG_INDIRECT1(T32,T64,8,8);
