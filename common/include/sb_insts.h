@@ -3,6 +3,7 @@
 
 // Magic sentinal for matching
 #define SENTINAL (((uint64_t)1)<<63)
+#define SENTINAL16 (((uint16_t)1)<<15)
 #define SENTINAL32 (((uint32_t)1)<<31)
 
 #define REPEAT_FXPNT_BITS (3)
