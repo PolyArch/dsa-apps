@@ -277,6 +277,10 @@
 #define SB_WAIT_MEM_WR() \
   __asm__ __volatile__("sb_wait t0, t0, 16"); \
 
+#define SB_WAIT_SCR_ATOMIC() \
+  __asm__ __volatile__("sb_wait t0, t0, 32"); \
+
+
 
 //Indirect Ports
 #define P_IND_1 (31)
