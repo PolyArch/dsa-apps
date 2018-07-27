@@ -20,8 +20,12 @@ endif
 
 CC = g++
 RCC= riscv64-unknown-elf-g++
-CFLAGS = -std=c++0x -O3
+CFLAGS = -std=c++0x -O3 -g
 LFLAGS = -lm
+MKL_IFLAGS = -I../../common/include -I$(SS_TOOLS)/include -I ~/intel/mkl/include 
+MKL_LFLAGS = -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -ldl  -L"~/intel/mkl/lib"
+NUM_THREADS = 8
+MKL_MACROS = -DNUM_PTHREADS=$(NUM_THREADS) -DOMP_NUM_THREADS=$(NUM_THREADS) -DNUM_OMP_THREADS=$(NUM_THREADS)
 #CFLAGS = -std=c++0x
 MACROS = -DN=$(N) -DM=$(M) -DS0=$(S0) -DS1=$(S1)
 
@@ -40,6 +44,9 @@ input.data output.data: gen.py
 
 main.exe: main.cc input.data output.data
 	$(CC) $(CFLAGS) $(MACROS) $< -o $@ $(LFLAGS)
+
+mkl.exe: mkl.cc
+	$(CC) $< -o $@ $(LFLAGS) $(MKL_LFLAGS) $(CFLAGS) $(MACROS) $(MKL_MACROS) $(MKL_IFLAGS)
 
 softbrain.exe: main.cc input.data output.data $(DFG_HEADERS)
 	$(RCC) $(CFLAGS) $(MACROS) $< -o $@ $(LFLAGS)
