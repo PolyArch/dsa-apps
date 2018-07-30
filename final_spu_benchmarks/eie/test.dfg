@@ -1,0 +1,28 @@
+Input: wval
+Input: wind
+Input: aval
+Input: aind
+
+nval = Extract16(aval) 
+nind = Extract16(aind) 
+
+P0 = IndexMatch16(wind:16:0,nind)
+P1 = IndexMatch16(wind:16:1,nind)
+P2 = IndexMatch16(wind:16:2,nind)
+P3 = IndexMatch16(wind:16:3,nind)
+
+E0 = Mul16(wval,nval,control=P0{1:b2,2:b1})
+E1 = Mul16(wval,nval,control=P1{1:b2,2:b1})
+E2 = Mul16(wval,nval,control=P2{1:b2,2:b1})
+E3 = Mul16(wval,nval,control=P3{1:b2,2:b1})
+
+# by a, i mean should not perform the operation but give the output (register)
+# => reset at only 3
+R0 = Acc16(E0,0,control=P0{0:d,1:d|a,2:d|a,3:r})
+R1 = Acc16(E1,0,control=P1{0:d,1:d|a,2:d|a,3:r})
+R2 = Acc16(E2,0,control=P2{0:d,1:d|a,2:d|a,3:r})
+R3 = Acc16(E3,0,control=P3{0:d,1:d|a,2:d|a,3:r})
+
+out_val = R0 R1 R2 R3
+
+Output: out_val
