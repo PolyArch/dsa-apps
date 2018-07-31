@@ -15,7 +15,7 @@ include ../common/Makefile.inc
 # sb-origin: The simplest origin Softbrain.
 # sb-new: Softbrain with new instructions to remove control overhead.
 # sb-scr: All the data will go through the spad instead of memory. TOO AGGRESSIVE, crashes on large scale.
-sb-reconfig.o sb-origin.o: %.o: %.cc compute0.dfg.h compute1.dfg.h
+sb-reconfig.o sb-origin.o: %.o: %.cc compute.dfg.h fine2.dfg.h fine1.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
 sb-multi.o sb-new.o: %.o: %.cc manager.dfg.h compute.dfg.h fine2.dfg.h fine1.dfg.h manager8.dfg.h

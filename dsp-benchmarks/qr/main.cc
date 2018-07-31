@@ -62,6 +62,6 @@ int main() {
     return 1;
   }*/
 
-  puts("result correct!");
+  //puts("result correct!");
   return 0;
 }

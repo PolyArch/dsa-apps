@@ -24,25 +24,24 @@ complex<float> *fft(complex<float> *from, complex<float> *to, complex<float> *w)
   int blocks = N / 2;
   int span = N / blocks;
 
-  SB_DMA_READ(from,          2 * blocks * 8, blocks * 8, span / 2, P_compute_L);
-  SB_DMA_READ(from + blocks, 2 * blocks * 8, blocks * 8, span / 2, P_compute_R);
-  SB_CONST(P_compute_W, 1065353216, N / 8);
-
-  SB_SCR_WRITE(P_compute_A, N * 4, 0);
-  SB_SCR_WRITE(P_compute_B, N * 4, N * 4);
-  SB_WAIT_SCR_WR();
-
-  blocks >>= 1;
-  span <<= 1;
+  //SB_DMA_READ(from,          2 * blocks * 8, blocks * 8, span / 2, P_compute_L);
+  //SB_DMA_READ(from + blocks, 2 * blocks * 8, blocks * 8, span / 2, P_compute_R);
+  //SB_CONST(P_compute_W, 1065353216, N / 8);
+    
+  //SB_SCR_WRITE(P_compute_A, N * 4, 0);
+  //SB_SCR_WRITE(P_compute_B, N * 4, N * 4);
+  //SB_WAIT_SCR_WR();
+    
+  //blocks >>= 1;
+  //span <<= 1;
 
   int scr = 0;
 
   while (blocks >= 4) {
-    _w -= span / 2;
 
     //SB_CONTEXT(1);
     SB_SCR_PORT_STREAM(scr             , 2 * blocks * 8, blocks * 8, span / 2, P_compute_L);
-    SB_SCR_PORT_STREAM(scr + blocks * 8, 2 * blocks * 8, blocks * 8, span / 2, P_compute_R);
+    SB_SCR_PORT_STREAM(scr + blocks * 8, 2 * blocks * 8, blocks * 8, span / 2, P_compute_RR);
     SB_REPEAT_PORT(blocks / 4);
     SB_DMA_READ(_w, 0, 4 * span, 1, P_compute_W);
 
@@ -53,9 +52,9 @@ complex<float> *fft(complex<float> *from, complex<float> *to, complex<float> *w)
 
     blocks >>= 1;
     span <<= 1;
+    _w -= span / 2;
   }
 
-  _w -= span / 2;
   SB_WAIT_ALL();
   
   SB_CONFIG(fine2_config, fine2_size);

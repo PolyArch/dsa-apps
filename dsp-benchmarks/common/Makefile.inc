@@ -1,6 +1,6 @@
 ifndef SBCONFIG
 $(warning SBCONFIG is undefined, using default)
-SBCONFIG=$(SS_TOOLS)/configs/revel.sbmodel
+SBCONFIG=$(SS)"/ss-config/configs/revel-2x2.sbmodel"
 endif
 
 ifndef OMP_NUM_THREADS
@@ -15,6 +15,8 @@ ifndef FIFO_DEPTH
 FIFO_DEPTH=15
 endif
 
+PYTHON = env python3
+
 DFG_HEADERS = $(DFG:.dfg=.dfg.h)
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
@@ -22,8 +24,8 @@ $(DFG_HEADERS): %.dfg.h: %.dfg
 
 IFLAGS=-I../../common/include -I../../../ss-tools/include -I../common/
 INTELI=-I /opt/intel/include 
-#CFLAGS=-O3 -std=c++11
-CFLAGS=-Ofast -std=c++11
+#CFLAGS=-O3 -std=c++17
+CFLAGS=-Ofast -std=c++17
 LMKL=-L"/opt/intel/mkl/lib" -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -ldl -lm
 
 CC=riscv64-unknown-elf-g++
@@ -43,7 +45,7 @@ $(MAT_HEADS): %.dfg.h: %.dfg
 matutils: $(MAT_HEADS)
 
 input.data ref.data: gen.py
-	python $< $(SCALE) > gen.log
+	$(PYTHON) $< $(SCALE) > gen.log
 
 $(OBJS): %.o: %.cc
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) $(CFLAGS)
@@ -77,6 +79,7 @@ cleandata:
 
 cleandfg:
 	rm -rf *.dfg.h
+	rm -rf sched
 
 clean: cleandata
 	rm -f *.o *.log *.exe

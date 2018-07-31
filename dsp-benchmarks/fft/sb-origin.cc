@@ -25,7 +25,7 @@ complex<float> *fft(complex<float> *from, complex<float> *to, complex<float> *w)
   int span = N / blocks;
 
   SB_DMA_READ(from,          2 * blocks * 8, blocks * 8, span / 2, P_compute_L);
-  SB_DMA_READ(from + blocks, 2 * blocks * 8, blocks * 8, span / 2, P_compute_R);
+  SB_DMA_READ(from + blocks, 2 * blocks * 8, blocks * 8, span / 2, P_compute_RR);
   SB_CONST(P_compute_W, 1065353216, N / 8);
 
   SB_SCR_WRITE(P_compute_A, N * 4, 0);
@@ -42,7 +42,7 @@ complex<float> *fft(complex<float> *from, complex<float> *to, complex<float> *w)
 
     SB_CONTEXT(1);
     SB_SCR_PORT_STREAM(scr             , 2 * blocks * 8, blocks * 8, span / 2, P_compute_L);
-    SB_SCR_PORT_STREAM(scr + blocks * 8, 2 * blocks * 8, blocks * 8, span / 2, P_compute_R);
+    SB_SCR_PORT_STREAM(scr + blocks * 8, 2 * blocks * 8, blocks * 8, span / 2, P_compute_RR);
 
     scr ^= 8192;
     SB_SCR_WRITE(P_compute_A, N * 4, scr);

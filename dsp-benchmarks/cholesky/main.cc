@@ -24,6 +24,6 @@ int main() {
   if (!compare_n_float_complex(ref_data, _N_ * _N_, L))
       return 1;
 
-  puts("result correct!");
+  //puts("result correct!");
   return 0;
 }

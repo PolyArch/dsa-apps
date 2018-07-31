@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cmath>
 #include <cstdlib>
+#include <iostream>
 #include "../../common/include/sim_timing.h"
 #include "../../common/include/sb_insts.h"
 
@@ -103,16 +104,18 @@ void spmv(int n_a, const Sparse *a, Sparse **a_head, int n_b, const Sparse *b, i
     //printf("%d %d %d %d %d\n", i, (a_head[i + 1] - a_head[i + 0]), (a_head[i + 2] - a_head[i + 1]),
         //(a_head[i + 3] - a_head[i + 2]), (a_head[i + 4] - a_head[i + 3]));
     SB_DMA_READ(b, 0, 4 * n_b, 1, P_eie_V);
-    SB_DMA_READ(a_head[i + 0], 0, 4 * (a_head[i + 1] - a_head[i + 0]), 1, P_eie_R0);
-    SB_DMA_READ(a_head[i + 1], 0, 4 * (a_head[i + 2] - a_head[i + 1]), 1, P_eie_R1);
-    SB_DMA_READ(a_head[i + 2], 0, 4 * (a_head[i + 3] - a_head[i + 2]), 1, P_eie_R2);
-    SB_DMA_READ(a_head[i + 3], 0, 4 * (a_head[i + 4] - a_head[i + 3]), 1, P_eie_R3);
-    SB_DMA_READ(a_head[i + 4], 0, 4 * (a_head[i + 5] - a_head[i + 4]), 1, P_eie_R4);
-    SB_DMA_READ(a_head[i + 5], 0, 4 * (a_head[i + 6] - a_head[i + 5]), 1, P_eie_R5);
-    SB_DMA_READ(a_head[i + 6], 0, 4 * (a_head[i + 7] - a_head[i + 6]), 1, P_eie_R6);
-    SB_DMA_READ(a_head[i + 7], 0, 4 * (a_head[i + 8] - a_head[i + 7]), 1, P_eie_R7);
+    SB_DMA_READ(a_head[i + 0], 0, 4 * (a_head[i + 1] - a_head[i + 0]), 1, P_eie_RR0);
+    SB_DMA_READ(a_head[i + 1], 0, 4 * (a_head[i + 2] - a_head[i + 1]), 1, P_eie_RR1);
+    SB_DMA_READ(a_head[i + 2], 0, 4 * (a_head[i + 3] - a_head[i + 2]), 1, P_eie_RR2);
+    SB_DMA_READ(a_head[i + 3], 0, 4 * (a_head[i + 4] - a_head[i + 3]), 1, P_eie_RR3);
+    SB_DMA_READ(a_head[i + 4], 0, 4 * (a_head[i + 5] - a_head[i + 4]), 1, P_eie_RR4);
+    SB_DMA_READ(a_head[i + 5], 0, 4 * (a_head[i + 6] - a_head[i + 5]), 1, P_eie_RR5);
+    SB_DMA_READ(a_head[i + 6], 0, 4 * (a_head[i + 7] - a_head[i + 6]), 1, P_eie_RR6);
+    SB_DMA_READ(a_head[i + 7], 0, 4 * (a_head[i + 8] - a_head[i + 7]), 1, P_eie_RR7);
     SB_DMA_WRITE(P_eie_O, 0, 16, 1, c + i);
     SB_WAIT_COMPUTE();
+    //std::cout << i << std::endl;
+    //SB_WAIT_ALL();
   }
   SB_WAIT_ALL();
 }

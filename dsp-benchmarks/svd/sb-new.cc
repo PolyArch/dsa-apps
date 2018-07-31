@@ -42,158 +42,67 @@ void givens(complex<float> &a, complex<float> &b, complex<float> &alpha) {
   } while(false)
 
 void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, int n) {
+  //for (int i = 0; i < n; ++i) std::cout << d[i] << " "; std::cout << std::endl;
+  //for (int i = 0; i < n - 1; ++i) std::cout << f[i] << " "; std::cout << std::endl;
+
   int N = _N_;
-  SB_CONFIG(aplygvs_config, aplygvs_size);
 
-  /* Initialization of Implicit QR
-   * Input: d[0], f[0], d[n - 1], d[1]
-   * Finalize d[0]
-   * Output: 
-   * reg[0] = cosine for potential f[1]
-   * reg[1] = sine for potential f[1]
-   * reg[2] = finalized f[0] (n = 2); o.w. f[0] to be used
-   * reg[3] = finalized d[1] (n = 2); o.w. d[1] to be used
-   * */
-
-  SB_CONST(P_aplygvs_F, *((uint64_t*) f), 1);
-  SB_CONST(P_aplygvs_D, *((uint64_t*) d), 1);
-  SB_CONST(P_aplygvs_F, *((uint64_t*) d + n - 1), 3);
-  SB_CONST(P_aplygvs_D, *((uint64_t*) d + 1), 3);
-  SB_CONST(P_aplygvs_Inst, INITIALIZE, 4);
-
-  SB_REPEAT_PORT(N);
-  SB_RECURRENCE(P_aplygvs_RES, P_aplygvs_C, 1);
-  SB_REPEAT_PORT(N);
-  SB_RECURRENCE(P_aplygvs_RES, P_aplygvs_S, 1);
-  SB_DMA_WRITE(P_aplygvs_RES, 0, 8, 1, d);
-
-  //float mu = complex_norm(d[n - 1]);
-  //complex<float> a(complex_norm(d[0]) - mu), b(complex_conj_mul(f[0], d[0])), alpha;
-  //complex<float> c, s, extra;
-  //givens(a, b, alpha);
-
-  /* Recurrence cosine and sine to corresponding GeMM port */
-  //c = a; s = b;
-  //SB_CONST(P_aplygvs_C, *((uint64_t*)&c), _N_);
-  //SB_CONST(P_aplygvs_S, *((uint64_t*)&s), _N_);
-  SB_DMA_READ(v, 8, 8, _N_, P_aplygvs_A);
-  SB_DMA_READ(v + _N_, 8, 8, _N_, P_aplygvs_B);
-  SB_DMA_WRITE(P_aplygvs_O0, 8, 8, _N_, v);
-  SB_DMA_WRITE(P_aplygvs_O1, 8, 8, _N_, v + _N_);
-  SB_WAIT_ALL();
-  //for (int i = 0; i < _N_; ++i) {
-  //  apply_givens(c, s, v[i], v[i + _N_]);
-  //}
-
-  //a = d[0] * c + f[0] * std::conj(s);
-  //f[0] = d[0] * s - f[0] * std::conj(c);
-
-  //b = d[1] * std::conj(s);
-  //d[1] *= -std::conj(c);
-
-  //givens(a, b, d[0]);
-  //apply_givens(a, b, f[0], d[1]);
-  /* End of initilization */
-
-  if (n != 2) {
-    /* Prepare for next iteration
-     * Input: f[1] (if applicable)
-     * Output:
-     * reg[0]: f[0]
-     * reg[1]: VALUE to be resolved next iteration
-     * reg[2]: d[1]
-     * reg[3]: f[1]
-     */
-    SB_CONST(P_aplygvs_D, 0, 1);
-    SB_CONST(P_aplygvs_F, *((uint64_t*) f + 1), 1);
-    SB_CONST(P_aplygvs_Inst, FURTHER, 1);
-    //b *= f[1];
-    //f[1] *= -std::conj(a);
-  } else {
-    /* Finalize f[0]
-     * Finalize d[1]
-     */
-    SB_CONST(P_aplygvs_D, 0, 2);
-    SB_CONST(P_aplygvs_F, 0, 2);
-    SB_CONST(P_aplygvs_Inst, FINALIZE, 2);
-    SB_DMA_WRITE(P_aplygvs_RES, 0, 8, 1, f);
-    SB_DMA_WRITE(P_aplygvs_RES, 0, 8, 1, d + 1);
-    SB_WAIT_ALL();
-    return ;
-  }
+  float mu = complex_norm(d[n - 1]);
+  complex<float> a(complex_norm(d[0]) - mu), b(complex_conj_mul(f[0], d[0]));
+  SB_CONST(P_aplygvs_mat, *((uint64_t*) &a), 1);
+  SB_CONST(P_aplygvs_mat, *((uint64_t*) &b), 1);
+  SB_CONST(P_aplygvs_mat, *((uint64_t*) (d + 0)), 1);
+  SB_CONST(P_aplygvs_mat, *((uint64_t*) (f + 0)), 1);
+  SB_DMA_READ(f + 1, 8, 8, n - 2, P_aplygvs_F);
+  SB_CONST(P_aplygvs_F, 0, 1);
+  SB_DMA_READ(d + 1, 8, 8, n - 1, P_aplygvs_D);
+  SB_GARBAGE(P_aplygvs_F_, 1);
+  SB_DMA_WRITE(P_aplygvs_F_, 8, 8, n - 2, f);
+  SB_DMA_WRITE(P_aplygvs_D_, 8, 8, n - 1, d);
 
   for (int i = 1; i < n - 1; ++i) {
-    /* Input: d[i+1]
-     * Output:
-     * Finalize f[i-1]
-     * Finalize d[i]
-     * reg[0]: cosine for potential f[i+1]
-     * reg[1]: sine for potential f[i+1]
-     * reg[2]: f[i]
-     * reg[3]: d[i+1]
-     * */
-    SB_CONST(P_aplygvs_D, *((uint64_t*)d + i + 1), 6);
-    if (i != n - 2) {
-      SB_CONST(P_aplygvs_F, *((uint64_t*)f + i + 1), 6);
-    } else {
-      SB_CONST(P_aplygvs_F, 0, 6);
-    }
-    SB_CONST(P_aplygvs_Inst, ITERATION, 5);
-    SB_DMA_WRITE(P_aplygvs_RES, 0, 8, 1, f + i - 1);
+    //complex<float> buffer[4];
+    //SB_RECV(P_aplygvs_mat_, buffer[0]);
+    //SB_RECV(P_aplygvs_mat_, buffer[1]);
+    //SB_RECV(P_aplygvs_mat_, buffer[2]);
+    //SB_RECV(P_aplygvs_mat_, buffer[3]);
+    //std::cout << buffer[0] << ", " << buffer[1] << ", " << buffer[2] << ", " << buffer[3] << "\n";
+    //SB_CONST(P_aplygvs_mat, *((uint64_t*) (buffer + 0)), 1);
+    //SB_CONST(P_aplygvs_mat, *((uint64_t*) (buffer + 1)), 1);
+    //SB_CONST(P_aplygvs_mat, *((uint64_t*) (buffer + 2)), 1);
+    //SB_CONST(P_aplygvs_mat, *((uint64_t*) (buffer + 3)), 1);
+
+    SB_RECURRENCE(P_aplygvs_mat_, P_aplygvs_mat, 4);
+
+    SB_REPEAT_PORT(N);
+    SB_RECURRENCE(P_aplygvs_rot, P_aplygvs_C, 1);
+    SB_REPEAT_PORT(N);
+    SB_RECURRENCE(P_aplygvs_rot, P_aplygvs_S, 1);
+    SB_DMA_READ(v + i * N, 8, 8, N, P_aplygvs_A);
+    SB_DMA_READ(v + (i + 1) * N, 8, 8, N, P_aplygvs_B);
+    SB_DMA_WRITE(P_aplygvs_O0, 8, 8, N, v + i * N);
+    SB_DMA_WRITE(P_aplygvs_O1, 8, 8, N, v + (i + 1) * N);
     
-    SB_REPEAT_PORT(N);
-    SB_RECURRENCE(P_aplygvs_RES, P_aplygvs_C, 1);
-    SB_REPEAT_PORT(N);
-    SB_RECURRENCE(P_aplygvs_RES, P_aplygvs_S, 1);
 
-    //a = f[i - 1];
-    //givens(a, b, f[i - 1]);
-    //c = a; s = b;
-    //a = d[i];
-
-    //a = d[i] * c + f[i] * s;
-    //f[i] = d[i] * std::conj(s) - f[i] * std::conj(c);
-    //b = d[i + 1] * s;
-    //d[i + 1] *= -std::conj(c);
-
-    /* Recurrence cosine and sine to corresponding GeMM port */
-    SB_DMA_READ(v + i * _N_, 8, 8, _N_, P_aplygvs_A);
-    SB_DMA_READ(v + i * _N_ + _N_, 8, 8, _N_, P_aplygvs_B);
-    SB_DMA_WRITE(P_aplygvs_O0, 8, 8, _N_, v + i * _N_);
-    SB_DMA_WRITE(P_aplygvs_O1, 8, 8, _N_, v + i * _N_ + _N_);
-    //for (int j = 0; j < _N_; ++j) {
-    //  apply_givens(c, std::conj(s), v[i * _N_ + j], v[(i + 1) * _N_ + j]);
-    //}
-
-    SB_DMA_WRITE(P_aplygvs_RES, 0, 8, 1, d + i);
-    //givens(a, b, d[i]);
-    //c = a; s = b;
-    //apply_givens(c, s, f[i], d[i + 1]);
-
-    if (i != n - 2) {
-      /* Prepare for next iteration
-       * Input: f[i+1]
-       * Output:
-       * reg[0]: f[i]
-       * reg[1]: VALUE to be resolved next iteration
-       * reg[2]: d[i+1]
-       * reg[3]: f[i+1]
-       */
-      SB_CONST(P_aplygvs_Inst, FURTHER, 1);
-      //b = s * f[i + 1];
-      //f[i + 1] *= -std::conj(c);
-    } else {
-      /* Finalize: f[i]
-       * Finalize: d[i+1]
-       */
-      SB_CONST(P_aplygvs_D, 0, 1);
-      SB_CONST(P_aplygvs_F, 0, 1);
-      SB_CONST(P_aplygvs_Inst, FINALIZE, 2);
-      SB_DMA_WRITE(P_aplygvs_RES, 0, 8, 1, f + i);
-      SB_DMA_WRITE(P_aplygvs_RES, 0, 8, 1, d + i + 1);
-    }
+    //complex<float> c, s;
+    //SB_RECV(P_aplygvs_rot, c);
+    //SB_RECV(P_aplygvs_rot, s);
+    //std::cout << c << ", " << s << std::endl;
   }
+
+  //SB_GARBAGE(P_aplygvs_D_, 1);
+  //SB_GARBAGE(P_aplygvs_F_, 1);
+  SB_GARBAGE(P_aplygvs_rot, 2);
+  SB_DMA_WRITE(P_aplygvs_mat_, 8, 8, 1, f + n - 2);
+  SB_GARBAGE(P_aplygvs_mat_, 1);
+  SB_DMA_WRITE(P_aplygvs_mat_, 8, 8, 1, d + n - 1);
+  SB_GARBAGE(P_aplygvs_mat_, 1);
+
   SB_WAIT_ALL();
+
+  //for (int i = 0; i < n; ++i) std::cout << d[i] << " "; std::cout << std::endl;
+  //for (int i = 0; i < n - 1; ++i) std::cout << f[i] << " "; std::cout << std::endl;
+
 }
 
 //The most horrible kernel so far
@@ -479,6 +388,8 @@ void bidiagonalize(complex<float> *a, complex<float> *f, complex<float> *d, comp
 }
 
 void implicit_iteration(complex<float> *d, complex<float> *f, complex<float> *v) {
+  SB_CONFIG(aplygvs_config, aplygvs_size);
+
   int left = 0, right = _N_ - 1;
   while (left < right) {
     //printf("%d %d\n", left, right);
@@ -501,8 +412,13 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
 
   int N = _N_;
   SB_CONTEXT(1);
+
   implicit_iteration(d, f, v);
+
+  //SB_CONFIG(aplygvs_config, aplygvs_size);
   //implicit_kernel(d, f, v, N);
+  //return;
+
   //for (int i = 0; i < N - 1; ++i)
   //  std::cout << f[i] << "\n";
   //for (int i = 0; i < N; ++i)
@@ -520,15 +436,16 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
   SB_WAIT_SCR_WR();
 
   SB_DMA_READ(v, 0, 8 * _N_ * _N_, _N_, P_finalize_A);
-  SB_RECURRENCE(P_finalize_O, P_finalize_U, _N_ * _N_);
   SB_2D_CONST(P_finalize_reset, 2, _N_ / 4 - 1, 1, 1, _N_ * _N_);
-  SB_REPEAT_PORT(_N_);
-  SB_SCRATCH_READ(0, 8 * _N_, P_finalize_INV);
-  SB_DMA_WRITE(P_finalize_RES, 0, 8 * _N_ * _N_, 1, u);
   for (int i = 0; i < _N_; ++i) {
     SB_DMA_READ(a + i * _N_, 0, 8 * _N_, _N_, P_finalize_B);
     s[i] = d[i].real();
   }
+  //SB_GARBAGE(P_finalize_O, _N_ * _N_);
+  SB_RECURRENCE(P_finalize_O, P_finalize_U, _N_ * _N_);
+  SB_REPEAT_PORT(_N_);
+  SB_SCRATCH_READ(0, 8 * _N_, P_finalize_INV);
+  SB_DMA_WRITE(P_finalize_RES, 0, 8 * _N_ * _N_, 1, u);
   SB_WAIT_ALL();
 
   //for (int i = 0; i < _N_; ++i) {
