@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import sys, numpy, random, imp
 from math import sin, cos, pi 
 output = imp.load_source('output', '../common/output.py')
@@ -27,9 +29,9 @@ for i in range(n - m + 1):
         c[i] += a[i + j] * b[j]
 
 
-print('ASIC Ideal:', ((m / 2) * (n - m + 1) - 1) / 4 + 1 + (n - m) / 4 + 1)
-print('ASIC Latency:', ((m / 2 - 1) / 4 + 1) * ((n - m) / 8 + 1)  + (n - m) / 4 + 1)
-print('SIMD Ideal:', (((m / 2) / 4 + m / 2 % 4) * (n - m + 1) + (n - m + 1) / 4) * 4)
+print('ASIC Ideal: %d' % (((m / 2) * (n - m + 1) - 1) / 4 + 1 + (n - m) / 4 + 1))
+print('ASIC Latency: %d', (((m / 2 - 1) / 4 + 1) * ((n - m) / 8 + 1)  + (n - m) / 4 + 1))
+print('SIMD Ideal: %d', ((((m / 2) / 4 + m / 2 % 4) * (n - m + 1) + (n - m + 1) / 4) * 4))
 
 output.print_complex_array('ref.data', c.flatten())
 print('output generated!')

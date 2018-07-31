@@ -2,13 +2,13 @@ ifndef N
 N=12
 endif
 
-DFG = compute.dfg writeback.dfg multi.dfg multi2.dfg
+DFG = compute.dfg writeback.dfg multi2.dfg
 
 SCALE=$(N)
 
 MACROS=-D_N_=$(N)
 
-SOFTBRAINS = sb-origin sb-new sb-latency sb-access sb-new2
+SOFTBRAINS = sb-origin sb-new sb-latency sb-access
 
 include ../common/Makefile.inc
 
@@ -18,9 +18,9 @@ sb-origin.o sb-access.o: %.o: %.cc compute.dfg.h writeback.dfg.h
 
 # On REVEL, using multi-DFG-single-CGRA tech gives pretty promissing
 # acceleration.
-sb-latency.o sb-new.o: %.o: %.cc multi.dfg.h
+sb-latency.o: %.o: %.cc multi2.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
-sb-new2.o: %.o: %.cc multi2.dfg.h
+sb-new.o: %.o: %.cc multi2.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 

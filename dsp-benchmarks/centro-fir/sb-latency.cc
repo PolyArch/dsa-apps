@@ -26,6 +26,7 @@ void filter(int n, int m, complex<float> *a, complex<float> *b, complex<float> *
   int resudo = (n - m + 1) & 127;
   int _res_size = res_size - resudo;
   int acc = 0;
+
   for (int io = 0; io < _res_size; io += block, (++acc) &= 7) {
     SB_CONTEXT(1 << acc);
     int len = block;
@@ -53,6 +54,7 @@ void filter(int n, int m, complex<float> *a, complex<float> *b, complex<float> *
     //  c[i] += a[i + m / 2] * b[m / 2];
     //}
   }
+
   if (resudo) {
     SB_CONTEXT(1 << acc);
     int io  = _res_size;

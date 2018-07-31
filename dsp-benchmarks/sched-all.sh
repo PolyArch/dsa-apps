@@ -1,6 +1,7 @@
 #!/bin/bash
 
-declare -a arr=("centro-fir" "gemm" "fft" "cholesky" "qr")
+#declare -a arr=("centro-fir" "gemm" "fft" "cholesky" "qr")
+declare -a arr=("solver")
 
 for i in "${arr[@]}"
 do

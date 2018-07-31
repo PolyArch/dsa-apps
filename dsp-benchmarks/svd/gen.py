@@ -9,11 +9,11 @@ n = int(sys.argv[1])
 ideal = 0
 
 _a = numpy.random.rand(n, n) + 1j * numpy.random.rand(n, n)
-#_a = numpy.zeros((n, n), dtype = 'complex64')
-#for i in xrange(n):
-#    for j in xrange(n):
-#        _a[i, j] = ((j - i + n) % n + 1) + 1j * ((j - (n - 1 - i) + n) % n + 1)
-#_a *= 0.1
+_a = numpy.zeros((n, n), dtype = 'complex64')
+for i in range(n):
+    for j in range(n):
+        _a[i, j] = ((j - i + n) % n + 1) + 1j * ((j - (n - 1 - i) + n) % n + 1)
+_a *= 0.1
 a = _a.copy()
 output.print_complex_array('input.data', a.flatten())
 
@@ -23,9 +23,15 @@ output.print_complex_array('ref.data', numpy.concatenate((ans, a.flatten())))
 
 V = numpy.identity(n, dtype = 'complex128')
 
+def upper_div(a, b):
+    return (a - 1) / b + 1
+
+vn = 4
+vn_red = 3
+
 def household(v):
-    global ideal
-    ideal += len(v) + 24
+    global ideal, vec
+    ideal += upper_div(len(v), vn) * vn_red + len(v) - 1 + 36
     w = v.copy()
     normx = numpy.linalg.norm(w)
     s = -w[0] / cmath.sqrt(w[0].conjugate() * w[0])
@@ -45,7 +51,7 @@ for i in range(n - 1):
     #print tau
     #print 'w', w
     r = r[:,1:] - tau * numpy.outer(w, numpy.dot(numpy.conj(w), r[:,1:]))
-    ideal += r.shape[0] * r.shape[1] + r.shape[0]
+    ideal += (r.shape[0] * r.shape[1] + r.shape[0]) * 2
     #print r[1:,:]
     d.append(alpha)
     if i != n - 2:
@@ -54,7 +60,7 @@ for i in range(n - 1):
         r = r[1:,:] - tau * numpy.outer(numpy.dot(r[1:,:], numpy.conj(w)), w)
         ideal += r.shape[0] * r.shape[1] + r.shape[0]
         V[i+1:,1:] = V[i+1:,1:] - tau * numpy.outer(numpy.conj(w), numpy.dot(w, V[i+1:,1:]))
-        ideal += (n - i - 1) * (n - 1) + (n - 1)
+        ideal += ((n - i - 1) * (n - 1) + (n - 1)) * 2
         f.append(alpha)
     #print r
 
@@ -145,7 +151,7 @@ while l < r:
     if r - l >= 1:
         implicit_kernel(d[l:r+1], f[l:r], V[l:r+1,:])
         implicit_log.append((l, r))
-        ideal += max(14 * (r - l + 1), n * (r - l + 1))
+        ideal += 48 * (r - l)
 
 #while True:
 #    i = 0
@@ -195,10 +201,10 @@ print('Singular value:\n', sv)
 
 print(V)
 U = numpy.dot(_a, numpy.conj(V).transpose())
-ideal += n * n * n // 4
+ideal += n * n * (n // 4)
 for i in range(n):
     U[:,i] /= sv[i]
-ideal += n + 12 - 1
+ideal += 11
 
 
 """ check pass!

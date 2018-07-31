@@ -8,24 +8,24 @@
 #
 #Output: O
 
-Input: R0
-Input: R1
-Input: R2
-Input: R3
-Input: R4
-Input: R5
-Input: R6
-Input: R7
+Input: RR0
+Input: RR1
+Input: RR2
+Input: RR3
+Input: RR4
+Input: RR5
+Input: RR6
+Input: RR7
 Input: V
 
-match0 = MatchIndex2(R0, V)
-match1 = MatchIndex2(R1, V)
-match2 = MatchIndex2(R2, V)
-match3 = MatchIndex2(R3, V)
-match4 = MatchIndex2(R4, V)
-match5 = MatchIndex2(R5, V)
-match6 = MatchIndex2(R6, V)
-match7 = MatchIndex2(R7, V)
+match0 = MatchIndex2(RR0, V)
+match1 = MatchIndex2(RR1, V)
+match2 = MatchIndex2(RR2, V)
+match3 = MatchIndex2(RR3, V)
+match4 = MatchIndex2(RR4, V)
+match5 = MatchIndex2(RR5, V)
+match6 = MatchIndex2(RR6, V)
+match7 = MatchIndex2(RR7, V)
 
 mac0 = MacRed16x2(match0)
 mac1 = MacRed16x2(match1)

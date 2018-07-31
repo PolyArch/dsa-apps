@@ -57,10 +57,10 @@ cleandata:
 cleandfg:
 	rm -f *.dfg.h
 
-clean:
+clean: cleandata
 	rm -f *.exe
 
-ultraclean: cleandata clean cleandfg
+ultraclean: clean cleandfg
 	rm -f *.log
 
 

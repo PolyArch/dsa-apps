@@ -15,7 +15,7 @@ void solver(complex<float> *a, complex<float> *v) {
   for (int i = 0; i < N; ++i) {
     v[i] /= a[i * N + i];
     for (int j = i + 1; j < N; ++j) {
-      v[j] -= a[j * N + i] * v[i];
+      v[j] -= a[i * N + j] * v[i];
     }
   }
 }
