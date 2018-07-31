@@ -1,18 +1,18 @@
 ifndef N
-N=24
+N=16
 endif
 
 ifndef M
-M=12
+M=8
 endif
 
 
 ifndef act_sp
-act_sp=0.4
+act_sp=1
 endif
 
 ifndef syn_sp
-syn_sp=0.33
+syn_sp=1
 endif
 
 ifndef SBCONFIG

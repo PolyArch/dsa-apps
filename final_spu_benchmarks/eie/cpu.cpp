@@ -96,7 +96,7 @@ int main(){
 	act_val[id] = (VTYPE)tval;
 	// iss >> act_ind[id] >> act_val[id];
 	id++;
-	// std::cout << "Hi2\n";
+	// std::cout << "Hi2;
 
   }
   
@@ -108,7 +108,7 @@ int main(){
   wgt_val = (VTYPE*)malloc((int)(N*M*syn_sp)*sizeof(VTYPE));
   wgt_col_ind = (VTYPE*)malloc((int)(N*M*syn_sp)*sizeof(VTYPE));
   // wgt_row_ptr = (int*)calloc((N+1)*sizeof(VTYPE),0);
-  wgt_row_ptr = (int*)malloc((N+1)*sizeof(VTYPE));
+  wgt_row_ptr = (int*)malloc((N+1)*sizeof(int));
 
   int row_id; int prev_row_id=-1;
 

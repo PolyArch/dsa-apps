@@ -12,7 +12,11 @@ with open('input_activations.data', 'w') as f_input:
     prev_ind = 0
     for i in range(nnz):
         #generate ith non-zero value
-        ind = random.randint(prev_ind, int(i/ratio))
+        upper = int(i/ratio)
+        if(prev_ind!=upper):
+            ind = random.randint(prev_ind+1, int(i/ratio))
+        else:
+            ind=prev_ind
         line.append('%d %d\n' % ( ind , random.randint(1,500)))
         prev_ind = ind
     f_input.write(''.join(line))
