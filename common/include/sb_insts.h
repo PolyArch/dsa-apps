@@ -224,7 +224,7 @@
 //configure the type of indirection -- here multiplier has to be less than 2^7
 //Currently DTYPE MUST be 64 bits
 #define SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,offset_list)  \
-  __asm__ __volatile__("sb_cfg_ind %0, t0, %1" : : "r"(offset_list), "i"( (itype<<2)  |  (dtype<<0)  |  (mult<<4))  );
+  __asm__ __volatile__("sb_cfg_ind %0, %1, %2" : : "r"(offset_list), "r"(mult), "i"( (itype<<2)  |  (dtype<<0) )  );
 
 #define SB_CONFIG_INDIRECT( itype,dtype,mult)             SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,0) 
 #define SB_CONFIG_INDIRECT1(itype,dtype,mult,o1)          SB_CONFIG_INDIRECT_GENERAL(itype,dtype,mult,o1) 
