@@ -43,7 +43,6 @@ void forwardPropagation(tree* circuit, uint32_t nodes_at_level[d2-d1], uint32_t 
   SB_DMA_SCRATCH_LOAD(&circuit[0].vr, 8, 8, no_nodes_per_cgra/2, vr_offset);
   SB_WAIT_SCR_WR();
 
-  SB_CONFIG(fwd_prop_config,fwd_prop_size);
 
   for (d=d-1; d >= 0; d--) {
     // start with i
@@ -51,7 +50,7 @@ void forwardPropagation(tree* circuit, uint32_t nodes_at_level[d2-d1], uint32_t 
     n_times = nodes_at_level[d];
 	// vectorization width of 2
 	n_times = n_times/2;
-	// std::cout << "depth: " << d << " " << i << " num_times: " << n_times << "\n";
+	//std::cout << "depth: " << d << " " << i << " num_times: " << n_times << "\n";
    
     // std::cout << "number of elements at the level: " << d << " are " << n_times << " with the starting index: " << i << std::endl;
     SB_DMA_READ(&circuit[i].nodeType, sizeof(tree), 8, n_times, P_fwd_prop_nodeType);
@@ -207,6 +206,8 @@ int main() {
 
   printf("Starting backpropagation with number of nodes: %d\n", index);
   printf("Number of nodes per CGRA: %d\n", no_nodes_per_cgra);
+
+  SB_CONFIG(fwd_prop_config,fwd_prop_size);
 
   forwardPropagation(arith_ckt, nodes_at_level, levels, index, no_nodes_per_cgra);
   begin_roi();
