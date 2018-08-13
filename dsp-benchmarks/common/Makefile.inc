@@ -1,6 +1,6 @@
 ifndef SBCONFIG
 $(warning SBCONFIG is undefined, using default)
-SBCONFIG=$(SS)"/ss-config/configs/revel-2x2.sbmodel"
+SBCONFIG=$(SS)"/ss-scheduler/configs/revel-2x2.sbmodel"
 endif
 
 ifndef OMP_NUM_THREADS
