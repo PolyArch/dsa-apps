@@ -20,7 +20,7 @@ PYTHON = env python3
 DFG_HEADERS = $(DFG:.dfg=.dfg.h)
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
-	$(SS_TOOLS)/bin/sb_sched -a sa --max-iters 200000 -d $(FIFO_DEPTH) --verbose $(SBCONFIG) $< 
+	$(SS_TOOLS)/bin/sb_sched -a sa --max-iters 20000 -d $(FIFO_DEPTH) --verbose $(SBCONFIG) $< 
 
 IFLAGS=-I../../common/include -I../../../ss-tools/include -I../common/
 INTELI=-I /opt/intel/include 
