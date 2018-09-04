@@ -26,10 +26,10 @@ val_imag1 = FAdd32(imag10, imag11)
 val_imag2 = FAdd32(imag20, imag21)
 val_imag3 = FAdd32(imag30, imag31)
 
-val0 = Concatenate32To64(val_real0, val_imag0)
-val1 = Concatenate32To64(val_real1, val_imag1)
-val2 = Concatenate32To64(val_real2, val_imag2)
-val3 = Concatenate32To64(val_real3, val_imag3)
+val0 = val_real0 val_imag0
+val1 = val_real1 val_imag1
+val2 = val_real2 val_imag2
+val3 = val_real3 val_imag3
 
 O0 = FAdd32x2(val0, C0)
 O1 = FAdd32x2(val1, C1)
