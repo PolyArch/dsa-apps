@@ -7,20 +7,10 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <complex>
-#include <iostream>
-#include <iomanip>
 
-#define BN 4
-#define NN (_N_ + BN - 1)
-
-#define eps 1e-5
+#define eps 2e-2
 using std::complex;
 
-struct complex_t {
-  float real;
-  float imag;
-};
-
-void run();
+void gemm(int n, int m, int p, complex<float> *, complex<float> *, complex<float> *);
 
 #endif

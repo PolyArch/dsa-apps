@@ -5,9 +5,9 @@
 #include <iostream>
 #include "ss-config/fixed_point.h"
 #include "sb_insts.h"
-#include "matvec.h"
 
 #include "compute.dfg.h"
+#define get_pad(n, vec_width) ((n) % (vec_width) ? (vec_width) - ((n) % vec_width) : 0)
 
 using std::complex;
 
