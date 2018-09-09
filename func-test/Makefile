@@ -1,6 +1,6 @@
 ifndef SBCONFIG
 $(warning SBCONFIG is undefined, using default)
-SBCONFIG=$(RISCV)/configs/revel-temporal.sbmodel
+SBCONFIG=$(SS)/ss-scheduler/configs/revel-1x2.sbmodel
 endif
 
 TESTN=$(wildcard fix*.c)

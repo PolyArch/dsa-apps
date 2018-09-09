@@ -1,10 +1,9 @@
 #!/bin/bash
-export SBCONFIG=$SS_TOOLS/configs/revel-temporal.sbmodel
+export SBCONFIG=$SS_TOOLS/configs/revel-1x2.sbmodel
 
 
 #export LD_LIBRARY_PATH=~/ss-stack/ss_tools/lib
 
-make -j8
 
 tests_passed=0
 tests_failed=0
@@ -30,6 +29,7 @@ function run_test {
 }
 
 if [ -z "$1" ]; then
+  make -j8
 
   echo "Test all the cases!"
   #for i in `ls ind*.c | grep -v fix | grep -v unalign`; do
@@ -46,6 +46,7 @@ if [ -z "$1" ]; then
   done
 
 else
+  make $1
 
   echo "Test " $1
   run_test $1
