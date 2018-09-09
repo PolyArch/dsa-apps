@@ -1,6 +1,6 @@
-Input: A
-Input: B [4]
-Input: C [4]
+Input64: A
+Input64: B [4]
+Input64: C [4]
 
 real0 = FMul32x2(A, B0)
 real1 = FMul32x2(A, B1)

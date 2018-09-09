@@ -16,9 +16,9 @@ P=64
 endif
 
 
-DFG = compute.dfg dgra.dfg
+DFG = compute.dfg dgra.dfg dgra32.dfg
 
-SOFTBRAINS = sb-new sb-dg
+SOFTBRAINS = sb-new sb-dg sb-dg32
 
 SCALE=$(N) $(M) $(P)
 
@@ -38,3 +38,6 @@ sb-new.o: %.o: %.cc compute.dfg.h
 sb-dg.o: %.o: %.cc dgra.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
+# The GeMM implemented in both old Softbrain and REVEL.
+sb-dg32.o: %.o: %.cc dgra32.dfg.h
+	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
