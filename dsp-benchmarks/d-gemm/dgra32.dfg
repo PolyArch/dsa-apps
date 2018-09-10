@@ -33,15 +33,14 @@ val_imag1 = FAdd32(imag10, imag11)
 val_imag2 = FAdd32(imag20, imag21)
 val_imag3 = FAdd32(imag30, imag31)
 
-val0 = val_real0 val_imag0
-val1 = val_real1 val_imag1
-val2 = val_real2 val_imag2
-val3 = val_real3 val_imag3
+O0 = FAdd32(val_real0, C0:0:31)
+O1 = FAdd32(val_imag0, C0:32:63)
+O2 = FAdd32(val_real1, C1:0:31)
+O3 = FAdd32(val_imag1, C1:32:63)
+O4 = FAdd32(val_real2, C2:0:31)
+O5 = FAdd32(val_imag2, C2:32:63)
+O6 = FAdd32(val_real3, C3:0:31)
+O7 = FAdd32(val_imag3, C3:32:63)
 
-O0 = FAdd32x2(val0, C0)
-O1 = FAdd32x2(val1, C1)
-O2 = FAdd32x2(val2, C2)
-O3 = FAdd32x2(val3, C3)
-
-Output: O [4]
+Output32: O [8]
 
