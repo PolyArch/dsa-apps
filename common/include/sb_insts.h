@@ -47,10 +47,13 @@
 
 //Fill the scratchpad from DMA (from memory or cache)
 //Note that scratch_addr will be written linearly
+//  __asm__ __volatile__("ss_stride    %0, %1, %2" : : "r"(stride), "r"(acc_size), "i"(stretch)); \
+//  __asm__ __volatile__("ss_dma_addr  %0, %1" : : "r"(mem_addr), "r"(mem_addr)); \
+//  __asm__ __volatile__("ss_dma_scr   %0, %1, %2" : : "r"(n_strides), "r"(scr_addr), "i"(shr)); 
 #define SB_DMA_SCRATCH_LOAD_GENERAL(mem_addr, stride, acc_size, stretch, n_strides, scr_addr, shr) \
-  __asm__ __volatile__("ss_stride    %0, %1, %2" : : "r"(stride), "r"(acc_size), "i"(stretch)); \
-  __asm__ __volatile__("ss_dma_addr  %0, %1" : : "r"(mem_addr), "r"(mem_addr)); \
-  __asm__ __volatile__("ss_dma_scr   %0, %1, %2" : : "r"(n_strides), "r"(scr_addr), "i"(shr));
+  SB_DMA_READ_STRETCH(mem_addr, stride, acc_size, stretch, n_strides, MEM_SCR_PORT); \
+  SB_SCR_WRITE(MEM_SCR_PORT, acc_size * n_strides, scr_addr);
+//TODO: FIXME: Make above work for other stretches
 
 #define SB_DMA_SCRATCH_LOAD_STRETCH(mem_addr, stride, acc_size, stretch, n_strides, scr_addr) \
  SB_DMA_SCRATCH_LOAD_GENERAL(mem_addr, stride, acc_size, stretch, n_strides, scr_addr, 0);
@@ -62,12 +65,15 @@
 #define SB_DMA_SCRATCH_LOAD(mem_addr, stride, acc_size, n_strides, scr_addr) \
   SB_DMA_SCRATCH_LOAD_STRETCH(mem_addr,stride, acc_size, 0, n_strides, scr_addr)
 
-//Fill the scratchpad from DMA (from memory or cache)
-//Note that mem_addr will be written linearly
-#define SB_SCRATCH_DMA_STORE_GENERAL(scr_addr, stride, access_size, num_strides, mem_addr, shr) \
-  __asm__ __volatile__("ss_stride    %0, %1, 0" : : "r"(stride), "r"(access_size)); \
-  __asm__ __volatile__("ss_dma_addr  %0, %1" : : "r"(mem_addr), "r"(mem_addr)); \
-  __asm__ __volatile__("ss_scr_dma   %0, %1, %2" : : "r"(num_strides), "r"(scr_addr), "i"(shr));
+
+//old way:
+//  __asm__ __volatile__("ss_stride    %0, %1, 0" : : "r"(stride), "r"(acc_size)); \
+//  __asm__ __volatile__("ss_dma_addr  %0, %1" : : "r"(mem_addr), "r"(mem_addr)); \
+//  __asm__ __volatile__("ss_scr_dma   %0, %1, %2" : : "r"(num_strides), "r"(scr_addr), "i"(shr));
+
+#define SB_SCRATCH_DMA_STORE_GENERAL(scr_addr, stride, acc_size, num_strides, mem_addr, shr) \
+  SB_SCR_PORT_STREAM_STRETCH(scr_addr,stride,acc_size,0,num_strides, SCR_MEM_PORT) \
+  SB_DMA_WRITE(SCR_MEM_PORT, 8, 8, acc_size*num_strides/8, mem_addr)
 
 #define SB_SCRATCH_DMA_STORE(scr_addr, stride, access_size, num_strides, mem_addr) \
   SB_SCRATCH_DMA_STORE_GENERAL(scr_addr, stride, access_size, num_strides, mem_addr, 0)
@@ -144,7 +150,7 @@
 
 
 // Scratch Oriented Instructions
-// Plain Write to Scratch  (TODO -- NEW -- TEST)
+// Plain Write to Scratch  
 #define SB_SCR_WRITE(output_port, num_bytes, scr_addr) \
   __asm__ __volatile__("ss_wr_scr   %0, %1, %2"   : : "r"(scr_addr), "r"(num_bytes), "i"(output_port)); 
 
@@ -157,12 +163,6 @@
 #define SB_CONST_SCR(scr_addr, val, num_elements) \
   __asm__ __volatile__("ss_set_iter %0 " : : "r"(num_elements)); \
   __asm__ __volatile__("ss_const_scr %0, %1" : : "r"(scr_addr), "r"(val));
-
-
-// Unused Instructions
-//  __asm__ __volatile__("ss_wr %0 "          : : "i"(output_port)); 
-//  __asm__ __volatile__("ss_dma_addr_p %0, %1, " #output_port : : "r"(mem_addr), "r"(stride_size)); 
-//  __asm__ __volatile__("ss_dma_wr   %0, " : : "r"(num_strides)); 
 
 //Send a constant value, repeated num_elements times to a port
 #define SB_CONST(port, val, num_elements) \
@@ -193,10 +193,6 @@
 
 #define SB_REPEAT_PORT(times) \
   SB_CONFIG_PORT_EXPLICIT((times)*(REPEAT_FXPNT_VAL),0);
-
-//Write to Scratch from a CGRA output port.  Note that only linear writes are currently allowed
-//#define SB_SCRATCH_WRITE(output_port, num_bytes, scratch_addr) 
-//%  __asm__ __volatile__("ss_scr_wr   %0, %1, %2" : : "r"(scratch_addr), "r"(num_bytes), "i"(output_port)); 
 
 //Write from output to input port
 #define SB_RECURRENCE(output_port, input_port, num_strides) \
@@ -296,5 +292,8 @@
 #define P_IND_DOUB0 (26)
 #define P_IND_DOUB1 (27)
 
+//Convenience ports for these functions
+#define MEM_SCR_PORT (23)
+#define SCR_MEM_PORT (24)
 
 #endif
