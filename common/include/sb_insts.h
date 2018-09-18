@@ -44,6 +44,9 @@
 #define SB_RESET() \
   __asm__ __volatile__("ss_cfg x0, 0");
 
+//Add duplicate port
+#define SB_ADD_PORT(port) \
+  __asm__ __volatile__("ss_add_port x0, x0, %0" : : "i"(port)); 
 
 //Fill the scratchpad from DMA (from memory or cache)
 //Note that scratch_addr will be written linearly
@@ -284,13 +287,8 @@
 #define P_IND_2 (30)
 #define P_IND_3 (29)
 #define P_IND_4 (28)
-
-#define P_IND_TRIP0 (25)
-#define P_IND_TRIP1 (26)
-#define P_IND_TRIP2 (27)
-
-#define P_IND_DOUB0 (26)
-#define P_IND_DOUB1 (27)
+#define P_IND_5 (27)
+#define P_IND_6 (26)
 
 //Convenience ports for these functions
 #define MEM_SCR_PORT (23)
