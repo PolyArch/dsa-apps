@@ -1,8 +1,8 @@
 #include "testing.h"
 #include <iostream>
 
-#define LEN 16
-#define SLEN 4
+#define LEN 256
+#define SLEN 64
 
 struct item_array {
   uint32_t item1;
@@ -19,10 +19,13 @@ int main(int argc, char* argv[]) {
   uint32_t known[SLEN*3]; //32-bit data type
   uint32_t output[SLEN*3];
 
-  ind_array[0]=0;
-  ind_array[1]=1;
-  ind_array[2]=5;
-  ind_array[3]=4;
+  for(int i = 0; i < 64; ++i) {
+    ind_array[i] = rand()%(SLEN-1);
+  }
+//  ind_array[0]=0;
+//  ind_array[1]=1;
+//  ind_array[2]=5;
+//  ind_array[3]=4;
 
   for(int i = 0; i<LEN; ++i) {
     array[i].item1 = i*LEN+1;
@@ -33,7 +36,6 @@ int main(int argc, char* argv[]) {
   //lets copy array to scratch
   SB_DMA_SCRATCH_LOAD(array,8,8,sizeof(array)/8,0);
   SB_WAIT_SCR_WR();
-
 
   for(int i = 0; i<SLEN; ++i) {
     int ind = ind_array[i];
@@ -50,15 +52,18 @@ int main(int argc, char* argv[]) {
   SB_CONFIG(none_config,none_size);
 
   begin_roi();
-  SB_DMA_READ(&ind_array[0],8,8,SLEN/4,P_IND_1);
-
-  //itype, dtype, mult, offset
-  SB_CONFIG_INDIRECT2(T16,T32,sizeof(item_array), 2, 3);  //2 offsets for item 3 and item 4
-  SB_INDIRECT_SCR(P_IND_1,0,SLEN,P_none_in);
-
-  SB_DMA_WRITE(P_none_out,8,8,SLEN*3/2,&output[0]);
+  for(int i = 0; i < 10; ++ i) {
+    SB_DMA_READ(&ind_array[0],8,8,SLEN/4,P_IND_1);
+  
+    //itype, dtype, mult, offset
+    SB_CONFIG_INDIRECT2(T16,T32,sizeof(item_array), 2, 3);  //2 offsets for item 3 and item 4
+    SB_INDIRECT_SCR(P_IND_1,0,SLEN,P_none_in);
+  
+    SB_DMA_WRITE(P_none_out,8,8,SLEN*3/2,&output[0]);
+  }
   SB_WAIT_ALL();
   end_roi();
+
 
   compare<uint32_t>(argv[0],output,known,(int)SLEN*3);
 }

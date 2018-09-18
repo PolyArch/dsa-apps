@@ -2,7 +2,7 @@
 #include "add1_vec.dfg.h"
 
 #define N 5
-#define M 3
+#define M 1
 #define TOTAL ((N) * (M))
 
 uint64_t input[TOTAL];
@@ -22,7 +22,7 @@ int main(int argc, char* argv[]) {
   begin_roi();
   SB_CONFIG(add1_vec_config,add1_vec_size);
 
-  SB_DMA_READ(input, M * 8, M * 8, N, P_add1_vec_in);
+  SB_DMA_READ(input,           M * 8, M * 8, N, P_add1_vec_in);
   SB_DMA_WRITE(P_add1_vec_out, M * 8, M * 8, N, output);
 
 
