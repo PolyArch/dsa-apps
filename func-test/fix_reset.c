@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
   //These are all garbage commands
   SB_DMA_SCRATCH_LOAD(in,ABYTES,ABYTES,1,0);
   SB_DMA_READ(&input[0],8,8, 1, P_add1_vec_in);
-  SB_SCRATCH_READ(0, ABYTES, P_none_in);
+  SB_SCRATCH_READ(0, ABYTES, P_add1_vec_in);
   SB_DMA_READ(&input[0],8,8, 4,P_add1_vec_in);
 
   SB_WAIT_MEM_WR();
