@@ -1,0 +1,55 @@
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled Sep 23 2018 21:07:26
+gem5 started Sep 23 2018 21:09:22
+gem5 executing on octa, pid 9983
+command line: gem5.opt /home/vidushi/ss-stack/gem5/configs/example/se.py --cpu-type=MinorCPU --ruby --num-cpus=4 --num-dirs=4 --network=simple --topology=Mesh_XY --mesh-rows=2 --cmd=cpu
+
+came to setup network buffers
+done setup network buffers
+Global frequency set at 1000000000000 ticks per second
+Loading SS Config (env SBCONFIG): "/home/vidushi/ss-stack/ss-tools/configs/spu_merge_test.sbmodel"
+FU_FIFO_LEN:15
+IND_ROB_SIZE:8
+VPORT_IN depricated, ignoring colons, switch to PORT_IN
+new m_nodes is 12, ctrl_nodes is 8
+src: 0 dest: 3
+src: 1 dest: 3
+src: 2 dest: 3
+src: 3 dest: 3
+CPU PIPELINE STARTS
+PIPELINE WAKES UP AND CALL FETCH
+FECTH WAKES UP AND CALLS CPU WAKE UP EVENT
+CPU PIPELINE STARTS
+**** REAL SIMULATION ****
+PIPELINE WAKES UP AND CALL FETCH
+FECTH WAKES UP AND CALLS CPU WAKE UP EVENT
+CPU PIPELINE STARTS
+PIPELINE WAKES UP AND CALL FETCH
+FECTH WAKES UP AND CALLS CPU WAKE UP EVENT
+CPU PIPELINE STARTS
+PIPELINE WAKES UP AND CALL FETCH
+FECTH WAKES UP AND CALLS CPU WAKE UP EVENT
+CPU PIPELINE STARTS
+PIPELINE WAKES UP AND CALL FETCH
+FECTH WAKES UP AND CALLS CPU WAKE UP EVENT
+CPU PIPELINE STARTS
+COMES IN EXECUTE TO EVALUATE: Is this the commit stage?
+Cycle: 1
+COMES IN EXECUTE TO EVALUATE: Is this the commit stage?
+Cycle: 1
+COMES IN EXECUTE TO EVALUATE: Is this the commit stage?
+Cycle: 1
+COMES IN EXECUTE TO EVALUATE: Is this the commit stage?
+Cycle: 1
+Comes to indert the packet into the request queue at line 188
+CPU PIPELINE STARTS
+COMES IN EXECUTE TO EVALUATE: Is this the commit stage?
+Cycle: 2
+COMES IN EXECUTE TO EVALUATE: Is this the commit stage?
+Cycle: 2
+COMES IN EXECUTE TO EVALUATE: Is this the commit stage?
+Cycle: 2
+COMES IN EXECUTE TO EVALUATE: Is this the commit stage?
+Cycle: 2

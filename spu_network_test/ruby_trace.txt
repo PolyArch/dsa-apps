@@ -1,0 +1,730 @@
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled Sep 27 2018 16:01:13
+gem5 started Sep 27 2018 16:02:41
+gem5 executing on octa, pid 30026
+command line: gem5.opt --debug-flags=Ruby /home/vidushi/ss-stack/gem5/configs/example/se.py --cpu-type=MinorCPU --ruby --num-cpus=4 --num-dirs=4 --network=simple --topology=Mesh_XY --mesh-rows=2 --cmd=cpu
+
+number of routers instantiated in the topology is 
+4
+COMES TO THE CONFIG FILES TO CREATE TOPOLOGY- HOW TO CHANGE?
+Global frequency set at 1000000000000 ticks per second
+Loading SS Config (env SBCONFIG): "/home/vidushi/ss-stack/ss-tools/configs/spu_merge_test.sbmodel"
+FU_FIFO_LEN:15
+IND_ROB_SIZE:8
+VPORT_IN depricated, ignoring colons, switch to PORT_IN
+      0: system.ruby.l1_cntrl0.sequencer.pio-master-port: Created master pioport on sequencer system.ruby.l1_cntrl0.sequencer.pio-master-port
+      0: system.ruby.l1_cntrl0.sequencer.pio-slave-port: Created slave pioport on sequencer system.ruby.l1_cntrl0.sequencer.pio-slave-port
+      0: system.ruby.l1_cntrl0.sequencer.mem-master-port: Created master memport on ruby sequencer system.ruby.l1_cntrl0.sequencer.mem-master-port
+      0: system.ruby.l1_cntrl0.sequencer-mem-slave-port: Created slave memport on ruby sequencer system.ruby.l1_cntrl0.sequencer-mem-slave-port
+      0: system.ruby.l1_cntrl0.sequencer.slave0: Created slave memport on ruby sequencer system.ruby.l1_cntrl0.sequencer.slave0
+      0: system.ruby.l1_cntrl0.sequencer.slave1: Created slave memport on ruby sequencer system.ruby.l1_cntrl0.sequencer.slave1
+      0: system.ruby.l1_cntrl1.sequencer.pio-master-port: Created master pioport on sequencer system.ruby.l1_cntrl1.sequencer.pio-master-port
+      0: system.ruby.l1_cntrl1.sequencer.pio-slave-port: Created slave pioport on sequencer system.ruby.l1_cntrl1.sequencer.pio-slave-port
+      0: system.ruby.l1_cntrl1.sequencer.mem-master-port: Created master memport on ruby sequencer system.ruby.l1_cntrl1.sequencer.mem-master-port
+      0: system.ruby.l1_cntrl1.sequencer-mem-slave-port: Created slave memport on ruby sequencer system.ruby.l1_cntrl1.sequencer-mem-slave-port
+      0: system.ruby.l1_cntrl1.sequencer.slave0: Created slave memport on ruby sequencer system.ruby.l1_cntrl1.sequencer.slave0
+      0: system.ruby.l1_cntrl1.sequencer.slave1: Created slave memport on ruby sequencer system.ruby.l1_cntrl1.sequencer.slave1
+      0: system.ruby.l1_cntrl2.sequencer.pio-master-port: Created master pioport on sequencer system.ruby.l1_cntrl2.sequencer.pio-master-port
+      0: system.ruby.l1_cntrl2.sequencer.pio-slave-port: Created slave pioport on sequencer system.ruby.l1_cntrl2.sequencer.pio-slave-port
+      0: system.ruby.l1_cntrl2.sequencer.mem-master-port: Created master memport on ruby sequencer system.ruby.l1_cntrl2.sequencer.mem-master-port
+      0: system.ruby.l1_cntrl2.sequencer-mem-slave-port: Created slave memport on ruby sequencer system.ruby.l1_cntrl2.sequencer-mem-slave-port
+      0: system.ruby.l1_cntrl2.sequencer.slave0: Created slave memport on ruby sequencer system.ruby.l1_cntrl2.sequencer.slave0
+      0: system.ruby.l1_cntrl2.sequencer.slave1: Created slave memport on ruby sequencer system.ruby.l1_cntrl2.sequencer.slave1
+      0: system.ruby.l1_cntrl3.sequencer.pio-master-port: Created master pioport on sequencer system.ruby.l1_cntrl3.sequencer.pio-master-port
+      0: system.ruby.l1_cntrl3.sequencer.pio-slave-port: Created slave pioport on sequencer system.ruby.l1_cntrl3.sequencer.pio-slave-port
+      0: system.ruby.l1_cntrl3.sequencer.mem-master-port: Created master memport on ruby sequencer system.ruby.l1_cntrl3.sequencer.mem-master-port
+      0: system.ruby.l1_cntrl3.sequencer-mem-slave-port: Created slave memport on ruby sequencer system.ruby.l1_cntrl3.sequencer-mem-slave-port
+      0: system.ruby.l1_cntrl3.sequencer.slave0: Created slave memport on ruby sequencer system.ruby.l1_cntrl3.sequencer.slave0
+      0: system.ruby.l1_cntrl3.sequencer.slave1: Created slave memport on ruby sequencer system.ruby.l1_cntrl3.sequencer.slave1
+NUMBER OF MEMORY CONTROLLERS: 8
+NUMBER OF SPU CORES: 4
+CHECK NETWORK NUM AT NETWORK.CC:setSpuQueue 0, IT SHOULD BE 2 FOR 2 virtual networks, with node_id: 0
+CHECK NETWORK NUM AT end 0, with node_id: 0
+CHECK NETWORK NUM AT NETWORK.CC:setSpuQueue 0, IT SHOULD BE 2 FOR 2 virtual networks, with node_id: 1
+CHECK NETWORK NUM AT end 0, with node_id: 1
+CHECK NETWORK NUM AT NETWORK.CC:setSpuQueue 0, IT SHOULD BE 2 FOR 2 virtual networks, with node_id: 2
+CHECK NETWORK NUM AT end 0, with node_id: 2
+CHECK NETWORK NUM AT NETWORK.CC:setSpuQueue 0, IT SHOULD BE 2 FOR 2 virtual networks, with node_id: 3
+CHECK NETWORK NUM AT end 0, with node_id: 3
+      0: system.sys_port_proxy.pio-master-port: Created master pioport on sequencer system.sys_port_proxy.pio-master-port
+      0: system.sys_port_proxy.pio-slave-port: Created slave pioport on sequencer system.sys_port_proxy.pio-slave-port
+      0: system.sys_port_proxy.mem-master-port: Created master memport on ruby sequencer system.sys_port_proxy.mem-master-port
+      0: system.sys_port_proxy-mem-slave-port: Created slave memport on ruby sequencer system.sys_port_proxy-mem-slave-port
+      0: system.sys_port_proxy.slave0: Created slave memport on ruby sequencer system.sys_port_proxy.slave0
+      0: system.ruby.dir_cntrl0.dmaRequestToDir: Setting consumer: [Directory_Controller 0]
+      0: system.ruby.dir_cntrl0.requestToDir: Setting consumer: [Directory_Controller 0]
+      0: system.ruby.dir_cntrl0.responseFromMemory: Setting consumer: [Directory_Controller 0]
+      0: system.ruby.dir_cntrl1.dmaRequestToDir: Setting consumer: [Directory_Controller 1]
+      0: system.ruby.dir_cntrl1.requestToDir: Setting consumer: [Directory_Controller 1]
+      0: system.ruby.dir_cntrl1.responseFromMemory: Setting consumer: [Directory_Controller 1]
+      0: system.ruby.dir_cntrl2.dmaRequestToDir: Setting consumer: [Directory_Controller 2]
+      0: system.ruby.dir_cntrl2.requestToDir: Setting consumer: [Directory_Controller 2]
+      0: system.ruby.dir_cntrl2.responseFromMemory: Setting consumer: [Directory_Controller 2]
+      0: system.ruby.dir_cntrl3.dmaRequestToDir: Setting consumer: [Directory_Controller 3]
+      0: system.ruby.dir_cntrl3.requestToDir: Setting consumer: [Directory_Controller 3]
+      0: system.ruby.dir_cntrl3.responseFromMemory: Setting consumer: [Directory_Controller 3]
+      0: system.ruby.l1_cntrl0.forwardToCache: Setting consumer: [L1Cache_Controller 0]
+      0: system.ruby.l1_cntrl0.responseToCache: Setting consumer: [L1Cache_Controller 0]
+      0: system.ruby.l1_cntrl0.mandatoryQueue: Setting consumer: [L1Cache_Controller 0]
+      0: system.ruby.l1_cntrl1.forwardToCache: Setting consumer: [L1Cache_Controller 1]
+      0: system.ruby.l1_cntrl1.responseToCache: Setting consumer: [L1Cache_Controller 1]
+      0: system.ruby.l1_cntrl1.mandatoryQueue: Setting consumer: [L1Cache_Controller 1]
+      0: system.ruby.l1_cntrl2.forwardToCache: Setting consumer: [L1Cache_Controller 2]
+      0: system.ruby.l1_cntrl2.responseToCache: Setting consumer: [L1Cache_Controller 2]
+      0: system.ruby.l1_cntrl2.mandatoryQueue: Setting consumer: [L1Cache_Controller 2]
+      0: system.ruby.l1_cntrl3.forwardToCache: Setting consumer: [L1Cache_Controller 3]
+      0: system.ruby.l1_cntrl3.responseToCache: Setting consumer: [L1Cache_Controller 3]
+      0: system.ruby.l1_cntrl3.mandatoryQueue: Setting consumer: [L1Cache_Controller 3]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 4294967280, (next-(2*max_machines)): 8, src: 0, next: 24, result: [NetDest (17)  - 0 0 0 0  -  -  - 1 1 1 1  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.l1_cntrl0.requestFromCache: Setting consumer: [PerfectSwitch 0]
+      0: system.ruby.l1_cntrl0.responseFromCache: Setting consumer: [PerfectSwitch 0]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 4294967281, (next-(2*max_machines)): 9, src: 1, next: 25, result: [NetDest (17)  - 0 0 0 0  -  -  - 1 1 1 1  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.l1_cntrl1.requestFromCache: Setting consumer: [PerfectSwitch 1]
+      0: system.ruby.l1_cntrl1.responseFromCache: Setting consumer: [PerfectSwitch 1]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 4294967282, (next-(2*max_machines)): 10, src: 2, next: 26, result: [NetDest (17)  - 0 0 0 0  -  -  - 1 1 1 1  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.l1_cntrl2.requestFromCache: Setting consumer: [PerfectSwitch 2]
+      0: system.ruby.l1_cntrl2.responseFromCache: Setting consumer: [PerfectSwitch 2]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 4294967283, (next-(2*max_machines)): 11, src: 3, next: 27, result: [NetDest (17)  - 0 0 0 0  -  -  - 1 1 1 1  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.l1_cntrl3.requestFromCache: Setting consumer: [PerfectSwitch 3]
+      0: system.ruby.l1_cntrl3.responseFromCache: Setting consumer: [PerfectSwitch 3]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 4294967284, (next-(2*max_machines)): 8, src: 4, next: 24, result: [NetDest (17)  - 0 0 0 0  -  -  - 1 1 1 1  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.dir_cntrl0.dmaResponseFromDir: Setting consumer: [PerfectSwitch 0]
+      0: system.ruby.dir_cntrl0.forwardFromDir: Setting consumer: [PerfectSwitch 0]
+      0: system.ruby.dir_cntrl0.responseFromDir: Setting consumer: [PerfectSwitch 0]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 4294967285, (next-(2*max_machines)): 9, src: 5, next: 25, result: [NetDest (17)  - 0 0 0 0  -  -  - 1 1 1 1  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.dir_cntrl1.dmaResponseFromDir: Setting consumer: [PerfectSwitch 1]
+      0: system.ruby.dir_cntrl1.forwardFromDir: Setting consumer: [PerfectSwitch 1]
+      0: system.ruby.dir_cntrl1.responseFromDir: Setting consumer: [PerfectSwitch 1]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 4294967286, (next-(2*max_machines)): 10, src: 6, next: 26, result: [NetDest (17)  - 0 0 0 0  -  -  - 1 1 1 1  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.dir_cntrl2.dmaResponseFromDir: Setting consumer: [PerfectSwitch 2]
+      0: system.ruby.dir_cntrl2.forwardFromDir: Setting consumer: [PerfectSwitch 2]
+      0: system.ruby.dir_cntrl2.responseFromDir: Setting consumer: [PerfectSwitch 2]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 4294967287, (next-(2*max_machines)): 11, src: 7, next: 27, result: [NetDest (17)  - 0 0 0 0  -  -  - 1 1 1 1  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.dir_cntrl3.dmaResponseFromDir: Setting consumer: [PerfectSwitch 3]
+      0: system.ruby.dir_cntrl3.forwardFromDir: Setting consumer: [PerfectSwitch 3]
+      0: system.ruby.dir_cntrl3.responseFromDir: Setting consumer: [PerfectSwitch 3]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 4294967288, (next-(2*max_machines)): 8, src: 8, next: 24, result: [NetDest (17)  - 0 0 0 0  -  -  - 1 1 1 1  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.cpu0.requestFromSpu: Setting consumer: [PerfectSwitch 0]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 4294967289, (next-(2*max_machines)): 9, src: 9, next: 25, result: [NetDest (17)  - 0 0 0 0  -  -  - 1 1 1 1  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.cpu1.requestFromSpu: Setting consumer: [PerfectSwitch 1]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 4294967290, (next-(2*max_machines)): 10, src: 10, next: 26, result: [NetDest (17)  - 0 0 0 0  -  -  - 1 1 1 1  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.cpu2.requestFromSpu: Setting consumer: [PerfectSwitch 2]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 4294967291, (next-(2*max_machines)): 11, src: 11, next: 27, result: [NetDest (17)  - 0 0 0 0  -  -  - 1 1 1 1  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.cpu3.requestFromSpu: Setting consumer: [PerfectSwitch 3]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 8, (next-(2*max_machines)): 4294967292, src: 24, next: 12, result: [NetDest (17)  - 0 0 0 0  -  -  - 1 0 0 0  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.routers0.port_buffers00: Setting consumer: [0 bw: 16000]
+      0: system.ruby.network.routers0.port_buffers01: Setting consumer: [0 bw: 16000]
+      0: system.ruby.network.routers0.port_buffers02: Setting consumer: [0 bw: 16000]
+      0: system.ruby.network.routers0.port_buffers03: Setting consumer: [0 bw: 16000]
+      0: system.ruby.network.routers0.port_buffers04: Setting consumer: [0 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 8, (next-(2*max_machines)): 0, src: 24, next: 16, result: [NetDest (17)  - 0 0 0 0  -  -  - 0 0 0 0  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.routers0.port_buffers05: Setting consumer: [1 bw: 16000]
+      0: system.ruby.network.routers0.port_buffers06: Setting consumer: [1 bw: 16000]
+      0: system.ruby.network.routers0.port_buffers07: Setting consumer: [1 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 8, (next-(2*max_machines)): 4, src: 24, next: 20, result: [NetDest (17)  - 0 0 0 0  -  -  - 0 0 0 0  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.routers0.port_buffers08: Setting consumer: [2 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 8, (next-(2*max_machines)): 9, src: 24, next: 25, result: [NetDest (17)  - 0 0 0 0  -  -  - 0 1 0 1  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.int_link_buffers00: Setting consumer: [PerfectSwitch 1]
+      0: system.ruby.network.int_link_buffers01: Setting consumer: [PerfectSwitch 1]
+      0: system.ruby.network.int_link_buffers02: Setting consumer: [PerfectSwitch 1]
+      0: system.ruby.network.int_link_buffers03: Setting consumer: [PerfectSwitch 1]
+      0: system.ruby.network.int_link_buffers04: Setting consumer: [PerfectSwitch 1]
+      0: system.ruby.network.routers0.port_buffers09: Setting consumer: [3 bw: 16000]
+      0: system.ruby.network.routers0.port_buffers10: Setting consumer: [3 bw: 16000]
+      0: system.ruby.network.routers0.port_buffers11: Setting consumer: [3 bw: 16000]
+      0: system.ruby.network.routers0.port_buffers12: Setting consumer: [3 bw: 16000]
+      0: system.ruby.network.routers0.port_buffers13: Setting consumer: [3 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 8, (next-(2*max_machines)): 10, src: 24, next: 26, result: [NetDest (17)  - 0 0 0 0  -  -  - 0 0 1 1  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.int_link_buffers05: Setting consumer: [PerfectSwitch 2]
+      0: system.ruby.network.int_link_buffers06: Setting consumer: [PerfectSwitch 2]
+      0: system.ruby.network.int_link_buffers07: Setting consumer: [PerfectSwitch 2]
+      0: system.ruby.network.int_link_buffers08: Setting consumer: [PerfectSwitch 2]
+      0: system.ruby.network.int_link_buffers09: Setting consumer: [PerfectSwitch 2]
+      0: system.ruby.network.routers0.port_buffers14: Setting consumer: [4 bw: 16000]
+      0: system.ruby.network.routers0.port_buffers15: Setting consumer: [4 bw: 16000]
+      0: system.ruby.network.routers0.port_buffers16: Setting consumer: [4 bw: 16000]
+      0: system.ruby.network.routers0.port_buffers17: Setting consumer: [4 bw: 16000]
+      0: system.ruby.network.routers0.port_buffers18: Setting consumer: [4 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 9, (next-(2*max_machines)): 4294967293, src: 25, next: 13, result: [NetDest (17)  - 0 0 0 0  -  -  - 0 1 0 0  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.routers1.port_buffers00: Setting consumer: [0 bw: 16000]
+      0: system.ruby.network.routers1.port_buffers01: Setting consumer: [0 bw: 16000]
+      0: system.ruby.network.routers1.port_buffers02: Setting consumer: [0 bw: 16000]
+      0: system.ruby.network.routers1.port_buffers03: Setting consumer: [0 bw: 16000]
+      0: system.ruby.network.routers1.port_buffers04: Setting consumer: [0 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 9, (next-(2*max_machines)): 1, src: 25, next: 17, result: [NetDest (17)  - 0 0 0 0  -  -  - 0 0 0 0  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.routers1.port_buffers05: Setting consumer: [1 bw: 16000]
+      0: system.ruby.network.routers1.port_buffers06: Setting consumer: [1 bw: 16000]
+      0: system.ruby.network.routers1.port_buffers07: Setting consumer: [1 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 9, (next-(2*max_machines)): 5, src: 25, next: 21, result: [NetDest (17)  - 0 0 0 0  -  -  - 0 0 0 0  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.routers1.port_buffers08: Setting consumer: [2 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 9, (next-(2*max_machines)): 8, src: 25, next: 24, result: [NetDest (17)  - 0 0 0 0  -  -  - 1 0 1 0  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.int_link_buffers10: Setting consumer: [PerfectSwitch 0]
+      0: system.ruby.network.int_link_buffers11: Setting consumer: [PerfectSwitch 0]
+      0: system.ruby.network.int_link_buffers12: Setting consumer: [PerfectSwitch 0]
+      0: system.ruby.network.int_link_buffers13: Setting consumer: [PerfectSwitch 0]
+      0: system.ruby.network.int_link_buffers14: Setting consumer: [PerfectSwitch 0]
+      0: system.ruby.network.routers1.port_buffers09: Setting consumer: [3 bw: 16000]
+      0: system.ruby.network.routers1.port_buffers10: Setting consumer: [3 bw: 16000]
+      0: system.ruby.network.routers1.port_buffers11: Setting consumer: [3 bw: 16000]
+      0: system.ruby.network.routers1.port_buffers12: Setting consumer: [3 bw: 16000]
+      0: system.ruby.network.routers1.port_buffers13: Setting consumer: [3 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 9, (next-(2*max_machines)): 11, src: 25, next: 27, result: [NetDest (17)  - 0 0 0 0  -  -  - 0 0 1 1  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.int_link_buffers15: Setting consumer: [PerfectSwitch 3]
+      0: system.ruby.network.int_link_buffers16: Setting consumer: [PerfectSwitch 3]
+      0: system.ruby.network.int_link_buffers17: Setting consumer: [PerfectSwitch 3]
+      0: system.ruby.network.int_link_buffers18: Setting consumer: [PerfectSwitch 3]
+      0: system.ruby.network.int_link_buffers19: Setting consumer: [PerfectSwitch 3]
+      0: system.ruby.network.routers1.port_buffers14: Setting consumer: [4 bw: 16000]
+      0: system.ruby.network.routers1.port_buffers15: Setting consumer: [4 bw: 16000]
+      0: system.ruby.network.routers1.port_buffers16: Setting consumer: [4 bw: 16000]
+      0: system.ruby.network.routers1.port_buffers17: Setting consumer: [4 bw: 16000]
+      0: system.ruby.network.routers1.port_buffers18: Setting consumer: [4 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 10, (next-(2*max_machines)): 4294967294, src: 26, next: 14, result: [NetDest (17)  - 0 0 0 0  -  -  - 0 0 1 0  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.routers2.port_buffers00: Setting consumer: [0 bw: 16000]
+      0: system.ruby.network.routers2.port_buffers01: Setting consumer: [0 bw: 16000]
+      0: system.ruby.network.routers2.port_buffers02: Setting consumer: [0 bw: 16000]
+      0: system.ruby.network.routers2.port_buffers03: Setting consumer: [0 bw: 16000]
+      0: system.ruby.network.routers2.port_buffers04: Setting consumer: [0 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 10, (next-(2*max_machines)): 2, src: 26, next: 18, result: [NetDest (17)  - 0 0 0 0  -  -  - 0 0 0 0  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.routers2.port_buffers05: Setting consumer: [1 bw: 16000]
+      0: system.ruby.network.routers2.port_buffers06: Setting consumer: [1 bw: 16000]
+      0: system.ruby.network.routers2.port_buffers07: Setting consumer: [1 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 10, (next-(2*max_machines)): 6, src: 26, next: 22, result: [NetDest (17)  - 0 0 0 0  -  -  - 0 0 0 0  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.routers2.port_buffers08: Setting consumer: [2 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 10, (next-(2*max_machines)): 8, src: 26, next: 24, result: [NetDest (17)  - 0 0 0 0  -  -  - 1 1 0 0  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.int_link_buffers20: Setting consumer: [PerfectSwitch 0]
+      0: system.ruby.network.int_link_buffers21: Setting consumer: [PerfectSwitch 0]
+      0: system.ruby.network.int_link_buffers22: Setting consumer: [PerfectSwitch 0]
+      0: system.ruby.network.int_link_buffers23: Setting consumer: [PerfectSwitch 0]
+      0: system.ruby.network.int_link_buffers24: Setting consumer: [PerfectSwitch 0]
+      0: system.ruby.network.routers2.port_buffers09: Setting consumer: [3 bw: 16000]
+      0: system.ruby.network.routers2.port_buffers10: Setting consumer: [3 bw: 16000]
+      0: system.ruby.network.routers2.port_buffers11: Setting consumer: [3 bw: 16000]
+      0: system.ruby.network.routers2.port_buffers12: Setting consumer: [3 bw: 16000]
+      0: system.ruby.network.routers2.port_buffers13: Setting consumer: [3 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 10, (next-(2*max_machines)): 11, src: 26, next: 27, result: [NetDest (17)  - 0 0 0 0  -  -  - 0 1 0 1  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.int_link_buffers25: Setting consumer: [PerfectSwitch 3]
+      0: system.ruby.network.int_link_buffers26: Setting consumer: [PerfectSwitch 3]
+      0: system.ruby.network.int_link_buffers27: Setting consumer: [PerfectSwitch 3]
+      0: system.ruby.network.int_link_buffers28: Setting consumer: [PerfectSwitch 3]
+      0: system.ruby.network.int_link_buffers29: Setting consumer: [PerfectSwitch 3]
+      0: system.ruby.network.routers2.port_buffers14: Setting consumer: [4 bw: 16000]
+      0: system.ruby.network.routers2.port_buffers15: Setting consumer: [4 bw: 16000]
+      0: system.ruby.network.routers2.port_buffers16: Setting consumer: [4 bw: 16000]
+      0: system.ruby.network.routers2.port_buffers17: Setting consumer: [4 bw: 16000]
+      0: system.ruby.network.routers2.port_buffers18: Setting consumer: [4 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 11, (next-(2*max_machines)): 4294967295, src: 27, next: 15, result: [NetDest (17)  - 0 0 0 0  -  -  - 0 0 0 1  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.routers3.port_buffers00: Setting consumer: [0 bw: 16000]
+      0: system.ruby.network.routers3.port_buffers01: Setting consumer: [0 bw: 16000]
+      0: system.ruby.network.routers3.port_buffers02: Setting consumer: [0 bw: 16000]
+      0: system.ruby.network.routers3.port_buffers03: Setting consumer: [0 bw: 16000]
+      0: system.ruby.network.routers3.port_buffers04: Setting consumer: [0 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 11, (next-(2*max_machines)): 3, src: 27, next: 19, result: [NetDest (17)  - 0 0 0 0  -  -  - 0 0 0 0  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.routers3.port_buffers05: Setting consumer: [1 bw: 16000]
+      0: system.ruby.network.routers3.port_buffers06: Setting consumer: [1 bw: 16000]
+      0: system.ruby.network.routers3.port_buffers07: Setting consumer: [1 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 11, (next-(2*max_machines)): 7, src: 27, next: 23, result: [NetDest (17)  - 0 0 0 0  -  -  - 0 0 0 0  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.routers3.port_buffers08: Setting consumer: [2 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 11, (next-(2*max_machines)): 9, src: 27, next: 25, result: [NetDest (17)  - 0 0 0 0  -  -  - 1 1 0 0  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.int_link_buffers30: Setting consumer: [PerfectSwitch 1]
+      0: system.ruby.network.int_link_buffers31: Setting consumer: [PerfectSwitch 1]
+      0: system.ruby.network.int_link_buffers32: Setting consumer: [PerfectSwitch 1]
+      0: system.ruby.network.int_link_buffers33: Setting consumer: [PerfectSwitch 1]
+      0: system.ruby.network.int_link_buffers34: Setting consumer: [PerfectSwitch 1]
+      0: system.ruby.network.routers3.port_buffers09: Setting consumer: [3 bw: 16000]
+      0: system.ruby.network.routers3.port_buffers10: Setting consumer: [3 bw: 16000]
+      0: system.ruby.network.routers3.port_buffers11: Setting consumer: [3 bw: 16000]
+      0: system.ruby.network.routers3.port_buffers12: Setting consumer: [3 bw: 16000]
+      0: system.ruby.network.routers3.port_buffers13: Setting consumer: [3 bw: 16000]
+      0: global: Returning shortest path
+(src-(2*max_machines)): 11, (next-(2*max_machines)): 10, src: 27, next: 26, result: [NetDest (17)  - 0 0 0 0  -  -  - 1 0 1 0  -  -  -  -  -  -  -  -  -  -  -  -  - ]
+      0: system.ruby.network.int_link_buffers35: Setting consumer: [PerfectSwitch 2]
+      0: system.ruby.network.int_link_buffers36: Setting consumer: [PerfectSwitch 2]
+      0: system.ruby.network.int_link_buffers37: Setting consumer: [PerfectSwitch 2]
+      0: system.ruby.network.int_link_buffers38: Setting consumer: [PerfectSwitch 2]
+      0: system.ruby.network.int_link_buffers39: Setting consumer: [PerfectSwitch 2]
+      0: system.ruby.network.routers3.port_buffers14: Setting consumer: [4 bw: 16000]
+      0: system.ruby.network.routers3.port_buffers15: Setting consumer: [4 bw: 16000]
+      0: system.ruby.network.routers3.port_buffers16: Setting consumer: [4 bw: 16000]
+      0: system.ruby.network.routers3.port_buffers17: Setting consumer: [4 bw: 16000]
+      0: system.ruby.network.routers3.port_buffers18: Setting consumer: [4 bw: 16000]
+      0: system.sys_port_proxy.slave0: Functional access for address: 0
+      0: system.ruby: Functional Write request for 0
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x40
+      0: system.ruby: Functional Write request for 0x40
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x40
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x40
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x80
+      0: system.ruby: Functional Write request for 0x80
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x80
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x80
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0xc0
+      0: system.ruby: Functional Write request for 0xc0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0xc0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0xc0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x100
+      0: system.ruby: Functional Write request for 0x100
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x100
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x100
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x140
+      0: system.ruby: Functional Write request for 0x140
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x140
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x140
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x180
+      0: system.ruby: Functional Write request for 0x180
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x180
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x180
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1c0
+      0: system.ruby: Functional Write request for 0x1c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x1c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x1c0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x200
+      0: system.ruby: Functional Write request for 0x200
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x200
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x200
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x240
+      0: system.ruby: Functional Write request for 0x240
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x240
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x240
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x280
+      0: system.ruby: Functional Write request for 0x280
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x280
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x280
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2c0
+      0: system.ruby: Functional Write request for 0x2c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x2c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x2c0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x300
+      0: system.ruby: Functional Write request for 0x300
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x300
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x300
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x340
+      0: system.ruby: Functional Write request for 0x340
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x340
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x340
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x380
+      0: system.ruby: Functional Write request for 0x380
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x380
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x380
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x3c0
+      0: system.ruby: Functional Write request for 0x3c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x3c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x3c0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x400
+      0: system.ruby: Functional Write request for 0x400
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x400
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x400
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x440
+      0: system.ruby: Functional Write request for 0x440
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x440
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x440
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1460
+      0: system.ruby: Functional Write request for 0x1460
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x1440
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x1440
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1480
+      0: system.ruby: Functional Write request for 0x1480
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x1480
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x1480
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x14c0
+      0: system.ruby: Functional Write request for 0x14c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x14c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x14c0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1500
+      0: system.ruby: Functional Write request for 0x1500
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x1500
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x1500
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1540
+      0: system.ruby: Functional Write request for 0x1540
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x1540
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x1540
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1580
+      0: system.ruby: Functional Write request for 0x1580
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x1580
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x1580
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x15c0
+      0: system.ruby: Functional Write request for 0x15c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x15c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x15c0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1600
+      0: system.ruby: Functional Write request for 0x1600
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x1600
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x1600
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1640
+      0: system.ruby: Functional Write request for 0x1640
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x1640
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x1640
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1680
+      0: system.ruby: Functional Write request for 0x1680
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x1680
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x1680
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x16c0
+      0: system.ruby: Functional Write request for 0x16c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x16c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x16c0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1700
+      0: system.ruby: Functional Write request for 0x1700
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x1700
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x1700
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1740
+      0: system.ruby: Functional Write request for 0x1740
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x1740
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x1740
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1780
+      0: system.ruby: Functional Write request for 0x1780
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x1780
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x1780
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x17c0
+      0: system.ruby: Functional Write request for 0x17c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x17c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x17c0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1800
+      0: system.ruby: Functional Write request for 0x1800
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x1800
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x1800
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1840
+      0: system.ruby: Functional Write request for 0x1840
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x1840
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x1840
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1880
+      0: system.ruby: Functional Write request for 0x1880
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x1880
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x1880
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x18c0
+      0: system.ruby: Functional Write request for 0x18c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x18c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x18c0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1900
+      0: system.ruby: Functional Write request for 0x1900
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x1900
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x1900
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1940
+      0: system.ruby: Functional Write request for 0x1940
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x1940
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x1940
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1980
+      0: system.ruby: Functional Write request for 0x1980
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x1980
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x1980
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x19c0
+      0: system.ruby: Functional Write request for 0x19c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x19c0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x19c0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1a00
+      0: system.ruby: Functional Write request for 0x1a00
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x1a00
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x1a00
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1a40
+      0: system.ruby: Functional Write request for 0x1a40
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x1a40
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x1a40
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1a80
+      0: system.ruby: Functional Write request for 0x1a80
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x1a80
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x1a80
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1ac0
+      0: system.ruby: Functional Write request for 0x1ac0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x1ac0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x1ac0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1b00
+      0: system.ruby: Functional Write request for 0x1b00
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x1b00
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x1b00
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1b40
+      0: system.ruby: Functional Write request for 0x1b40
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x1b40
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x1b40
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1b80
+      0: system.ruby: Functional Write request for 0x1b80
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x1b80
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x1b80
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1bc0
+      0: system.ruby: Functional Write request for 0x1bc0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x1bc0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x1bc0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x1c00
+      0: system.ruby: Functional Write request for 0x1c00
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x1c00
+      0: system.ruby.dir_cntrl0.directory: Looking up address: 0x1c00
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2fef
+      0: system.ruby: Functional Write request for 0x2fef
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x2fc0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x2fc0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2feb
+      0: system.ruby: Functional Write request for 0x2feb
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x2fc0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2fec
+      0: system.ruby: Functional Write request for 0x2fec
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x2fc0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2fed
+      0: system.ruby: Functional Write request for 0x2fed
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x2fc0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2fee
+      0: system.ruby: Functional Write request for 0x2fee
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x2fc0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2f40
+      0: system.ruby: Functional Write request for 0x2f40
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x2f40
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x2f40
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2f48
+      0: system.ruby: Functional Write request for 0x2f48
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x2f40
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2f50
+      0: system.ruby: Functional Write request for 0x2f50
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x2f40
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2f58
+      0: system.ruby: Functional Write request for 0x2f58
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x2f40
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2f60
+      0: system.ruby: Functional Write request for 0x2f60
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x2f40
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2f68
+      0: system.ruby: Functional Write request for 0x2f68
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x2f40
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2f70
+      0: system.ruby: Functional Write request for 0x2f70
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x2f40
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2f78
+      0: system.ruby: Functional Write request for 0x2f78
+      0: system.ruby.dir_cntrl1.directory: Looking up address: 0x2f40
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2f80
+      0: system.ruby: Functional Write request for 0x2f80
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x2f80
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x2f80
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2f88
+      0: system.ruby: Functional Write request for 0x2f88
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x2f80
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2f90
+      0: system.ruby: Functional Write request for 0x2f90
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x2f80
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2f98
+      0: system.ruby: Functional Write request for 0x2f98
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x2f80
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2fa0
+      0: system.ruby: Functional Write request for 0x2fa0
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x2f80
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2fa8
+      0: system.ruby: Functional Write request for 0x2fa8
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x2f80
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2fb0
+      0: system.ruby: Functional Write request for 0x2fb0
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x2f80
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2fb8
+      0: system.ruby: Functional Write request for 0x2fb8
+      0: system.ruby.dir_cntrl2.directory: Looking up address: 0x2f80
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2fc0
+      0: system.ruby: Functional Write request for 0x2fc0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x2fc0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2fc8
+      0: system.ruby: Functional Write request for 0x2fc8
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x2fc0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2fd0
+      0: system.ruby: Functional Write request for 0x2fd0
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x2fc0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+      0: system.sys_port_proxy.slave0: Functional access for address: 0x2fd8
+      0: system.ruby: Functional Write request for 0x2fd8
+      0: system.ruby.dir_cntrl3.directory: Looking up address: 0x2fc0
+      0: system.ruby: Messages written = 1
+      0: system.sys_port_proxy.slave0: Functional access successful!
+**** REAL SIMULATION ****
+    500: system.ruby.l1_cntrl0.sequencer.slave0: Timing request for address 0x80 on port 0
+    500: system.ruby.l1_cntrl0.mandatoryQueue: Enqueue arrival_time: 1000, Message: [RubyRequest: LineAddress = 0x80 PhysicalAddress = 0x80 Type = IFETCH ProgramCounter = 0x100b4 AccessMode = Supervisor Size = 64 Prefetch = No ]
+    500: system.ruby.l1_cntrl0.sequencer.slave0: Request ReadReq address 0x80 issued
+   1000: system.ruby.l1_cntrl0.mandatoryQueue: Peeking at head of queue.
+   1000: system.ruby.l1_cntrl0.mandatoryQueue: Message: [RubyRequest: LineAddress = 0x80 PhysicalAddress = 0x80 Type = IFETCH ProgramCounter = 0x100b4 AccessMode = Supervisor Size = 64 Prefetch = No ]
+   1000: system.ruby.l1_cntrl0: [L1Cache_Controller 0], Time: 2, state: I, event: Ifetch, addr: 0x80
+   1000: system.ruby.l1_cntrl0: executing v_allocateTBE
+   1000: system.ruby.l1_cntrl0: executing i_allocateL1CacheBlock
+   1000: system.ruby.l1_cntrl0.cacheMemory: No tag match for address: 0x80
+   1000: system.ruby.l1_cntrl0.cacheMemory: address: 0x80
+   1000: system.ruby.l1_cntrl0.cacheMemory: Allocate clearing lock for addr: 80
+   1000: system.ruby.l1_cntrl0: executing a_issueRequest
+   1000: system.ruby.l1_cntrl0.requestFromCache: Enqueue arrival_time: 2000, Message: [RequestMsg: addr = [0x80, line 0x80] Type = GETX Requestor = L1Cache-0 Destination = [NetDest (17)  - 0 0 0 0  -  -  - 0 0 1 0  -  -  -  -  -  -  -  -  -  -  -  -  - ] DataBlk = [ 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 0x0 ] MessageSize = Control ]
+   1000: system.ruby.l1_cntrl0: executing p_profileMiss
+   1000: system.ruby.l1_cntrl0: executing m_popMandatoryQueue
+   1000: system.ruby.l1_cntrl0.mandatoryQueue: Popping
+   1000: system.ruby.l1_cntrl0: next_state: IS
+Request sent to be pushed into the SPU buffer
