@@ -15,7 +15,7 @@ all: $(TESTS)
 CPP=riscv64-unknown-elf-g++
 
 OPT?=-O3
-CFLAGS=$(OPT) -g -ggdb -gdwarf-3 
+CFLAGS=$(OPT) -g -ggdb -gdwarf-3 -I$(SS)/ss-workloads/common/include
 #--std=c++11 
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
