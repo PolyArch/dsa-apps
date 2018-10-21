@@ -1,8 +1,0 @@
-InputVec: A [0, 1]
-InputVec: B [0, 1]
-
-P = Index_match(A0,B0)
-E = Mul64(A1,B1)
-R = MatrixAcc64(E,P)
-
-Output: R

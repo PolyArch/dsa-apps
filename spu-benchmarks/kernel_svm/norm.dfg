@@ -1,8 +1,0 @@
-Input: A
-Input: const
-
-sum = Mul64(A,A)
-
-output = Acc64(sum,const)
-
-Output: output
