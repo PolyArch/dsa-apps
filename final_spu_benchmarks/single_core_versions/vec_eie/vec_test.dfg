@@ -1,0 +1,161 @@
+Input: wval0
+Input: wind0
+Input: wval1
+Input: wind1
+Input: wval2
+Input: wind2
+Input: wval3
+Input: wind3
+Input: wval4
+Input: wind4
+Input: wval5
+Input: wind5
+Input: wval6
+Input: wind6
+Input: wval7
+Input: wind7
+Input: aval
+Input: aind
+
+nval = Extract16(aval) 
+nind = Extract16(aind) 
+
+P00 = IndexMatch16(wind0:16:0,nind)
+P10 = IndexMatch16(wind0:16:1,nind)
+P20 = IndexMatch16(wind0:16:2,nind)
+P30 = IndexMatch16(wind0:16:3,nind)
+
+E00 = Mul16(wval0,nval,control=P00{1:b2,2:b1})
+E10 = Mul16(wval0,nval,control=P10{1:b2,2:b1})
+E20 = Mul16(wval0,nval,control=P20{1:b2,2:b1})
+E30 = Mul16(wval0,nval,control=P30{1:b2,2:b1})
+
+R00 = Acc16(E00,P00,control=P00{0:d,1:d,2:d})
+R10 = Acc16(E10,P10,control=P10{0:d,1:d,2:d})
+R20 = Acc16(E20,P20,control=P20{0:d,1:d,2:d})
+R30 = Acc16(E30,P30,control=P30{0:d,1:d,2:d})
+
+out_val0 = R00 R10 R20 R30
+
+P01 = IndexMatch16(wind1:16:0,nind)
+P11 = IndexMatch16(wind1:16:1,nind)
+P21 = IndexMatch16(wind1:16:2,nind)
+P31 = IndexMatch16(wind1:16:3,nind)
+
+E01 = Mul16(wval1,nval,control=P01{1:b2,2:b1})
+E11 = Mul16(wval1,nval,control=P11{1:b2,2:b1})
+E21 = Mul16(wval1,nval,control=P21{1:b2,2:b1})
+E31 = Mul16(wval1,nval,control=P31{1:b2,2:b1})
+
+R01 = Acc16(E01,P01,control=P01{0:d,1:d,2:d})
+R11 = Acc16(E11,P11,control=P11{0:d,1:d,2:d})
+R21 = Acc16(E21,P21,control=P21{0:d,1:d,2:d})
+R31 = Acc16(E31,P31,control=P31{0:d,1:d,2:d})
+
+out_val1 = R01 R11 R21 R31
+
+P02 = IndexMatch16(wind2:16:0,nind)
+P12 = IndexMatch16(wind2:16:1,nind)
+P22 = IndexMatch16(wind2:16:2,nind)
+P32 = IndexMatch16(wind2:16:3,nind)
+
+E02 = Mul16(wval2,nval,control=P02{1:b2,2:b1})
+E12 = Mul16(wval2,nval,control=P12{1:b2,2:b1})
+E22 = Mul16(wval2,nval,control=P22{1:b2,2:b1})
+E32 = Mul16(wval2,nval,control=P32{1:b2,2:b1})
+
+R02 = Acc16(E02,P02,control=P02{0:d,1:d,2:d})
+R12 = Acc16(E12,P12,control=P12{0:d,1:d,2:d})
+R22 = Acc16(E22,P22,control=P22{0:d,1:d,2:d})
+R32 = Acc16(E32,P32,control=P32{0:d,1:d,2:d})
+
+out_val2 = R02 R12 R22 R32
+
+P03 = IndexMatch16(wind3:16:0,nind)
+P13 = IndexMatch16(wind3:16:1,nind)
+P23 = IndexMatch16(wind3:16:2,nind)
+P33 = IndexMatch16(wind3:16:3,nind)
+
+E03 = Mul16(wval3,nval,control=P03{1:b2,2:b1})
+E13 = Mul16(wval3,nval,control=P13{1:b2,2:b1})
+E23 = Mul16(wval3,nval,control=P23{1:b2,2:b1})
+E33 = Mul16(wval3,nval,control=P33{1:b2,2:b1})
+
+R03 = Acc16(E03,P03,control=P03{0:d,1:d,2:d})
+R13 = Acc16(E13,P13,control=P13{0:d,1:d,2:d})
+R23 = Acc16(E23,P23,control=P23{0:d,1:d,2:d})
+R33 = Acc16(E33,P33,control=P33{0:d,1:d,2:d})
+
+out_val3 = R03 R13 R23 R33
+
+
+P04 = IndexMatch16(wind4:16:0,nind)
+P14 = IndexMatch16(wind4:16:1,nind)
+P24 = IndexMatch16(wind4:16:2,nind)
+P34 = IndexMatch16(wind4:16:3,nind)
+
+E04 = Mul16(wval4,nval,control=P04{1:b2,2:b1})
+E14 = Mul16(wval4,nval,control=P14{1:b2,2:b1})
+E24 = Mul16(wval4,nval,control=P24{1:b2,2:b1})
+E34 = Mul16(wval4,nval,control=P34{1:b2,2:b1})
+
+R04 = Acc16(E04,P04,control=P04{0:d,1:d,2:d})
+R14 = Acc16(E14,P14,control=P14{0:d,1:d,2:d})
+R24 = Acc16(E24,P24,control=P24{0:d,1:d,2:d})
+R34 = Acc16(E34,P34,control=P34{0:d,1:d,2:d})
+
+out_val4 = R04 R14 R24 R34
+
+P05 = IndexMatch16(wind5:16:0,nind)
+P15 = IndexMatch16(wind5:16:1,nind)
+P25 = IndexMatch16(wind5:16:2,nind)
+P35 = IndexMatch16(wind5:16:3,nind)
+
+E05 = Mul16(wval5,nval,control=P05{1:b2,2:b1})
+E15 = Mul16(wval5,nval,control=P15{1:b2,2:b1})
+E25 = Mul16(wval5,nval,control=P25{1:b2,2:b1})
+E35 = Mul16(wval5,nval,control=P35{1:b2,2:b1})
+
+R05 = Acc16(E05,P05,control=P05{0:d,1:d,2:d})
+R15 = Acc16(E15,P15,control=P15{0:d,1:d,2:d})
+R25 = Acc16(E25,P25,control=P25{0:d,1:d,2:d})
+R35 = Acc16(E35,P35,control=P35{0:d,1:d,2:d})
+
+out_val5 = R05 R15 R25 R35
+
+P06 = IndexMatch16(wind6:16:0,nind)
+P16 = IndexMatch16(wind6:16:1,nind)
+P26 = IndexMatch16(wind6:16:2,nind)
+P36 = IndexMatch16(wind6:16:3,nind)
+
+E06 = Mul16(wval6,nval,control=P06{1:b2,2:b1})
+E16 = Mul16(wval6,nval,control=P16{1:b2,2:b1})
+E26 = Mul16(wval6,nval,control=P26{1:b2,2:b1})
+E36 = Mul16(wval6,nval,control=P36{1:b2,2:b1})
+
+R06 = Acc16(E06,P06,control=P06{0:d,1:d,2:d})
+R16 = Acc16(E16,P16,control=P16{0:d,1:d,2:d})
+R26 = Acc16(E26,P26,control=P26{0:d,1:d,2:d})
+R36 = Acc16(E36,P36,control=P36{0:d,1:d,2:d})
+
+out_val6 = R06 R16 R26 R36
+
+P07 = IndexMatch16(wind7:16:0,nind)
+P17 = IndexMatch16(wind7:16:1,nind)
+P27 = IndexMatch16(wind7:16:2,nind)
+P37 = IndexMatch16(wind7:16:3,nind)
+
+E07 = Mul16(wval7,nval,control=P07{1:b2,2:b1})
+E17 = Mul16(wval7,nval,control=P17{1:b2,2:b1})
+E27 = Mul16(wval7,nval,control=P27{1:b2,2:b1})
+E37 = Mul16(wval7,nval,control=P37{1:b2,2:b1})
+
+R07 = Acc16(E07,P07,control=P07{0:d,1:d,2:d})
+R17 = Acc16(E17,P17,control=P17{0:d,1:d,2:d})
+R27 = Acc16(E27,P27,control=P27{0:d,1:d,2:d})
+R37 = Acc16(E37,P37,control=P37{0:d,1:d,2:d})
+
+out_val7 = R07 R17 R27 R37
+
+Output: out_val [8]
+# Output: out_val [4]

@@ -1,0 +1,130 @@
+gem5 Simulator System.  http://gem5.org
+gem5 is copyrighted software; use the --copyright option for details.
+
+gem5 compiled Oct 22 2018 18:56:15
+gem5 started Oct 22 2018 19:15:24
+gem5 executing on octa, pid 23326
+command line: gem5.opt /home/vidushi/ss-stack/gem5/configs/example/se.py --cpu-type=MinorCPU --ruby --num-cpus=4 --num-dirs=4 --network=simple --topology=Mesh_XY --mesh-rows=4 --cmd=main
+
+Global frequency set at 1000000000000 ticks per second
+SS_DEBUG VAR: COMMAND_O IS ON
+SS_DEBUG VAR: COMMAND_I IS ON
+SS_DEBUG VAR: COMP IS ON
+SS_DEBUG VAR: NET_REQ IS ON
+Loading SS Config (env SBCONFIG): "/home/vidushi/ss-stack/ss-tools/configs/spu_merge_test.sbmodel"
+FU_FIFO_LEN:15
+IND_ROB_SIZE:8
+VPORT_IN depricated, ignoring colons, switch to PORT_IN
+SS_DEBUG VAR: COMMAND_O IS ON
+SS_DEBUG VAR: COMMAND_I IS ON
+SS_DEBUG VAR: COMP IS ON
+SS_DEBUG VAR: NET_REQ IS ON
+SS_DEBUG VAR: COMMAND_O IS ON
+SS_DEBUG VAR: COMMAND_I IS ON
+SS_DEBUG VAR: COMP IS ON
+SS_DEBUG VAR: NET_REQ IS ON
+SS_DEBUG VAR: COMMAND_O IS ON
+SS_DEBUG VAR: COMMAND_I IS ON
+SS_DEBUG VAR: COMP IS ON
+SS_DEBUG VAR: NET_REQ IS ON
+NUMBER OF MEMORY CONTROLLERS: 8
+NUMBER OF SPU CORES: 4
+**** REAL SIMULATION ****
+Done writing merged weights values
+In main: creating thread 0
+In main: creating thread 1
+Using Schedule: "sched/eie.sched"
+Switched to config: eie lat_mis:0 (group breakdown: group0: fu_thr:1 mis:1 )
+Switched to config: eie lat_mis:0 (group breakdown: group0: fu_thr:1 mis:1 )
+795	acc0  ISSUED 	id:1 dma->port acc_size=8 stride=8 bytes_comp=0 addr=150700 strides_left=19595585 in_port=23 ( ) repeat_in=1 stretch=0               ACTIVE
+855	acc0  ISSUED 	id:2 port->scr acc_size=8 stride=8 bytes_comp=0 addr=10000 strides_left=19595585 out_port=23 garbage=0               ACTIVE
+859	acc0  ISSUED 	id:3 dma->port acc_size=8 stride=8 bytes_comp=0 addr=150730 strides_left=18446744073709551610 in_port=23 ( ) repeat_in=1 stretch=0               ACTIVE
+1026	acc0  ISSUED 	id:5 port->scr acc_size=8 stride=8 bytes_comp=0 addr=0 strides_left=2305843009213693951 out_port=23 garbage=0               ACTIVE
+1476	acc0  ISSUED 	id:11 port->dma acc_size=8 stride=8 bytes_comp=0 addr=150430 strides_left=1 out_port=4 garbage=0               ACTIVE
+1336	acc0  ISSUED 	id:12 port->dma acc_size=8 stride=8 bytes_comp=0 addr=150430 strides_left=1 out_port=4 garbage=0               ACTIVE
+1871	acc0  ISSUED 	id:17 dma->port acc_size=8 stride=8 bytes_comp=0 addr=152690 strides_left=8 in_port=14 (aind ) repeat_in=32 stretch=0               ACTIVE
+COMPLETED: dma->port acc_size=8 stride=8 bytes_comp=0 addr=1526d0 strides_left=0 in_port=14 (aind ) repeat_in=32 stretch=0             inactive
+1875	acc0  ISSUED 	id:18 dma->port acc_size=8 stride=8 bytes_comp=0 addr=1526b0 strides_left=8 in_port=6 (aval ) repeat_in=32 stretch=0               ACTIVE
+COMPLETED: dma->port acc_size=8 stride=8 bytes_comp=0 addr=1526f0 strides_left=0 in_port=6 (aval ) repeat_in=32 stretch=0             inactive
+Allowed to push input: 100020003
+Allowed to push input: 1920097005b0192
+Allowed to push input: 100020003
+Allowed to push input: 1920097005b0192
+Allowed to push input: 100020003
+Allowed to push input: 1920097005b0192
+Allowed to push input: 100020003
+Allowed to push input: 1920097005b0192
+Allowed to push input: 4000500068000
+Allowed to push input: 141012b013e0000
+Allowed to push input: 4000500068000
+Allowed to push input: 141012b013e0000
+Allowed to push input: 4000500068000
+Allowed to push input: 141012b013e0000
+Allowed to push input: 4000500068000
+Allowed to push input: 141012b013e0000
+Allowed to push input: 0
+Allowed to push input: 0
+Allowed to push input: 0
+Allowed to push input: 0
+breakpointbreakpointbreakpointbreakpointbreakpointbreakpointbreakpointbreakpointbreakpointbreakpointbreakpoint
+*** ROI STATISTICS for CORE ID: 1 ***
+Simulator Time: 0 sec
+Cycles: 0
+Control Core Insts Issued: 168
+Control Core Discarded Insts Issued: 33
+Control Core Discarded Inst Stalls: 0.1964
+Control Core Config Stalls: inf
+Control Core Wait Stalls:   inf (ALL)  
+
+ACCEL 0 STATS ***
+Commands Issued: 3
+CGRA Instances: 0 -- Activity Ratio: -nan, DFGs / Cycle: -nan
+CGRA Insts / Computation Instance: -nan
+CGRA Insts / Cycle: -nan (overall activity factor)
+Mapped DFG utilization: -nan
+Data availability ratio: inf
+Percentage bank conflicts: -nan
+Allowed input port consumption rate: inf, inf, inf, inf, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, 
+percentage time we could not serve input ports: inf, inf, inf, inf, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, -nan, 
+Cycle Breakdown: CONFIG:-nan ISSUED:-nan ISSUED_MULTI:-nan TEMPORAL_ONLY:-nan CONST_FILL:-nan SCR_FILL:-nan DMA_FILL:-nan REC_WAIT:-nan CORE_WAIT:inf SCR_BAR_WAIT:-nan DMA_WRITE:-nan CMD_QUEUE:-nan CGRA_BACK:-nan DRAIN:inf NOT_IN_USE:-nan 
+Bandwidth Table: (B/c=Bytes/cycle, B/r=Bytes/request) -- Breakdown (sources/destinatinos): 
+SP_READ:	(0 B/c, 0 B/r)  -- 
+SP_WRITE:	(0 B/c, 0 B/r)  -- port:(0 B/c, 0 B/r) 
+DMA_LOAD:	inf(infB/c, 62.5B/r)  -- port:inf(infB/c, 62.5B/r) 
+DMA_STORE:	(0 B/c, 0 B/r)  -- 
+REC_BUS_READ:	(0 B/c, 0 B/r)  -- 
+---- ACCEL 0 STATUS ----
+MEM REQs OUTSTANDING: 22
+Active SEs:
+dma->port acc_size=8 stride=8 bytes_comp=0 addr=150ec0 strides_left=18446744073709551368 in_port=23 ( ) repeat_in=1 stretch=0               ACTIVE
+port->dma acc_size=8 stride=8 bytes_comp=0 addr=150430 strides_left=1 out_port=4 garbage=0               ACTIVE
+remote core net stream _num_elem1000	addr_port= 21	val_port22
+port->scr acc_size=8 stride=8 bytes_comp=0 addr=0 strides_left=2305843009213693951 out_port=23 garbage=0               ACTIVE
+Waiting SEs: (3)
+dma->port acc_size=8 stride=8 bytes_comp=0 addr=15068c strides_left=18446744073709551610 in_port=23 ( ) repeat_in=1 stretch=0               ACTIVE
+port->scr acc_size=8 stride=8 bytes_comp=0 addr=fff strides_left=2305843009213693951 out_port=23 garbage=0               ACTIVE
+ write_barrier mask=0x1
+Ports:
+In Port 7 wval:   Mem Size: 0  Num Ready: 0
+In Port 5 wind:   Mem Size: 0  Num Ready: 0
+In Port 6 aval:   Mem Size: 0  Num Ready: 0
+In Port 14 aind:   Mem Size: 0  Num Ready: 0
+Ind In Port 23:   Mem Size: 58  Num Ready: 0
+Ind In Port 24:   Mem Size: 0  Num Ready: 0
+Ind In Port 25:   Mem Size: 0  Num Ready: 0
+Ind In Port 26:   Mem Size: 0  Num Ready: 0
+Ind In Port 27:   Mem Size: 0  Num Ready: 0
+Ind In Port 28:   Mem Size: 0  Num Ready: 0
+Ind In Port 29:   Mem Size: 0  Num Ready: 0
+Ind In Port 30:   Mem Size: 0  Num Ready: 0
+Ind In Port 31:   Mem Size: 0  Num Ready: 0
+Out Port 4 out_val:   In Flight: 0  Num Ready: 0  Mem Size: 0
+DMA -> PORT Streams Not Empty
+
+Cores used: 1bitmask: 1
+Total Memory Activity: inf
+
+ -- Parallelization Estimates --
+Multi-Pipeline Cycles (cores:cycles): 1:31 2:31 3:31 4:31 5:31 6:31 7:31 8:31 9:31 10:31 11:31 12:31 13:31 14:31 15:31 16:31 17:31 18:31 
+Multi-Pipeline Activity: (cores:cycles)1:0 2:0 3:0 4:0 5:0 6:0 7:0 8:0 9:0 10:0 11:0 12:0 13:0 14:0 15:0 16:0 17:0 18:0 
+

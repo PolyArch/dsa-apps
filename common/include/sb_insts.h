@@ -201,6 +201,25 @@
 #define SB_RECURRENCE(output_port, input_port, num_strides) \
   __asm__ __volatile__("ss_wr_rd %0, %1" : : "r"(num_strides), "i"((input_port<<5) | (output_port)));
 
+//Write from output to remote input port through the network
+#define SB_REM_PORT(output_port, num_elem, mask, remote_port) \
+  __asm__ __volatile("ss_rem_port %0, %1, %2" : : "r"(num_elem), "r"(mask), "i"((output_port<<7) | (0<<6) | (remote_port<<1) | (0)));
+  // __asm__ __volatile("ss_rem_port %0, %1, %2" : : "r"(num_elem), "r"(mask), "i"((output_port<<6) | (remote_port)));
+
+//Write from output to remote scratchpad through the network (1 flag stands for spad)
+#define SB_IND_REM_SCRATCH(val_port, addr_port, num_elem, scr_base_addr, scratch_type) \
+  __asm__ __volatile("ss_rem_port %0, %1, %2" : : "r"(num_elem), "r"(scr_base_addr), "i"((val_port<<7) | (scratch_type<<6) | (addr_port<<1) | (1)));
+
+#define SB_REM_SCRATCH(scr_base_addr, stride, access_size, num_strides, val_port, scratch_type) \
+  __asm__ __volatile__("ss_stride   %0, %1, 0" : : "r"(stride), "r"(access_size)); \
+  __asm__ __volatile("ss_rem_port %0, %1, %2" : : "r"(num_strides), "r"(scr_base_addr), "i"((val_port<<7) | (scratch_type<<6) | (0<<1) | (1)));
+
+// could be affine stream to banked scratchpad also
+// #define SB_REM_SCRATCH(scr_base_addr, num_bytes, val_port, scratch_type) \
+//   __asm__ __volatile("ss_rem_port %0, %1, %2" : : "r"(num_bytes), "r"(scr_base_addr), "i"((val_port<<7) | (scratch_type<<6) | (0<<1) | (1)));
+
+
+
 //Write from output to remote input port
 //pos: local=0, left=1, right=2, undef=3
 //(might be replaced later by some other RISCV instructions)
@@ -248,6 +267,10 @@
 #define SB_INDIRECT_WR_SCR(ind_port, addr_offset, num_elem, output_port) \
   __asm__ __volatile__("ss_ind_wr %0, %1, %2" : : "r"(addr_offset), "r"(num_elem),\
                                                   "i"((1<<10) | (output_port<<5) | (ind_port)));
+
+//Wait on N number of remote scratchpad writes
+#define SB_WAIT_DF(num_rem_writes, scratch_type) \
+  __asm __volatile__("ss_wait_df %0, %1" : : "r"(num_rem_writes), "i"(scratch_type));
 
 //Wait with custom bit vector -- probably don't need to use
 #define SB_WAIT(bit_vec) \

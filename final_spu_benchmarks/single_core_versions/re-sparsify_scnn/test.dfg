@@ -1,0 +1,21 @@
+Input: neuron
+Input: const
+Input: dummy
+
+n = Extract16(neuron)
+
+relu = ReLU16(n:16:0)
+
+flag = ICmpNE16(relu,0)
+
+ctrl = Add16(Mul16(flag,2),2)
+
+nind = BitsliceAcc64(const,ctrl)
+
+nval = BitsliceAcc64(neuron,flag)
+
+done = Keep(dummy,1,control=flag{0:d,1:d})
+
+Output: nval
+Output: nind
+Output: done
