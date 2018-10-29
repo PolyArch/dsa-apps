@@ -1,9 +1,13 @@
+ifndef PRINT_RESULT
+PRINT_RESULT=false
+endif
+
 ifndef N
-N=2
+N=8
 endif
 
 ifndef M
-M=8
+M=16
 endif
 
 
@@ -35,10 +39,10 @@ CC=riscv64-unknown-linux-gnu-gcc
 CPP=riscv64-unknown-linux-gnu-g++
 
 
-MACROS= -DN=$(N) -DM=$(M) -Dact_sp=$(act_sp) -Dsyn_sp=$(syn_sp) -DC=$(C)
+MACROS= -DN=$(N) -DM=$(M) -Dact_sp=$(act_sp) -Dsyn_sp=$(syn_sp) -DC=$(C) -Dprint_result=$(PRINT_RESULT)
 GCC=g++
 
-DFGS=eie.dfg
+DFGS=eie.dfg sparsify.dfg
 
 DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 
@@ -50,16 +54,19 @@ LFLAGS = -lm
 input_activations.data: gen_activations.py 
 	python $< $(M) $(act_sp)
 
+dense_activations.data: gen_dense_act.py 
+	python $< $(M) $(act_sp)
+
 input_weights.data: gen_weights.py 
 	python $< $(N) $(M) $(syn_sp)
 
-cpu: cpu.cpp input_activations.data input_weights.data
+cpu: cpu.cpp input_activations.data input_weights.data dense_activations.data
 	$(GCC) $< $(LIB) $(CFLAGS) $(MACROS) -o $(@) $(LFLAGS)
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
 	$(SS_TOOLS)/bin/sb_sched --verbose $(SBCONFIG) $< 
 
-$(TEST_OBJS): $(TESTC) $(DFG_HEADERS) input_activations.data input_weights.data
+$(TEST_OBJS): $(TESTC) $(DFG_HEADERS) input_activations.data input_weights.data dense_activations.data
 	 $(CC) -c $< $(CFLAGS) $(MACROS) -I. -static -o $(@)
 	
 # targets is main and dependent on main.o
@@ -71,6 +78,9 @@ run-debug:
 
 run:
 	BACKCGRA=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --ruby --num-cpus=$(C) --num-dirs=$(C) --network=simple --topology=Mesh_XY --mesh-rows=$(C) --cmd=$(TESTS)
+
+cleandfg:
+	rm -f *.dfg.h
 
 cleandata:
 	rm -f *.data

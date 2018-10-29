@@ -317,4 +317,7 @@
 #define MEM_SCR_PORT (23)
 #define SCR_MEM_PORT (24)
 
+// #define NET_ADDR_PORT (25)
+// #define NET_VAL_PORT (32)
+
 #endif

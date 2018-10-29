@@ -1,0 +1,50 @@
+Input: nval
+Input: nind
+Input: sval
+Input: sind
+Input: const
+Input: Tx
+Input: Kx
+Input: rle_const
+Input: neuron
+Input: constt
+Input: dummy
+
+
+# I could use extract here
+
+rec = Acc16x4(nind,const)
+
+RLEi = RLEDecoder16x4(sind,Tx,Kx)
+
+RLEf = Sub16x4(rle_const, RLEi)
+
+C0 = SpuAdd16x4(rec, RLEf, 0)
+C1 = SpuAdd16x4(rec, RLEf, 1)
+C2 = SpuAdd16x4(rec, RLEf, 2)
+C3 = SpuAdd16x4(rec, RLEf, 3)
+
+D0 = SpuMul16x4(nval, sval, 0)
+D1 = SpuMul16x4(nval, sval, 1)
+D2 = SpuMul16x4(nval, sval, 2)
+D3 = SpuMul16x4(nval, sval, 3)
+
+n = Extract16(neuron)
+
+relu = ReLU16(n)
+
+flag = ICmpNE16(relu,0)
+
+ctrl = Add16(Mul16(flag,2),2)
+
+inind = BitsliceAcc64(constt,ctrl)
+
+inval = BitsliceAcc64(neuron,flag)
+
+done = Keep(dummy,1,control=flag{0:d,1:d})
+
+Output: C [4]
+Output: D [4]
+Output: inval
+Output: inind
+Output: done

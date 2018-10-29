@@ -1,17 +1,20 @@
 Input16: wval [4]
 Input16: wind [4]
-Input16: aval [4]
-Input16: aind [4]
+Input: aval
+Input: aind
 
-P0 = IndexMatch16(wind0,aind0)
-P1 = IndexMatch16(wind1,aind0)
-P2 = IndexMatch16(wind2,aind0)
-P3 = IndexMatch16(wind3,aind0)
+nval = Extract16(aval) 
+nind = Extract16(aind) 
 
-E0 = Mul16(wval0,aval1,control=P0{1:b2,2:b1})
-E1 = Mul16(wval0,aval1,control=P1{1:b2,2:b1})
-E2 = Mul16(wval0,aval1,control=P2{1:b2,2:b1})
-E3 = Mul16(wval0,aval1,control=P3{1:b2,2:b1})
+P0 = IndexMatch16(wind0,nind)
+P1 = IndexMatch16(wind1,nind)
+P2 = IndexMatch16(wind2,nind)
+P3 = IndexMatch16(wind3,nind)
+
+E0 = Mul16(wval0,nval,control=P0{1:b2,2:b1})
+E1 = Mul16(wval1,nval,control=P1{1:b2,2:b1})
+E2 = Mul16(wval2,nval,control=P2{1:b2,2:b1})
+E3 = Mul16(wval3,nval,control=P3{1:b2,2:b1})
 
 out_val0 = Acc16(E0,P0,control=P0{0:d,1:d,2:d})
 out_val1 = Acc16(E1,P1,control=P1{0:d,1:d,2:d})
