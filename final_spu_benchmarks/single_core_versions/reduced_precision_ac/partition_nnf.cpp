@@ -2,7 +2,11 @@
 Input: circuit.data and height.data (DAG in topological level-order)
 Step2: Partition the graph according to the number of nodes
 Step1: Insert shadow nodes in the graph (at the partition layer)
-Output: new circuit.data and new height.data (should need to copy h2-h1 nodes only; also inc height at intermediate node) and part.data
+Output: new circuit.data and new height.data (should need to shadow h2-h1 nodes only; also inc height at intermediate node) and part.data
+
+Shadow nodes has only 1 child (and all those properties are copied to it by default)
+Either I could create an indirect list (local double buffering won't be allowed then) -- might be difficult to do indexing in the other core
+Or I can do this extra computation to copy the list of copy nodes (Oh, this DF is not possible here also -- otherwise more copy nodes would be required)
 ***/
 #include <iostream>
 #include <stdio.h>
@@ -22,7 +26,7 @@ using namespace std;
 #define N_PART 64
 
 // I still think it should be an struct of arrays (we cannot read these things
-// in a single port -- stride will affect performance) -- can copy it there
+// in a single port -- stride will affect performance) -- can shadow it there
 struct prop {
  char nodeType;
  float vr;
@@ -38,9 +42,10 @@ struct ac_node {
   int c0; int c1;
 };
 
-// copy nodes to be accessed by this partition (for 0, it's empty)
-vector<int> copy_nodes[N_PART];
-// vector<int> height_ptr; // height ptr for copy nodes
+// shadow nodes to be accessed by this partition (for 0, it's empty)
+vector<int> shadow_nodes[N_PART];
+vector<int> attached_nodes[N_PART];
+// vector<int> height_ptr; // height ptr for shadow nodes
 int part_size;
 
 // input DAG properties
@@ -48,22 +53,25 @@ int V; // total number of vertices
 vector<struct ac_node> ac; // length should be V
 vector<int> orig_hgt_ptr; // original height pointers
 
-vector<int> final_ac_ind; // length should be V
+vector<int> final_ac_ind; // length should be >= V
+vector<int> final_ac_valid; // length should be >= V
 vector<int> final_hgt_ptr; // original height pointers
+
+vector<int> shadow_hgt_ptr; // original height pointers
 
 int cumsum(int x){
   if(x<=0)	return 0;
   int s=0;
   for(int i=1; i<x; ++i){
-	s+= copy_nodes[i].size();
+	s+= shadow_nodes[i].size();
   }
   return s;
 }
 
-// Should be either real child (if in same partition) or copy node (if
+// Should be either real child (if in same partition) or shadow node (if
 // in earlier partition)
 // TODO: confirm the formulas
-void find_copy_nodes() {
+void find_shadow_nodes() {
   // go over all the vertices from last partition
   int part_id = 0;
   int x = 0;
@@ -73,20 +81,24 @@ void find_copy_nodes() {
 	for(int j=i; j<(i+part_size) && j<V; j++){
 	  struct ac_node temp = ac[j];
 	  if(temp.c0>-1 && temp.c0 < i){
-		copy_nodes[part_id].push_back(temp.c0);
-		// ac[j].c0 = j + cumsum(part_id-1) + copy_nodes[part_id].size()-1;
-	    x = part_size*part_id + cumsum(part_id-1) + copy_nodes[part_id].size()-1; // copy nodes would be put before this
+		shadow_nodes[part_id].push_back(temp.c0);
+       
+        // final index of shadow nodes
+		// attached_nodes[part_id].push_back(temp.c0 + part_size*part_id + cumsum(part_id-1));
+		
+		// ac[j].c0 = j + cumsum(part_id-1) + shadow_nodes[part_id].size()-1;
+	    x = part_size*part_id + cumsum(part_id-1) + shadow_nodes[part_id].size()-1; // shadow nodes would be put before this
 	  } else { // if in the same partition
 		x = temp.c0 + part_size*part_id + cumsum(part_id-1);
 	  }
 	  ac[j].c0 = x;
 
 	  if(temp.c1>-1 && temp.c1 < i){
-		copy_nodes[part_id].push_back(temp.c1);
-		ac[j].c1 = j + cumsum(part_id-1) + copy_nodes[part_id].size()-1;
-		// temp.c1 = j + cumsum(part_id-1) + copy_nodes[part_id].size()-1;
-		// x = j + cumsum(part_id-1) + copy_nodes[part_id].size()-1;
-	    x = part_size*part_id + cumsum(part_id-1) + copy_nodes[part_id].size()-1; // copy nodes would be put before this
+		shadow_nodes[part_id].push_back(temp.c1);
+		ac[j].c1 = j + cumsum(part_id-1) + shadow_nodes[part_id].size()-1;
+		// temp.c1 = j + cumsum(part_id-1) + shadow_nodes[part_id].size()-1;
+		// x = j + cumsum(part_id-1) + shadow_nodes[part_id].size()-1;
+	    x = part_size*part_id + cumsum(part_id-1) + shadow_nodes[part_id].size()-1; // shadow nodes would be put before this
 	    ac[j].c1 = x;
 	  } else {
 		x = temp.c1 + part_size*part_id + cumsum(part_id-1);
@@ -96,9 +108,9 @@ void find_copy_nodes() {
   }
 }
 
-// load balance (compute balance) while minimizing number of copy nodes (memory balance)
+// load balance (compute balance) while minimizing number of shadow nodes (memory balance)
 // this is just the load balance
-void insert_copy_nodes(){
+void insert_shadow_nodes(){
   int cur_hgt=0;
   int part_id = 0;
 
@@ -106,28 +118,32 @@ void insert_copy_nodes(){
     part_id = i/part_size;
 
 	for(int j=i; j<(i+part_size) && j<V; ++j){
-	  // first copy all the required nodes
+	  // first shadow all the required nodes
 	  final_ac_ind.push_back(j);
+	  final_ac_valid.push_back(1);
 	  if(j==orig_hgt_ptr[cur_hgt]) { // if it was same height
 		final_hgt_ptr.push_back(final_ac_ind.size());
 		cur_hgt++;
 	  }
 	}
-	// TODO: could save space for copy nodes (also add erase)
-	// now the copy nodes (no need after the last one)
+	// TODO: could save space for shadow nodes (also add erase)
+	// now the shadow nodes (no need after the last one)
 	if(i<V-part_size) {
-	  // cout << "copy nodes size at this partition id: " << part_id << " is: " << copy_nodes[part_id+1].size() << "\n";
-	  for(unsigned k=0; k<copy_nodes[part_id+1].size(); ++k){
-	    final_ac_ind.push_back(copy_nodes[part_id+1][k]);
+	  // cout << "shadow nodes size at this partition id: " << part_id << " is: " << shadow_nodes[part_id+1].size() << "\n";
+	  shadow_hgt_ptr.push_back(final_ac_ind.size());
+	  for(unsigned k=0; k<shadow_nodes[part_id+1].size(); ++k){
+	    final_ac_ind.push_back(shadow_nodes[part_id+1][k]);
+	    final_ac_valid.push_back(0);
 	  }
 	  // how to say that there is a partition here (I need to change the
 	  // heights)
 	  final_hgt_ptr.push_back(final_ac_ind.size());
+	  shadow_hgt_ptr.push_back(final_ac_ind.size());
 	}
   }
 }
 
-// TODO: how do I know which nodes are copy nodes (some validity information)
+// TODO: how do I know which nodes are shadow nodes (some validity information)
 void store_ac_in_file() {
   ofstream ac_file ("final_circuit.data"); // to store the nodes in top_order
 
@@ -138,9 +154,17 @@ void store_ac_in_file() {
 	  // this is not direct mapping as earlier
       struct ac_node temp = ac[final_ac_ind[i]];
       if(temp.nodeType=='l') {
-         ac_file << temp.nodeType << " " << temp.vr << "\n";
+		if(final_ac_valid[i]) { // if the original node
+          ac_file << temp.nodeType << " " << temp.vr << " " << 1 << "\n";
+		} else {
+          ac_file << temp.nodeType << " " << temp.vr << " " << final_ac_ind[i] << " " << 0 << "\n";
+		}
       } else {
-        ac_file << temp.nodeType << " " << temp.c0 << " " << temp.c1 << "\n";
+		if(final_ac_valid[i]) { // if the original node
+          ac_file << temp.nodeType << " " << temp.c0 << " " << temp.c1 << " " << 1 << "\n";
+		} else { // just one connection (not multiple childs)
+          ac_file << temp.nodeType << " " << final_ac_ind[i] << " " << 0 << "\n";
+		}
       }
     }
   }
@@ -156,8 +180,17 @@ void store_ac_in_file() {
   }
   height_index.close();
   cout << "Done writing index\n";
-}
 
+  ofstream shadow_index("final_shadow_index.data"); // to store the nodes in top_order
+
+  if(shadow_index.is_open()) {
+    for(unsigned i=0; i<shadow_hgt_ptr.size(); i++) {
+	  shadow_index << shadow_hgt_ptr[i] << "\n";
+    }
+  }
+  shadow_index.close();
+  cout << "Done writing shadow index\n";
+}
 
 int main() {
   FILE *ac_file;
@@ -214,9 +247,9 @@ int main() {
   fclose(height_file);
   cout << "Done reading inputs ACs\n";
 
-  find_copy_nodes();
-  cout << "Stored copy nodes in variable\n";
-  insert_copy_nodes();
+  find_shadow_nodes();
+  cout << "Stored shadow nodes in variable\n";
+  insert_shadow_nodes();
   cout << "Inserted into final AC\n";
   store_ac_in_file();
   cout << "Final store done\n";
