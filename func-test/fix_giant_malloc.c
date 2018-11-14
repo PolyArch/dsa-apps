@@ -1,10 +1,10 @@
 #include "testing.h"
 
 #define VTYPE uint64_t
-#define GSIZE 1024*1024*1024 / sizeof(VTYPE)
+#define GSIZE 1024*1024*128
 
 int main(int argc, char* argv[]) {
-  char* giant_array = (char*) malloc(GSIZE);
+  char* giant_array = (char*) aligned_alloc(64, GSIZE);
 
   SB_CONFIG(none_config,none_size);
 

@@ -94,7 +94,7 @@
 
 //A convienience command for linear access
 #define SB_SCRATCH_READ(scr_addr, n_bytes, port) \
-  SB_SCR_PORT_STREAM_STRETCH(scr_addr,8,8,0,n_bytes/8, port) 
+  SB_SCR_PORT_STREAM_STRETCH(scr_addr,0,n_bytes,0,1, port) 
 
 //Read from DMA into a port
 #define SB_DMA_READ_STRETCH(mem_addr, stride, acc_size, stretch, n_strides, port ) \
@@ -214,6 +214,11 @@
   __asm__ __volatile__("ss_stride   %0, %1, 0" : : "r"(stride), "r"(access_size)); \
   __asm__ __volatile("ss_rem_port %0, %1, %2" : : "r"(num_strides), "r"(scr_base_addr), "i"((val_port<<7) | (scratch_type<<6) | (0<<1) | (1)));
 
+// banked scratchpad
+#define SB_SCR_REM_SCR(src_scr_base_addr, stride, access_size, num_strides, dest_scr_base_addr, scratch_type) \
+  SB_REM_SCRATCH(src_scr_base_addr, stride, access_size, num_strides, SCR_SCR_PORT, scratch_type) \
+  SB_SCR_WRITE(SCR_SCR_PORT, access_size * num_strides, dest_scr_base_addr);
+
 // could be affine stream to banked scratchpad also
 // #define SB_REM_SCRATCH(scr_base_addr, num_bytes, val_port, scratch_type) \
 //   __asm__ __volatile("ss_rem_port %0, %1, %2" : : "r"(num_bytes), "r"(scr_base_addr), "i"((val_port<<7) | (scratch_type<<6) | (0<<1) | (1)));
@@ -316,6 +321,7 @@
 //Convenience ports for these functions
 #define MEM_SCR_PORT (23)
 #define SCR_MEM_PORT (24)
+#define SCR_SCR_PORT (25)
 
 // #define NET_ADDR_PORT (25)
 // #define NET_VAL_PORT (32)
