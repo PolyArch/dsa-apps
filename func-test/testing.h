@@ -18,7 +18,7 @@
 static DTYPE out[ASIZE]; 
 static DTYPE in[ASIZE];
 
-void finalfunc(int argc, void* arg) {
+void finalfunc() {
   sb_stats();
 }
 
@@ -28,7 +28,7 @@ void init() {
     out[i]=0;
   }
 
-  on_exit(finalfunc, (void*)10);
+  atexit(finalfunc);
 }
 
 
