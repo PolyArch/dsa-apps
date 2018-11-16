@@ -76,7 +76,7 @@
 
 #define SB_SCRATCH_DMA_STORE_GENERAL(scr_addr, stride, acc_size, num_strides, mem_addr, shr) \
   SB_SCR_PORT_STREAM_STRETCH(scr_addr,stride,acc_size,0,num_strides, SCR_MEM_PORT) \
-  SB_DMA_WRITE(SCR_MEM_PORT, 8, 8, acc_size*num_strides/8, mem_addr)
+  SB_DMA_WRITE(SCR_MEM_PORT, acc_size*num_strides, acc_size*num_strides, 1, mem_addr)
 
 #define SB_SCRATCH_DMA_STORE(scr_addr, stride, access_size, num_strides, mem_addr) \
   SB_SCRATCH_DMA_STORE_GENERAL(scr_addr, stride, access_size, num_strides, mem_addr, 0)
