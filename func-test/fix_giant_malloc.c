@@ -1,4 +1,5 @@
 #include "testing.h"
+#include <stdlib.h>
 
 #define VTYPE uint64_t
 #define GSIZE 1024*1024*128
