@@ -1,0 +1,111 @@
+Input16: nval[8]
+Input16: nind[8]
+Input16: sval
+Input16: sind
+Input: const #send Ty-Ky+1
+Input: Ty
+Input: Ky
+
+Input16: neuron
+Input: constt
+Input: dummy
+
+#Convolution dfg-------------------
+
+#activations
+tx0 = Div16(nind0,Ty)
+tx1 = Div16(nind1,Ty)
+tx2 = Div16(nind2,Ty)
+tx3 = Div16(nind3,Ty)
+tx4 = Div16(nind4,Ty)
+tx5 = Div16(nind5,Ty)
+tx6 = Div16(nind6,Ty)
+tx7 = Div16(nind7,Ty)
+
+ty0 = Mod16(nind0,Ty)
+ty1 = Mod16(nind1,Ty)
+ty2 = Mod16(nind2,Ty)
+ty3 = Mod16(nind3,Ty)
+ty4 = Mod16(nind4,Ty)
+ty5 = Mod16(nind5,Ty)
+ty6 = Mod16(nind6,Ty)
+ty7 = Mod16(nind7,Ty)
+
+kx = Div16(sind,Ky)
+ky = Mod16(sind,Ky)
+
+part10 = Add16(Mul16(tx0,const),ty0)
+part11 = Add16(Mul16(tx1,const),ty1)
+part12 = Add16(Mul16(tx2,const),ty2)
+part13 = Add16(Mul16(tx3,const),ty3)
+part14 = Add16(Mul16(tx4,const),ty4)
+part15 = Add16(Mul16(tx5,const),ty5)
+part16 = Add16(Mul16(tx6,const),ty6)
+part17 = Add16(Mul16(tx7,const),ty7)
+
+part2 = Add16(Mul16(kx,const),ky)
+part3 = Add16(const,1)
+
+# Formula = (tx-kx+1)(Ty-Ky+1) + (ty-ky+1)
+val0 = Add16(Sub16(part10,part2),part3)
+val1 = Add16(Sub16(part11,part2),part3)
+val2 = Add16(Sub16(part12,part2),part3)
+val3 = Add16(Sub16(part13,part2),part3)
+val4 = Add16(Sub16(part14,part2),part3)
+val5 = Add16(Sub16(part15,part2),part3)
+val6 = Add16(Sub16(part16,part2),part3)
+val7 = Add16(Sub16(part17,part2),part3)
+
+C0 = Acc16(val0,0)
+C1 = Acc16(val1,0)
+C2 = Acc16(val2,0)
+C3 = Acc16(val3,0)
+C4 = Acc16(val4,0)
+C5 = Acc16(val5,0)
+C6 = Acc16(val6,0)
+C7 = Acc16(val7,0)
+
+# output values
+D0 = Mul16(nval0, sval)
+D1 = Mul16(nval1, sval)
+D2 = Mul16(nval2, sval)
+D3 = Mul16(nval3, sval)
+D4 = Mul16(nval4, sval)
+D5 = Mul16(nval5, sval)
+D6 = Mul16(nval6, sval)
+D7 = Mul16(nval7, sval)
+
+#Re-sparsification dfg--------------------------
+
+# n = Extract16(neuron)
+
+relu = ReLU16(neuron)
+
+flag = ICmpNE16(relu,0)
+
+ctrl = Add16(Mul16(flag,2),2)
+
+inind = BitsliceAcc64(constt,ctrl)
+
+inval = BitsliceAcc64(neuron,flag)
+
+done = Keep(dummy,1,control=flag{0:d,1:d})
+
+Output16: C [8]
+Output16: D [8]
+Output: inval
+Output: inind
+Output: done
+
+
+# find addresses in output feature map
+#C0 = CartProd16(nind0, sind, rec)
+#C1 = CartProd16(nind1, sind, rec)
+#C2 = CartProd16(nind2, sind, rec)
+#C3 = CartProd16(nind3, sind, rec)
+#C4 = CartProd16(nind4, sind, rec)
+#C5 = CartProd16(nind5, sind, rec)
+#C6 = CartProd16(nind6, sind, rec)
+#C7 = CartProd16(nind7, sind, rec)
+
+

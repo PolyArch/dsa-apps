@@ -1,0 +1,19 @@
+Input: feat_val
+Input: split_thres
+Input: child1_offset
+Input: child2_offset
+Input: node_id
+
+cond = ICmp(feat_val, split_thres)
+
+cur_c1_index = Acc64(1,Mul64(cond,4))
+cur_c2_index = Acc64(1,Mul64(Not(cond),4))
+
+child1_addr = Add64(child1_offset, cur_c1_index)
+child2_addr = Add64(child2_offset, cur_c2_index)
+
+offset = Select(child1_addr, child2_addr, cond)
+id = node_id
+
+Output: offset
+Output: id

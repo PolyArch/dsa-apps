@@ -1,0 +1,56 @@
+Input: nodeType
+Input: c1vf [2]
+Input: c2vf [2]
+Input: const
+
+c1vr0 = c1vf0:0:31
+c1vr1 = c1vf1:0:31
+c1flag0 = c1vf0:32:63
+c1flag1 = c1vf1:32:63
+c2vr0 = c2vf0:0:31
+c2vr1 = c2vf1:0:31
+c2flag0 = c2vf0:32:63
+c2flag1 = c2vf1:32:63
+
+s1 = Add32x2(0,c1vr0 c1vr1)
+
+s20 = Select32(s1:0:31,0,c1flag0)
+s21 = Select32(s1:32:63,0,c1flag1)
+
+s3 = Add32x2(s20 s21,c2vr0 c2vr1)
+
+s40 = Select32(s3:0:31,s20,c2flag0)
+s41 = Select32(s3:32:63,s21,c2flag1)
+
+m1 = Mul32x2(const,c1vr0 c1vr1)
+
+m20 = Select32(m1:0:31,1,c1flag0)
+m21 = Select32(m1:32:63,1,c1flag1)
+
+m3 = Mul32x2(m20 m21,c2vr0 c2vr1)
+
+m40 = Select32(m3:0:31,m20,c2flag0)
+m41 = Select32(m3:32:63,m21,c2flag1)
+
+cond0 = Or32(And32(ICmpNE32(c1vr0,0),c1flag0),And32(ICmpNE32(c2vr0,0),c2flag0))
+cond1 = Or32(And32(ICmpNE32(c1vr1,0),c1flag1),And32(ICmpNE32(c2vr1,0),c2flag1))
+
+out20 = Select32(0,m40,cond0)
+out21 = Select32(0,m41,cond1)
+
+vr0 = Select32(s40,out20,nodeType:0:31)
+vr1 = Select32(s41,out21,nodeType:32:63)
+
+
+flag0 = And32(nodeType:0:31,Xor32(c1vr0,c2vr0))
+flag1 = And32(nodeType:32:63,Xor32(c1vr1,c2vr1))
+
+# vr = vr0 vr1
+# flag = flag0 flag1
+
+vrf0 = vr0 flag0
+vrf1 = vr1 flag1
+
+Output: vrf [2]
+# Output: vr
+# Output: flag

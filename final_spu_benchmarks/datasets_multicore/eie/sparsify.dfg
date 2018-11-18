@@ -1,0 +1,64 @@
+Input16: A[8]
+Input16: B[8]
+Input: size
+
+# implement a reduction tree here
+# generate all the control signals first
+# different kind of B match (can we rather have a template?)--operation - (consume both inputs or need to send one?)
+C10 = Control16(A0, A1)
+C11 = Control16(A2, A3)
+C12 = Control16(A4, A5)
+C13 = Control16(A6, A7)
+
+C20 = Control16(C10, C11)
+C21 = Control16(C12, C13)
+
+C30 = Control16(C20, C21)
+
+V10 = Min16(A0, A1, control=C10{2:b1,4:b2,3:d})
+V11 = Min16(A2, A3, control=C11{2:b1,4:b2,3:d})
+V12 = Min16(A4, A5, control=C12{2:b1,4:b2,3:d})
+V13 = Min16(A6, A7, control=C13{2:b1,4:b2,3:d})
+
+V20 = Min16(V10, V11, control=C20{2:b1,4:b2})
+V21 = Min16(V12, V13, control=C21{2:b1,4:b2})
+
+V30 = Min16(V20, V21, control=C30{2:b1,2:b2})
+
+L10 = Select16(B0, B1, C10)
+L11 = Select16(B2, B3, C11)
+L12 = Select16(B4, B5, C12)
+L13 = Select16(B6, B7, C13)
+
+I10 = Keep16(L10, 1, control=C10{2:b1,4:b2, 3:d})
+I11 = Keep16(L11, 1, control=C11{2:b1,4:b2, 3:d})
+I12 = Keep16(L12, 1, control=C12{2:b1,4:b2, 3:d})
+I13 = Keep16(L13, 1, control=C13{2:b1,4:b2, 3:d})
+
+L20 = Select16(I10, I11, C20)
+L21 = Select16(I12, I13, C21)
+
+I20 = Keep16(L20, 1, control=C10{2:b1,4:b2})
+I21 = Keep16(L21, 1, control=C10{2:b1,4:b2})
+
+L30 = Select16(I20, I21, C30)
+I30 = Select16(L30, control=C10{2:b1,4:b2})
+
+keep = ICmpEq16(V30, 0)
+val_o = Keep16(V30, keep)
+ind_o = Keep16(I30, keep)
+# signal_o = ICmpEq16(I30, size)
+temp = ICmpEQ(I30, size)
+signal = Keep(2, temp)
+
+val = Concat16(val_o)
+ind = Concat16(ind_o)
+# signal = Concat16(signal_o)
+
+Output: val
+Output: ind
+Output: signal
+
+# Output16: val [4]
+# Output16: ind [4]
+# Output16: signal [4]
