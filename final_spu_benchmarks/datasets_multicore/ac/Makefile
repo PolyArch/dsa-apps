@@ -37,7 +37,7 @@ DFGS=ac.dfg
 
 DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 
-MACROS= -Dd1=$(d1) -Dd2=$(d2) -Dratio=$(ratio) -DC=$(C)
+MACROS= -Dd1=$(d1) -Dd2=$(d2) -Dratio=$(ratio) -DC=$(C) -Dindex_file=$(index_file) -Dshadow_file=$(shadow_file) -Dcircuit_file=$(circuit_file)
 
 #${info $(DFGS)}
 #${info $(DFG_HEADERS)}

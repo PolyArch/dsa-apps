@@ -2,42 +2,12 @@ ifndef C
 C = 4
 endif
 
-ifndef Tx
-Tx=32
-#Tx=14
-endif
-
-ifndef Kx
-Kx=3
-endif
-
-
-ifndef Ni
-Ni=64
-endif
-
-ifndef Tn
-Tn=1
-endif
-
-ifndef neuron_sp
-neuron_sp=0.25
-endif
-
-ifndef synapse_sp
-synapse_sp=0.45
-endif
-
-ifndef rle_width
-rle_width=4
-endif
-
 ifndef SBCONFIG
 $(warning SBCONFIG is undefined, using default)
 SBCONFIG=$(SS_TOOLS)/configs/spu_merge_test.sbmodel
 endif
 
-TESTS=main
+TESTS=main # multicore_scnn
 TESTC=$(TESTS:=.cpp)
 TEST_OBJS=$(TESTS:=.o)
 
@@ -49,7 +19,7 @@ CC=riscv64-unknown-linux-gnu-g++
 CPP=riscv64-unknown-linux-gnu-g++
 
 # MACROS= -DTx=$(Tx) -DNi=$(Ni) -DTn=$(Tn) -Dneuron_sp=$(neuron_sp) -Dsynapse_sp=$(synapse_sp) -Drle_width=$(rle_width)  -DC=$(C)
-MACROS= -DC=$(C)
+MACROS= -DC=$(C) -Dwgt_val_file=$(wgt_val_file) -Dwgt_ind_file=$(wgt_ind_file) -Dwgt_ptr_file=$(wgt_ptr_file) -Dact_val_file=$(act_val_file) -Dact_ind_file=$(act_ind_file) -Dact_ptr_file=$(act_ptr_file) -DNi=$(Ni) -DNx=$(Nx) -DNy=$(Ny) -DTx=$(Tx) -DTy=$(Ty) -DNi=$(Ni) -DNn=$(Nn) -DTn=$(Tn) -DKx=$(Kx) -DKy=$(Ky)
 GCC=g++
 
 DFGS=scnn.dfg
@@ -100,3 +70,15 @@ clean:
 
 ultraclean: cleandata cleancpu clean
 	rm -f *.log
+
+# ifndef neuron_sp
+# neuron_sp=0.25
+# endif
+# 
+# ifndef synapse_sp
+# synapse_sp=0.45
+# endif
+# 
+# ifndef rle_width
+# rle_width=4
+# endif

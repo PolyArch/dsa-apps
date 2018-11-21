@@ -11,12 +11,12 @@ C1 = Add16x4(A,local_offset1)
 C2 = Add16x4(A,local_offset2)
 
 # 32-bit values to add (last 2 are consts)
-D0 = hess hess 
-D1 = hess hess 
-D2 = grad grad 
-D3 = grad grad
-D4 = const:0:31 const:0:31 
-D5 = const:0:31 const:0:31 
+D0 = const:0:31 const:0:31 
+D1 = const:0:31 const:0:31 
+D2 = hess hess 
+D3 = hess hess 
+D4 = grad grad 
+D5 = grad grad
 
 Output: C[3]
 Output: D[6]

@@ -25,8 +25,12 @@ using namespace std;
 
 #define INT16MAX ((1<<16)-1)
 
-#define N 84
-#define M 100
+// very small.data
+// #define N 84
+// #define M 10
+
+// #define N 84
+// #define M 100
 
 std::pair<float,float> *gram_mat_pair;
 int *gram_ptr;
@@ -46,17 +50,24 @@ float max(float a, float b){
 }
 
 void eta_calc(int i, int j, double &dp, double &norm1, double &norm2){
-  // std::cout << "Size1: " << (end1-ptr1) << " and size2: " << (end2-ptr2) << endl;
-  // TODO: put an equivalent condition
-  // if(end1==ptr1 || end2==ptr2)
-  //   return;
+  
+  if(data_val[i].size()==0 || data_val[j].size()==0)
+	return;
+  cout << data_val[i].size() << " " << data_val[j].size() << "\n";
   
   SB_CONFIG(eta_config, eta_size);
 
-  SB_DMA_READ(&data_ind[i][0], sizeof(float), sizeof(float), data_ind[i].size(), P_eta_a_ind);
-  SB_DMA_READ(&data_val[i][0], sizeof(float), sizeof(float), data_val[i].size(), P_eta_a_val);
-  SB_DMA_READ(&data_ind[j][0], sizeof(float), sizeof(float), data_ind[j].size(), P_eta_b_ind);
-  SB_DMA_READ(&data_val[j][0], sizeof(float), sizeof(float), data_val[j].size(), P_eta_b_val);
+  // SB_DMA_READ(&data_ind[i][0], sizeof(float), sizeof(float), data_ind[i].size(), P_eta_a_ind);
+  // SB_DMA_READ(&data_val[i][0], sizeof(float), sizeof(float), data_val[i].size(), P_eta_a_val);
+  // SB_DMA_READ(&data_ind[j][0], sizeof(float), sizeof(float), data_ind[j].size(), P_eta_b_ind);
+  // SB_DMA_READ(&data_val[j][0], sizeof(float), sizeof(float), data_val[j].size(), P_eta_b_val);
+
+  // TODO:FIXME: see how to remove padding for ksvm 
+  SB_DMA_READ(&data_ind[i][0], 8, 8, data_ind[i].size()/2, P_eta_a_ind);
+  SB_DMA_READ(&data_val[i][0], 8, 8, data_val[i].size()/2, P_eta_a_val);
+  SB_DMA_READ(&data_ind[j][0], 8, 8, data_ind[j].size()/2, P_eta_b_ind);
+  SB_DMA_READ(&data_val[j][0], 8, 8, data_val[j].size()/2, P_eta_b_val);
+ 
   // 32-bit sentinal? (how does 64-bit works -- some trick in IM32x2)
   SB_CONST(P_eta_a_ind, SENTINAL, 1);
   SB_CONST(P_eta_b_ind, SENTINAL, 1);
@@ -70,7 +81,7 @@ void eta_calc(int i, int j, double &dp, double &norm1, double &norm2){
   SB_DMA_WRITE_SIMP(P_eta_s, 1, &dp);
   SB_WAIT_ALL();
 
-  // return (2*dp - norm1 - norm2);
+  cout << "Eta calc done\n";
 }
 
 void calc_duality_gap(double alpha[M], double E[M], double b, double &duality_gap){
@@ -84,10 +95,14 @@ void calc_duality_gap(double alpha[M], double E[M], double b, double &duality_ga
 
   SB_DMA_WRITE_SIMP(P_duality_gap_dgap, 1, &duality_gap);
   SB_WAIT_ALL();
+  cout << "Duality calc done\n";
 }
 
 
 void kernel_err_update(int i, int j, double diff1, double diff2, double y1, double y2, double (&E)[M]){
+  
+  if(data_val[i].size()==0 || data_val[j].size()==0)  return;
+
   // double output = 0;
   int num_inst = M;
   double gauss_var = -1/(2*sigma*sigma); // double to fix
@@ -107,7 +122,8 @@ void kernel_err_update(int i, int j, double diff1, double diff2, double y1, doub
   for(int k=0; k<num_inst; ++k){
     // std::cout << "k: " << k << " a_count: " << (end3-ptr3)/2 << " b_count: " << (end2-ptr2)/2 << " c_count: :" << (end1-ptr1)/2 << "\n";
 	
-	// FIXME:CHECKME: if size()==0 then continue
+	if(data_val[k].size()==0)
+	  continue;
     SB_DMA_READ(&data_ind[k][0], sizeof(float), sizeof(float), data_ind[k].size(), P_ksvm_a_ind);
     SB_DMA_READ(&data_val[k][0], sizeof(float), sizeof(float), data_val[k].size(), P_ksvm_a_val);
     SB_DMA_READ(&data_ind[i][0], sizeof(float), sizeof(float), data_ind[i].size(), P_ksvm_b_ind);
@@ -127,7 +143,7 @@ void kernel_err_update(int i, int j, double diff1, double diff2, double y1, doub
   // SB_DMA_WRITE_SIMP(P_ksvm_E, num_inst-9, &E[0]);
   SB_DMA_WRITE_SIMP(P_ksvm_E, num_inst, &E[0]);
   SB_WAIT_ALL();
-  // return output+b-y[i];
+  cout << "Kernel err calc done\n";
 }
 
 void train(){
@@ -190,13 +206,10 @@ void train(){
       H = min(C, alpha[i]+alpha[j]);
     }
     // cout << "L=H?\n";
+	cout << L << " " << H << endl;
     if(L==H) continue;
-    // float inter_prod = dot_prod_sparse(data, row_ptr[i], row_ptr[i+1], row_ptr[j], row_ptr[j+1]);
-    // float intra_prod1 = norm(data, row_ptr[i], row_ptr[i+1]);
-    // float intra_prod2 = norm(data, row_ptr[j], row_ptr[j+1]);
-    // eta = 2*inter_prod - intra_prod1 - intra_prod2;
     double inter_prod = 0, norm1 = 0, norm2 = 0;
-    // eta_calc(row_ptr[i], row_ptr[i+1], row_ptr[j], row_ptr[j+1], inter_prod, norm1, norm2);
+	cout << "Sent for eta calculation\n";
     eta_calc(i, j, inter_prod, norm1, norm2);
     eta = 2*inter_prod - norm1 - norm2;
     if(eta == 0) eta=2;
@@ -239,9 +252,11 @@ void train(){
     }
     dual = dual - diff/y[i]*(E[i]-E[j]) + eta/2*(diff/y[i])*(diff/y[i]);
 
+	cout << "Sent for kernel err calculation\n";
     kernel_err_update(i, j, diff1, diff, y[i], y[j], E);
 
     duality_gap = 0;
+	cout << "Sent for duality gap calculation\n";
     calc_duality_gap(alpha, E, b, duality_gap);
     /*
     for(int k=0; k<M; ++k){
@@ -261,8 +276,12 @@ int main(){
 
   FILE *m1_file;
   char lineToRead[5000];
+  string str(file);
 
-  m1_file = fopen("datasets/small_adult.data", "r");
+  m1_file = fopen(str.c_str(), "r");
+
+  // m1_file = fopen("datasets/small_adult.data", "r");
+  // m1_file = fopen("datasets/very_small.data", "r");
   printf("Start reading matrix1\n");
 
   int inst_id=0;

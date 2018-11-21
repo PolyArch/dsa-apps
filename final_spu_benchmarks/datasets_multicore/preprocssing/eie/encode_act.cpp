@@ -12,12 +12,17 @@
 using namespace std;
 
 // fc layer 6
-#define N 9216
-#define M 4096
+// #define N 9216
+// #define M 4096
 
 // fc layer 7
 // #define N 4096
 // #define M 4096
+
+// very small
+#define N 20
+#define M 15
+
 
 // output data structures in RLE format
 vector<float> act;
@@ -72,7 +77,8 @@ void correctness_check() {
 
 int main() {
   FILE *wgt_file;
-  wgt_file = fopen("input_datasets/fc6_act_file.txt", "r");
+  // wgt_file = fopen("input_datasets/fc6_act_file.txt", "r");
+  wgt_file = fopen("input_datasets/very_small/act.txt", "r");
   char lineToRead[5000];
 
   int id=0; 

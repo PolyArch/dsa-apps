@@ -1,11 +1,3 @@
-# ifndef N
-# N=10
-# endif
-# 
-# ifndef M
-# M=100
-# endif
-
 ifndef ratio
 ratio=0.4
 endif
@@ -31,8 +23,7 @@ CC=riscv64-unknown-linux-gnu-gcc
 CPP=riscv64-unknown-linux-gnu-g++
 
 DFGS=ksvm.dfg duality_gap.dfg eta.dfg
-MACROS= -Dratio=$(ratio) -DT=$(T)
-# MACROS= -DN=$(N) -DM=$(M) -Dratio=$(ratio) -DT=$(T)
+MACROS= -DN=$(N) -DM=$(M) -Dratio=$(ratio) -DT=$(T) -Dfile=$(file)
 
 DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 

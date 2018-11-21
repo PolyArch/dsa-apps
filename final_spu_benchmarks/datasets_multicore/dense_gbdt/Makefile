@@ -1,21 +1,5 @@
-ifndef N
-N=100
-endif
-
-ifndef Mt
-Mt=4
-endif
-
-ifndef k
-k=64
-endif
-
 ifndef ratio
 ratio=0.25
-endif
-
-ifndef M
-M=136
 endif
 
 ifndef C
@@ -38,10 +22,10 @@ CC=riscv64-unknown-linux-gnu-g++
 CPP=riscv64-unknown-linux-gnu-g++
 
 
-MACROS = -DN=$(N) -DMt=$(Mt) -Dk=$(k) -Dratio=$(ratio) -DM=$(M)
+MACROS = -DN=$(N) -DM=$(M) -Dratio=$(ratio) -Dfile=$(file)
 
 # DFGS=test.dfg final_redn.dfg map.dfg stall_none.dfg
-DFGS=gbdt.dfg
+DFGS=gbdt.dfg local_redn.dfg
 
 DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 
@@ -54,11 +38,11 @@ input.data inst_id.data: gen.py
 	python $< $(N) $(Mt) $(k) $(ratio)
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
-	ss_sched $(SBCONFIG) $< 
+	ss_sched $(SBCONFIG) $<
 
-$(TEST_OBJS): $(TESTC) $(DFG_HEADERS) input.data inst_id.data
+$(TEST_OBJS): $(TESTC) $(DFG_HEADERS) inst_id.data
 	 $(CC) -c $< $(CFLAGS) $(MACROS) -I. -static -o $(@)
-	
+
 # targets is main and dependent on main.o
 $(TESTS): $(TEST_OBJS)
 	 $(CPP) $(LIB) $(CFLAGS) $(MACROS) -static -o $(@) $< $(LFLAGS)
@@ -79,7 +63,7 @@ cleancpu:
 	rm -f cpu
 
 clean:
-	rm -f $(TESTS) $(DFG_HEADERS) *.s *.o
+	rm -f $(TESTS) *.s *.o
 	rm -r m5out stats sched verif viz gams
 
 ultraclean: cleandata cleancpu clean

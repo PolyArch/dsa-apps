@@ -20,13 +20,19 @@ using namespace std;
 // #define stride 4
 
 // input to conv layer 2
-#define Ni 96
-#define Nn 256
-#define Tn 64
-#define Kx 5
-#define Ky 5
+// #define Ni 96
+// #define Nn 256
+// #define Tn 64
+// #define Kx 5
+// #define Ky 5
 // #define stride 2
 
+// input to very small
+#define Ni 1
+#define Nn 1
+#define Tn 1
+#define Kx 3
+#define Ky 3
 
 // output data structures in RLE format
 vector<float> synapse[Ni][Nn/Tn]; // other side is nnz
@@ -137,7 +143,8 @@ int main() {
   initialize_weights();
 
   FILE *syn_file;
-  syn_file = fopen("input_datasets/alex_conv2.mtx", "r");
+  // syn_file = fopen("input_datasets/alex_conv2.mtx", "r");
+  syn_file = fopen("input_datasets/very_small/wgt.txt", "r");
   char lineToRead[5000];
 
   bool first_time = true;

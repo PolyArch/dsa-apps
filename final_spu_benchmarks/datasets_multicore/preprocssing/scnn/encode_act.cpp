@@ -17,11 +17,19 @@ using namespace std;
 // #define Ny 227
 
 // input to conv layer 2
-#define Ni 96
-#define Nx 55
-#define Ny 55
-#define Tx 7
-#define Ty 7
+// #define Ni 96
+// #define Nx 55
+// #define Ny 55
+// #define Tx 7
+// #define Ty 7
+
+// input to very small
+#define Ni 1
+#define Nx 10
+#define Ny 10
+#define Tx 10
+#define Ty 10
+
 
 // output data structures in RLE format
 const int dim1 = (Nx*Ny)/(Tx*Ty);
@@ -89,7 +97,8 @@ void store_rle_in_file() {
 
 int main() {
   FILE *act_file;
-  act_file = fopen("input_datasets/act_conv2.data", "r");
+  // act_file = fopen("input_datasets/act_conv2.data", "r");
+  act_file = fopen("input_datasets/very_small/act.txt", "r");
   char lineToRead[5000];
 
   int linear_index=0;

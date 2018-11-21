@@ -231,7 +231,9 @@ int main() {
   char lineToRead[5000];
 
   // read height ptr
-  FILE *hgt = fopen("datasets/final_index.data", "r");
+  string str(index_file);
+  FILE *hgt = fopen(str.c_str(), "r");
+  // FILE *hgt = fopen("datasets/final_index.data", "r");
 
   while(fgets(lineToRead, 5000, hgt) != NULL){
 	std::string raw(lineToRead);
@@ -245,7 +247,9 @@ int main() {
  
   
   // read copy nodes index
-  FILE *shadow = fopen("datasets/final_shadow_index.data", "r");
+  str = shadow_file;
+  FILE *shadow = fopen(str.c_str(), "r");
+  // FILE *shadow = fopen("datasets/final_shadow_index.data", "r");
 
   while(fgets(lineToRead, 5000, shadow) != NULL){
 	std::string raw(lineToRead);
@@ -275,7 +279,9 @@ int main() {
   cout << "DONE ASSIGNING START AND END INDEX\n";
 
   // read final circuit data
-  FILE *ckt = fopen("datasets/final_circuit.data", "r");
+  str = circuit_file;
+  FILE *ckt = fopen(str.c_str(), "r");
+  // FILE *ckt = fopen("datasets/final_circuit.data", "r");
   int cur_v=0;
 
   while(fgets(lineToRead, 5000, ckt) != NULL){

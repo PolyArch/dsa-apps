@@ -2,13 +2,10 @@ ifndef PRINT_RESULT
 PRINT_RESULT=false
 endif
 
-ifndef N
-N=8
+ifndef dense_act_file
+dense_act_file=\"datasets/very_small/dense_act.txt\"
 endif
 
-ifndef M
-M=16
-endif
 
 ifndef act_sp
 act_sp=1
@@ -39,7 +36,7 @@ CC=riscv64-unknown-linux-gnu-g++
 CPP=riscv64-unknown-linux-gnu-g++
 
 
-MACROS= -DN=$(N) -DM=$(M) -Dact_sp=$(act_sp) -Dsyn_sp=$(syn_sp) -DC=$(C) -Dprint_result=$(PRINT_RESULT)
+MACROS= -Dact_sp=$(act_sp) -Dsyn_sp=$(syn_sp) -DC=$(C) -Dprint_result=$(PRINT_RESULT) -Ddense_act_file=$(dense_act_file) -Dwgt_ptr_file=$(wgt_ptr_file) -Dwgt_val_file=$(wgt_val_file) -Dwgt_ind_file=$(wgt_ind_file) -DN=$(N) -DM=$(M) 
 GCC=g++
 
 DFGS=eie.dfg sparsify.dfg
@@ -66,7 +63,7 @@ cpu: cpu.cpp input_activations.data input_weights.data dense_activations.data
 $(DFG_HEADERS): %.dfg.h: %.dfg
 	$(SS_TOOLS)/bin/ss_sched --verbose $(SBCONFIG) $< 
 
-$(TEST_OBJS): $(TESTC) $(DFG_HEADERS) input_activations.data input_weights.data dense_activations.data
+$(TEST_OBJS): $(TESTC) $(DFG_HEADERS) # input_activations.data input_weights.data dense_activations.data
 	 $(CC) -c $< $(CFLAGS) $(MACROS) -I. -static -o $(@)
 	
 # targets is main and dependent on main.o
@@ -89,7 +86,7 @@ cleancpu:
 	rm -f cpu
 
 clean:
-	rm -f $(TESTS) $(DFG_HEADERS) *.s *.o
+	rm -f $(TESTS) *.s *.o
 	rm -r m5out stats sched verif viz gams
 
 ultraclean: cleandata cleancpu clean
