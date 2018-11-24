@@ -15,7 +15,7 @@
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/net_util_func.h"
 #include <inttypes.h>
 #define NUM_THREADS	2
-#define EIE_WIDTH 1
+#define EIE_WIDTH 4
 
 using namespace std;
 
@@ -38,6 +38,7 @@ uint16_t out_vec[N];
 // Barrier variable
 pthread_barrier_t barr;
 
+// ISSUE1: for local read, address has to be local -- mapping would help here??
 // Each core will execute 1 merge (all activations read into 1st core from DRAM
 // and then -- it broadcasts the output value; weights on the network from linear spad)
 void mv_merged(long tid) {
@@ -50,19 +51,41 @@ void mv_merged(long tid) {
   unsigned nweight_load = wgt_ptr[end_col] - wgt_ptr[start_col];
   SB_CONFIG(eie_config,eie_size);
  
-  // ISSUE1: for local read, address has to be local -- mapping would help here??
   SB_DMA_SCRATCH_LOAD(&wgt_ind[start_col][0], 2, 2, nweight_load, 0);
   SB_DMA_SCRATCH_LOAD(&wgt_val[start_col][0], 2, 2, nweight_load, getLinearAddr(getLinearOffset(1,2))); 
- 
   SB_WAIT_SCR_WR();
  
-  SB_DMA_WRITE(P_eie_out_val, 2, 2, ncol, &out_vec[0]); // write to the DMA? or are we doing multiple layers
+  // write to dma, sure?
+  SB_DMA_WRITE(P_eie_out_val, 2, 2, ncol, &out_vec[0]);
   int i = tid;
-    
-  SB_SCRATCH_READ(0, wgt_val[i].size()*2, P_eie_wind);
-  SB_SCRATCH_READ(getLinearAddr(getLinearOffset(1,2)), wgt_ind[i].size()*2, P_eie_wval);
-  SB_CONST(P_eie_wind, SENTINAL16, 1);
-  SB_CONST(P_eie_wval, 0, 1);
+  int stride=0; int scr_offset = getLinearAddr(getLinearOffset(1,2));
+
+  // col1
+  SB_SCRATCH_READ(stride, wgt_val[i].size()*2, P_eie_wind0);
+  SB_SCRATCH_READ(scr_offset+stride, wgt_ind[i].size()*2, P_eie_wval0);
+  SB_CONST(P_eie_wind0, SENTINAL16, 1);
+  SB_CONST(P_eie_wval0, 0, 1);
+
+  // col2
+  stride += wgt_val[i].size()*2;
+  SB_SCRATCH_READ(stride, wgt_val[i+1].size()*2, P_eie_wind1);
+  SB_SCRATCH_READ(scr_offset+stride, wgt_ind[i+1].size()*2, P_eie_wval1);
+  SB_CONST(P_eie_wind1, SENTINAL16, 1);
+  SB_CONST(P_eie_wval1, 0, 1);
+
+  // col3
+  stride += wgt_val[i+1].size();
+  SB_SCRATCH_READ(stride, wgt_val[i+2].size()*2, P_eie_wind2);
+  SB_SCRATCH_READ(scr_offset+stride, wgt_ind[i+2].size()*2, P_eie_wval2);
+  SB_CONST(P_eie_wind2, SENTINAL16, 1);
+  SB_CONST(P_eie_wval2, 0, 1);
+
+  // col4
+  stride += wgt_val[i+2].size();
+  SB_SCRATCH_READ(stride, wgt_val[i+3].size()*2, P_eie_wind3);
+  SB_SCRATCH_READ(scr_offset + stride, wgt_ind[i+3].size()*2, P_eie_wval3);
+  SB_CONST(P_eie_wind3, SENTINAL16, 1);
+  SB_CONST(P_eie_wval3, 0, 1);
   
   SB_WAIT_ALL(); 
 }
