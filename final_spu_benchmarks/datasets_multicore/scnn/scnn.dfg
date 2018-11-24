@@ -2,37 +2,36 @@ Input16: nval[8]
 Input16: nind[8]
 Input16: sval
 Input16: sind
-Input: const #send Ty-Ky+1
-Input: Ty
-Input: Ky
-
+Input16: const #send ty-ky+1
+Input16: ty
+Input16: ky
 Input16: neuron
-Input: constt
-Input: dummy
+Input16: num_in
+Input16: acc_ctrl
 
 #Convolution dfg-------------------
 
 #activations
-tx0 = Div16(nind0,Ty)
-tx1 = Div16(nind1,Ty)
-tx2 = Div16(nind2,Ty)
-tx3 = Div16(nind3,Ty)
-tx4 = Div16(nind4,Ty)
-tx5 = Div16(nind5,Ty)
-tx6 = Div16(nind6,Ty)
-tx7 = Div16(nind7,Ty)
+tx0 = Div16(nind0,ty)
+tx1 = Div16(nind1,ty)
+tx2 = Div16(nind2,ty)
+tx3 = Div16(nind3,ty)
+tx4 = Div16(nind4,ty)
+tx5 = Div16(nind5,ty)
+tx6 = Div16(nind6,ty)
+tx7 = Div16(nind7,ty)
 
-ty0 = Mod16(nind0,Ty)
-ty1 = Mod16(nind1,Ty)
-ty2 = Mod16(nind2,Ty)
-ty3 = Mod16(nind3,Ty)
-ty4 = Mod16(nind4,Ty)
-ty5 = Mod16(nind5,Ty)
-ty6 = Mod16(nind6,Ty)
-ty7 = Mod16(nind7,Ty)
+ty0 = Mod16(nind0,ty)
+ty1 = Mod16(nind1,ty)
+ty2 = Mod16(nind2,ty)
+ty3 = Mod16(nind3,ty)
+ty4 = Mod16(nind4,ty)
+ty5 = Mod16(nind5,ty)
+ty6 = Mod16(nind6,ty)
+ty7 = Mod16(nind7,ty)
 
-kx = Div16(sind,Ky)
-ky = Mod16(sind,Ky)
+kx = Div16(sind,ky)
+ky = Mod16(sind,ky)
 
 part10 = Add16(Mul16(tx0,const),ty0)
 part11 = Add16(Mul16(tx1,const),ty1)
@@ -46,7 +45,7 @@ part17 = Add16(Mul16(tx7,const),ty7)
 part2 = Add16(Mul16(kx,const),ky)
 part3 = Add16(const,1)
 
-# Formula = (tx-kx+1)(Ty-Ky+1) + (ty-ky+1)
+# Formula = (tx-kx+1)(ty-ky+1) + (ty-ky+1)
 val0 = Add16(Sub16(part10,part2),part3)
 val1 = Add16(Sub16(part11,part2),part3)
 val2 = Add16(Sub16(part12,part2),part3)
@@ -75,37 +74,35 @@ D5 = Mul16(nval5, sval)
 D6 = Mul16(nval6, sval)
 D7 = Mul16(nval7, sval)
 
-#Re-sparsification dfg--------------------------
+A00 = C3 C2
+A10 = C7 C6
+B00 = D3 D2
+B10 = D7 D6
 
-# n = Extract16(neuron)
+A0 = A00 C1 C0
+A1 = A10 C5 C4
+B0 = B00 D1 D0
+B1 = B10 D5 D4
+
+#Re-sparsification dfg--------------------------
 
 relu = ReLU16(neuron)
 
 flag = ICmpNE16(relu,0)
 
-ctrl = Add16(Mul16(flag,2),2)
+# acc_ctrl = Mul16(Not16(flag),2)
 
-inind = BitsliceAcc64(constt,ctrl)
+# inind = Acc16(1, 0, control=flag{0:d})
+count = Acc16(1, acc_ctrl) #always add
 
-inval = BitsliceAcc64(neuron,flag)
+inind = Keep16(1, flag)
+inval = Keep16(1, flag)
 
-done = Keep(dummy,1,control=flag{0:d,1:d})
+ctrl = ICmpNE16(count, num_in)
+done = Keep16(1, Not16(ctrl))
 
-Output16: C [8]
-Output16: D [8]
-Output: inval
-Output: inind
-Output: done
-
-
-# find addresses in output feature map
-#C0 = CartProd16(nind0, sind, rec)
-#C1 = CartProd16(nind1, sind, rec)
-#C2 = CartProd16(nind2, sind, rec)
-#C3 = CartProd16(nind3, sind, rec)
-#C4 = CartProd16(nind4, sind, rec)
-#C5 = CartProd16(nind5, sind, rec)
-#C6 = CartProd16(nind6, sind, rec)
-#C7 = CartProd16(nind7, sind, rec)
-
-
+Output: A [2]
+Output: B [2]
+Output16: inval
+Output16: inind
+Output16: done
