@@ -8,14 +8,14 @@
 #include <pthread.h>
 #include "eie.dfg.h"
 #include "sparsify.dfg.h"
+// #include "small_sp.dfg.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sb_insts.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
 #include "/home/vidushi/ss-stack/ss-scheduler/src/config/fixed_point.h"
+#include "/home/vidushi/ss-stack/ss-workloads/common/include/net_util_func.h"
 #include <inttypes.h>
 #define NUM_THREADS	2
-
-// #define sentinal (SENTINAL16 | (SENTINAL16 & 0xFFFFFFFFFFFFFFFF) << 16 | (SENTINAL16 & 0xFFFFFFFFFFFFFFFF) << 32 | (SENTINAL16 & 0xFFFFFFFFFFFFFFFF) << 48)
-#define sentinal SENTINAL
+#define EIE_WIDTH 1
 
 using namespace std;
 
@@ -27,70 +27,71 @@ vector<uint16_t> act_ind;
 
 // dense
 uint16_t activations[M];
-uint16_t *counter;
+uint16_t counter[M];
 
-// vector<float> fwgt_val[N];
 vector<uint16_t> wgt_val[N];
 vector<uint16_t> wgt_ind[N];
 uint16_t wgt_ptr[N];
 
-// uint64_t *out_vec;
 uint16_t out_vec[N];
 
 // Barrier variable
 pthread_barrier_t barr;
 
-// Each core will execute 1 merge (all activations read into 1st core from DRAM and then
-// it broadcasts the output value; weights on the network from linear spad)
+// Each core will execute 1 merge (all activations read into 1st core from DRAM
+// and then -- it broadcasts the output value; weights on the network from linear spad)
 void mv_merged(long tid) {
-  // int ptr1=0, end1=0;
-  // unsigned row_size=0;
-  // std::cout << "reached till here\n";
-  // load into scratchpads in main
  
-  int ncol = N/(4*NUM_THREADS); // 4 because of the vec width
+  // for only 1 broadcast, ncol should be equal to the vec_width
+  int ncol = EIE_WIDTH;
   int start_col = ncol*tid;
   int end_col = start_col+ncol;
-  // each thread id would have N/63 columns 
   
   unsigned nweight_load = wgt_ptr[end_col] - wgt_ptr[start_col];
-  // cout << "Number of weights are: " << nweight_load << "\n";
- 
   SB_CONFIG(eie_config,eie_size);
-
-  // since it is now using a port; either we should add a condition not to reset those ports
+ 
   // ISSUE1: for local read, address has to be local -- mapping would help here??
-  // SB_DMA_SCRATCH_LOAD(&wgt_merged_col_ind[wgt_merged_row_ptr[start_col]], 8, 8, nweight_load, (tid << 16) | 0);
-  // SB_DMA_SCRATCH_LOAD(&wgt_merged_val[wgt_merged_row_ptr[start_col]], 8, 8, nweight_load, (tid << 16) | (4095)); // fix this offset
   SB_DMA_SCRATCH_LOAD(&wgt_ind[start_col][0], 2, 2, nweight_load, 0);
-  SB_DMA_SCRATCH_LOAD(&wgt_val[start_col][0], 2, 2, nweight_load, nweight_load); // TODO: set correct offset
+  SB_DMA_SCRATCH_LOAD(&wgt_val[start_col][0], 2, 2, nweight_load, getLinearAddr(getLinearOffset(1,2))); 
  
   SB_WAIT_SCR_WR();
  
-  SB_DMA_WRITE(P_eie_out_val, 8, 8, ncol, &out_vec[0]); // write to the DMA? or are we doing multiple layers
-  // cout << "tid: " << tid << " ncol: " << ncol << "\n";
-  for (int i=tid; i<tid+ncol; ++i){ // work on a subset of columns
-	// if(end1-ptr1<=0)
-	//   continue;
-	// row_size = (end1-ptr1);
+  SB_DMA_WRITE(P_eie_out_val, 2, 2, ncol, &out_vec[0]); // write to the DMA? or are we doing multiple layers
+  int i = tid;
     
-	// SB_SCRATCH_READ((tid << 16) | 0, row_size*8, P_eie_wind);
-	SB_SCRATCH_READ(0, wgt_val[i].size()*2, P_eie_wind);
-	SB_CONST(P_eie_wind, sentinal, 1);
-	// SB_SCRATCH_READ((tid << 16) | 4095, row_size*8, P_eie_wval);
-	SB_SCRATCH_READ(nweight_load, wgt_val[i].size()*2, P_eie_wval);
-	SB_CONST(P_eie_wval, 0, 1);
-
-	// double read instead of broadcast?
-    SB_DMA_READ(&act_ind[0], 2, 2, act_ind.size(), P_eie_aind); // being broadcasted from core 0
-    SB_DMA_READ(&act_val[0], 2, 2, act_val.size(), P_eie_aval); // being broadcasted from core 0
-
-	// no more implicit sentinal here
-	SB_CONST(P_eie_aind, sentinal, 1);
-	SB_CONST(P_eie_aval, 0, 1);
-  }
-  // error in this wait all
+  SB_SCRATCH_READ(0, wgt_val[i].size()*2, P_eie_wind);
+  SB_SCRATCH_READ(getLinearAddr(getLinearOffset(1,2)), wgt_ind[i].size()*2, P_eie_wval);
+  SB_CONST(P_eie_wind, SENTINAL16, 1);
+  SB_CONST(P_eie_wval, 0, 1);
+  
   SB_WAIT_ALL(); 
+}
+
+void sparsify(){
+  uint64_t mask = 0;
+  addDest(mask, 1);
+  int vec_width=8;
+  int pad_size = M%vec_width;
+  
+  SB_CONFIG(sparsify_config, sparsify_size);
+
+  SB_DMA_READ(&activations[0], 2, 2, M, P_sparsify_A);
+  SB_DMA_READ(&counter[0], 2, 2, M, P_sparsify_B);
+  
+  SB_CONST(P_sparsify_sentinal, SENTINAL16, M+2); // max M times needed
+
+  // has to be non-zero to be sent from here
+  SB_CONST(P_sparsify_A, SENTINAL16, pad_size+vec_width); 
+  SB_CONST(P_sparsify_B, SENTINAL16, pad_size+vec_width);
+
+  // number of elements according to the port width
+  SB_REM_PORT(P_sparsify_val, M, mask, P_eie_aval);
+  SB_REM_PORT(P_sparsify_ind, M, mask, P_eie_aind);
+
+  uint16_t temp;
+  SB_RECV(P_sparsify_signal, temp);
+  SB_RESET();
+  SB_WAIT_ALL();
 }
 
 void *entry_point(void *threadid) {
@@ -106,41 +107,12 @@ void *entry_point(void *threadid) {
    }
 
    begin_roi();
-   mv_merged(tid);
-   // mv_single(tid);
+   if(tid==0) sparsify();
+   else mv_merged(tid-1);
    end_roi();
    sb_stats();
    // pthread_exit(NULL);
    return NULL;
-}
-
-void sparsify(){
-  // uint16_t a[M];
-  // uint16_t b[M];
-  int values = (M/4)*4; // can we do it by sending dummy values at the end?
-  uint64_t mask = (((uint64_t)1)<<63)-1;
-  
-  SB_CONFIG(sparsify_config, sparsify_size);
-
-  SB_DMA_READ(&activations[0], 2, 2, values, P_sparsify_A);
-  SB_DMA_READ(&counter[0], 2, 2, values, P_sparsify_B);
-  SB_CONST(P_sparsify_size, N*M-1, values); // should be a 16-bit input
-
-  // sentinals (not allowing to push this constant)
-  SB_CONST(P_sparsify_A, sentinal, 1);
-  SB_CONST(P_sparsify_B, sentinal, 1);
-
-  // SB_STRIDE(8,8);
-  // SB_DMA_WRITE_SIMP(P_sparsify_val, values, &a[0]);
-  // SB_DMA_WRITE_SIMP(P_sparsify_ind, values, &b[0]);
-
-  SB_REM_PORT(P_sparsify_val, values, mask, P_eie_aval);
-  SB_REM_PORT(P_sparsify_ind, values, mask, P_eie_aind);
-
-  uint16_t temp;
-  SB_RECV(P_sparsify_signal, temp);
-  SB_RESET();
-  SB_WAIT_ALL();
 }
 
 void check_correctness() {
@@ -149,21 +121,14 @@ void check_correctness() {
   }
 }
 
-uint64_t merge_bits(uint16_t a, uint16_t b, uint16_t c, uint16_t d){
-  uint64_t ret = (a | (b  & 0xFFFFFFFFFFFFFFFF) << 16 | (c & 0xFFFFFFFFFFFFFFFF) << 32 | (d & 0xFFFFFFFFFFFFFFFF) << 48);
-  return ret;
-}
-
-
 int main(){
 
   // Reading dense activations
   char lineToRead[5000];
 
   string str(dense_act_file);
-  cout << "Start reading dense activations: " << dense_act_file << "\n";
-  // FILE *dense_act_file = fopen("datasets/pyfc6_dense_act_file.txt", "r");
   FILE *dense_act_file2 = fopen(str.c_str(), "r");
+  // FILE *dense_act_file2 = fopen("datasets/very_small/dense_act.data", "r");
   int ind=0;
   
   
@@ -172,18 +137,26 @@ int main(){
 	std::istringstream iss(raw.c_str());
 
 	iss >> activations[ind];
-	cout << "ind: " << counter[ind] << " val: " << activations[ind] << "\n";
+	// cout << " val: " << activations[ind] << "\n";
 	ind++;
   } 
   fclose(dense_act_file2);
   printf("Done reading dense activations\n");
+
+
+  // setting the counter
+  for(int i=0; i<M; ++i) {
+	counter[i]=i;
+  }
+
+  printf("Done setting counter\n");
 
   str = wgt_ptr_file;
   FILE *wgt_ptr_file2 = fopen(str.c_str(), "r");
   // FILE *wgt_ptr_file = fopen("datasets/pyfc6_wgt_ptr.txt", "r");
  
   ind=0;
-  printf("Start reading dense activations\n");
+  printf("Start reading wgt ptr\n");
   
   while(fgets(lineToRead, 5000, wgt_ptr_file2) != NULL){
 	std::string raw(lineToRead);
@@ -195,11 +168,12 @@ int main(){
   fclose(wgt_ptr_file2);
 
   str = wgt_val_file;
+  cout << wgt_val_file << "\n";
   FILE *wgt_val_file2 = fopen(str.c_str(), "r");
   // FILE *wgt_val_file = fopen("datasets/pyfc6_wgt_val.txt", "r");
  
   ind=0; int k=0;
-  printf("Start reading dense activations\n");
+  printf("Start reading wgt val\n");
   
   while(fgets(lineToRead, 5000, wgt_val_file2) != NULL){
 	std::string raw(lineToRead);
@@ -207,9 +181,8 @@ int main(){
 	float x;
 
 	iss >> x;
+	// cout << "k: " << k << " x: " << x << endl;
 	wgt_val[k].push_back(DOUBLE_TO_FIX(x));
-	// need pointer?
-	cout << "ind: " << counter[ind] << " val: " << activations[ind] << "\n";
 	ind++;
 	// FIXME: confirm this
 	if(ind==wgt_ptr[k]) {
@@ -223,7 +196,7 @@ int main(){
   // FILE *wgt_ind_file = fopen("datasets/pyfc6_wgt_ind.txt", "r");
  
   ind=0; k=0;
-  printf("Start reading dense activations\n");
+  printf("Start reading wgt_ind activations\n");
   
   while(fgets(lineToRead, 5000, wgt_ind_file2) != NULL){
 	std::string raw(lineToRead);
@@ -232,8 +205,6 @@ int main(){
 
 	iss >> x;
 	wgt_ind[k].push_back(x);
-	// need pointer?
-	cout << "ind: " << counter[ind] << " val: " << activations[ind] << "\n";
 	ind++;
 	// FIXME: confirm this
 	if(ind==wgt_ptr[k]) {
@@ -242,9 +213,8 @@ int main(){
   }  
   fclose(wgt_ind_file2);
 
-  sparsify();
+  // sparsify();
 
-  /*
   assert(NUM_THREADS<C);
   
   // Barrier initialization
@@ -272,11 +242,9 @@ int main(){
       return -1;
     }
   }
-  */
   
   if(print_result) {
     check_correctness();
   }
-
   return 0;
 }

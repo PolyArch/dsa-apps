@@ -1,21 +1,42 @@
-Input16: wval [4]
-Input16: wind [4]
+Input16: wval
+Input16: wind
 Input16: aval
 Input16: aind
 
-P0 = IndexMatch16(wind0,aind)
-P1 = IndexMatch16(wind1,aind)
-P2 = IndexMatch16(wind2,aind)
-P3 = IndexMatch16(wind3,aind)
+P0 = IndexMatch16(wind,aind)
 
-E0 = Mul16(wval0,aval,control=P0{1:b2,2:b1})
-E1 = Mul16(wval1,aval,control=P1{1:b2,2:b1})
-E2 = Mul16(wval2,aval,control=P2{1:b2,2:b1})
-E3 = Mul16(wval3,aval,control=P3{1:b2,2:b1})
+E0 = Mul16(wval,aval,control=P0{1:b2,2:b1})
 
-out_val0 = Acc16(E0,P0,control=P0{0:d,1:d,2:d})
-out_val1 = Acc16(E1,P1,control=P1{0:d,1:d,2:d})
-out_val2 = Acc16(E2,P2,control=P2{0:d,1:d,2:d})
-out_val3 = Acc16(E3,P3,control=P3{0:d,1:d,2:d})
+out_val = Acc16(E0,P0,control=P0{0:d,1:d,2:d})
 
-Output16: out_val [4]
+Output16: out_val
+
+# Vectorized version
+
+# Input16: wval0
+# Input16: wval1
+# Input16: wval2
+# Input16: wval3
+# Input16: wind0
+# Input16: wind1
+# Input16: wind2
+# Input16: wind3
+# Input16: aval
+# Input16: aind
+# 
+# P0 = IndexMatch16(wind0,aind)
+# P1 = IndexMatch16(wind1,aind)
+# P2 = IndexMatch16(wind2,aind)
+# P3 = IndexMatch16(wind3,aind)
+# 
+# E0 = Mul16(wval0,aval,control=P0{1:b2,2:b1})
+# E1 = Mul16(wval1,aval,control=P1{1:b2,2:b1})
+# E2 = Mul16(wval2,aval,control=P2{1:b2,2:b1})
+# E3 = Mul16(wval3,aval,control=P3{1:b2,2:b1})
+# 
+# out_val0 = Acc16(E0,P0,control=P0{0:d,1:d,2:d})
+# out_val1 = Acc16(E1,P1,control=P1{0:d,1:d,2:d})
+# out_val2 = Acc16(E2,P2,control=P2{0:d,1:d,2:d})
+# out_val3 = Acc16(E3,P3,control=P3{0:d,1:d,2:d})
+# 
+# Output16: out_val [4]
