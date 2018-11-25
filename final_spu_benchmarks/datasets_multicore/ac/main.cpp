@@ -14,15 +14,16 @@
 #include "ac.dfg.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sb_insts.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
+#include "/home/vidushi/ss-stack/ss-scheduler/src/config/fixed_point.h"
+#include "/home/vidushi/ss-stack/ss-workloads/common/include/net_util_func.h"
 #include <inttypes.h>
 #include <sstream>
 
 using namespace std;
 
-#define NUM_THREADS 4
-#define NUM_INPUTS 1
+#define NUM_THREADS 2
+#define NUM_INPUTS 2
 #define fused_const (1 | (1 & 0xFFFFFFFF00000000) << 32)
-#define SCRATCH_SIZE 16384 // FIXME: number of kB
 	
 // const for all input (all of size V)
 struct node_prop1 {
@@ -53,145 +54,80 @@ int end_index[NUM_THREADS]; // last one is copy nodes
 vector<int> height_ptr; 
 vector<int> shadow_ptr; 
 
-int spad_buffer = SCRATCH_SIZE/2;
-// int linear_part_offset = (1<<15)/3;
-
-// utility functions -------------
-
-int getLinearAddr(int offset) {
-  int linear_scr_offset = 1 << 14; // log of scratch size
-  return linear_scr_offset|offset;
-}
-
-// TODO: give the aligned answer
-int getLinearOffset(int part_id, int n_part) {
-  int x = SCRATCH_SIZE*part_id/n_part;
-  return ((x/8)*8);
-}
-
-int getBankedOffset(int part_id, int n_part) {
-  int x = SCRATCH_SIZE*part_id/n_part;
-  return ((x/8)*8);
-}
-
-
-
-
-
-// -----------------
-
-
-// Which core's spad?
 // load ac_prop in linear scratchpads
 void load_linear_scratch(long tid) {
   int n_times = height_ptr[end_index[tid]]-height_ptr[start_index[tid]];
   int start_id = height_ptr[start_index[tid]];
-  /*
-  if(tid==0) {
-  cout << "n_times: " << n_times << "\n";
-  }
-  */
-  SB_DMA_SCRATCH_LOAD(&ac_prop.nodeType[start_id], 0, 4*n_times, 1, getLinearAddr(0));
-  SB_DMA_SCRATCH_LOAD(&ac_prop.c0[start_id], 0, 4*n_times, 1, getLinearAddr(getLinearOffset(1,3)));
-  SB_DMA_SCRATCH_LOAD(&ac_prop.c1[start_id], 0, 4*n_times, 1, getLinearAddr(getLinearOffset(2,3)));
-  SB_WAIT_SCR_WR();
-  // SB_WAIT_ALL();
+  SB_DMA_SCRATCH_LOAD(&ac_prop.nodeType[start_id], 1, 1, 4*n_times, getLinearAddr(0));
+  SB_DMA_SCRATCH_LOAD(&ac_prop.c0[start_id], 1, 1, 4*n_times, getLinearAddr(getLinearOffset(1,3)));
+  SB_DMA_SCRATCH_LOAD(&ac_prop.c1[start_id], 1, 1, 4*n_times, getLinearAddr(getLinearOffset(2,3)));
+  // SB_WAIT_SCR_WR();
+  SB_WAIT_ALL();
 }
 
-void compute(long tid, int input_id) {
-
+void compute(bool enable, long tid, int input_id) {
+  if(!enable) return;
   // cout << "Compute for input id: " << input_id << "\n";
-  int vr_offset = getBankedOffset(input_id%2,2);
-  SB_CONFIG(ac_config,ac_size);
+  int vr_offset = getBankedOffset((1-input_id)%3,3);
 
-  // for(int h=start_index[tid]; h<end_index[tid]; ++h) {
-	// Should start from less than the last level (for only 0 level node -- no
-	// shadow node)
-  for(int h=start_index[tid]+1; h<end_index[tid]; ++h) {
-	int n_times = height_ptr[h+1]-height_ptr[h];
-	// padding for indirect ports
-	n_times = (n_times/2)*2;
-	// cout << "N_times: " << n_times << "\n";
-	int start_id = height_ptr[h];
-	int linear_offset = start_id-height_ptr[h];
+  // Should start from less than the last level (for only 0 level node -- no shadow node)
+  for(int h=start_index[tid]+1; h<=end_index[tid]; ++h) {
+	int num_elem = height_ptr[h+1]-height_ptr[h];
+
+    if(num_elem < 1) return;
+
+	int num_iters = num_elem/2; // padding for indirect ports
+	int linear_offset = height_ptr[h]-height_ptr[start_index[tid]];
+    linear_offset = linear_offset*4;
+	cout << "NUM_ITERS: " << num_iters << " linear_offset: " << linear_offset << "\n";
     
 	// reads from linear scratchpad
-	SB_SCRATCH_READ(getLinearAddr(0+linear_offset), 4*n_times, P_ac_nodeType);
-    SB_SCRATCH_READ(getLinearAddr(getLinearOffset(1,3)+linear_offset), 4*n_times, P_IND_1);
-    SB_SCRATCH_READ(getLinearAddr(getLinearOffset(2,3)+linear_offset), 4*n_times, P_IND_2);
+    // 8 * num_iters bytes
+	SB_SCRATCH_READ(getLinearAddr(0+linear_offset), 8*num_iters, P_ac_nodeType);
+    SB_SCRATCH_READ(getLinearAddr(getLinearOffset(1,3)+linear_offset), 8*num_iters, P_IND_1);
+    SB_SCRATCH_READ(getLinearAddr(getLinearOffset(2,3)+linear_offset), 8*num_iters, P_IND_2);
 
-	// TODO: these child id's should be allotted to it's offset rather than
-	// using it here (do during preprocessing)
-	// c0-start_index[tid], c1-start_index[tid] (Okay, well if I use normal
-	// output ports for this -- my padding issue would be resolved maybe)
-
-	SB_CONST(P_ac_const, fused_const, n_times);
+	SB_CONST(P_ac_const, fused_const, num_iters);
 
 	// indirect reads from banked scratchpad
-	// SB_CONFIG_INDIRECT1(T32, T32, sizeof(node_prop2), 2*sizeof(uint32_t));
 	// _index_addr + index * _ind_mult + _offsets[_index_in_offsets]*_data_bytes;
 	SB_CONFIG_INDIRECT1(T32, T32, 2, 2);
-    SB_INDIRECT_SCR(P_IND_1, vr_offset-2*start_index[tid], 2*n_times, P_ac_c1vf);
-    // SB_CONFIG_INDIRECT1(T32, T32, sizeof(node_prop2), 2*sizeof(uint32_t));
-    // SB_CONFIG_INDIRECT1(T32, T32, sizeof(node_prop2), sizeof(uint32_t));
+    // 4 * 2 * 2 * num_iters bytes
+    SB_INDIRECT_SCR(P_IND_1, vr_offset-2*start_index[tid], 2*num_iters, P_ac_c1vf);
     SB_CONFIG_INDIRECT1(T32, T32, 2, 2);
-    SB_INDIRECT_SCR(P_IND_2, (vr_offset+8*n_times-2*start_index[tid]), 2*n_times, P_ac_c2vf);
-
-	SB_WAIT_SCR_RD();
+    SB_INDIRECT_SCR(P_IND_2, (vr_offset+16*num_iters-2*start_index[tid]), 2*num_iters, P_ac_c2vf);
 
     // direct banked scratch write in sequence
-	SB_SCR_WRITE(P_ac_vrf, 4*n_times*2, vr_offset+start_id);
-	// SB_SCR_WRITE(P_ac_vr, 4*n_times, vr_offset+start_id);
-	// SB_SCR_WRITE(P_ac_flag, 4*n_times, vr_offset+start_id+4*n_times);
+	SB_SCR_WRITE(P_ac_vrf, 8*2*num_iters, vr_offset+32*num_iters);
 
     SB_WAIT_ALL();
   }
 }
 
-void *entry_point(void *threadid) {
-   long tid;
-   tid = (long)threadid;
-   // Synchronization point
-   int rc = pthread_barrier_wait(&barr);
-   if(rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD)
-   {
-     printf("Could not wait on barrier\n");
-     // exit(-1);
-   }
-
-   begin_roi();
-   // double buffering here
-   load_linear_scratch(tid);
-   for(int i=0; i<NUM_INPUTS; ++i){
-     compute(tid, i);
-   }
-   end_roi();
-   sb_stats();
-   printf("Forward propagation done!\n");
-   // pthread_exit(NULL);
-   return NULL;
-}
-/*
-void receive_data(long tid){
+void receive_data(bool enable, long tid){
+  if(!enable) return;
   if(tid==0){
     SB_WAIT_SCR_WR();
   } else {
     int num_nodes = shadow_ptr[tid]-shadow_ptr[tid-1];
-    SB_WAIT_DF(num_nodes, 0); // we do not need range because it considers only remote writes
+    SB_WAIT_DF(num_nodes, 0);
   }
 }
 
-void send_data(long tid, int input_id){
-  int src_offset = getBankedOffset(input_id%2,2);
-  int rem_offset = getBankedOffset((input_id+1)%2,2);
-  if(tid==0) {
-    // SB_DMA_SCRATCH_LOAD(&ac[input_id][0].vr, 4, 4, total_nodes, src_offset);
-    SB_DMA_SCRATCH_LOAD(&ac[input_id][0].vr, 4, 4, height_ptr[1]-height_ptr[0], src_offset);
+void send_data(bool enable, long tid, int input_id){
+  if(!enable) return;
+
+  int src_offset = getBankedOffset((2-input_id+3*NUM_THREADS)%3,3);
+  int rem_offset = getRemoteBankedOffset(tid+1,(3-input_id)%3,3);
+
+  if(tid==NUM_THREADS-1) { // send to memory
+    // TODO: check! (both vr and flag?)
+    SB_SCRATCH_DMA_STORE(src_offset, 4, 4, (shadow_ptr[tid]-shadow_ptr[tid-1])*2, &ac[input_id][0].vr);
   } else {  // send to the next core
-	// TODO: decide this pattern
-	// TODO: NEED TO APPLY MASK FOR THE DEST NODE IN SCR ADDR HERE
-    int total_nodes = shadow_ptr[tid]-shadow_ptr[tid-1]; // fix this
-    SB_SCR_REM_SCR(src_offset, total_nodes, total_nodes, 1, rem_offset, 0);
+    int total_nodes = shadow_ptr[tid]-shadow_ptr[tid-1]; 
+    // FIXME: source offset would be different
+    // cout << "SOURCE OFFSET: " << src_offset << " REMOTE OFFSET: " << rem_offset << " number of nodes: " << total_nodes << endl;
+    SB_SCR_REM_SCR(src_offset, 4, 4, total_nodes, rem_offset, 0);
   }
 }
 
@@ -206,25 +142,60 @@ void *entry_point(void *threadid) {
      // exit(-1);
    }
 
-   begin_roi();
-   // double buffering here
-   load_linear_scratch(tid);
-   for(int i=0; i<NUM_INPUTS+1; ++i){
-	 if(i<NUM_INPUTS) {
-	   send_data(tid, i);
-	 }
-	 if(i > 0) {
-       receive_data(tid);
-       compute(tid, i-1);
-	 }
-   }
-   end_roi();
-   sb_stats();
-   printf("Forward propagation done!\n");
-   // pthread_exit(NULL);
-   return NULL;
+  int recv_offset = 0;   
+  begin_roi();
+  SB_CONFIG(ac_config,ac_size);
+  load_linear_scratch(tid);
+  // triple buffering here -- tid=1 will start after first round
+  
+  // for(int i=0; i<NUM_INPUTS+2; ++i){
+  // for(int i=0; i<NUM_INPUTS+2+3*(NUM_THREADS-1); ++i){
+  for(int i=0; i<4; ++i){
+
+    bool cond1 = (i >= 3*tid) && (i<NUM_INPUTS+3*tid);
+    bool cond2 = (i > 3*tid) && (i<NUM_INPUTS+1+3*tid);
+    bool cond3 = (i>1+3*tid) && (i<NUM_INPUTS+2+3*tid);
+
+    // bool tid_enable = (i >= tid*3);
+    // bool cond1 = (i<NUM_INPUTS) && tid_enable;
+    // bool cond2 = (i > 0) && (i<NUM_INPUTS+1) && tid_enable;
+    // bool cond3 = (i>1) && tid_enable;
+
+    if(i%3==0) {
+      if(tid==0 && cond1) {
+        recv_offset = getBankedOffset((3-i)%3,3);
+        SB_DMA_SCRATCH_LOAD(&ac[i][0].vr, 4, 4, shadow_ptr[tid], recv_offset);
+      }
+      receive_data(cond1, tid); // doesn't work for tid=1 at the first time
+      compute(cond2, tid, i-3*tid);
+      send_data(cond3, tid, i-3*tid);
+    } else if(i%3==1) {
+      if(tid==0 && cond1) {
+        recv_offset = getBankedOffset((3-i)%3,3);
+        SB_DMA_SCRATCH_LOAD(&ac[i][0].vr, 4, 4, shadow_ptr[tid], recv_offset);
+      }
+      receive_data(cond1, tid);
+      compute(cond2, tid, i-1-3*tid);
+      send_data(cond3, tid, i-1-3*tid);
+    } else {
+      if(tid==0 && cond1) {
+        recv_offset = getBankedOffset((3-i)%3,3);
+        SB_DMA_SCRATCH_LOAD(&ac[i][0].vr, 4, 4, shadow_ptr[tid], recv_offset);
+      }
+      receive_data(cond1, tid);
+      compute(cond2, tid, i-2-3*tid);
+      send_data(cond3, tid, i-2-3*tid);
+    }
+    // do we need this?
+    pthread_barrier_wait(&barr);
+  }
+  
+  end_roi();
+  sb_stats();
+  printf("Forward propagation done!\n");
+  // pthread_exit(NULL);
+  return NULL;
 }
-*/
 
 int main() {
 
@@ -240,6 +211,7 @@ int main() {
 	std::istringstream iss(raw.c_str());
 	int x;
 	iss >> x;
+    cout << x << " ";
 	height_ptr.push_back(x);
   }
   fclose(hgt); 
@@ -256,6 +228,7 @@ int main() {
 	std::istringstream iss(raw.c_str());
 	int x;
 	iss >> x;
+    cout << x << " ";
 	shadow_ptr.push_back(x);
   }
   fclose(shadow); 
@@ -272,7 +245,7 @@ int main() {
 	  h++;
 	}
 	end_index[a/2] = h;
-	// cout << start_index[a/2] << " " << end_index[a/2] << "\n";
+	cout << "SE: " << start_index[a/2] << " " << end_index[a/2] << "\n";
 	h++; a+=2;
   }
 
@@ -331,7 +304,7 @@ int main() {
 	    ac_dr[i][cur_v] = 0.0f;
 	  }
 	}
-    cout << "Child1: " << ac_prop.c0[cur_v] << " child2: " << ac_prop.c1[cur_v] << "\n"; 
+    // cout << "Child1: " << ac_prop.c0[cur_v] << " child2: " << ac_prop.c1[cur_v] << "\n"; 
 	cur_v++;
   }
   fclose(ckt);  
@@ -377,3 +350,29 @@ int main() {
 
   return 0;
 }
+
+/*
+void *entry_point(void *threadid) {
+   long tid;
+   tid = (long)threadid;
+   // Synchronization point
+   int rc = pthread_barrier_wait(&barr);
+   if(rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD)
+   {
+     printf("Could not wait on barrier\n");
+     // exit(-1);
+   }
+
+   begin_roi();
+   // double buffering here
+   load_linear_scratch(tid);
+   for(int i=0; i<NUM_INPUTS; ++i){
+     compute(tid, i);
+   }
+   end_roi();
+   sb_stats();
+   printf("Forward propagation done!\n");
+   // pthread_exit(NULL);
+   return NULL;
+}
+*/

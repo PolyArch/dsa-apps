@@ -41,7 +41,6 @@ out21 = Select32(0,m41,cond1)
 vr0 = Select32(s40,out20,nodeType:0:31)
 vr1 = Select32(s41,out21,nodeType:32:63)
 
-
 flag0 = And32(nodeType:0:31,Xor32(c1vr0,c2vr0))
 flag1 = And32(nodeType:32:63,Xor32(c1vr1,c2vr1))
 
