@@ -20,69 +20,9 @@ using namespace std;
   #define Sx 1
 #endif
 
-
-// #define Kxsim (Kx | Kx << 16 | (Kx & 0xFFFFFFFFFFFFFFFF) << 32 | (Kx & 0xFFFFFFFFFFFFFFFF) << 48)
-// #define Nxsim (Nx | Nx << 16 | (Nx & 0xFFFFFFFFFFFFFFFF) << 32 | (Nx & 0xFFFFFFFFFFFFFFFF) << 48)
-// #define Txsim (Tx | Tx << 16 | (Tx & 0xFFFFFFFFFFFFFFFF) << 32 | (Tx & 0xFFFFFFFFFFFFFFFF) << 48)
-
-#define fused_const (1 | 1 << 16 | (1 & 0xFFFFFFFFFFFFFFFF) << 32 | (1 & 0xFFFFFFFFFFFFFFFF) << 48)
-
 // Barrier variable
 pthread_barrier_t barr;
 
-/*
-// 3rd dim in weights
-for(int x=0; x<Nn/Tn; x++) {
-  // 2nd dim in both 
-  for(int y=0; y<Ni; y++) {
-	// 1 dim of sparse input act ---------------------------
-	for(int w=tid*Tx; w<(tid*Tx+Tx); w++){
-     for(int w=tid*Tx; w<(tid*Tx+Tx); w++){
-	   // -------------------------
-	   // 1-dim of sparse weights --------------------
-	   for(int t=0; t<Tn; t++){
-	   for(int r=0; r<Kx; r++){
-		 for(int s=0; s<Ky; s++){
-
-		}
-	  }
-	   }
-	   // -------------------
-	 }  
-	}
-	
-  }
-  scratch_move();
-}
-
-// in stream format
-// 3rd dim in weights
-for(int x=0; x<Nn/Tn; x++) {
-  // 2nd dim in both 
-  for(int y=0; y<Ni; y++) {
-	// inter-iteration reuse
-	for(int i=0; i < n_times; i++) {
-	  stream_load(input_act[tid*Tx], Tx);
-	}
-	repeat();
-	stream_load(weights[x*Kx*Ky], Tn*Kx*Ky);
-  }
-  scratch_move();
-}
-*/
-
-// #define Ni 96
-// #define Nx 55
-// #define Ny 55
-// // TODO: this should be made balanced when done across cores
-// #define Tx 7
-// #define Ty 7
-// #define Ni 96
-// #define Nn 256
-// // #define Tn 256
-// #define Tn 64
-// #define Kx 5
-// #define Ky 5
 #define num_inputs (Tx*Ty*Tn)
 
 // uint16_t out_n[Nn][Ty-Ky+1][Tx-Kx+1];
@@ -106,6 +46,29 @@ uint16_t neuron_o_ind[(Nx*Ny)/(Tx*Ty)][Nn][Tx*Ty];
 
 uint16_t neuron_o_ptr[(Nx*Ny*Nn)/(Tx*Ty)];
 
+int count=0;
+
+// This two functions are for a given tid only
+void load_weights_in_linear_scratch(int y, int x) {
+  unsigned size_synapse = synapse_val[y][x].size();
+  SB_DMA_SCRATCH_LOAD(&synapse_val[y][x][0], 2, 2, size_synapse, getLinearAddr(getLinearOffset(0,2)));
+  SB_DMA_SCRATCH_LOAD(&synapse_ind[y][x][0], 2, 2, size_synapse, getLinearAddr(getLinearOffset(1,2)));
+  // SB_WAIT_SCR_WR();
+  SB_WAIT_ALL();
+}
+
+// linear scr -> remote port
+void broadcast_weights(long tid, int y, int x) {
+  uint64_t mask = 0;
+  for(int i=0; i<NUM_THREADS; ++i) {
+    addDest(mask, i);
+  }
+  unsigned size_synapse = synapse_val[y][x].size();
+  // FIXME: find indirect ports -- hopefully, we don't write from scr to memory here
+  SB_SCR_REM_PORT(getLinearAddr(getLinearOffset(0,2)), size_synapse*2, mask, SCR_MEM_PORT);
+  SB_SCR_REM_PORT(getLinearAddr(getLinearOffset(1,2)), size_synapse*2, mask, P_IND_5);
+}
+
 // working on act of neuron_i_val[z][y]
 // working on weight of synapse_val[y][x]
 void kernel(int x, int y, int z) {
@@ -124,78 +87,132 @@ void kernel(int x, int y, int z) {
 
   unsigned size_synapse = synapse_val[y][x].size();
 
-
   // although this should be taken care in the simulator
   if(size_synapse==0 || size_neuron_tile==0)
 	return;
 
   int num_comp_inst = size_synapse*ceiled_sn_tile;
-  cout << size_neuron_tile << " " << ceiled_sn_tile << " " << size_synapse << " " << num_comp_inst << endl;
+  // cout << "COMPUTE LENGTHS: ";
+  // cout << size_neuron_tile << " " << ceiled_sn_tile << " " << size_synapse << " " << num_comp_inst << endl;
 
-  SB_CONST_SCR(0, 0, Tx*Ty*Tn);
-  SB_WAIT_ALL();
+  // SB_CONST_SCR(0, 0, Tx*Ty*Tn);
+  // SB_WAIT_ALL();
 
-  SB_CONFIG(scnn_config,scnn_size);
+  // Should change with double buffering if we would be swapping
+  int prev_val_scr_offset = getBankedOffset(1,4); 
+  int prev_ind_scr_offset = getBankedOffset(2,4);
+  int cur_val_scr_offset = getBankedOffset(3,4);
+  int cur_ind_scr_offset = getBankedOffset(4,4);
 
   // frequency of synapses
+  // num_elem depends on num_writes
   SB_REPEAT_PORT(ceiled_sn_tile/8);
-  SB_DMA_READ(&synapse_val[y][x][0], 2, 2, size_synapse, P_scnn_sval);
+  SB_RECURRENCE(SCR_MEM_PORT, P_scnn_sval, size_synapse);
 
   SB_REPEAT_PORT(ceiled_sn_tile/8);
-  SB_DMA_READ(&synapse_ind[y][x][0], 2, 2, size_synapse, P_scnn_sind);
+  SB_RECURRENCE(P_IND_5, P_scnn_sind, size_synapse);
  
   SB_CONST(P_scnn_ky, Ky, num_comp_inst/8);
   SB_CONST(P_scnn_ty, Ty, num_comp_inst/8);
-  SB_CONST(P_scnn_const, Ty-Ky+1, num_comp_inst/8);
+  // SB_CONST(P_scnn_const, Ty-Ky+1, num_comp_inst/8);
+  SB_CONST(P_scnn_const, Ty-Ky, num_comp_inst/8);
 
   // frequency of neurons
   for(unsigned is=0; is<size_synapse; ++is) {
-    SB_DMA_READ(&neuron_i_val[z][y][0], 2, 2, size_neuron_tile, P_scnn_nval);
-    SB_DMA_READ(&neuron_i_ind[z][y][0], 2, 2, size_neuron_tile, P_scnn_nind);
+    SB_SCRATCH_READ(cur_val_scr_offset, size_neuron_tile*2, P_scnn_nval);
+    SB_SCRATCH_READ(cur_ind_scr_offset, size_neuron_tile*2, P_scnn_nind);
+ 
 	SB_CONST(P_scnn_nval, 0, pad_size); // nothing should happen here
 	SB_CONST(P_scnn_nind, 1, pad_size);
   }
   SB_CONFIG_ATOMIC_SCR_OP(T16, T16, T32);
   SB_ATOMIC_SCR_OP(P_scnn_A, P_scnn_B, 0, num_comp_inst, 0);
 
-  // re-sparsification code
+  // re-sparsification code -- let's skip this for the time being
   SB_DMA_READ(&out_n[x*Tn][z*(Kx*Ky)], 2, 2, num_inputs, P_scnn_neuron);
+  SB_SCRATCH_READ(prev_val_scr_offset, num_inputs*2, P_scnn_neuron);
   SB_CONST(P_scnn_num_in, num_inputs, num_inputs);
   SB_CONST(P_scnn_acc_ctrl, 0, num_inputs);
 
+  // FIXME: may be some error here (Some error in arbitration)
+  // SB_SCR_WRITE(P_scnn_inval, num_inputs*2*2, prev_val_scr_offset);
+  // SB_SCR_WRITE(P_scnn_inval, num_inputs*2*2, prev_ind_scr_offset);
+ 
   SB_STRIDE(2,2);
   SB_DMA_WRITE_SIMP(P_scnn_inval, num_inputs*2, &neuron_o_val[z][x*Tn][0]);
   SB_DMA_WRITE_SIMP(P_scnn_inind, num_inputs*2, &neuron_o_ind[z][x*Tn][0]);
 
   SB_WAIT_SCR_ATOMIC();
-  uint64_t done;
+  uint16_t done;
   SB_RECV(P_scnn_done, done);
   SB_RESET();
 
-
   SB_WAIT_ALL();
 }
-/*
-void send_halos() {
+
+// depending on tid chose which core it should go
+// FIXME: need different streams because of 2-D pattern
+void send_halos(long tid) {
   // this is important to know this address
-  SB_SCR_REM_SCR(0, 8, 8, (Tx*Ty*4)*2/8, 0, 0);
+  int src_val_offset = getBankedOffset(2,4);
+  int src_ind_offset = getBankedOffset(3,4);
+  int dest_val_offset = 0;  
+  int dest_ind_offset = 0;
+
+  if(tid+1 < NUM_THREADS) {
+    dest_val_offset = getRemoteAddr(tid+1, getBankedOffset(2,4) + (Tx*Ty*2));
+    dest_ind_offset = getRemoteAddr(tid+1, getBankedOffset(3,4) + (Tx*Ty*2));
+    SB_SCR_REM_SCR(src_val_offset, 2, 2, (Tx)*2, dest_val_offset, 0);
+    SB_SCR_REM_SCR(src_ind_offset, 2, 2, (Tx)*2, dest_ind_offset, 0);
+  }
+  if(tid-1 > 0 && tid-1 < NUM_THREADS) {
+    dest_val_offset = getRemoteAddr(tid-1, getBankedOffset(2,4) + (Tx*Ty*2));
+    dest_ind_offset = getRemoteAddr(tid-1, getBankedOffset(3,4) + (Tx*Ty*2));
+    SB_SCR_REM_SCR(src_val_offset, Tx*2, 2, (Ty)*2, dest_val_offset+Tx*2, 0);
+    SB_SCR_REM_SCR(src_ind_offset, Tx*2, 2, (Ty)*2, dest_ind_offset+Tx*2, 0);
+  }
+  if(tid+8 < NUM_THREADS) {
+    dest_val_offset = getRemoteAddr(tid+8, getBankedOffset(2,4) + (Tx*Ty*2));
+    dest_ind_offset = getRemoteAddr(tid+8, getBankedOffset(3,4) + (Tx*Ty*2));
+    SB_SCR_REM_SCR(src_val_offset+Tx*(Ty-1)*2, 2, 2, (Tx)*2, dest_val_offset+Tx*2+Ty*2, 0);
+    SB_SCR_REM_SCR(src_ind_offset+Tx*(Ty-1)*2, 2, 2, (Tx)*2, dest_ind_offset+Tx*2+Ty*2, 0);
+  }
+  if(tid-8 > 0 && tid-8 < NUM_THREADS) {
+    dest_val_offset = getRemoteAddr(tid-8, getBankedOffset(2,4) + (Tx*Ty*2));
+    dest_ind_offset = getRemoteAddr(tid-8, getBankedOffset(3,4) + (Tx*Ty*2));
+    SB_SCR_REM_SCR(src_val_offset+Tx*2, Tx*2, 2, (Ty)*2, dest_val_offset+Tx*4+Ty*2, 0);
+    SB_SCR_REM_SCR(src_ind_offset+Tx*2, Tx*2, 2, (Ty)*2, dest_ind_offset+Tx*4+Ty*2, 0);
+  }
+  SB_WAIT_ALL();
 }
-*/
 
+// TODO: make it general
+int halo_count(long tid) {
+  if(tid==0) return 0;
+  if(tid==1) return (Tx*2);
+  return (Ty*2);
+}
 
+// FIXME: fix the count thing
 void convolution_layer_blocked(long tid) {
-  // wait on the halos
-  // SB_WAIT_DF((Tx*Ty*4)*2, 0);
+  SB_CONFIG(scnn_config,scnn_size);
+  int n_count = halo_count(tid);
   int stride = (Nx*Ny)/(Tx*Ty);
   for(int i=0; i<Nn/Tn; ++i) {
 	for(int j=0; j<Ni; ++j){
+      if(tid==i*Ni+j) {
+        load_weights_in_linear_scratch(j,i);
+        broadcast_weights(tid, j, i);
+        // count++;
+      }
 	  // all of them use the same weights
 	  for(int k=tid*stride; k<stride*(1+tid); ++k) {
 		kernel(i,j,k);
 	  }
+      send_halos(tid);
+      SB_WAIT_DF(n_count, 0);
 	}
   }
-  // send_halos();
 }
 
 void *entry_point(void *threadid) {
@@ -372,43 +389,74 @@ int main() {
 
   cout << "starting computation\n";
 
+  /*
   begin_roi();
   convolution_layer_blocked(0);
   end_roi();
   sb_stats();
+  */
 
-  // assert(NUM_THREADS<C);
-  // 
-  // // Barrier initialization
-  // if(pthread_barrier_init(&barr, NULL, NUM_THREADS))
-  // {
-  //   printf("Could not create a barrier\n");
-  //   return -1;
-  // }
+  assert(NUM_THREADS<C);
+  
+  // Barrier initialization
+  if(pthread_barrier_init(&barr, NULL, NUM_THREADS))
+  {
+    printf("Could not create a barrier\n");
+    return -1;
+  }
 
-  // pthread_t threads[NUM_THREADS];
-  // int rc;
-  // long t;
-  // for(t=0;t<NUM_THREADS;t++){
-  //   printf("In main: creating thread %ld\n", t);
-  //   rc = pthread_create(&threads[t], NULL, entry_point, (void *)t);     
-  //   if (rc){
-  //     printf("ERROR; return code from pthread_create() is %d\n", rc);
-  //     return 0;
-  //   }
-  // }
-  // 
-  // for(int i = 0; i < NUM_THREADS; ++i) {
-  //   if(pthread_join(threads[i], NULL)) {
-  // 	printf("Could not join thread %d\n", i);
-  //     return -1;
-  //   }
-  // }
+  pthread_t threads[NUM_THREADS];
+  int rc;
+  long t;
+  for(t=0;t<NUM_THREADS;t++){
+    printf("In main: creating thread %ld\n", t);
+    rc = pthread_create(&threads[t], NULL, entry_point, (void *)t);     
+    if (rc){
+      printf("ERROR; return code from pthread_create() is %d\n", rc);
+      return 0;
+    }
+  }
+  
+  for(int i = 0; i < NUM_THREADS; ++i) {
+    if(pthread_join(threads[i], NULL)) {
+  	printf("Could not join thread %d\n", i);
+      return -1;
+    }
+  }
 
-  // cout << "blocked computation complete!\n";  
+  cout << "blocked computation complete!\n";  
 
   // compare((uint16_t*)*neuron_n,(uint16_t*)*neuron_n2,NYSCL*NXSCL*Nn);
 
-  // cout << "done\n";
+  cout << "done\n";
   return 0;
 }
+
+/*
+void broadcast_weights(long tid, int y, int x) {
+  // linear scr -> remote port
+
+  unsigned size_synapse = synapse_val[y][x].size();
+  // Either make these ports 1-byte or use some other ports, FIXME: need
+  // padding here also
+  // scr_mem_port, scr_rem_port are free
+  // SB_SCR_REM_PORT(getLinearAddr(getLinearOffset(1,2)), size_synapse, mask, P_IND_1);
+  // SB_SCR_REM_PORT(getLinearAddr(getLinearOffset(2,2)), size_synapse, mask, P_IND_2);
+
+  // FIXME: cannot use this because the destination can be local also (let's
+  // keep that separate) -- anyways routers should not be crowded
+  // FOR REMOTE
+  uint64_t mask = 0; // derive from here
+  for(int i=0; i<NUM_THREADS; ++i) {
+    if(tid!=i) addDest(mask, i);
+  }
+  if(mask!=0) { // should be there in simulator itself
+    SB_SCR_REM_PORT(getLinearAddr(getLinearOffset(1,2)), size_synapse, mask, SCR_MEM_PORT);
+    SB_SCR_REM_PORT(getLinearAddr(getLinearOffset(2,2)), size_synapse, mask, SCR_REM_PORT);
+  }
+
+  // FOR LOCAL (multiple reads -- improve)
+  SB_SCRATCH_READ(getLinearAddr(getLinearOffset(1,2)), 
+
+}
+*/
