@@ -1,10 +1,11 @@
+# maintain the optimal thres here (same thing for each thres)
 Input32: C
 Input32: H
 Input32: G
 Input32: F
-Input: const
-# Input32: const
+Input32: const
 
+# maintain the optimal pair here
 Input32: cur_err
 Input32: prev_err # send max error
 
@@ -15,10 +16,9 @@ M = Add32(F,D)
 
 E = Mul32(P,Mul32(M,M))
 
-# error reduction part
+final_error = Acc32(E,const)
 
-# final_error = Acc32(E,const)
-final_error = Acc32(E,const:0:31)
+# error reduction part
 
 reduced_error = Min32(cur_err,prev_err)
 

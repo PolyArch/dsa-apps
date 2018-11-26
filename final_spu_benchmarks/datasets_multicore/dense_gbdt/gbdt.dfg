@@ -1,37 +1,56 @@
-Input: A
+Input: A [2]
 Input: local_offset1
 Input: local_offset2
+Input: local_offset3
+Input: local_offset4
 Input32: hess
 Input32: grad
-Input: const
+Input32: const
 
-# address corresponding to 1 instance and 4 features
-C0 = A
-C1 = Add16x4(A,local_offset1)
-C2 = Add16x4(A,local_offset2)
+C0 = A0
+C1 = Add16x4(A0,local_offset1) #for hess
+C2 = Add16x4(A0,local_offset2) #for grad
+C3 = A1
+C4 = Add16x4(A1,local_offset3)
+C5 = Add16x4(A1,local_offset4)
 
-# 32-bit values to add (last 2 are consts)
-D0 = const:0:31 const:0:31 
-D1 = const:0:31 const:0:31 
-D2 = hess hess 
-D3 = hess hess 
-D4 = grad grad 
-D5 = grad grad
+D0 = const const
+D1 = const const
+D2 = const const
+D3 = const const
+D4 = hess hess 
+D5 = hess hess 
+D6 = hess hess 
+D7 = hess hess 
+D8 = grad grad 
+D9 = grad grad
+D10 = grad grad 
+D11 = grad grad
 
-Output: C[3]
-Output: D[6]
+Output: C[6]
+Output: D[12]
 
-# D0 = label
-# D1 = label
-# D2 = label
-# D3 = label
-# D4 = grad 
-# D5 = grad 
-# D6 = grad 
-# D7 = grad 
-# D8 = const
-# D9 = const
-# D10 = const
-# D11 = const
+# vector width = 4
 
-# Output: D[12]
+# Input: A
+# Input: local_offset1
+# Input: local_offset2
+# Input32: hess
+# Input32: grad
+# Input: const
+# 
+# # address corresponding to 1 instance and 4 features
+# C0 = A
+# C1 = Add16x4(A,local_offset1)
+# C2 = Add16x4(A,local_offset2)
+# 
+# # 32-bit values to add (last 2 are consts)
+# D0 = const:0:31 const:0:31 
+# D1 = const:0:31 const:0:31 
+# D2 = hess hess 
+# D3 = hess hess 
+# D4 = grad grad 
+# D5 = grad grad
+# 
+# Output: C[3]
+# Output: D[6]
