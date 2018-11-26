@@ -13,7 +13,7 @@ void gemm(int n, int m, int p, complex<float> *a, complex<float> *b, complex<flo
       complex<float> &tmp = a[i * m + k];
       for (int j = 0; j < p; ++j) {
         complex<float> delta(tmp * b[k * p + j]);
-        c[i * p + j] = c[i * p + j] + delta;
+        c[i * p + j] += delta;
       }
     }
   }

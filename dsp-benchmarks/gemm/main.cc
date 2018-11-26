@@ -1,16 +1,26 @@
 #include "gemm.h"
+#include "loader.dfg.h"
 #include "fileop.h"
 #include <complex>
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h> 
 #include "sim_timing.h"
-#include "ss-config/fixed_point.h"
-#define PI 3.14159265358979303
+#include "sb_insts.h"
 
 using std::complex;
 
-complex<int16_t> a[_N_ * _M_], b[_M_ * _P_], c[_N_ * _P_], cc[_N_ * _P_];
+#ifdef LATENCY
+#define LANES 8
+#else
+#define LANES 1
+#endif
+
+#define N _N_
+#define M _M_
+#define P _P_
+
+complex<float> a[N * M + 8 * M], b[M * P + 8 * P], c[N * P + 8 * P], cc[N * P + 8 * P];
 
 int main() {
   FILE *input_data = fopen("input.data", "r"), *ref_data = fopen("ref.data", "r");
@@ -19,16 +29,27 @@ int main() {
     return 1;
   }
 
-  read_n_fix_complex(input_data, _N_ * _M_, a);
-  read_n_fix_complex(input_data, _P_ * _M_, b);
+  read_n_float_complex(input_data, N * M, a);
+  read_n_float_complex(input_data, P * M, b);
 
-  gemm(_N_, _M_, _P_, a, b, cc);
+  int m = M;
+  int p = P;
+  for (int i = 0; i < LANES; ++i) {
+    SB_CONTEXT(1 << i);
+    SB_CONFIG(loader_config, loader_size);
+    SB_DMA_READ(b, 0, 8 * m * p, 1, P_loader_In);
+    SB_SCR_WRITE(P_loader_Out, 8 * m * p, 0);
+    SB_WAIT_SCR_WR();
+  }
+  SB_WAIT_ALL();
+
+  gemm(N, M, P, a, b, cc);
   begin_roi();
-  gemm(_N_, _M_, _P_, a, b, c);
+  gemm(N, M, P, a, b, c);
   end_roi();
   sb_stats();
 
-  if (!compare_n_fix_complex( ref_data, _N_ * _P_, c)) {
+  if (!compare_n_float_complex( ref_data, N * P, c)) {
     puts("Error result!");
     return 1;
   }
@@ -36,3 +57,7 @@ int main() {
   puts("result correct!");
   return 0;
 }
+
+#undef N
+#undef M
+#undef P

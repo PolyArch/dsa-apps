@@ -5,37 +5,73 @@ output = imp.load_source('output', '../common/output.py')
 import numpy, cmath, sys
 n = int(sys.argv[1])
 a = numpy.random.rand(n, n) + 1j * numpy.random.rand(n, n)
-a = a + numpy.identity(n)
+for i in range(n):
+    for j in range(n):
+        a[i, j] = (i * n + j + 1) + ((j + j) * n + (i * i) + 1) * 1j
+
+origin = a.copy()
 
 output.print_complex_array('input.data', a.flatten())
 print("%d x %d Input generated!" % (n, n))
 
-Q = numpy.identity(n, dtype = 'complex128')
-R = a.copy()
+tau = numpy.zeros((n - 1, ), dtype = 'complex128')
+q = numpy.identity(n, dtype = 'complex128')
 
-#print origin
+for i in range(n - 1):
+    w = a[i:,i].copy()
+    normx = numpy.linalg.norm(w)
+    s = -w[0] / cmath.sqrt(w[0].conjugate() * w[0])
+    u1 = w[0] - s * normx
+    w /= u1
+    w[0] = 1 + 0j
+    a[i, i] = s * normx
+    #a[i+1:,i] = w[1:]
+    a[i+1:,i] = numpy.zeros(n - i - 1)
+    tau[i] = -s.conjugate() * u1 / normx
+    print('norm', normx)
+    print('alpha', a[i, i])
+    print('u1inv', 1.0 / u1)
+    print('tau', tau[i])
+    print()
 
-for i in range(n):
-    v = R[i:,i].copy()
-    alpha = -cmath.exp(1j * cmath.phase(v[0])) * numpy.linalg.norm(v)
-    v[0] -= alpha
-    v = v / numpy.linalg.norm(v)
-    H = numpy.identity(n - i, dtype = 'complex128') - 2 * numpy.outer(v, numpy.conj(v))
-    temp = numpy.dot(numpy.conj(v), R[i:,i:])
-    R[i:,i:] -= 2 * numpy.outer(v, temp)
-    temp = numpy.dot(Q[:,i:], v)
-    Q[:,i:] -= 2 * numpy.outer(temp, numpy.conj(v))
+    v = tau[i] * numpy.dot(numpy.conj(w), a[i:,i+1:])
+    a[i:,i+1:] -= numpy.outer(w, v)
 
-numpy.testing.assert_allclose(numpy.identity(n), numpy.dot(Q, numpy.conj(Q.transpose())), atol = 1e-5)
-numpy.testing.assert_allclose(a, numpy.dot(Q, R), rtol = 1e-5)
+    v = numpy.dot(q[:,i:], w)
+    q[:,i:] -= tau[i] * numpy.outer(v, numpy.conj(w))
 
-print("Correctness check pass!")
-output.print_complex_array('ref.data', a.flatten()) #numpy.concatenate((Q.flatten(), R.flatten())));
+#for i in xrange(n - 2, -1, -1):
+#    w = a[i+1:,i]
+#    v = numpy.dot(numpy.conj(w), q[i+1:,i+1:])
+#    q[i,i] = 1 - tau[i]
+#    q[i,i+1:] = -tau[i] * v
+#    q[i+1:,i+1:] -= tau[i] * numpy.outer(w, v)
+#    q[i+1:,i] = a[i+1:,i] * -tau[i]
+
+#print a
+#print numpy.dot(numpy.conj(q.transpose()), origin)
+output.print_complex_array('ref.data', numpy.concatenate((a.flatten(), tau, q.flatten())))
+
 print("New data generated!")
 
-hh = sum((n - i) + (n - i - 1) + 40 for i in range(n))
-gemm_r = 0 #sum(n - i + (n - i) * (n - i) for i in range(n)) + 4 - 1
-#gemm_q = sum(((n - i - 1) / 2 + 1) * n + n for i in range(n))
-gemm_q = sum(((n - i - 1) + 1) * n for i in range(n))
-print('ASIC Ideal: %d' % (hh + gemm_q + gemm_r))
+ideal = 0
+simd  = 0
+last_h = 0
+for i in range(n - 1):
+    r_kernel = n - i + (n - i) * n
+    simd    += ((n - i) // 4 + (n - i) % 4) * n * 5
+    q_kernel = n - i + (n - i) * (n - i)
+    simd    += ((n - i) // 4 + (n - i) % 4) * (n - i) * 5
+    if i == 0:
+        ideal += (n - i) + (n - i - 1) + 40
+    else:
+        ideal += max(0, 5 + (n - i) * 2 + (n - i - 1) + 40 - diff)
+    ideal += max(r_kernel, q_kernel)
+    diff   = abs(r_kernel - q_kernel)
+    simd  += ((n - i) // 4 + (n - i) % 4) * 3 + 40
 
+ideal += diff
+
+print('ASIC Latency:', ideal)
+print('ASIC Ideal:', ideal)
+print('SIMD Ideal:', simd)

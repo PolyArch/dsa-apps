@@ -6,7 +6,7 @@ numpy.set_printoptions(precision = 4, suppress = True, threshold = 1000, linewid
 
 n = int(sys.argv[1])
 
-ideal = 0
+ideal = seq = 0
 
 _a = numpy.random.rand(n, n) + 1j * numpy.random.rand(n, n)
 _a = numpy.zeros((n, n), dtype = 'complex64')
@@ -30,8 +30,8 @@ vn = 4
 vn_red = 3
 
 def household(v):
-    global ideal, vec
-    ideal += upper_div(len(v), vn) * vn_red + len(v) - 1 + 36
+    global ideal, vec, seq
+    #ideal += upper_div(len(v), vn) * vn_red + len(v) - 1 + 36
     w = v.copy()
     normx = numpy.linalg.norm(w)
     s = -w[0] / cmath.sqrt(w[0].conjugate() * w[0])
@@ -51,16 +51,13 @@ for i in range(n - 1):
     #print tau
     #print 'w', w
     r = r[:,1:] - tau * numpy.outer(w, numpy.dot(numpy.conj(w), r[:,1:]))
-    ideal += (r.shape[0] * r.shape[1] + r.shape[0]) * 2
     #print r[1:,:]
     d.append(alpha)
     if i != n - 2:
         alpha, tau, w = household(r[0,:].copy())
         #print 'w\'', w
         r = r[1:,:] - tau * numpy.outer(numpy.dot(r[1:,:], numpy.conj(w)), w)
-        ideal += r.shape[0] * r.shape[1] + r.shape[0]
         V[i+1:,1:] = V[i+1:,1:] - tau * numpy.outer(numpy.conj(w), numpy.dot(w, V[i+1:,1:]))
-        ideal += ((n - i - 1) * (n - 1) + (n - 1)) * 2
         f.append(alpha)
     #print r
 
@@ -81,13 +78,12 @@ def givens(a, b):
     r = cmath.sqrt(a.conjugate() * a + b.conjugate() * b)
     c = a.conjugate() / r
     s = b.conjugate() / r
-    global ideal
-    ideal += 12
     return (r, c, s)
 
 def implicit_kernel(d, f, V):
     n = len(d)
     assert n > 1
+    global seq, ideal
 
     mu = d[-1].conjugate() * d[-1]
     alpha, c, s = givens(d[0] * d[0].conjugate() - mu, d[0] * f[0].conjugate())
@@ -151,7 +147,7 @@ while l < r:
     if r - l >= 1:
         implicit_kernel(d[l:r+1], f[l:r], V[l:r+1,:])
         implicit_log.append((l, r))
-        ideal += 48 * (r - l)
+        ideal += (r - l)
 
 #while True:
 #    i = 0
@@ -201,10 +197,8 @@ print('Singular value:\n', sv)
 
 print(V)
 U = numpy.dot(_a, numpy.conj(V).transpose())
-ideal += n * n * (n // 4)
 for i in range(n):
     U[:,i] /= sv[i]
-ideal += 11
 
 
 """ check pass!
@@ -233,4 +227,5 @@ except:
 print('AVG ERROR: %.6f' % (abs(numpy.dot(numpy.dot(U, sigma), V) - _a).sum() / (n * n)))
 print('ASIC Ideal:', ideal)
 print('ASIC Latency:', ideal)
+print('Sequential Ideal', seq)
 

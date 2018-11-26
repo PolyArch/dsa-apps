@@ -296,7 +296,11 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
 
   int N = _N_;
 
-  d[N - 1] = sqrt(complex_norm(d[N - 1]));
+  for (int i = 0; i < _N_; ++i) {
+    s[i] = sqrt(complex_norm(d[i]));
+  }
+
+  //d[N - 1] = sqrt(complex_norm(d[N - 1]));
 
   SB_CONFIG(finalize_config, finalize_size);
   for (int i = 0; i < _N_; ++i) {
@@ -324,4 +328,5 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
       u[i * _N_ + j] /= s[j];
     }
   }
+
 }

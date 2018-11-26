@@ -71,7 +71,6 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
   givens(a, b, alpha);
 
   c = a; s = b;
-  SB_CONFIG(aplygvs_config, aplygvs_size);
   SB_CONST(P_aplygvs_C, *((uint64_t*)&c), _N_);
   SB_CONST(P_aplygvs_S, *((uint64_t*)&s), _N_);
   SB_DMA_READ(v, 8, 8, _N_, P_aplygvs_A);
@@ -296,6 +295,7 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
   f[_N_ - 2] = r[0];
   d[_N_ - 1] = r[1];
 
+  SB_CONFIG(aplygvs_config, aplygvs_size);
   int left = 0, right = _N_ - 1;
   while (left < right) {
     while (left < _N_ - 1 && fabs(f[left].real()) < eps && fabs(f[left].imag()) < eps)

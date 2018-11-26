@@ -1,6 +1,6 @@
 ifndef SBCONFIG
 $(warning SBCONFIG is undefined, using default)
-SBCONFIG=$(SS)"/ss-scheduler/configs/revel-2x2.sbmodel"
+SBCONFIG=$(SS)"/ss-scheduler/configs/revel-1x2.sbmodel"
 endif
 
 ifndef OMP_NUM_THREADS
@@ -20,7 +20,7 @@ PYTHON = env python3
 DFG_HEADERS = $(DFG:.dfg=.dfg.h)
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
-	$(SS_TOOLS)/bin/sb_sched -a sa --max-iters 20000 -d $(FIFO_DEPTH) --verbose $(SBCONFIG) $< 
+	$(SS_TOOLS)/bin/ss_sched -a sa --max-iters 20000 -d $(FIFO_DEPTH) --verbose $(SBCONFIG) $< 
 
 IFLAGS=-I../../common/include -I../../../ss-tools/include -I../common/
 INTELI=-I /opt/intel/include 
@@ -80,10 +80,10 @@ cleandata:
 cleandfg:
 	rm -rf *.dfg.h
 	rm -rf sched
+	rm -rf stats gams m5out viz verif
 
 clean: cleandata
 	rm -f *.o *.log *.exe
-	rm -rf stats gams m5out viz verif
 
 cleanmat:
 	rm -rf ../common/*.dfg.h

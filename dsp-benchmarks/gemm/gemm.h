@@ -8,9 +8,9 @@
 #include <stdio.h>
 #include <complex>
 
-#define eps 2e-2
+#define eps 1e-4
 using std::complex;
 
-void gemm(int n, int m, int p, complex<int16_t> *, complex<int16_t> *, complex<int16_t> *);
+void gemm(int n, int m, int p, complex<float> *, complex<float> *, complex<float> *);
 
 #endif

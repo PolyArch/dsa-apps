@@ -1,4 +1,3 @@
-SBCONFIG=$(SS)/ss-scheduler/configs/revel.sbmodel
 
 ifndef N
 N=12
@@ -10,7 +9,7 @@ SCALE=$(N)
 
 MACROS=-D_N_=$(N)
 
-SOFTBRAINS = sb-origin sb-new sb-latency sb-access
+SOFTBRAINS = sb-origin sb-new sb-latency sb-access sb-mask sb-lmask
 
 include ../common/Makefile.inc
 
@@ -23,6 +22,6 @@ sb-origin.o sb-access.o: %.o: %.cc compute.dfg.h writeback.dfg.h
 sb-latency.o: %.o: %.cc multi2.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
-sb-new.o: %.o: %.cc multi2.dfg.h
+sb-new.o sb-mask.o sb-lmask.o: %.o: %.cc multi2.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
