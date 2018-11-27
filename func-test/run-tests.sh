@@ -11,7 +11,7 @@ export SBCONFIG=$SS_TOOLS/configs/revel-1x2.sbmodel
 function run_test {
   test=$1
 
-  SUPRESS_STATS=1 timeout 10 gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=64kB --l1i_size=16kB  --caches  --cmd=$test 
+  BACKCGRA=1 SUPRESS_STATS=1 timeout 10 gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=64kB --l1i_size=16kB  --caches  --cmd=$test 
   #SUPRESS_STATS=1 timeout 10 gem5.opt ~/ss-stack/gem5/configs/example/se.py  --cpu-type=MinorCPU --l1d_size=64kB --l1i_size=16kB --caches --ruby --num-cpus=4 --num-dirs=4 --network=simple --topology=Mesh_XY --mesh-rows=2 --cmd=$test
   ret_val=$?
   { 

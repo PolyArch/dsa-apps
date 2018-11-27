@@ -201,9 +201,11 @@
 #define SB_RECURRENCE(output_port, input_port, num_strides) \
   __asm__ __volatile__("ss_wr_rd %0, %1" : : "r"(num_strides), "i"((input_port<<5) | (output_port)));
 
-//Write from output to remote input port through the network
+//Write from output to remote input port through the network (num_elem
+//according to the port width)
 #define SB_REM_PORT(output_port, num_elem, mask, remote_port) \
-  __asm__ __volatile("ss_rem_port %0, %1, %2" : : "r"(num_elem), "r"(mask), "i"((output_port<<7) | (0<<6) | (remote_port<<1) | (0)));
+  __asm__ __volatile("ss_rem_port %0, %1, %2" : : "r"(num_elem), "r"(mask), "i"(((output_port<15?output_port:output_port-32)<<7) | (0<<6) | (remote_port<<1) | (0)));
+  // __asm__ __volatile("ss_rem_port %0, %1, %2" : : "r"(num_elem), "r"(mask), "i"((output_port<<7) | (0<<6) | (remote_port<<1) | (0)));
   // __asm__ __volatile("ss_rem_port %0, %1, %2" : : "r"(num_elem), "r"(mask), "i"((output_port<<6) | (remote_port)));
 
 //Write from output to remote scratchpad through the network (1 flag stands for spad)
@@ -213,17 +215,21 @@
 #define SB_REM_SCRATCH(scr_base_addr, stride, access_size, num_strides, val_port, scratch_type) \
   __asm__ __volatile__("ss_stride   %0, %1, 0" : : "r"(stride), "r"(access_size)); \
   __asm__ __volatile("ss_rem_port %0, %1, %2" : : "r"(num_strides), "r"(scr_base_addr), "i"((val_port<<7) | (scratch_type<<6) | (0<<1) | (1)));
+  // __asm__ __volatile("ss_rem_port %0, %1, %2" : : "r"(num_strides), "r"(scr_base_addr), "i"(((val_port<15?val_port:val_port-32)<<7) | (scratch_type<<6) | (0<<1) | (1)));
 
-// banked scratchpad
+// banked scratchpad: scr->port, port->remote scr
+// TODO: remove scratch_type later (for now, I make the immediate negative)
 #define SB_SCR_REM_SCR(src_scr_base_addr, stride, access_size, num_strides, dest_scr_base_addr, scratch_type) \
-  SB_REM_SCRATCH(src_scr_base_addr, stride, access_size, num_strides, SCR_SCR_PORT, scratch_type) \
-  SB_SCR_WRITE(SCR_SCR_PORT, access_size * num_strides, dest_scr_base_addr);
+  SB_SCR_PORT_STREAM(src_scr_base_addr, stride, access_size, num_strides, SCR_SCR_PORT) \
+  SB_REM_SCRATCH(dest_scr_base_addr, stride, access_size, num_strides, (SCR_SCR_PORT-32), scratch_type);
+
+#define SB_SCR_REM_PORT(scr_base_addr, num_strides, mask, remote_port) \
+  SB_SCRATCH_READ(scr_base_addr, num_strides, SCR_REM_PORT) \
+  SB_REM_PORT((SCR_REM_PORT-32), num_strides, mask, remote_port);
 
 // could be affine stream to banked scratchpad also
 // #define SB_REM_SCRATCH(scr_base_addr, num_bytes, val_port, scratch_type) \
 //   __asm__ __volatile("ss_rem_port %0, %1, %2" : : "r"(num_bytes), "r"(scr_base_addr), "i"((val_port<<7) | (scratch_type<<6) | (0<<1) | (1)));
-
-
 
 //Write from output to remote input port
 //pos: local=0, left=1, right=2, undef=3
@@ -273,7 +279,7 @@
   __asm__ __volatile__("ss_ind_wr %0, %1, %2" : : "r"(addr_offset), "r"(num_elem),\
                                                   "i"((1<<10) | (output_port<<5) | (ind_port)));
 
-//Wait on N number of remote scratchpad writes
+//Wait on N number of remote scratchpad writes (num_bytes)
 #define SB_WAIT_DF(num_rem_writes, scratch_type) \
   __asm __volatile__("ss_wait_df %0, %1" : : "r"(num_rem_writes), "i"(scratch_type));
 
@@ -315,13 +321,15 @@
 #define P_IND_2 (30)
 #define P_IND_3 (29)
 #define P_IND_4 (28)
+//TODO: make indirect ports also 1-byte
 #define P_IND_5 (27)
-#define P_IND_6 (26)
+// #define P_IND_6 (26)
 
 //Convenience ports for these functions
 #define MEM_SCR_PORT (23)
 #define SCR_MEM_PORT (24)
 #define SCR_SCR_PORT (25)
+#define SCR_REM_PORT (26)
 
 // #define NET_ADDR_PORT (25)
 // #define NET_VAL_PORT (32)
