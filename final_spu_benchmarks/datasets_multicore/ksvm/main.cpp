@@ -23,18 +23,8 @@ using namespace std;
 #define max_passes 1
 #define sigma 0.5
 
-#define NUM_THREADS	1
+#define NUM_THREADS	2
 #define INT16MAX ((1<<16)-1)
-
-// very small.data
-// #define N 84
-// #define M 10
-
-// #define N 84
-// #define M 100
-
-// std::pair<float,float> *gram_mat_pair;
-// int *gram_ptr;
 
 // input train set
 uint64_t y[M];
@@ -56,56 +46,10 @@ float max(float a, float b){
   return a>b?a:b;
 }
 
-void eta_calc(int i, int j, double &dp, double &norm1, double &norm2){
-  
-  if(data_val[i].size()==0 || data_val[j].size()==0)
-	return;
-  cout << data_val[i].size() << " " << data_val[j].size() << "\n";
-  
-  // send i, j to 1 core -- Why to distribute?
-  // TODO:FIXME: see how to remove padding for ksvm 
-  SB_DMA_READ(&data_ind[i][0], 8, 8, data_ind[i].size()/2, P_eta_a_ind);
-  SB_DMA_READ(&data_val[i][0], 8, 8, data_val[i].size()/2, P_eta_a_val);
-  SB_DMA_READ(&data_ind[j][0], 8, 8, data_ind[j].size()/2, P_eta_b_ind);
-  SB_DMA_READ(&data_val[j][0], 8, 8, data_val[j].size()/2, P_eta_b_val);
- 
-  // 32-bit sentinal? (how does 64-bit works -- some trick in IM32x2)
-  // SB_CONST(P_eta_a_ind, SENTINAL, 1);
-  // SB_CONST(P_eta_b_ind, SENTINAL, 1);
-  // SB_CONST(P_eta_a_val, 0, 1);
-  // SB_CONST(P_eta_b_val, 0, 1);
-  SB_2D_CONST(P_eta_const1, 2, (data_ind[i].size())/2-1, 1, 1, 1);
-  SB_2D_CONST(P_eta_const2, 2, (data_ind[i].size())/2-1, 1, 1, 1);
-  
-  SB_DMA_WRITE_SIMP(P_eta_n1, 1, &norm1);
-  SB_DMA_WRITE_SIMP(P_eta_n2, 1, &norm2);
-  SB_DMA_WRITE_SIMP(P_eta_s, 1, &dp);
-  SB_WAIT_ALL();
-
-  cout << "Eta calc done\n";
-}
-
-void calc_duality_gap(double b, double &duality_gap){
-  SB_CONFIG(duality_gap_config, duality_gap_size);
-
-  // read all three things from the banked scratchpad (distribute according to
-  // duality)
-  SB_DMA_READ(&alpha[0], 8, 8, M, P_duality_gap_alpha);
-  SB_DMA_READ(&y[0], 8, 8, M, P_duality_gap_y);
-  SB_DMA_READ(&E[0], 8, 8, M, P_duality_gap_E);
-  SB_CONST(P_duality_gap_b, b, 1);
-  SB_2D_CONST(P_duality_gap_const, 2, M-1, 1, 1, 1);
-
-  SB_DMA_WRITE_SIMP(P_duality_gap_dgap, 1, &duality_gap);
-  SB_WAIT_ALL();
-  cout << "Duality calc done\n";
-}
-
 int getCoreLoc(int inst_id) {
   return NUM_THREADS*inst_id/M;
 }
 
-// need sentinal after everything -- overloads network controller
 void broadcast_inst(long tid, int i, int j) {
   uint64_t mask=0;
   for(int k=0; k<NUM_THREADS; ++k){
@@ -126,6 +70,67 @@ void broadcast_inst(long tid, int i, int j) {
   }
 }
 
+// FIXME: should not need two same functions?
+void broadcast_eta(long tid, int i, int j) {
+  uint64_t mask=0;
+  addDest(mask,0);
+  
+  if(tid==getCoreLoc(i)) {
+    int local_offset = (data_ptr[i]-data_ptr[tid*M/NUM_THREADS])*4;
+    assert(data_ind[i].size() == (data_ptr[i+1]-data_ptr[i]));
+    SB_SCR_REM_PORT(getLinearAddr(local_offset), (data_ptr[i+1]-data_ptr[i])*4, mask, P_eta_a_val);
+    SB_SCR_REM_PORT(getLinearAddr(getLinearOffset(1,2)+local_offset), (data_ptr[i+1]-data_ptr[i])*4, mask, P_eta_a_ind);
+  }
+
+  if(tid==getCoreLoc(j)) {
+    int local_offset = (data_ptr[j]-data_ptr[tid*M/NUM_THREADS])*4;
+    assert(data_ind[j].size() == (data_ptr[j+1]-data_ptr[j]));
+    SB_SCR_REM_PORT(getLinearAddr(local_offset), (data_ptr[j+1]-data_ptr[j])*4, mask, P_eta_b_val);
+    SB_SCR_REM_PORT(getLinearAddr(getLinearOffset(1,2)+local_offset), (data_ptr[j+1]-data_ptr[j])*4, mask, P_eta_b_ind);
+  }
+}
+
+// done at only 1 core
+void eta_calc(long tid, int i, int j, double &dp, double &norm1, double &norm2){
+  
+  if(data_val[i].size()==0 || data_val[j].size()==0)
+	return;
+  cout << data_val[i].size() << " " << data_val[j].size() << "\n";
+  
+  broadcast_eta(tid, i,j);
+
+  SB_2D_CONST(P_eta_const1, 2, (data_ind[i].size())/2-1, 1, 1, 1);
+  SB_2D_CONST(P_eta_const2, 2, (data_ind[i].size())/2-1, 1, 1, 1);
+  
+  SB_DMA_WRITE_SIMP(P_eta_n1, 1, &norm1);
+  SB_DMA_WRITE_SIMP(P_eta_n2, 1, &norm2);
+  SB_DMA_WRITE_SIMP(P_eta_s, 1, &dp);
+  SB_WAIT_ALL();
+
+  // cout << "Eta calc done\n";
+}
+
+void calc_duality_gap(long tid, double b, double &duality_gap){
+  SB_CONFIG(duality_gap_config, duality_gap_size);
+
+  int num_inst = M/NUM_THREADS;
+
+  int start_id = tid*num_inst;
+  int end_id = start_id+num_inst;
+
+
+  SB_SCRATCH_READ(getBankedOffset(2,3), 8*num_inst, P_duality_gap_alpha);
+  SB_SCRATCH_READ(getBankedOffset(1,3), 8*num_inst, P_duality_gap_y);
+  SB_SCRATCH_READ(getBankedOffset(0,3), 8*num_inst, P_duality_gap_E);
+  
+  SB_CONST(P_duality_gap_b, b, 1);
+  SB_2D_CONST(P_duality_gap_const, 2, M-1, 1, 1, 1);
+
+  SB_DMA_WRITE_SIMP(P_duality_gap_dgap, 1, &duality_gap);
+  SB_WAIT_ALL();
+  // cout << "Duality calc done\n";
+}
+
 void kernel_err_update(long tid, int i, int j, double diff1, double diff2, double y1, double y2){
   
   if(data_val[i].size()==0 || data_val[j].size()==0)  return;
@@ -143,45 +148,26 @@ void kernel_err_update(long tid, int i, int j, double diff1, double diff2, doubl
   SB_CONST(P_ksvm_y2, y2, num_inst);
 
   // banked scratch read
-  SB_DMA_READ(&E[0], 8, 8, num_inst, P_ksvm_old_E);
+  SB_SCRATCH_READ(getBankedOffset(0,3), 8*num_inst, P_ksvm_old_E);
 
   int start_id = tid*num_inst;
   int end_id = start_id+num_inst;
 
   broadcast_inst(tid, i, j);
-  // should by default be 0, so don't need to load anything here!
   SB_SCRATCH_READ(getLinearAddr(0), (data_ptr[end_id]-data_ptr[start_id])*4 ,P_ksvm_a_val);
   SB_SCRATCH_READ(getLinearAddr(getLinearOffset(1,2)) ,(data_ptr[end_id]-data_ptr[start_id])*4 ,P_ksvm_a_ind);
 
-  // for(int k=0; k<num_inst; ++k){
+  
+  // FIXME: removing this loop gives page fault? 
   for(int k=start_id; k<end_id; ++k){
-	
 	if(data_val[k].size()==0)
 	  continue;
-
-    // local scratch read
-    // SB_DMA_READ(&data_ind[k][0], 8, 8, data_ind[k].size()/2, P_ksvm_a_ind);
-    // SB_DMA_READ(&data_val[k][0], 8, 8, data_val[k].size()/2, P_ksvm_a_val);
-
-    // coming from broadcast -- remove this!
-    // SB_DMA_READ(&data_ind[i][0], 8, 8, data_ind[i].size()/2, P_ksvm_b_ind);
-    // SB_DMA_READ(&data_val[i][0], 8, 8, data_val[i].size()/2, P_ksvm_b_val);
-    // SB_DMA_READ(&data_ind[j][0], 8, 8, data_ind[j].size()/2, P_ksvm_c_ind);
-    // SB_DMA_READ(&data_val[j][0], 8, 8, data_val[j].size()/2, P_ksvm_c_val);
-
-    // 32-bit sentinal?
-    // SB_CONST(P_ksvm_a_ind, SENTINAL, 1);
-    // SB_CONST(P_ksvm_b_ind, SENTINAL, 1);
-    // SB_CONST(P_ksvm_c_ind, SENTINAL, 1);
-    // SB_CONST(P_ksvm_a_val, 0, 1);
-    // SB_CONST(P_ksvm_b_val, 0, 1);
-    // SB_CONST(P_ksvm_c_val, 0, 1);
   }
 
-  // may write this in banked scratch
-  SB_DMA_WRITE_SIMP(P_ksvm_E, num_inst, &E[0]);
+  // write this in banked scratch
+  SB_SCR_WRITE(P_ksvm_E, num_inst*8, getBankedOffset(0,3));
   SB_WAIT_ALL();
-  cout << "Kernel err calc done\n";
+  // cout << "Kernel err calc done\n";
 }
 
 void train(long tid) {
@@ -207,7 +193,7 @@ void train(long tid) {
       if(E[k]<E[j])
         j=k;
     }
-	std::cout << "i: " << i << " j: " << j << std::endl;
+	// std::cout << "i: " << i << " j: " << j << std::endl;
 
     // Step 1:
     old_alpha_i=alpha[i];
@@ -223,9 +209,9 @@ void train(long tid) {
 	cout << L << " " << H << endl;
     if(L==H) continue;
     double inter_prod = 0, norm1 = 0, norm2 = 0;
-	cout << "Sent for eta calculation\n";
+	// cout << "Sent for eta calculation\n";
     SB_CONFIG(eta_config, eta_size);
-    eta_calc(i, j, inter_prod, norm1, norm2);
+    eta_calc(tid, i, j, inter_prod, norm1, norm2);
     eta = 2*inter_prod - norm1 - norm2;
     if(eta == 0) eta=2;
     // cout << "Eta was less\n";
@@ -267,12 +253,12 @@ void train(long tid) {
     }
     dual = dual - diff/y[i]*(E[i]-E[j]) + eta/2*(diff/y[i])*(diff/y[i]);
 
-	cout << "Sent for kernel err calculation\n";
+	// cout << "Sent for kernel err calculation\n";
     kernel_err_update(tid, i, j, diff1, diff, y[i], y[j]);
 
     duality_gap = 0;
-	cout << "Sent for duality gap calculation\n";
-    calc_duality_gap(b, duality_gap);
+	// cout << "Sent for duality gap calculation\n";
+    calc_duality_gap(tid, b, duality_gap);
     /*
     for(int k=0; k<M; ++k){
       duality_gap += alpha[k]*y[k]*E[k];
