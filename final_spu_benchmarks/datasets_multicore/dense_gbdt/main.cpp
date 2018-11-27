@@ -17,7 +17,7 @@
 #define iters 63
 #define k 64
 
-#define NUM_THREADS 2
+#define NUM_THREADS 1
 
 using namespace std;
 
@@ -36,7 +36,7 @@ struct featInfo {
 };
 
 struct TNode {
-  vector<uint64_t> inst_id;
+  vector<uint16_t> inst_id;
   struct TNode* child1;
   struct TNode* child2;
   vector<featInfo> feat_hists;
@@ -76,7 +76,7 @@ TNode init_node(){
     hists.push_back(init_hists);
   }
 
-  vector<uint64_t> inst_id;
+  vector<uint16_t> inst_id;
   struct SplitInfo init_info = {0, 0, 0.0};
 
   TNode temp = {inst_id, nullptr, nullptr, hists, init_info};
@@ -175,36 +175,37 @@ void local_reduction1() {
   SB_WAIT_ALL();
 }
 
-void build_histogram(long j, struct TNode* node) {
+void build_histogram(struct TNode* node) {
  
-  uint64_t feature_offset = merge_bits(0,k*4*3,k*4*3*2,k*4*3*3);
+  // just take into consideration the elements here
+  uint64_t feature_offset = merge_bits(0,k*3,k*3*2,k*3*3);
 
-  uint64_t local_offset1 = merge_bits(k*4, k*4, k*4, k*4);
-  uint64_t local_offset2 = merge_bits(k*4*2, k*4*2, k*4*2, k*4*2);
+  uint64_t local_offset1 = merge_bits(k, k, k, k);
+  uint64_t local_offset2 = merge_bits(k*2, k*2, k*2, k*2);
   
-  uint64_t local_offset3 = merge_bits(k*4+k*4*3*4, k*4+k*4*3*4, k*4+k*4*3*4, k*4+k*4*3*4);
-  uint64_t local_offset4 = merge_bits(k*4*2+k*4*3*4, k*4*2+k*4*3*4, k*4*2+k*4*3*4, k*4*2+k*4*3*4);
+  uint64_t local_offset3 = merge_bits(k+k*3*4, k+k*3*4, k+k*3*4, k+k*3*4);
+  uint64_t local_offset4 = merge_bits(k*2+k*3*4, k*2+k*3*4, k*2+k*3*4, k*2+k*3*4);
 
   unsigned n = node->inst_id.size();
-
-  // inst_id could be just 16-bit (this could be reduced, also it would need
-  // padding then for n)
+  n = (n/4)*4; // padding required because of indirect ports
 
   SB_ADD_PORT(P_IND_2);
   SB_ADD_PORT(P_IND_3);
-  SB_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_1);
+  // TODO: broadcast this!
+  SB_DMA_READ(&node->inst_id[0], 8, 8, n/4, P_IND_1);
 
   // _index_addr + index * _ind_mult + _offsets[_index_in_offsets]*_data_bytes;
-  SB_CONFIG_INDIRECT(T64, T64, M*sizeof(uint16_t)); // FIXME: this multiplier is good enough?
-  SB_INDIRECT(P_IND_1, &fixed_inst_feat[0][j], n, P_gbdt_A);
+  // itype, dtype, mult
+  SB_CONFIG_INDIRECT1(T16, T64, M*sizeof(uint16_t), 1); // FIXME: this multiplier is good enough?
+  // SB_INDIRECT(P_IND_1, &fixed_inst_feat[0][0], n, P_gbdt_A);
+  SB_INDIRECT_SCR(P_IND_1, getLinearAddr(0), n, P_gbdt_A);
 
-  SB_CONFIG_INDIRECT(T64, T32, sizeof(uint32_t));
+  SB_CONFIG_INDIRECT(T16, T32, sizeof(uint32_t));
   SB_INDIRECT(P_IND_2, &hess[0], n, P_gbdt_hess);
 
-  SB_CONFIG_INDIRECT(T64, T32, sizeof(uint32_t));
+  SB_CONFIG_INDIRECT(T16, T32, sizeof(uint32_t));
   SB_INDIRECT(P_IND_3, &grad[0], n, P_gbdt_grad);
 
-  // SB_CONST(P_gbdt_const, 1, n);
   SB_CONST(P_gbdt_const, 1, n);
 
   SB_CONST(P_gbdt_local_offset1, local_offset1, n);
@@ -212,60 +213,19 @@ void build_histogram(long j, struct TNode* node) {
   SB_CONST(P_gbdt_local_offset3, local_offset3, n);
   SB_CONST(P_gbdt_local_offset4, local_offset4, n);
 
+  // FIXME: it repeats at the granularity of whole vec port I guess -- might
+  // need to change offsets for correct result
+  SB_REPEAT_PORT(4);
+  SB_RECURRENCE(P_gbdt_D, P_gbdt_dummy_in, n*3);
+
+  // n*8*3
   SB_CONFIG_ATOMIC_SCR_OP(T16, T32, T32);
-  // iters is num of ops
-  // FIXME: CHECKME: I want it to be 16-bits -- should follow address datatype
-  SB_ATOMIC_SCR_OP(P_gbdt_C, P_gbdt_D, feature_offset, n*8*3, 0);
+  SB_ATOMIC_SCR_OP(P_gbdt_C, P_gbdt_dummy_out, feature_offset, n*4*3*2, 0);
+  // SB_ATOMIC_SCR_OP(P_gbdt_C, P_gbdt_D, feature_offset, n*8*3, 0);
   SB_WAIT_SCR_WR();
   SB_WAIT_ALL();
 }
-/*
-// Let's do 8 features at a time
-void build_histogram(long j, struct TNode* node) {
-  part1 = k*4*4;
-  part1 = k*4*2*4;
-  uint64_t local_offset1 = merge_bits(part1, part1, part1, part1);
-  uint64_t local_offset2 = merge_bits(part2, part2, part2, part2);
-  uint64_t fused_const = merge_bits(1, 1, 1, 1);
-  uint64_t feature_offset = merge_bits(0,k*4*3,k*4*3*2,k*4*3*3);
-  local_offset1 = merge_bits(k*4, k*4, k*4, k*4);
-  local_offset2 = merge_bits(k*4*2, k*4*2, k*4*2, k*4*2);
-  unsigned n = node->inst_id.size();
 
-  // inst_id could be just 16-bit (this could be reduced, also it would need
-  // padding then for n)
-
-  SB_ADD_PORT(P_IND_2);
-  SB_ADD_PORT(P_IND_3);
-  SB_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_1);
-
-  // _index_addr + index * _ind_mult + _offsets[_index_in_offsets]*_data_bytes;
-  SB_CONFIG_INDIRECT(T64, T64, M*sizeof(uint16_t)); // FIXME: this multiplier is good enough?
-  SB_INDIRECT(P_IND_1, &fixed_inst_feat[0][j], n, P_gbdt_A);
-
-  SB_CONFIG_INDIRECT(T64, T32, sizeof(uint32_t));
-  SB_INDIRECT(P_IND_2, &hess[0], n, P_gbdt_hess);
-
-  SB_CONFIG_INDIRECT(T64, T32, sizeof(uint32_t));
-  SB_INDIRECT(P_IND_3, &grad[0], n, P_gbdt_grad);
-
-  // SB_CONST(P_gbdt_const, 1, n);
-  SB_CONST(P_gbdt_const, fused_const, n);
-
-  SB_CONST(P_gbdt_local_offset1, local_offset1, n);
-  SB_CONST(P_gbdt_local_offset2, local_offset2, n);
-
-  // SB_CONFIG_ATOMIC_SCR_OP(T16, T64, T64);
-  // addr, val, out
-  SB_CONFIG_ATOMIC_SCR_OP(T16, T32, T32);
-  // iters is num of ops
-  // SB_ATOMIC_SCR_OP(P_gbdt_C, P_gbdt_D, offset, n*4*3, 0);
-  // FIXME: CHECKME: I want it to be 16-bits -- should follow address datatype
-  SB_ATOMIC_SCR_OP(P_gbdt_C, P_gbdt_D, feature_offset, n*4*3, 0);
-  SB_WAIT_SCR_WR();
-  SB_WAIT_ALL();
-}
-*/
 void hierarchical_reduction(long tid) {
   uint64_t mask=0;
   for(int stride=1; stride<4; ++stride) {
@@ -295,13 +255,17 @@ void *entry_point(void *threadid) {
     // exit(-1);
   }
 
-  begin_roi();
+
+  // load all instances of the features (8-features per core)
   SB_CONFIG(gbdt_config, gbdt_size);
-  build_histogram(tid, cur_node);
-  SB_CONFIG(local_redn_config, local_redn_size);
-  local_reduction1();
-  local_reduction2();
-  global_reduction(tid);
+  SB_DMA_SCRATCH_LOAD(&fixed_inst_feat[0][tid], 2, 2, N*8, getLinearAddr(0));
+  SB_WAIT_ALL();
+  begin_roi();
+  build_histogram(cur_node);
+  // SB_CONFIG(local_redn_config, local_redn_size);
+  // local_reduction1();
+  // local_reduction2();
+  // global_reduction(tid);
   // hierarchical_reduction(tid);
   // SB_CONFIG(map_config, map_size);
   // mapping(cur_node);
@@ -438,7 +402,7 @@ int main() {
     hists.push_back(init_hists);
   }
 
-  vector<uint64_t> inst_id;
+  vector<uint16_t> inst_id;
   for(unsigned i=0; i<N; i++) {
 	inst_id.push_back(i);
   }
@@ -457,3 +421,50 @@ int main() {
   return 0;
 }
 
+/*
+// Let's do 8 features at a time
+void build_histogram(long j, struct TNode* node) {
+  part1 = k*4*4;
+  part1 = k*4*2*4;
+  uint64_t local_offset1 = merge_bits(part1, part1, part1, part1);
+  uint64_t local_offset2 = merge_bits(part2, part2, part2, part2);
+  uint64_t fused_const = merge_bits(1, 1, 1, 1);
+  uint64_t feature_offset = merge_bits(0,k*4*3,k*4*3*2,k*4*3*3);
+  local_offset1 = merge_bits(k*4, k*4, k*4, k*4);
+  local_offset2 = merge_bits(k*4*2, k*4*2, k*4*2, k*4*2);
+  unsigned n = node->inst_id.size();
+
+  // inst_id could be just 16-bit (this could be reduced, also it would need
+  // padding then for n)
+
+  SB_ADD_PORT(P_IND_2);
+  SB_ADD_PORT(P_IND_3);
+  SB_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_1);
+
+  // _index_addr + index * _ind_mult + _offsets[_index_in_offsets]*_data_bytes;
+  SB_CONFIG_INDIRECT(T64, T64, M*sizeof(uint16_t)); // FIXME: this multiplier is good enough?
+  SB_INDIRECT(P_IND_1, &fixed_inst_feat[0][j], n, P_gbdt_A);
+
+  SB_CONFIG_INDIRECT(T64, T32, sizeof(uint32_t));
+  SB_INDIRECT(P_IND_2, &hess[0], n, P_gbdt_hess);
+
+  SB_CONFIG_INDIRECT(T64, T32, sizeof(uint32_t));
+  SB_INDIRECT(P_IND_3, &grad[0], n, P_gbdt_grad);
+
+  // SB_CONST(P_gbdt_const, 1, n);
+  SB_CONST(P_gbdt_const, fused_const, n);
+
+  SB_CONST(P_gbdt_local_offset1, local_offset1, n);
+  SB_CONST(P_gbdt_local_offset2, local_offset2, n);
+
+  // SB_CONFIG_ATOMIC_SCR_OP(T16, T64, T64);
+  // addr, val, out
+  SB_CONFIG_ATOMIC_SCR_OP(T16, T32, T32);
+  // iters is num of ops
+  // SB_ATOMIC_SCR_OP(P_gbdt_C, P_gbdt_D, offset, n*4*3, 0);
+  // FIXME: CHECKME: I want it to be 16-bits -- should follow address datatype
+  SB_ATOMIC_SCR_OP(P_gbdt_C, P_gbdt_D, feature_offset, n*4*3, 0);
+  SB_WAIT_SCR_WR();
+  SB_WAIT_ALL();
+}
+*/
