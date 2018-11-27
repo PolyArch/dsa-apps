@@ -14,7 +14,7 @@ P=64
 endif
 
 
-DFG = compute.dfg
+DFG = compute.dfg loader.dfg
 
 SOFTBRAINS = sb-origin sb-new sb-latency
 
@@ -22,12 +22,15 @@ SCALE=$(N) $(M) $(P)
 
 MACROS=-D_N_=$(N) -D_M_=$(M) -D_P_=$(P)
 
-ifneq ($(shell test $(N) -gt 10; echo $$?), 0)
-MACROS += -D LATENCY
+ifdef LATENCY
+MACROS += -DLATENCY
 endif
 
 include ../common/Makefile.inc
 
 # The GeMM implemented in both old Softbrain and REVEL.
-sb-latency.o sb-origin.o sb-new.o: %.o: %.cc compute.dfg.h
+sb-origin.o sb-new.o: %.o: %.cc compute.dfg.h loader.dfg.h
+	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
+
+sb-latency.o: %.o: %.cc compute.dfg.h loader.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3

@@ -41,15 +41,11 @@ import os, re, math, subprocess
 
 def run(sizes, template, softbrains, log = 'log'):
 
-    res = {}
-
+    subprocess.check_output(['make', 'ultraclean'])
     for i in sizes:
-        subprocess.check_output(['make', 'ultraclean'])
+        subprocess.check_output(['make', 'clean'])
 
         env = template % i
-
-        res[env] = {}
-
 
         print('Run Case %s...' % env)
         for sb in softbrains:
@@ -67,7 +63,6 @@ def run(sizes, template, softbrains, log = 'log'):
                         accel.append((ipc, brkd))
                     brkd = {}
                 elif line.startswith('Cycle Breakdown: '):
-                    print(line[len('Cycle Breakdown: '):].rstrip())
                     for attr in line[len('Cycle Breakdown: '):].rstrip().split(' '):
                         cont, perc = attr.split(':')
                         brkd[cont] = float(perc)
@@ -76,10 +71,9 @@ def run(sizes, template, softbrains, log = 'log'):
             
             if brkd is not None:
                 accel.append((ipc, brkd))
-            res[env][sb] = (cycle, accel)
-            #print(raw)
-            #print('sb-%s Done' % sb)
-    open(log, 'a').write(str(res) + '\n')
+            with open(log, 'a') as f:
+                res = ('%s %s %s ' % (env, sb, cycle)) + str(accel)
+                f.write(res + '\n')
 
 
 if __name__ == '__main__':

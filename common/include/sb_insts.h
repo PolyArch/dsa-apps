@@ -15,6 +15,7 @@
 #define PRE_ZERO_FILL  2
 #define STRIDE_ZERO_FILL 3
 #define STRIDE_DISCARD_FILL 4
+
 #define SB_FILL_MODE(mode) \
   __asm__ __volatile__("ss_fill_mode t0, t0, %0" : : "i"(mode));
 
@@ -199,7 +200,11 @@
 
 //Write from output to input port
 #define SB_RECURRENCE(output_port, input_port, num_strides) \
-  __asm__ __volatile__("ss_wr_rd %0, %1" : : "r"(num_strides), "i"((input_port<<5) | (output_port)));
+  __asm__ __volatile__("ss_wr_rd %0, zero, %1" : : "r"(num_strides), "i"((input_port<<6) | (output_port)));
+
+//Write from output to input port
+#define SB_RECURRENCE_PAD(output_port, input_port, num_strides) \
+  __asm__ __volatile__("ss_wr_rd %0, %1, %2" : : "r"(num_strides), "r"(4), "i"((input_port<<6) | (output_port)));
 
 //Write from output to remote input port through the network (num_elem
 //according to the port width)
@@ -233,11 +238,17 @@
 
 //Write from output to remote input port
 //pos: local=0, left=1, right=2, undef=3
+//13th bit: disable-padding=0, enable-padding=1
 //(might be replaced later by some other RISCV instructions)
 #define SB_XFER_LEFT(output_port, input_port, num_strides) \
-  __asm__ __volatile__("ss_wr_rd %0, %1" : : "r"(num_strides), "i"(1<<10 | (input_port<<5) | (output_port)));
+  __asm__ __volatile__("ss_wr_rd %0, %1, %2" : : "r"(num_strides), "r"(1), "i"((input_port<<6) | (output_port)));
 #define SB_XFER_RIGHT(output_port, input_port, num_strides) \
-  __asm__ __volatile__("ss_wr_rd %0, %1" : : "r"(num_strides), "i"( -2048 + (0<<10 |  (input_port<<5) | (output_port))) );
+  __asm__ __volatile__("ss_wr_rd %0, %1, %2" : : "r"(num_strides), "r"(2), "i"((input_port<<6) | (output_port)));
+
+#define SB_XFER_LEFT_PAD(output_port, input_port, num_strides) \
+  __asm__ __volatile__("ss_wr_rd %0, %1, %2" : : "r"(num_strides), "r"(1 | 4), "i"((input_port<<6) | (output_port)));
+#define SB_XFER_RIGHT_PAD(output_port, input_port, num_strides) \
+  __asm__ __volatile__("ss_wr_rd %0, %1, %2" : : "r"(num_strides), "r"(2 | 4), "i"((input_port<<6) | (output_port)));
 
 
 // Datatype Encodings

@@ -115,11 +115,13 @@ void bidiagonalize(complex<float> *a, complex<float> *f, complex<float> *d, comp
 
   SB_CONTEXT(2);
   SB_CONFIG(fused_config, fused_size);
-  SB_DMA_SCRATCH_LOAD(&_one, 8, 8, 1, 0);
+  //SB_DMA_SCRATCH_LOAD(&_one, 8, 8, 1, 0);
+  SB_CONST_SCR(0, *((uint64_t*)&_one), 1);
 
   SB_CONTEXT(1);
   SB_CONFIG(hhr_config, hhr_size);
-  SB_DMA_SCRATCH_LOAD(&_one, 8, 8, 1, 0);
+  SB_CONST_SCR(0, *((uint64_t*)&_one), 1);
+  //SB_DMA_SCRATCH_LOAD(&_one, 8, 8, 1, 0);
   SB_DMA_READ(a + N, 8 * N, 8, N - 1, P_hhr_A);
   SB_DMA_READ(a + N, 8 * N, 8, N - 1, P_hhr_B);
   SB_CONST(P_hhr_Coef, 1065353216, N - 1);
@@ -192,7 +194,8 @@ void bidiagonalize(complex<float> *a, complex<float> *f, complex<float> *d, comp
   SB_XFER_RIGHT(P_hhr_OUTremote, P_fused_IN, N - 2);
   SB_CONTEXT(2);
   SB_SCR_WRITE(P_fused_OUT, 8 * (N - 2), w_spad);
-  SB_DMA_SCRATCH_LOAD(&_one, 0, 8, 1, 0);
+  //SB_DMA_SCRATCH_LOAD(&_one, 0, 8, 1, 0);
+  SB_CONST_SCR(0, *((uint64_t*)&_one), 1);
   SB_CONTEXT(1);
   SB_REPEAT_PORT((N - 1) * (N - 1));
   SB_RECURRENCE(P_hhr_OUTlocal, P_hhr_Coef_, 1);
@@ -346,7 +349,7 @@ void bidiagonalize(complex<float> *a, complex<float> *f, complex<float> *d, comp
       SB_WAIT_SCR_WR();
 
       /* It fixes the timing */
-      SB_SCRATCH_DMA_STORE(r_trans_spad, 0, 8 * (n - 1) * (n - 1), 1, r);
+      //SB_SCRATCH_DMA_STORE(r_trans_spad, 0, 8 * (n - 1) * (n - 1), 1, r);
       SB_WAIT_ALL();
       //for (int j = 0; j < n - 1; ++j) std::cout << hh[j] << " "; std::cout << "\n";
       //std::cout << i << "\n";

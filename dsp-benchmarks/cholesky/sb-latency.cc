@@ -32,7 +32,6 @@ void cholesky(complex<float> *a, complex<float> *L) { int N = _N_;
     SB_DMA_READ_STRETCH(a + 1, 8, 8 * (N - 1), -8, N - 1, P_multi2_B);
     SB_FILL_MODE(NO_FILL);
   }
-  int next = 1;
   for (int i = 1, acc = 0, addr = 0; i < N; ++i) {
     //int total = N - i - 1;
     int n = N - i;
@@ -69,7 +68,7 @@ void cholesky(complex<float> *a, complex<float> *L) { int N = _N_;
     //return;
 
     if (acc == 0)
-      addr ^= 256;
+      addr ^= 512;
   }
 
   SB_CONTEXT(255);

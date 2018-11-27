@@ -8,13 +8,13 @@ SCALE=$(N)
 
 MACROS=-D_N_=$(N)
 
-SOFTBRAINS = sb-origin sb-new
+SOFTBRAINS = sb-origin sb-new sb-conc sb-access
 
 include ../common/Makefile.inc
 
-sb-origin.o: %.o: %.cc compute.dfg.h
+sb-origin.o sb-access.o: %.o: %.cc compute.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
-sb-new.o: %.o: %.cc multi.dfg.h
+sb-new.o sb-conc.o: %.o: %.cc multi.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 

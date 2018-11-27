@@ -6,13 +6,19 @@
 #include <time.h> 
 #include "sim_timing.h"
 #include <iostream>
+#include "loader.dfg.h"
+
+#ifndef __x86_64__
+#include "sb_insts.h"
+#endif
 
 using std::complex;
 
-complex<float> a[_N_ * _N_], Q[_N_ * _N_], R[_N_ * _N_];
+complex<float> a[_N_ * _N_], tau[_N_], q[_N_ * _N_];
 complex<float> aa[_N_ * _N_];
 
 int main() {
+  int N = _N_;
   FILE *input_data = fopen("input.data", "r"), *ref_data = fopen("ref.data", "r");
   std::cout << std::fixed;
   if (!input_data || !ref_data) {
@@ -20,47 +26,41 @@ int main() {
     return 1;
   }
 
-  read_n_float_complex(input_data, _N_ * _N_, a);
+  read_n_float_complex(input_data, N * N, a);
+
+#ifndef __x86_64__
+  SB_CONFIG(loader_config, loader_size);
+  for (int i = 0; i < N; ++i) {
+    SB_DMA_READ(a + i, 8 * N, 8, N, P_loader_In);
+    SB_SCR_WRITE(P_loader_Out, 8 * N, i * N * 8);
+  }
+  SB_WAIT_ALL();
+#endif
 
   qr(aa, aa, aa);
   begin_roi();
-  qr(a, Q, R);
+  qr(a, q, tau);
   end_roi();
   sb_stats();
 
-  /*for (int i = 0; i < _N_; ++i) {
-    for (int j = 0; j < _N_; ++j) {
-      complex<float> sum(0);
-      for (int k = 0; k < _N_; ++k)
-        sum += Q[i * _N_ + k] * std::conj(Q[j * _N_ + k]);
-      if (i == j && (fabs(sum.real() - 1.0) > eps || fabs(sum.imag()) > eps)) {
-        puts("Q is not a orthogonal matrix!");
-        printf("%f %f\n", sum.real(), sum.imag());
-        return 1;
-      }
-      if (i != j && fabs(sum.real() + sum.imag()) > 2 * eps) {
-        puts("Q is not a orthogonal matrix!");
-        printf("%f %f\n", sum.real(), sum.imag());
-        return 1;
-      }
-    }
+  for (int i = 1; i < N; ++i)
+    for (int j = 0; j < i; ++j)
+      a[i * N + j] = 0.0f;
+  
+  if (!compare_n_float_complex(ref_data, N * N, a)) {
+    //puts("error r");
+    return 0;
   }
 
-  for (int i = 0; i < _N_ * _N_; ++i) aa[i] = 0;
+  if (!compare_n_float_complex(ref_data, N - 1, tau)) {
+    //puts("error tau");
+    return 0;
+  }
 
-  for (int i = 0; i < _N_; ++i)
-    for (int j = 0; j < _N_; ++j)
-      for (int k = 0; k < _N_; ++k)
-        aa[i * _N_ + j] += Q[i * _N_ + k] * R[k * _N_ + j];
-
-  if (!compare_n_float_complex(ref_data, _N_ * _N_, aa)) {
-    puts("error origin matrix");
-    return 1;
-  }*/
-  /*if (!compare_n_float_complex(ref_data, _N_ * _N_, R)) {
-    puts("error r");
-    return 1;
-  }*/
+  if (!compare_n_float_complex(ref_data, N * N, q)) {
+    //puts("error q");
+    return 0;
+  }
 
   //puts("result correct!");
   return 0;

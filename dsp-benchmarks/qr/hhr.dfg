@@ -29,15 +29,15 @@ R_SPAD = Discard(R, RSignal)
 Output: R_MEM
 Output: R_SPAD
 
-#----
-#
-#Input: IN
-#
-#OUTlocal  = IN
-#OUTremote = IN
-#
-#Output: OUTlocal
-#Output: OUTremote
+----
+
+Input: IN
+
+OUTlocal  = IN
+OUTremote = IN
+
+Output: OUTlocal
+Output: OUTremote
 
 ----
 

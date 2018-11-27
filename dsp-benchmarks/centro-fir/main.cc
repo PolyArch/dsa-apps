@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h> 
+#include "sb_insts.h"
 #include "sim_timing.h"
+#include "loader.dfg.h"
 #include "fileop.h"
 #include <iostream>
 
@@ -12,6 +14,12 @@
 using std::complex;
 
 complex<float> a[_N_], b[_M_], c[_N_], cc[_N_], w[_N_ + _M_];
+
+#ifdef LATENCY
+#define LANES 8
+#else
+#define LANES 1
+#endif
 
 int main() {
   FILE *input_data = fopen("input.data", "r"), *ref_data = fopen("ref.data", "r");
@@ -22,6 +30,14 @@ int main() {
 
   read_n_float_complex(input_data, _N_, a);
   read_n_float_complex(input_data, _M_, b);
+
+  for (int i = 0; i < LANES; ++i) {
+    SB_CONTEXT(1 << i);
+    SB_CONFIG(loader_config, loader_size);
+    SB_DMA_READ(a, 0, 8 * _N_, 1, P_loader_In);
+    SB_SCR_WRITE(P_loader_Out, 8 * _N_, 0);
+    SB_WAIT_ALL();
+  }
 
   int n;
   for (n = 1; n < _N_ + _M_; n <<= 1);

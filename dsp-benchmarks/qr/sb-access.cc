@@ -1,254 +1,203 @@
 #include "qr.h"
+#include <cmath>
 #include <iostream>
 #include <algorithm>
-#include "sim_timing.h"
+//#include "matvec.h"
 #include "sb_insts.h"
-
-#include "dot.dfg.h"
-#include "mulconj.dfg.h"
 #include "finalize.dfg.h"
+#include "nmlz.dfg.h"
+#include "norm.dfg.h"
+#include "vcmm.dfg.h"
 
-#define complex_mul(a, b) (complex_t) { \
-  (a).real * (b).real - (a).imag * (b).imag, \
-  (a).real * (b).imag + (a).imag * (b).real }
+complex<float> buffer[1024];
+complex<float> ws[1024];
 
-#define complex_conj_mul(a, b) (complex_t) { \
-  (a).real * (b).real + (a).imag * (b).imag, \
-  (a).real * (b).imag - (a).imag * (b).real }
+int get_pad(int n, int v) {
+  return (v - n % v) % v;
+}
 
-#define complex_add(a, b) (complex_t) { (a).real + (b).real, (a).imag + (b).imag }
+float complex_norm(const complex<float> &v) {
+  return v.real() * v.real() + v.imag() * v.imag();
+}
 
-#define complex_sub(a, b) (complex_t) { (a).real - (b).real, (a).imag - (b).imag }
+void qr(complex<float> *a, complex<float> *q, complex<float> *tau) {
+  int N = _N_;
+  complex<float> *w = buffer;
+  complex<float> *v = buffer + N;
 
-#define complex_norm(a) ((a).real * (a).real + (a).imag * (a).imag)
-
-complex_t tmp0[_N_ * _N_];
-complex_t tmp1[_N_ * _N_];
-complex_t sub_q[_N_ * _N_];
-complex_t rbuffer0[_N_ * _N_];
-
-#define h(x, y) (((x) >= i) && ((y) >= i) ? (((x) == (y)) - v[x] * v[y] * 2.) : (x) == (y))
-void qr(complex<float> *a, complex<float> *Q, complex<float> *R) {
-  int i, j, k, x, y;
-
-  complex_t *r = rbuffer0;
-  /*for (i = 0; i < _N_; ++i) {
-    for (j = 0; j < _N_; ++j) {
-      r[j * _N_ + i] = (complex_t){a[i * _N_ + j].real(), a[i * _N_ + j].imag()};
-      //r[j * _N_ + i] = a[i * _N_ + j];
-    }
-  }*/
-
-  for (i = 0; i < _N_; ++i) {
-    int len = _N_ - i;
-    complex_t v[len];
+  for (int i = 0; i < N - 1; ++i) {
+    int n = N - i;
+    complex<float> normx(0);
     {
-      complex_t norm1 = {0, 0};
-
-      SB_CONFIG(dot_config, dot_size);
-      if (len > 1) {
-        if (i) {
-          SB_DMA_READ(r + 1, 8, 8, len - 1, P_dot_A);
-          SB_DMA_READ(r + 1, 8, 8, len - 1, P_dot_B);
-        } else {
-          SB_DMA_READ(a + _N_, 8 * _N_, 8, len - 1, P_dot_A);
-          SB_DMA_READ(a + _N_, 8 * _N_, 8, len - 1, P_dot_B);
-        }
-        SB_2D_CONST(P_dot_reset, 2, len - 2, 1, 1, 1);
-        //SB_CONST(P_dot_reset, 0, len - 2);
-        //SB_CONST(P_dot_reset, 1, 1);
-        //SB_GARBAGE(P_dot_O, len - 2);
-        SB_DMA_WRITE(P_dot_O, 8, 8, 1, &norm1);
-      }
-
-      if (i)
-        *v = *r;
-      else
-        *v = (complex_t) {a->real(), a->imag()};
-      float norm0 = complex_norm(*v);
-
-      if (len > 1) {
-        SB_WAIT_ALL();
-      }
-
-
-      float rate = 1 + sqrt(1 + norm1.real / norm0);
-      v->real *= rate;
-      v->imag *= rate;
-
-      norm1.real += complex_norm(*v);
-      norm1.real = 1. / sqrt(norm1.real);
-
-
-      if (len > 1) {
-        SB_CONST(P_dot_A, *((uint64_t*) &norm1), len - 1);
-        if (i) {
-          SB_DMA_READ(r + 1, 8, 8, len - 1, P_dot_B);
-        } else {
-          SB_DMA_READ(a + _N_, 8 * _N_, 8, len - 1, P_dot_B);
-        }
-        SB_CONST(P_dot_reset, 1, len - 1);
-        SB_DMA_WRITE(P_dot_O, 8, 8, len - 1, v + 1);
-
-        v->real *= norm1.real;
-        v->imag *= norm1.real;
-
-        SB_WAIT_ALL();
-      } else {
-        v->real *= norm1.real;
-        v->imag *= norm1.real;
-      }
+      SB_CONFIG(norm_config, norm_size);
+      int pad = get_pad(n, 6);
+      SB_DMA_READ(a + i * N + i, 8 * N, 8, n, P_norm_A); SB_CONST(P_norm_A, 0, pad);
+      SB_CONST(P_norm_reset, 0, (n + pad) / 6 - 1);
+      SB_CONST(P_norm_reset, 1, 1);
+      SB_GARBAGE(P_norm_O, (n + pad) / 6 - 1);
+      SB_DMA_WRITE(P_norm_O, 8, 8, 1, &normx);
+      SB_WAIT_ALL();
+      normx = sqrt(normx.real() + normx.imag());
     }
-
-// Household Vector Done
-
-// Intermediate result computing
+    //float normx = 0;
+    //for (int j = i; j < N; ++j) {
+    //  w[j - i] = a[j * N + i];
+    //  normx += complex_norm(w[j - i]);
+    //}
+    //normx = sqrt(normx);
+    w[0] = a[i * N + i];
+    float norm0 = 1. / sqrt(complex_norm(w[0]));
+    complex<float> s = -w[0] * norm0;
+    a[i * N + i] = s * normx;
+    complex<float> u1 = 1.0f / (w[0] - s * normx);
+    w[0] = 1.0f;
     {
-      complex_t *tmpxq = tmp0;
-      complex_t *tmpxr = tmp1;
-
-      SB_CONFIG(mulconj_config, mulconj_size);
-      if (i) {
-        SB_DMA_READ(sub_q, 0, _N_ * len * 8, 1, P_mulconj_Q);
-      }
-      SB_DMA_READ(v, 0, 8 * len, _N_, P_mulconj_V);
-      SB_CONST(P_mulconj_R, 0, i * len);
-      if (i) {
-        SB_DMA_READ(r, 0, len * len * 8, 1, P_mulconj_R);
-      }
-
-      SB_GARBAGE(P_mulconj_O1, i);
-      SB_2D_CONST(P_mulconj_reset, 2, len - 1, 1, 1, i);
-      SB_DMA_WRITE(P_mulconj_O0, 0, 8 * i, 1, tmpxq);
-      tmpxq += i;
-      //SB_GARBAGE(P_mulconj_O1, len * i);
-      //for (y = 0; y < i; ++y) {
-      //  SB_CONST(P_mulconj_reset, 0, len - 1);
-      //  SB_CONST(P_mulconj_reset, 1, 1);
-      //  SB_GARBAGE(P_mulconj_O0, len - 1);
-      //  SB_DMA_WRITE(P_mulconj_O0, 0, 8, 1, tmpxq++);
-      //}
-
-      SB_2D_CONST(P_mulconj_reset, 2, len - 1, 1, 1, len);
-      SB_DMA_WRITE(P_mulconj_O0, 8, 8, len, tmpxq); tmpxq += len;
-      SB_DMA_WRITE(P_mulconj_O1, 8, 8, len, tmpxr); tmpxr += len;
-      if (!i) {
-        SB_2D_CONST(P_mulconj_Q, 1065353216, 1, 0, _N_, (_N_ - 1));
-        SB_CONST(P_mulconj_Q, 1065353216, 1);
-        for (x = 0; x < _N_; ++x) {
-          SB_DMA_READ(a + x, 8 * _N_, 8, _N_, P_mulconj_R);
-        }
-      }
-      //for (x = 0; x < len; ++x) {
-      //  if (!i) {
-      //    SB_CONST(P_mulconj_Q, 0, x);
-      //    SB_CONST(P_mulconj_Q, 1065353216, 1);
-      //    SB_CONST(P_mulconj_Q, 0, _N_ - 1 - x);
-      //    SB_DMA_READ(a + x, 8 * _N_, 8, _N_, P_mulconj_R);
-      //  }
-      //  SB_CONST(P_mulconj_reset, 0, len - 1);
-      //  SB_CONST(P_mulconj_reset, 1, 1);
-      //  SB_GARBAGE(P_mulconj_O0, len - 1);
-      //  SB_DMA_WRITE(P_mulconj_O0, 0, 8, 1, tmpxq++);
-      //  SB_GARBAGE(P_mulconj_O1, len - 1);
-      //  SB_DMA_WRITE(P_mulconj_O1, 0, 8, 1, tmpxr++);
-      //}
-
+      SB_CONFIG(nmlz_config, nmlz_size);
+      int pad = get_pad(n - 1, 4);
+      SB_DMA_READ(a + (i + 1) * N + i, 8 * N, 8, n - 1, P_nmlz_A); SB_CONST(P_nmlz_A, 0, pad);
+      SB_CONST(P_nmlz_B, *((uint64_t*) &u1), n - 1 + pad);
+      //SB_DMA_WRITE(P_nmlz_AB, 8 * N, 8, n - 1, a + (i + 1) * N + i);
+      SB_DMA_WRITE(P_nmlz_AB, 8, 8, n - 1, ws + i * N);
+      SB_DMA_WRITE(P_nmlz_AB_, 8, 8, n - 1, w + 1);
+      SB_GARBAGE(P_nmlz_AB, pad);
+      SB_GARBAGE(P_nmlz_AB_, pad);
       SB_WAIT_ALL();
     }
+    //for (int j = i + 1; j < N; ++j) {
+    //  w[j - i] *= u1;
+    //  a[j * N + i] = w[j - i];
+    //}
+    tau[i] = -std::conj(s) / u1 / normx;
+    //householder done
 
-// Finalize the result
+    //SBvec_mul_mat(a + i * N + i + 1, n, n - 1, N, w, true, v);
+    do {
+      auto mat = a + i * N + i + 1;
+      auto vec = w;
+      auto res = v;
+      auto mat_stride = N;
+      auto mat_height = n;
+      auto mat_width  = n - 1;
+      int pad(get_pad((mat_width), 4));
+      int A(P_vcmm_A);
+      int B(P_vcmm_B);
+      int C(P_vcmm_C);
+      int O(P_vcmm_O);
+      SB_CONFIG(vcmm_config, vcmm_size);
+      SB_CONST(C, 0, (mat_width) + pad);
+      SB_REPEAT_PORT((mat_width + pad) / 4);
+      SB_DMA_READ(vec, 8, 8, mat_height, B);
+      for (int _i_(0); _i_ < (0) + (mat_height); ++_i_) {
+        SB_DMA_READ((mat) + _i_ * (mat_stride), 8, 8, (mat_width), A);
+        SB_CONST(A, 0, pad);
+        //SB_CONST(B, *((uint64_t*)(vec) + _i_), ((mat_width) + pad) / 4);
+        if (_i_ != (mat_height) - 1) {
+          SB_RECURRENCE(O, C, (mat_width) + pad);
+        } else {
+          SB_DMA_WRITE(O, 8, 8, (mat_width), (res));
+          SB_GARBAGE(O, pad);
+        }
+      }
+      SB_WAIT_ALL();
+    } while (false);
+
     {
-      complex_t *tmpxq = tmp0, *nxt = sub_q;
-
+      int pad = (n - 1) & 1;
       SB_CONFIG(finalize_config, finalize_size);
-      if (i) {
-        SB_DMA_READ(sub_q, 8, 8, _N_ * len, P_finalize_Q);
+      SB_CONST(P_finalize_TAU, *((uint64_t*)(tau + i)), n * (n - 1 + pad));
+      SB_REPEAT_PORT((n - 1 + pad) / 2);
+      SB_DMA_READ(w, 8, 8, n, P_finalize_B);
+      for (int j = 0; j < n; ++j) {
+        SB_DMA_READ(a + (j + i) * N + i + 1, 0, 8 * (n - 1), 1, P_finalize_C); SB_CONST(P_finalize_C, 0, pad);
+        //SB_CONST(P_finalize_B, *((uint64_t*)(w + j)), (n - 1 + pad) / 2);
+        SB_DMA_READ(v, 0, 8 * (n - 1), 1, P_finalize_A); SB_CONST(P_finalize_A, 0, pad);
+        SB_DMA_WRITE(P_finalize_O, 0, 8 * (n - 1), 1, a + (j + i) * N + i + 1); SB_GARBAGE(P_finalize_O, pad);
       }
-      SB_DMA_READ(v, 0, 8 * len, i, P_finalize_VQ);
+      SB_WAIT_ALL();
+    }
+    //for (int j = i; j < N; ++j) {
+    //  for (int k = i + 1; k < N; ++k) {
+    //    a[j * N + k] -= tau[i] * w[j - i] * v[k - i - 1];
+    //  }
+    //}
+  }
 
-      SB_CONST(P_finalize_TMPR, 0, i * len);
-      SB_CONST(P_finalize_VR, 0, i * len);
-      SB_CONST(P_finalize_R, 0, i * len);
-      SB_GARBAGE(P_finalize_O1, i * len);
-
-      SB_REPEAT_PORT(len);
-      SB_DMA_READ(tmpxq, 8, 8, i, P_finalize_TMPQ);
-      for (y = 0; y < i; ++y) {
-        //SB_CONST(P_finalize_TMPQ, *((uint64_t*)tmpxq), len);
-        SB_DMA_WRITE(P_finalize_O0, 8, 8, 1, Q + y * _N_ + i);
-        SB_DMA_WRITE(P_finalize_O0, 8, 8, len - 1, nxt);
-        tmpxq++;
-        nxt += len - 1;
-      }
-
-
-      {
-        SB_DMA_READ(tmp1, 0, 8 * len, 1, P_finalize_TMPR);
-        if (i) {
-          SB_DMA_READ(r, len * 8, 8, len, P_finalize_R);
+  q[N * N - 1] = 1.0f;
+  for (int i = N - 2; i >= 0; --i) {
+    int n = N - i;
+    auto *w = ws + i * N;
+    //for (int j = i + 1; j < N; ++j)
+    // w[j - i - 1] = a[j * N + i];
+    //SBvec_mul_mat(q + (i + 1) * N + i + 1, n - 1, n - 1, N, w, true, v);
+    do {
+      auto mat = q + i * N + i + 1;
+      auto vec = w;
+      auto res = v;
+      auto mat_stride = N;
+      auto mat_height = n - 1;
+      auto mat_width  = n - 1;
+      int pad(get_pad((mat_width), 4));
+      int A(P_vcmm_A);
+      int B(P_vcmm_B);
+      int C(P_vcmm_C);
+      int O(P_vcmm_O);
+      SB_CONFIG(vcmm_config, vcmm_size);
+      SB_CONST(C, 0, (mat_width) + pad);
+      for (int _i_(0); _i_ < (0) + (mat_height); ++_i_) {
+        SB_DMA_READ((mat) + _i_ * (mat_stride), 8, 8, (mat_width), A);
+        SB_CONST(A, 0, pad);
+        SB_CONST(B, *((uint64_t*)(vec) + _i_), ((mat_width) + pad) / 4);
+        if (_i_ != (mat_height) - 1) {
+          SB_RECURRENCE(O, C, (mat_width) + pad);
         } else {
-          SB_DMA_READ(a, 8, 8, _N_, P_finalize_R);
+          SB_DMA_WRITE(O, 8, 8, (mat_width), (res));
+          SB_GARBAGE(O, pad);
         }
-        SB_CONST(P_finalize_VR, *((uint64_t*)v), len);
-
-        SB_CONST(P_finalize_TMPQ, *((uint64_t*)tmpxq), len);
-        SB_DMA_READ(v, 8, 8, len, P_finalize_VQ);
-
-
-        SB_DMA_WRITE(P_finalize_O1, 8, 8, len, R + i * _N_ + i);
-        SB_DMA_WRITE(P_finalize_O0, 0, 8, 1, Q + i * _N_ + i);
-        SB_DMA_WRITE(P_finalize_O0, 8, 8, len - 1, nxt);
-
-        ++tmpxq;
-        nxt += len - 1;
-
       }
+      SB_WAIT_ALL();
+    } while (false);
 
- 
+    complex<float> neg(-tau[i]);
+    {
+      SB_CONFIG(nmlz_config, nmlz_size);
+      //nmlz1:
+      int pad = get_pad(n - 1, 4);
+      SB_DMA_READ(v, 0, 8 * (n - 1), 1, P_nmlz_A); SB_CONST(P_nmlz_A, 0, pad);
+      SB_CONST(P_nmlz_B, *((uint64_t*)&neg), n - 1 + pad);
+      SB_DMA_WRITE(P_nmlz_AB, 8, 8, n - 1, q + i * N + i + 1); SB_GARBAGE(P_nmlz_AB, pad);
+      SB_GARBAGE(P_nmlz_AB_, n - 1 + pad);
 
-      SB_DMA_READ(v, 0, 8 * len, len - 1, P_finalize_VQ);
-
-      SB_CONST(P_finalize_TMPR, 0, len - 1);
-      SB_CONST(P_finalize_VR, 0, len - 1);
-      SB_CONST(P_finalize_R, 0, len - 1);
-      SB_GARBAGE(P_finalize_O1, len - 1);
-
-      if (i) {
-        SB_DMA_READ(r + len + 1, 8 * len, 8 * (len - 1), len - 1, P_finalize_R);
-      }
-      SB_DMA_READ(v + 1, 0, 8 * (len - 1), len - 1, P_finalize_VR);
-      SB_DMA_WRITE(P_finalize_O1, 8, 8, (len - 1) * (len - 1), r);
-
-      if (!i) {
-        SB_2D_CONST(P_finalize_Q, 1065353216, 1, 0, _N_, (_N_ - 1));
-        SB_CONST(P_finalize_Q, 1065353216, 1);
-        //SB_CONST(P_finalize_Q, 1065353216, 1);
-        //SB_CONST(P_finalize_Q, 0, _N_ - 1);
-      }
-
-      SB_REPEAT_PORT(len);
-      SB_DMA_READ(tmpxq, 8, 8, len - 1, P_finalize_TMPQ);
-      tmpxq += len - 1;
-      for (y = i + 1; y < _N_; ++y) {
-        if (!i) {
-          //SB_CONST(P_finalize_Q, 0, y);
-          //SB_CONST(P_finalize_Q, 1065353216, 1);
-          //SB_CONST(P_finalize_Q, 0, _N_ - 1 - y);
-          SB_DMA_READ(a + _N_ + y, 8 * _N_, 8, _N_ - 1, P_finalize_R);
-        }
-        //SB_CONST(P_finalize_TMPQ, *((uint64_t*)tmpxq), len);
-        SB_CONST(P_finalize_TMPR, *((uint64_t*)tmp1 + y - i), len - 1);
-        SB_DMA_WRITE(P_finalize_O0, 0, 8, 1, Q + y * _N_ + i);
-        SB_DMA_WRITE(P_finalize_O0, 8, 8, len - 1, nxt);
-        //++tmpxq;
-        nxt += len - 1;
-      }
+      //nmlz2:
+      SB_DMA_READ(a + (i + 1) * N + i, 8 * N, 8, n - 1, P_nmlz_A); SB_CONST(P_nmlz_A, 0, pad);
+      SB_CONST(P_nmlz_B, *((uint64_t*)&neg), n - 1 + pad);
+      SB_DMA_WRITE(P_nmlz_AB, 8 * N, 8, n - 1, q + (i + 1) * N + i); SB_GARBAGE(P_nmlz_AB, pad);
+      SB_GARBAGE(P_nmlz_AB_, n - 1 + pad);
 
       SB_WAIT_ALL();
     }
 
+    {
+      int pad = (n - 1) & 1;
+      SB_CONFIG(finalize_config, finalize_size);
+      SB_CONST(P_finalize_TAU, *((uint64_t*)(tau + i)), (n - 1) * (n - 1 + pad));
+      SB_REPEAT_PORT((n - 1 + pad) / 2);
+      SB_DMA_READ(w, 8, 8, n - 1, P_finalize_B);
+      for (int j = 0; j < n - 1; ++j) {
+        SB_DMA_READ(q + (j + i + 1) * N + i + 1, 0, 8 * (n - 1), 1, P_finalize_C); SB_CONST(P_finalize_C, 0, pad);
+        //SB_CONST(P_finalize_B, *((uint64_t*)(w + j)), (n - 1 + pad) / 2);
+        SB_DMA_READ(v, 0, 8 * (n - 1), 1, P_finalize_A); SB_CONST(P_finalize_A, 0, pad);
+        SB_DMA_WRITE(P_finalize_O, 0, 8 * (n - 1), 1, q + (j + i + 1) * N + i + 1); SB_GARBAGE(P_finalize_O, pad);
+      }
+      SB_WAIT_ALL();
+    }
+
+    q[i * N + i] = 1.0f - tau[i];
+    //for (int j = i + 1; j < N; ++j) {
+    //  // nmlz1: q[i * N + j] = -tau[i] * v[j - i - 1];
+    //  // nmlz2: q[j * N + i] = -tau[i] * a[j * N + i];
+    //  for (int k = i + 1; k < N; ++k) {
+    //    q[j * N + k] -= tau[i] * w[j - i - 1] * v[k - i - 1];
+    //  }
+    //}
   }
 }
-#undef h
-

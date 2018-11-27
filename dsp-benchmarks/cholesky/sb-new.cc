@@ -49,7 +49,7 @@ void cholesky(complex<float> *a, complex<float> *L) {
     SB_REPEAT_PORT(n - 1);
     SB_RECURRENCE(P_multi2_invsqrt, P_multi2_DIV, 1);
     SB_SCRATCH_READ(addr, (n - 1) * 8, P_multi2_VEC);
-    SB_DMA_WRITE(P_multi2_fin, 8 * N, 8, (n - 1), L + (i + 1) * N);
+    SB_DMA_WRITE(P_multi2_fin, 8 * N, 8, (n - 1), L + (i + 1) * N + i);
     SB_DMA_WRITE(P_multi2_sqrt, 0, 8, 1, L + i * N + i);
 
     //SB_GARBAGE(P_multi2_invsqrt, 1);
@@ -60,7 +60,7 @@ void cholesky(complex<float> *a, complex<float> *L) {
     SB_FILL_MODE(STRIDE_ZERO_FILL);
     SB_SCR_PORT_STREAM_STRETCH(addr, 8, 8 * (n - 1), -8, (n - 1), P_multi2_B);
     SB_FILL_MODE(NO_FILL);
-    SB_SCR_PORT_STREAM(addr, 0, n * n / 2 * 8, 1, P_multi2_Z);
+    SB_SCR_PORT_STREAM(array, 0, n * n / 2 * 8, 1, P_multi2_Z);
     SB_CONFIG_PORT_EXPLICIT((n - 1) * 4, -4);
     SB_SCR_PORT_STREAM(addr, 8, 8, n - 1, P_multi2_A);
 
