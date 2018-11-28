@@ -34,14 +34,14 @@ OPT?=-O3
 CFLAGS=$(OPT) -g -ggdb -gdwarf-3 -static --std=c++11
 #--std=c++11 
 
-$(TESTSN):  bin/% : %.c $(DFG_HEADERS) $(HEADERS)
+$(TESTSN):  bin/% : %.c $(DFG_HEADERS) $(HEADERS) bin
 	 $(CPP) $< $(LIB) $(CFLAGS) -o $@ -DASIZE=128
 
-$(TESTS_SMALL): bin/%_36 : %.c  $(DFG_HEADERS) $(HEADERS) 
+$(TESTS_SMALL): bin/%_36 : %.c  $(DFG_HEADERS) $(HEADERS) bin
 	 $(CPP) $< $(LIB) $(CFLAGS) -o $@ -DASIZE=12
-$(TESTS_MEDIUM): bin/%_128 : %.c  $(DFG_HEADERS)  $(HEADERS)
+$(TESTS_MEDIUM): bin/%_128 : %.c  $(DFG_HEADERS)  $(HEADERS) bin
 	 $(CPP) $< $(LIB) $(CFLAGS) -o $@ -DASIZE=500
-$(TESTS_LARGE): bin/%_2048 : %.c  $(DFG_HEADERS)  $(HEADERS)
+$(TESTS_LARGE): bin/%_2048 : %.c  $(DFG_HEADERS)  $(HEADERS) bin
 	 $(CPP) $< $(LIB) $(CFLAGS) -o $@ -DASIZE=2048
 
 

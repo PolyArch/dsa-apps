@@ -16,11 +16,11 @@ complex<float> b[_N_ * _N_];
 complex<float> _one(1), _zero(0);
 
 #ifndef NUM_OMP_THREADS
-#define NUM_OMP_THREADS 4
+#define NUM_OMP_THREADS 1
 #endif
 
 #ifndef NUM_PTHREADS
-#define NUM_PTHREADS    4
+#define NUM_PTHREADS    1
 #endif
 
 int main() {

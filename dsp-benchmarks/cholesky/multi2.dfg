@@ -20,6 +20,7 @@ O1 = FSub32x2(Z1, C_AB1)
 Output: O [2]
 
 ----
+#pragma group temporal
 
 Input: VAL
 

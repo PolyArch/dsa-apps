@@ -17,8 +17,6 @@ complex<float> _zero(0, 0);
 
 void filter(int n, int m, complex<float> *a, complex<float> *b, complex<float> *c, complex<float> *) {
   SB_CONFIG(compute_config, compute_size);
-  SB_DMA_SCRATCH_LOAD(a, 8, 8, n, 0);
-  SB_WAIT_SCR_WR();
   int half = m / 2;
   const int block = 128;
   for (int io = 0; io < n - m + 1; io += block) {
@@ -34,11 +32,13 @@ void filter(int n, int m, complex<float> *a, complex<float> *b, complex<float> *
     //for (int j = 0; j < half; ++j) {
     //  SB_SCRATCH_READ((io + m - 1 - j) * 8, 8 * (len + pad), P_compute_AR);
     //}
+
     SB_SCRATCH_READ((half + io) * 8, 8 * len, P_compute_AL);
     SB_CONST(P_compute_AL, 0, pad);
     SB_CONST(P_compute_AR, 0, len + pad);
     SB_CONST(P_compute_B, *((uint64_t*) b + half), (len + pad) / VEC);
     SB_DMA_WRITE(P_compute_O, 0, 8 * (len + pad), 1, c + io);
+
     //for (int ii = 0; ii < len; ++ii) {
     //  int i = io + ii;
     //  for (int j = 0, jj = m - 1; j < m / 2; ++j, --jj) {

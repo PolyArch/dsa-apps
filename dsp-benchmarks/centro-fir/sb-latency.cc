@@ -18,8 +18,8 @@ complex<float> _zero(0, 0);
 void filter(int n, int m, complex<float> *a, complex<float> *b, complex<float> *c, complex<float> *) {
   SB_CONTEXT(255);
   SB_CONFIG(compute_config, compute_size);
-  SB_DMA_SCRATCH_LOAD(a, 8, 8, n, 0);
-  SB_WAIT_SCR_WR();
+  //SB_DMA_SCRATCH_LOAD(a, 8, 8, n, 0);
+  //SB_WAIT_SCR_WR();
   int half = m / 2;
   const int block = 128;
   int res_size = n - m + 1;
