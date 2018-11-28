@@ -16,6 +16,7 @@ TESTS=$(TESTS_SMALL) $(TESTS_MEDIUM) $(TESTS_LARGE) $(TESTSN)
 
 all: bin $(TESTS) 
 
+#CPP=riscv64-unknown-linux-gnu-g++
 CPP=riscv64-unknown-elf-g++
 
 DFGS=$(wildcard *.dfg)
@@ -30,7 +31,7 @@ $(DFG_HEADERS): %.dfg.h: %.dfg
 	$(RISCV)/bin/ss_sched -a sa $(SBCONFIG) $<
 
 OPT?=-O3
-CFLAGS=$(OPT) -g -ggdb -gdwarf-3 -static
+CFLAGS=$(OPT) -g -ggdb -gdwarf-3 -static --std=c++11
 #--std=c++11 
 
 $(TESTSN):  bin/% : %.c $(DFG_HEADERS) $(HEADERS)
