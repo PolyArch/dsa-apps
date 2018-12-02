@@ -2,7 +2,7 @@
 #include <vector>
 #include <math.h>
 #include <assert.h>
-#include "sparse_none.dfg.h"
+#include "gbdt.dfg.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sb_insts.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/net_util_func.h"
@@ -39,7 +39,7 @@ struct featInfo {
 };
 
 struct TNode {
-  vector<uint16_t> inst_id;
+  vector<uint64_t> inst_id;
   struct TNode* child1;
   struct TNode* child2;
   vector<featInfo> feat_hists;
@@ -82,7 +82,7 @@ TNode init_node(){
     hists.push_back(init_hists);
   }
 
-  vector<uint16_t> inst_id;
+  vector<uint64_t> inst_id;
   struct SplitInfo init_info = {0, 0, 0.0};
 
   TNode temp = {inst_id, nullptr, nullptr, hists, init_info};
@@ -105,75 +105,68 @@ void build_histogram(long tid, struct TNode* node) {
   uint64_t local_offset = merge_bits(k, k, k, k);
 
   unsigned n = node->inst_id.size();
+  vector<uint64_t> a = node->inst_id;
   n = (n/4)*4; // padding required because of indirect ports
+  cout << "Number of instances to be dealt with: " << n << endl;
 
   cout << "Starting histogram building\n";
 
 
 
-  // SB_CONFIG(sparse_none_config,sparse_none_size);
-                
-  SB_ADD_PORT(P_IND_1);
-  SB_DMA_READ(&node->inst_id[0], 8, 8, n, P_sparse_none_node_ind);
-
-  SB_DMA_READ(&feat_ind[0][0], 2, 2, feat_ind[0].size(), P_sparse_none_feat_ind0);
-  SB_DMA_READ(&feat_ind[1][0], 2, 2, feat_ind[1].size(), P_sparse_none_feat_ind1);
-  SB_DMA_READ(&feat_ind[2][0], 2, 2, feat_ind[2].size(), P_sparse_none_feat_ind2);
-  SB_DMA_READ(&feat_ind[3][0], 2, 2, feat_ind[3].size(), P_sparse_none_feat_ind3);
-
-  SB_DMA_READ(&feat_val[0][0], 2, 2, feat_val[0].size(), P_sparse_none_feat_val0);
-  SB_DMA_READ(&feat_val[1][0], 2, 2, feat_val[1].size(), P_sparse_none_feat_val1);
-  SB_DMA_READ(&feat_val[2][0], 2, 2, feat_val[2].size(), P_sparse_none_feat_val2);
-  SB_DMA_READ(&feat_val[3][0], 2, 2, feat_val[3].size(), P_sparse_none_feat_val3);
-
-  // SB_CONST(P_sparse_none_feat_val, dummy_addr, 1);
-  SB_CONST(P_sparse_none_feat_val0, 0, 1);
-  SB_CONST(P_sparse_none_feat_val1, 0, 1);
-  SB_CONST(P_sparse_none_feat_val2, 0, 1);
-  SB_CONST(P_sparse_none_feat_val3, 0, 1);
+  // SB_ADD_PORT(P_IND_1);
+  // SB_ADD_PORT(P_gbdt_node_ind1);
+  // SB_ADD_PORT(P_gbdt_node_ind2);
+  // SB_ADD_PORT(P_gbdt_node_ind3);
+  SB_DMA_READ(&a[0], 8, 8, n, P_gbdt_node_ind0);
+  SB_CONST(P_gbdt_node_ind0, SENTINAL16, 1);
+ 
+  SB_DMA_READ(&y[0], 4, 4, n, P_gbdt_label0);
+  SB_CONST(P_gbdt_label1, 1, n);
+  // SB_CONST(P_gbdt_local_offset, local_offset, n);
+  // SB_CONST(P_gbdt_local_offset, k, n);
   
-  // SB_CONST(P_sparse_none_feat_ind, dummy_sentinal, 1);
-  SB_CONST(P_sparse_none_feat_ind0, SENTINAL16, 1);
-  SB_CONST(P_sparse_none_feat_ind1, SENTINAL16, 1);
-  SB_CONST(P_sparse_none_feat_ind1, SENTINAL16, 1);
-  SB_CONST(P_sparse_none_feat_ind1, SENTINAL16, 1);
+  SB_CONFIG_ATOMIC_SCR_OP(T16, T32, T32);
+  SB_ATOMIC_SCR_OP(P_gbdt_C, P_gbdt_D, offset, 2*n, 0);
+  // SB_ATOMIC_SCR_OP(P_gbdt_C, P_gbdt_D, offset, 2*n*4, 0);
+               
+  SB_DMA_READ(&feat_ind[0][0], 2, 2, feat_ind[0].size(), P_gbdt_feat_ind0);
+  SB_CONST(P_gbdt_feat_ind0, SENTINAL16, 1);
+  // SB_DMA_READ(&feat_ind[1][0], 2, 2, feat_ind[1].size(), P_gbdt_feat_ind1);
+  // SB_CONST(P_gbdt_feat_ind1, SENTINAL16, 1);
+  // SB_DMA_READ(&feat_ind[2][0], 2, 2, feat_ind[2].size(), P_gbdt_feat_ind2);
+  // SB_CONST(P_gbdt_feat_ind2, SENTINAL16, 1);
+  // SB_DMA_READ(&feat_ind[3][0], 2, 2, feat_ind[3].size(), P_gbdt_feat_ind3);
+  // SB_CONST(P_gbdt_feat_ind3, SENTINAL16, 1);
 
+  SB_DMA_READ(&feat_val[0][0], 2, 2, feat_val[0].size(), P_gbdt_feat_val0);
+  // SB_DMA_READ(&feat_val[1][0], 2, 2, feat_val[1].size(), P_gbdt_feat_val1);
+  // SB_DMA_READ(&feat_val[2][0], 2, 2, feat_val[2].size(), P_gbdt_feat_val2);
+  // SB_DMA_READ(&feat_val[3][0], 2, 2, feat_val[3].size(), P_gbdt_feat_val3);
 
-  SB_CONST(P_sparse_none_node_ind, node_sentinal, 1);
-  
-  // TODO: y is now 32-bits only (page fault here)
-  // TODO: can we have labels 32-bits?
+  // SB_CONST(P_gbdt_feat_val, dummy_addr, 1);
+  SB_CONST(P_gbdt_feat_val0, 0, 1);
+  // SB_CONST(P_gbdt_feat_val1, 0, 1);
+  // SB_CONST(P_gbdt_feat_val2, 0, 1);
+  // SB_CONST(P_gbdt_feat_val3, 0, 1);
+   
+  // SB_CONST(P_gbdt_node_ind1, SENTINAL16, 1);
+  // SB_CONST(P_gbdt_node_ind2, SENTINAL16, 1);
+  // SB_CONST(P_gbdt_node_ind3, SENTINAL16, 1);
+
+  // For now, assume linear
+  // SB_CONFIG_INDIRECT(T64, T32, 4);
+  // SB_INDIRECT(P_IND_1, &y[0], n, P_gbdt_label0);
+
   // itype, dtype, mult, offset
-  // SB_CONFIG_INDIRECT1(T64, T64, 16, 8);
-  SB_CONFIG_INDIRECT1(T16, T32, 2, 1);
-  // SB_INDIRECT(P_IND_1, &labels[0][0], n, P_sparse_none_label);
-  SB_INDIRECT(P_IND_1, &y[0], n, P_sparse_none_label);
+  // SB_CONFIG_INDIRECT1(T16, T32, 2, 1);
+  // SB_CONFIG_INDIRECT(T16, T32, 4);
 
-  SB_CONST(P_sparse_none_local_offset, local_offset, n);
 
   // SB_CONFIG_ATOMIC_SCR_OP(T16, T64, T64);
-  SB_CONFIG_ATOMIC_SCR_OP(T16, T32, T32);
-  SB_ATOMIC_SCR_OP(P_sparse_none_C, P_sparse_none_D, offset, 2*n*4, 0);
-  uint64_t y;
-  SB_RECV(P_sparse_none_all_done, y);
+ uint64_t y;
+  SB_RECV(P_gbdt_all_done, y);
   SB_RESET();
   SB_WAIT_ALL();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 }
 
@@ -206,7 +199,7 @@ void build_tree(struct TNode* node){
     // SB_WAIT_ALL();
  
     begin_roi();
-    SB_CONFIG(sparse_none_config, sparse_none_size);
+    SB_CONFIG(gbdt_config, gbdt_size);
     build_histogram(0, node);
 
     // cout << "Done with histogram building\n";
@@ -236,9 +229,6 @@ int main() {
   FILE* train_file = fopen(str.c_str(), "r");
 
   char lineToRead[5000];
-  if(!train_file){
-    printf("Error opening file\n");
-  }
 
   cout << "Start reading train file!\n";
   
@@ -247,20 +237,41 @@ int main() {
 	std::string raw(lineToRead);
 	std::istringstream iss(raw.c_str());
 	char ignore;
-	float x;
+	// float x;
+    int x; // binned already
 	int ind;
 
 	iss >> x;
-	y[inst_id1] = DOUBLE_TO_FIX(x);
+	y[inst_id1] = x; // DOUBLE_TO_FIX(x);
 
-    // TODO: how to make sure that ind is less than 4? some preprocessing on
-    // the dataset
 	while(iss >> ind) {
 	  iss >> ignore >> x;
-	  feat_ind[inst_id1].push_back(ind);
-	  feat_val[inst_id1].push_back(DOUBLE_TO_FIX(x));
+      feat_ind[ind].push_back(inst_id1);
+      feat_val[ind].push_back(x);
+	  // feat_ind[inst_id1].push_back(ind);
+	  // feat_val[inst_id1].push_back(DOUBLE_TO_FIX(x));
 	}
     inst_id1++;
+  }
+
+  /*
+  for(unsigned i=0; i<feat_ind[3].size(); ++i) {
+    cout << feat_ind[3][i] << endl;
+  }
+  */
+  // append dummy values at the end
+  int max_nnz=0;
+  for(int i=0; i<M; ++i) {
+    if(feat_ind[i].size()>max_nnz)
+      max_nnz=feat_ind[i].size();
+  }
+  for(int i=0; i<M; ++i) {
+    int pad_size = max_nnz-feat_ind[i].size();
+    inst_id1 = feat_ind[i][feat_ind[i].size()-1];
+    for(int j=0; j<pad_size; ++j) {
+      feat_ind[i].push_back(j+inst_id1+1);
+      feat_val[i].push_back(0);
+    }
   }
 
   fclose(train_file);
@@ -282,7 +293,7 @@ int main() {
     hists.push_back(init_hists);
   }
 
-  vector<uint16_t> inst_id;
+  vector<uint64_t> inst_id;
   for(unsigned i=0; i<N; i++) {
 	inst_id.push_back(i);
   }

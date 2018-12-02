@@ -4,7 +4,11 @@ import subprocess
 
 cases = []
 # file, N, M
-cases.append(("datasets/very_small.data", 10, 136))
+# cases.append(("datasets/very_small.data", 10, 84))
+# I just need 4 features
+# cases.append(("datasets/small_ltrc.train", 1000, 4))
+cases.append(("datasets/small_mslr.train", 1000, 4))
+# cases.append(("datasets/connect-4.txt", 1056, 126))
 # cases.append(("datasets/small_mslr.train", 50, 136))
 # cases.append(("datasets/binned_small_mslr.train", 100, 136))
 # cases.append(("datasets/mslr.train", 1000, 136))
