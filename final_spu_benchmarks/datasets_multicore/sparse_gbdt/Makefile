@@ -28,15 +28,16 @@ $(warning SBCONFIG is undefined, using default)
 SBCONFIG=$(SS_TOOLS)/configs/spu_merge_test.sbmodel
 endif
 
-TESTS=softbrain
+TESTS=main
 TESTC=$(TESTS:=.cpp)
 
 all: $(TESTS)
 
-CPP=riscv64-unknown-elf-g++
-MACROS = -DN=$(N) -DMt=$(Mt) -Dk=$(k) -Dratio=$(ratio) -DM=$(M)
+# CPP=riscv64-unknown-elf-g++
+CPP=riscv64-unknown-linux-gnu-g++
+MACROS = -DN=$(N) -DMt=$(Mt) -Dk=$(k) -Dratio=$(ratio) -DM=$(M) -Dfile=$(file)
 
-DFGS=sparse_none.dfg
+DFGS=gbdt.dfg
 
 DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 
@@ -52,16 +53,17 @@ input.data inst_id.data: gen.py
 	python $< $(N) $(Mt) $(ratio) $(dep_ratio)
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
-	$(SS_TOOLS)/bin/sb_sched $(SBCONFIG) $< 
+	ss_sched $(SBCONFIG) $< 
 
 $(TESTS): % :%.cpp $(DFG_HEADERS) input.data
 	 $(CPP) $< $(LIB) $(CFLAGS) $(MACROS) -static -o $@ $(LFLAGS)
 
 run:
-	BACKCGRA=1 MAPPING=COL gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=4096kB --l1i_size=16kB --l2_size=4096kB --caches --cmd=softbrain
+	BACKCGRA=1 MAPPING=COL gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=4096kB --l1i_size=16kB --l2_size=4096kB --caches --cmd=main
 
 run-debug:
-	BACKCGRA=1 MAPPING=COL gdb --args gem5.debug $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=64kB --l1i_size=16kB --l2_size=1024kB --caches --cmd=softbrain
+	BACKCGRA=1 MAPPING=COL COMMAND_I=1 COMMAND_O=1 COMP=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=64kB --l1i_size=16kB --l2_size=1024kB --caches --cmd=main
+	# BACKCGRA=1 MAPPING=COL gdb --args gem5.debug $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=64kB --l1i_size=16kB --l2_size=1024kB --caches --cmd=main
 
 
 cleandata:
