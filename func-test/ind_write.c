@@ -30,16 +30,16 @@ int main(int argc, char* argv[]) {
   std::cout << "outaddr:" << std::hex << output << "\n";
 
   begin_roi();
-  SB_CONFIG(none_config,none_size);
+  SS_CONFIG(none_config,none_size);
 
-  SB_DMA_READ(data_array,8,8,AWORDS,P_none_in);
+  SS_DMA_READ(data_array,8,8,AWORDS,P_none_in);
 
-  SB_DMA_READ(&ind_array[0],8,8,AWORDS,P_IND_1);
+  SS_DMA_READ(&ind_array[0],8,8,AWORDS,P_IND_1);
 
-  SB_CONFIG_INDIRECT(T64,T64,8); //itype, dtype, mult
-  SB_INDIRECT_WR(P_IND_1,&output[0],AWORDS,P_none_out);
+  SS_CONFIG_INDIRECT(T64,T64,8); //itype, dtype, mult
+  SS_INDIRECT_WR(P_IND_1,&output[0],AWORDS,P_none_out);
 
-  SB_WAIT_ALL();
+  SS_WAIT_ALL();
   end_roi();
 
   //for(int i = 0; i<AWORDS; ++i) {

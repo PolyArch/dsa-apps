@@ -9,10 +9,10 @@ int main(int argc, char* argv[]) {
 
   begin_roi();
   if(N_BYTES > 0) {
-    SB_CONFIG(none_config,none_size);
-    SB_DMA_READ(&in[2],N_BYTES,N_BYTES,1,P_none_in);
-    SB_DMA_WRITE(P_none_out,8,8,N_WORDS,&out[2]);
-    SB_WAIT_ALL();
+    SS_CONFIG(none_config,none_size);
+    SS_DMA_READ(&in[2],N_BYTES,N_BYTES,1,P_none_in);
+    SS_DMA_WRITE(P_none_out,8,8,N_WORDS,&out[2]);
+    SS_WAIT_ALL();
   }
 
   out[0]=in[0];

@@ -1,5 +1,5 @@
 #include "FxAdd16x4.dfg.h"
-#include "sb_insts.h"
+#include "ss_insts.h"
 #include "ss-config/fixed_point.h"
 #include "check.h"
 #include <complex>
@@ -31,11 +31,11 @@ int main() {
   complex<int16_t> ans[] = {res_a, res_a};
   complex<int16_t> res[2];
 
-  SB_CONFIG(FxAdd16x4_config, FxAdd16x4_size);
-  SB_DMA_READ(array1, 8, 8, 1, P_FxAdd16x4_A);
-  SB_DMA_READ(array2, 8, 8, 1, P_FxAdd16x4_B);
-  SB_DMA_WRITE(P_FxAdd16x4_C, 8, 8, 1, res);
-  SB_WAIT_ALL();
+  SS_CONFIG(FxAdd16x4_config, FxAdd16x4_size);
+  SS_DMA_READ(array1, 8, 8, 1, P_FxAdd16x4_A);
+  SS_DMA_READ(array2, 8, 8, 1, P_FxAdd16x4_B);
+  SS_DMA_WRITE(P_FxAdd16x4_C, 8, 8, 1, res);
+  SS_WAIT_ALL();
   compare("FxAdd16x4", res, ans, 2);
 
   return 0;

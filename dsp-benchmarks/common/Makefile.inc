@@ -22,7 +22,7 @@ DFG_HEADERS = $(DFG:.dfg=.dfg.h)
 $(DFG_HEADERS): %.dfg.h: %.dfg
 	$(SS_TOOLS)/bin/ss_sched -a sa --max-iters 20000 -d $(FIFO_DEPTH) --verbose $(SBCONFIG) $< 
 
-IFLAGS=-I../../common/include -I../../../ss-tools/include -I../common/
+IFLAGS=-I../../common/include -I../../../ss-tools/include -I../common/ -I$(SS_TOOLS)/include/ss-intrin
 INTELI=-I/opt/intel/include -I/opt/intel/mkl/include/
 #CFLAGS=-O3 -std=c++17
 CFLAGS=-Ofast -std=c++17

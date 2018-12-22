@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <time.h>
 #include "ac.dfg.h"
-#include "/home/vidushi/ss-stack/ss-workloads/common/include/sb_insts.h"
+#include "/home/vidushi/ss-stack/ss-workloads/common/include/ss_insts.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
 #include <inttypes.h>
 #include <sstream>
@@ -47,10 +47,10 @@ void forwardPropagation(long tid){
   // std::cout << sizeof(tree) << "\n";
 
   int vr_offset = 0;
-  SB_DMA_SCRATCH_LOAD(&circuit[0].vr, 8, 8, no_nodes_per_cgra/2, vr_offset);
-  SB_WAIT_SCR_WR();
+  SS_DMA_SCRATCH_LOAD(&circuit[0].vr, 8, 8, no_nodes_per_cgra/2, vr_offset);
+  SS_WAIT_SCR_WR();
   
-  SB_CONFIG(ac_config,ac_size);
+  SS_CONFIG(ac_config,ac_size);
 
 
   for (d=d-1; d >= 0; d--) {
@@ -62,28 +62,28 @@ void forwardPropagation(long tid){
 	//std::cout << "depth: " << d << " " << i << " num_times: " << n_times << "\n";
    
     // std::cout << "number of elements at the level: " << d << " are " << n_times << " with the starting index: " << i << std::endl;
-    SB_DMA_READ(&circuit[i].nodeType, sizeof(tree), 8, n_times, P_fwd_prop_nodeType);
-    SB_DMA_READ(&circuit[i].child0, sizeof(tree), 8, n_times, P_IND_1);
-    SB_DMA_READ(&circuit[i].child1, sizeof(tree), 8, n_times, P_IND_2);
-	SB_CONST(P_fwd_prop_const, fused_const, n_times);
+    SS_DMA_READ(&circuit[i].nodeType, sizeof(tree), 8, n_times, P_fwd_prop_nodeType);
+    SS_DMA_READ(&circuit[i].child0, sizeof(tree), 8, n_times, P_IND_1);
+    SS_DMA_READ(&circuit[i].child1, sizeof(tree), 8, n_times, P_IND_2);
+	SS_CONST(P_fwd_prop_const, fused_const, n_times);
 
-	// SB_CONFIG_INDIRECT1(T64,T64,sizeof(struct tree),4*sizeof(uint32_t));
-	// SB_CONFIG_INDIRECT1(T32,T32,sizeof(struct tree),4*sizeof(uint32_t));
-	// SB_CONFIG_INDIRECT1(T32, T64, sizeof(tree), 2*sizeof(uint32_t));
+	// SS_CONFIG_INDIRECT1(T64,T64,sizeof(struct tree),4*sizeof(uint32_t));
+	// SS_CONFIG_INDIRECT1(T32,T32,sizeof(struct tree),4*sizeof(uint32_t));
+	// SS_CONFIG_INDIRECT1(T32, T64, sizeof(tree), 2*sizeof(uint32_t));
 	// should extract 2 32-bit value per index
-	SB_CONFIG_INDIRECT1(T32, T32, sizeof(tree), 2*sizeof(uint32_t));
-    // SB_INDIRECT_SCR(P_IND_1, vr_offset, n_times, P_fwd_prop_c1vf);
-    SB_INDIRECT_SCR(P_IND_1, vr_offset, 2*n_times, P_fwd_prop_c1vf);
+	SS_CONFIG_INDIRECT1(T32, T32, sizeof(tree), 2*sizeof(uint32_t));
+    // SS_INDIRECT_SCR(P_IND_1, vr_offset, n_times, P_fwd_prop_c1vf);
+    SS_INDIRECT_SCR(P_IND_1, vr_offset, 2*n_times, P_fwd_prop_c1vf);
 
-	// SB_CONFIG_INDIRECT1(T64,T64,sizeof(struct tree),4*sizeof(uint32_t));
-	// SB_CONFIG_INDIRECT1(T32,T32,sizeof(struct tree),4*sizeof(uint32_t));
-	SB_CONFIG_INDIRECT1(T32, T32, sizeof(tree), 2*sizeof(uint32_t));
-    SB_INDIRECT_SCR(P_IND_2, vr_offset, 2*n_times, P_fwd_prop_c2vf);
+	// SS_CONFIG_INDIRECT1(T64,T64,sizeof(struct tree),4*sizeof(uint32_t));
+	// SS_CONFIG_INDIRECT1(T32,T32,sizeof(struct tree),4*sizeof(uint32_t));
+	SS_CONFIG_INDIRECT1(T32, T32, sizeof(tree), 2*sizeof(uint32_t));
+    SS_INDIRECT_SCR(P_IND_2, vr_offset, 2*n_times, P_fwd_prop_c2vf);
 
-	SB_DMA_WRITE(P_fwd_prop_vr, sizeof(tree), 8, n_times, &circuit[i].vr);
-	SB_DMA_WRITE(P_fwd_prop_flag, sizeof(tree), 8, n_times, &circuit[i].flag);
+	SS_DMA_WRITE(P_fwd_prop_vr, sizeof(tree), 8, n_times, &circuit[i].vr);
+	SS_DMA_WRITE(P_fwd_prop_flag, sizeof(tree), 8, n_times, &circuit[i].flag);
 
-    SB_WAIT_ALL();
+    SS_WAIT_ALL();
   }
   // std::cout << "Number of computations done: " << i << std::endl;
 }
@@ -267,7 +267,7 @@ int main() {
 
 
   /*
-  SB_CONFIG(fwd_prop_config,fwd_prop_size);
+  SS_CONFIG(fwd_prop_config,fwd_prop_size);
 
   printf("Forward propagation done!\n");
   return 0;

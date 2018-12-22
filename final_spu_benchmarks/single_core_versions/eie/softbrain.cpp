@@ -5,7 +5,7 @@
 #include <sstream>
 #include <assert.h>
 #include "test.dfg.h"
-#include "../../common/include/sb_insts.h"
+#include "../../common/include/ss_insts.h"
 #include "../../common/include/sim_timing.h"
 #include <inttypes.h>
 
@@ -22,10 +22,10 @@ void mv_merged(uint64_t *wgt_col_ind, uint64_t *wgt_val, int* wgt_row_ptr, uint6
   // std::cout << "reached till here\n";
   
   int ncol = N/4;
-  SB_CONFIG(test_config,test_size);
+  SS_CONFIG(test_config,test_size);
   
   // std::cout << wgt_row_ptr[0]; 
-  SB_DMA_WRITE(P_test_out_val, 8, 8, ncol, &out_vec[0]);
+  SS_DMA_WRITE(P_test_out_val, 8, 8, ncol, &out_vec[0]);
   for (int i=0; i<ncol; ++i){
     ptr1 = wgt_row_ptr[i];
     end1 = wgt_row_ptr[i+1];
@@ -37,18 +37,18 @@ void mv_merged(uint64_t *wgt_col_ind, uint64_t *wgt_val, int* wgt_row_ptr, uint6
 	row_size = (end1-ptr1);
 	// std::cout << "weight row size: " << row_size << " act size: " << act_size << "\n";
     
-    SB_DMA_READ(&wgt_col_ind[ptr1], 8, 8, row_size, P_test_wind);
-	SB_CONST(P_test_wind, sentinal, 1);
-    SB_DMA_READ(&wgt_val[ptr1], 8, 8, row_size, P_test_wval);
-	SB_CONST(P_test_wval, 0, 1);
+    SS_DMA_READ(&wgt_col_ind[ptr1], 8, 8, row_size, P_test_wind);
+	SS_CONST(P_test_wind, sentinal, 1);
+    SS_DMA_READ(&wgt_val[ptr1], 8, 8, row_size, P_test_wval);
+	SS_CONST(P_test_wval, 0, 1);
 
-	SB_REPEAT_PORT(4);
-    SB_DMA_READ(&act_ind[0], 8, 8, act_size, P_test_aind);
-	SB_REPEAT_PORT(4);
-    SB_DMA_READ(&act_val[0], 8, 8, act_size, P_test_aval);
+	SS_REPEAT_PORT(4);
+    SS_DMA_READ(&act_ind[0], 8, 8, act_size, P_test_aind);
+	SS_REPEAT_PORT(4);
+    SS_DMA_READ(&act_val[0], 8, 8, act_size, P_test_aval);
   }
   // error in this wait all
-  SB_WAIT_ALL(); 
+  SS_WAIT_ALL(); 
 }
 
 

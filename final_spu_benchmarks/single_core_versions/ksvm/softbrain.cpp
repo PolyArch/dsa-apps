@@ -7,7 +7,7 @@
 #include "new_err.dfg.h"
 #include "duality_gap.dfg.h"
 #include "eta.dfg.h"
-#include "../../common/include/sb_insts.h"
+#include "../../common/include/ss_insts.h"
 #include "../../common/include/sim_timing.h"
 using namespace std;
 
@@ -45,38 +45,38 @@ void eta_calc(uint32_t *data_val, uint32_t *data_ind, int ptr1, int end1, int pt
   // std::cout << "Size1: " << (end1-ptr1) << " and size2: " << (end2-ptr2) << endl;
   if(end1==ptr1 || end2==ptr2)
     return;
-  SB_CONFIG(eta_config, eta_size);
-  SB_DMA_READ(&data_ind[ptr1], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end1-ptr1)/2, P_eta_a_ind);
-  SB_DMA_READ(&data_val[ptr1], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end1-ptr1)/2, P_eta_a_val);
-  SB_DMA_READ(&data_ind[ptr2], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end2-ptr2)/2, P_eta_b_ind);
-  SB_DMA_READ(&data_val[ptr2], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end2-ptr2)/2, P_eta_b_val);
+  SS_CONFIG(eta_config, eta_size);
+  SS_DMA_READ(&data_ind[ptr1], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end1-ptr1)/2, P_eta_a_ind);
+  SS_DMA_READ(&data_val[ptr1], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end1-ptr1)/2, P_eta_a_val);
+  SS_DMA_READ(&data_ind[ptr2], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end2-ptr2)/2, P_eta_b_ind);
+  SS_DMA_READ(&data_val[ptr2], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end2-ptr2)/2, P_eta_b_val);
   // 32-bit sentinal?
-  SB_CONST(P_eta_a_ind, SENTINAL, 1);
-  SB_CONST(P_eta_b_ind, SENTINAL, 1);
-  SB_CONST(P_eta_a_val, 0, 1);
-  SB_CONST(P_eta_b_val, 0, 1);
-  SB_2D_CONST(P_eta_const1, 2, (end1-ptr1)/2-1, 1, 1, 1);
-  SB_2D_CONST(P_eta_const2, 2, (end2-ptr2)/2-1, 1, 1, 1);
+  SS_CONST(P_eta_a_ind, SENTINAL, 1);
+  SS_CONST(P_eta_b_ind, SENTINAL, 1);
+  SS_CONST(P_eta_a_val, 0, 1);
+  SS_CONST(P_eta_b_val, 0, 1);
+  SS_2D_CONST(P_eta_const1, 2, (end1-ptr1)/2-1, 1, 1, 1);
+  SS_2D_CONST(P_eta_const2, 2, (end2-ptr2)/2-1, 1, 1, 1);
   // double norm1, norm2, dp;
-  SB_DMA_WRITE_SIMP(P_eta_n1, 1, &norm1);
-  SB_DMA_WRITE_SIMP(P_eta_n2, 1, &norm2);
-  SB_DMA_WRITE_SIMP(P_eta_s, 1, &dp);
-  SB_WAIT_ALL();
+  SS_DMA_WRITE_SIMP(P_eta_n1, 1, &norm1);
+  SS_DMA_WRITE_SIMP(P_eta_n2, 1, &norm2);
+  SS_DMA_WRITE_SIMP(P_eta_s, 1, &dp);
+  SS_WAIT_ALL();
 
   // return (2*dp - norm1 - norm2);
 }
 
 void calc_duality_gap(double alpha[M], uint64_t y[M], double E[M], double b, double &duality_gap){
-  SB_CONFIG(duality_gap_config, duality_gap_size);
+  SS_CONFIG(duality_gap_config, duality_gap_size);
 
-  SB_DMA_READ(&alpha[0], 8, 8, M, P_duality_gap_alpha);
-  SB_DMA_READ(&y[0], 8, 8, M, P_duality_gap_y);
-  SB_DMA_READ(&E[0], 8, 8, M, P_duality_gap_E);
-  SB_CONST(P_duality_gap_b, b, 1);
-  SB_2D_CONST(P_duality_gap_const, 2, M-1, 1, 1, 1);
+  SS_DMA_READ(&alpha[0], 8, 8, M, P_duality_gap_alpha);
+  SS_DMA_READ(&y[0], 8, 8, M, P_duality_gap_y);
+  SS_DMA_READ(&E[0], 8, 8, M, P_duality_gap_E);
+  SS_CONST(P_duality_gap_b, b, 1);
+  SS_2D_CONST(P_duality_gap_const, 2, M-1, 1, 1, 1);
 
-  SB_DMA_WRITE_SIMP(P_duality_gap_dgap, 1, &duality_gap);
-  SB_WAIT_ALL();
+  SS_DMA_WRITE_SIMP(P_duality_gap_dgap, 1, &duality_gap);
+  SS_WAIT_ALL();
 }
 
 
@@ -101,42 +101,42 @@ void kernel_err_update(uint32_t *data_val, uint32_t *data_ind, int *row_ptr, int
 
   double gauss_var = -1/(2*sigma*sigma); // double to fix
   // int m=1;
-  SB_CONFIG(new_err_config, new_err_size);
+  SS_CONFIG(new_err_config, new_err_size);
 
-  SB_CONST(P_new_err_gauss_var, gauss_var, num_inst);
-  SB_CONST(P_new_err_alpha1, diff1, num_inst);
-  SB_CONST(P_new_err_alpha2, diff2, num_inst);
-  SB_CONST(P_new_err_y1, y1, num_inst);
-  SB_CONST(P_new_err_y2, y2, num_inst);
-  SB_DMA_READ(&E[0], 8, 8, num_inst, P_new_err_old_E);
+  SS_CONST(P_new_err_gauss_var, gauss_var, num_inst);
+  SS_CONST(P_new_err_alpha1, diff1, num_inst);
+  SS_CONST(P_new_err_alpha2, diff2, num_inst);
+  SS_CONST(P_new_err_y1, y1, num_inst);
+  SS_CONST(P_new_err_y2, y2, num_inst);
+  SS_DMA_READ(&E[0], 8, 8, num_inst, P_new_err_old_E);
 
-  // SB_2D_CONST(P_new_err_const, 2, num_inst-1, 1, 1, 1);
-  // SB_2D_CONST(P_new_err_const, 2, 0, 1, 1, num_inst);
-  // SB_CONST(P_new_err_const, 1, num_inst);
+  // SS_2D_CONST(P_new_err_const, 2, num_inst-1, 1, 1, 1);
+  // SS_2D_CONST(P_new_err_const, 2, 0, 1, 1, num_inst);
+  // SS_CONST(P_new_err_const, 1, num_inst);
   for(int k=0; k<num_inst; ++k){
     ptr3 = row_ptr[k];
     end3 = row_ptr[k+1];
     // std::cout << "k: " << k << " a_count: " << (end3-ptr3)/2 << " b_count: " << (end2-ptr2)/2 << " c_count: :" << (end1-ptr1)/2 << "\n";
     // ptr2 = 0; end2 = 20;
-    SB_DMA_READ(&data_ind[ptr3], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end3-ptr3)/2, P_new_err_a_ind);
-    SB_DMA_READ(&data_val[ptr3], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end3-ptr3)/2, P_new_err_a_val);
-    SB_DMA_READ(&data_ind[ptr1], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end1-ptr1)/2, P_new_err_b_ind);
-    SB_DMA_READ(&data_val[ptr1], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end1-ptr1)/2, P_new_err_b_val);
-    SB_DMA_READ(&data_ind[ptr2], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end2-ptr2)/2, P_new_err_c_ind);
-    SB_DMA_READ(&data_val[ptr2], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end2-ptr2)/2, P_new_err_c_val);
+    SS_DMA_READ(&data_ind[ptr3], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end3-ptr3)/2, P_new_err_a_ind);
+    SS_DMA_READ(&data_val[ptr3], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end3-ptr3)/2, P_new_err_a_val);
+    SS_DMA_READ(&data_ind[ptr1], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end1-ptr1)/2, P_new_err_b_ind);
+    SS_DMA_READ(&data_val[ptr1], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end1-ptr1)/2, P_new_err_b_val);
+    SS_DMA_READ(&data_ind[ptr2], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end2-ptr2)/2, P_new_err_c_ind);
+    SS_DMA_READ(&data_val[ptr2], 2*sizeof(VTYPE), 2*sizeof(VTYPE), (end2-ptr2)/2, P_new_err_c_val);
 
     // 32-bit sentinal?
-    SB_CONST(P_new_err_a_ind, SENTINAL, 1);
-    SB_CONST(P_new_err_b_ind, SENTINAL, 1);
-    SB_CONST(P_new_err_c_ind, SENTINAL, 1);
-    SB_CONST(P_new_err_a_val, 0, 1);
-    SB_CONST(P_new_err_b_val, 0, 1);
-    SB_CONST(P_new_err_c_val, 0, 1);
+    SS_CONST(P_new_err_a_ind, SENTINAL, 1);
+    SS_CONST(P_new_err_b_ind, SENTINAL, 1);
+    SS_CONST(P_new_err_c_ind, SENTINAL, 1);
+    SS_CONST(P_new_err_a_val, 0, 1);
+    SS_CONST(P_new_err_b_val, 0, 1);
+    SS_CONST(P_new_err_c_val, 0, 1);
   }
-  // SB_DMA_WRITE_SIMP(P_err_error, 1, &output);
-  // SB_DMA_WRITE_SIMP(P_new_err_E, num_inst-9, &E[0]);
-  SB_DMA_WRITE_SIMP(P_new_err_E, num_inst, &E[0]);
-  SB_WAIT_ALL();
+  // SS_DMA_WRITE_SIMP(P_err_error, 1, &output);
+  // SS_DMA_WRITE_SIMP(P_new_err_E, num_inst-9, &E[0]);
+  SS_DMA_WRITE_SIMP(P_new_err_E, num_inst, &E[0]);
+  SS_WAIT_ALL();
   // return output+b-y[i];
 }
 

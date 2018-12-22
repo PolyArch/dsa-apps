@@ -7,7 +7,7 @@
 #include <pthread.h>
 #include "eie.dfg.h"
 #include "sparsify.dfg.h"
-#include "/home/vidushi/ss-stack/ss-workloads/common/include/sb_insts.h"
+#include "/home/vidushi/ss-stack/ss-workloads/common/include/ss_insts.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
 #include <inttypes.h>
 #define NUM_THREADS	2
@@ -58,18 +58,18 @@ void mv_merged(long tid) {
   int nweight_load = wgt_merged_row_ptr[end_col]-wgt_merged_row_ptr[start_col];
   // cout << "Number of weights are: " << nweight_load << "\n";
  
-  SB_CONFIG(eie_config,eie_size);
+  SS_CONFIG(eie_config,eie_size);
 
   // since it is now using a port; either we should add a condition not to reset those ports
   // ISSUE1: for local read, address has to be local -- mapping would help here??
-  // SB_DMA_SCRATCH_LOAD(&wgt_merged_col_ind[wgt_merged_row_ptr[start_col]], 8, 8, nweight_load, (tid << 16) | 0);
-  // SB_DMA_SCRATCH_LOAD(&wgt_merged_val[wgt_merged_row_ptr[start_col]], 8, 8, nweight_load, (tid << 16) | (4095)); // fix this offset
-  SB_DMA_SCRATCH_LOAD(&wgt_merged_col_ind[wgt_merged_row_ptr[start_col]], 8, 8, nweight_load, 0);
-  SB_DMA_SCRATCH_LOAD(&wgt_merged_val[wgt_merged_row_ptr[start_col]], 8, 8, nweight_load, nweight_load); // fix this offset
+  // SS_DMA_SCRATCH_LOAD(&wgt_merged_col_ind[wgt_merged_row_ptr[start_col]], 8, 8, nweight_load, (tid << 16) | 0);
+  // SS_DMA_SCRATCH_LOAD(&wgt_merged_val[wgt_merged_row_ptr[start_col]], 8, 8, nweight_load, (tid << 16) | (4095)); // fix this offset
+  SS_DMA_SCRATCH_LOAD(&wgt_merged_col_ind[wgt_merged_row_ptr[start_col]], 8, 8, nweight_load, 0);
+  SS_DMA_SCRATCH_LOAD(&wgt_merged_val[wgt_merged_row_ptr[start_col]], 8, 8, nweight_load, nweight_load); // fix this offset
  
-  SB_WAIT_SCR_WR();
+  SS_WAIT_SCR_WR();
  
-  SB_DMA_WRITE(P_eie_out_val, 8, 8, ncol, &out_vec[0]); // write to the DMA? or are we doing multiple layers
+  SS_DMA_WRITE(P_eie_out_val, 8, 8, ncol, &out_vec[0]); // write to the DMA? or are we doing multiple layers
   // cout << "tid: " << tid << " ncol: " << ncol << "\n";
   for (int i=tid; i<tid+ncol; ++i){ // work on a subset of columns
     ptr1 = wgt_merged_row_ptr[i];
@@ -78,21 +78,21 @@ void mv_merged(long tid) {
 	  continue;
 	row_size = (end1-ptr1);
     
-	// SB_SCRATCH_READ((tid << 16) | 0, row_size*8, P_eie_wind);
-	SB_SCRATCH_READ(0, row_size*8, P_eie_wind);
-	SB_CONST(P_eie_wind, sentinal, 1);
-	// SB_SCRATCH_READ((tid << 16) | 4095, row_size*8, P_eie_wval);
-	SB_SCRATCH_READ(nweight_load, row_size*8, P_eie_wval);
-	SB_CONST(P_eie_wval, 0, 1);
+	// SS_SCRATCH_READ((tid << 16) | 0, row_size*8, P_eie_wind);
+	SS_SCRATCH_READ(0, row_size*8, P_eie_wind);
+	SS_CONST(P_eie_wind, sentinal, 1);
+	// SS_SCRATCH_READ((tid << 16) | 4095, row_size*8, P_eie_wval);
+	SS_SCRATCH_READ(nweight_load, row_size*8, P_eie_wval);
+	SS_CONST(P_eie_wval, 0, 1);
 
 	// double read instead of broadcast?
-	SB_REPEAT_PORT(4); // this might not be required after the port config
-    SB_DMA_READ(&act_merged_ind[0], 8, 8, merged_act_size, P_eie_aind); // being broadcasted from core 0
-	SB_REPEAT_PORT(4);
-    SB_DMA_READ(&act_merged_val[0], 8, 8, merged_act_size, P_eie_aval); // being broadcasted from core 0
+	SS_REPEAT_PORT(4); // this might not be required after the port config
+    SS_DMA_READ(&act_merged_ind[0], 8, 8, merged_act_size, P_eie_aind); // being broadcasted from core 0
+	SS_REPEAT_PORT(4);
+    SS_DMA_READ(&act_merged_val[0], 8, 8, merged_act_size, P_eie_aval); // being broadcasted from core 0
   }
   // error in this wait all
-  SB_WAIT_ALL(); 
+  SS_WAIT_ALL(); 
 }
 
 void *entry_point(void *threadid) {
@@ -123,31 +123,31 @@ void sparsify(){
   int values = M/4;
   uint64_t mask = (((uint64_t)1)<<63)-1;
   
-  SB_CONFIG(sparsify_config, sparsify_size);
+  SS_CONFIG(sparsify_config, sparsify_size);
 
-  SB_DMA_READ(&activations[0], 8, 8, values, P_sparsify_A);
-  SB_DMA_READ(&counter[0], 8, 8, values, P_sparsify_B);
-  SB_CONST(P_sparsify_size, N*M-1, values*4); // should be a 16-bit input
+  SS_DMA_READ(&activations[0], 8, 8, values, P_sparsify_A);
+  SS_DMA_READ(&counter[0], 8, 8, values, P_sparsify_B);
+  SS_CONST(P_sparsify_size, N*M-1, values*4); // should be a 16-bit input
 
   // sentinals (not allowing to push this constant)
-  SB_CONST(P_sparsify_A, sentinal, 1);
-  SB_CONST(P_sparsify_B, sentinal, 1);
+  SS_CONST(P_sparsify_A, sentinal, 1);
+  SS_CONST(P_sparsify_B, sentinal, 1);
 
-  SB_STRIDE(8,8);
-  SB_DMA_WRITE_SIMP(P_sparsify_val, values, &a[0]);
-  SB_DMA_WRITE_SIMP(P_sparsify_ind, values, &b[0]);
+  SS_STRIDE(8,8);
+  SS_DMA_WRITE_SIMP(P_sparsify_val, values, &a[0]);
+  SS_DMA_WRITE_SIMP(P_sparsify_ind, values, &b[0]);
 
-  // SB_DMA_WRITE_SHF16(P_sparsify_val, 8, 8, values, &a[0]);
-  // SB_DMA_WRITE_SHF16(P_sparsify_ind, 8, 8, values, &b[0]);
+  // SS_DMA_WRITE_SHF16(P_sparsify_val, 8, 8, values, &a[0]);
+  // SS_DMA_WRITE_SHF16(P_sparsify_ind, 8, 8, values, &b[0]);
 
   // how would I copy only 16-bits? (only possible now by accumulate)
-  // SB_REM_PORT(P_sparsify_val, values, mask, P_eie_aval);
-  // SB_REM_PORT(P_sparsify_ind, values, mask, P_eie_aind);
+  // SS_REM_PORT(P_sparsify_val, values, mask, P_eie_aval);
+  // SS_REM_PORT(P_sparsify_ind, values, mask, P_eie_aind);
 
   uint16_t temp;
-  SB_RECV(P_sparsify_signal, temp);
-  SB_RESET();
-  SB_WAIT_ALL();
+  SS_RECV(P_sparsify_signal, temp);
+  SS_RESET();
+  SS_WAIT_ALL();
 }
 
 void check_correctness() {
@@ -391,16 +391,16 @@ void mv(long tid) {
   int end_col = start_col+ncol;
   // each thread id would have N/63 columns 
   // TODO: pad all of these (not just one) (--can i use fill mode here? No I guess)
-  SB_CONFIG(eie_config,eie_size);
+  SS_CONFIG(eie_config,eie_size);
 
   int nweight_load = wgt_row_ptr[end_col]-wgt_row_ptr[start_col];
   cout << "Number of weights are: " << nweight_load << "\n";
   // since it is now using a port; either we should add a condition not to reset those ports
-  SB_DMA_SCRATCH_LOAD(&wgt_col_ind[wgt_row_ptr[start_col]], 8, 8, nweight_load, (tid << 16) | 0);
-  SB_DMA_SCRATCH_LOAD(&wgt_val[wgt_row_ptr[start_col]], 8, 8, nweight_load, (tid << 16) | (4095)); // fix this offset
-  SB_WAIT_SCR_WR();
+  SS_DMA_SCRATCH_LOAD(&wgt_col_ind[wgt_row_ptr[start_col]], 8, 8, nweight_load, (tid << 16) | 0);
+  SS_DMA_SCRATCH_LOAD(&wgt_val[wgt_row_ptr[start_col]], 8, 8, nweight_load, (tid << 16) | (4095)); // fix this offset
+  SS_WAIT_SCR_WR();
  
-  SB_DMA_WRITE(P_eie_out_val, 8, 8, ncol, &out_vec[0]); // write to the DMA? or are we doing multiple layers
+  SS_DMA_WRITE(P_eie_out_val, 8, 8, ncol, &out_vec[0]); // write to the DMA? or are we doing multiple layers
   for (int i=tid; i<tid+ncol; ++i){ // work on a subset of columns
     ptr1 = wgt_row_ptr[i];
     end1 = wgt_row_ptr[i+1];
@@ -408,17 +408,17 @@ void mv(long tid) {
 	  continue;
 	row_size = (end1-ptr1);
     
-	SB_SCRATCH_READ((tid << 16) | 0, row_size*8, P_eie_wind);
-	SB_CONST(P_eie_wind, sentinal, 1);
-	SB_SCRATCH_READ((tid << 16) | 4095, row_size*8, P_eie_wval);
-	SB_CONST(P_eie_wval, 0, 1);
+	SS_SCRATCH_READ((tid << 16) | 0, row_size*8, P_eie_wind);
+	SS_CONST(P_eie_wind, sentinal, 1);
+	SS_SCRATCH_READ((tid << 16) | 4095, row_size*8, P_eie_wval);
+	SS_CONST(P_eie_wval, 0, 1);
 
-	SB_REPEAT_PORT(4); // this might not be required after the port config
-    SB_DMA_READ(&act_ind[0], 8, 8, act_size, P_eie_aind); // being broadcasted from core 0
-	SB_REPEAT_PORT(4);
-    SB_DMA_READ(&act_val[0], 8, 8, act_size, P_eie_aval); // being broadcasted from core 0
+	SS_REPEAT_PORT(4); // this might not be required after the port config
+    SS_DMA_READ(&act_ind[0], 8, 8, act_size, P_eie_aind); // being broadcasted from core 0
+	SS_REPEAT_PORT(4);
+    SS_DMA_READ(&act_val[0], 8, 8, act_size, P_eie_aval); // being broadcasted from core 0
   }
   // error in this wait all
-  SB_WAIT_ALL(); 
+  SS_WAIT_ALL(); 
 }
 */

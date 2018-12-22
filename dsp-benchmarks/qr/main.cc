@@ -9,7 +9,7 @@
 #include "loader.dfg.h"
 
 #ifndef __x86_64__
-#include "sb_insts.h"
+#include "ss_insts.h"
 #endif
 
 using std::complex;
@@ -29,12 +29,12 @@ int main() {
   read_n_float_complex(input_data, N * N, a);
 
 #ifndef __x86_64__
-  SB_CONFIG(loader_config, loader_size);
+  SS_CONFIG(loader_config, loader_size);
   for (int i = 0; i < N; ++i) {
-    SB_DMA_READ(a + i, 8 * N, 8, N, P_loader_In);
-    SB_SCR_WRITE(P_loader_Out, 8 * N, i * N * 8);
+    SS_DMA_READ(a + i, 8 * N, 8, N, P_loader_In);
+    SS_SCR_WRITE(P_loader_Out, 8 * N, i * N * 8);
   }
-  SB_WAIT_ALL();
+  SS_WAIT_ALL();
 #endif
 
   qr(aa, aa, aa);

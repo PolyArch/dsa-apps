@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "dot_red.h"
-#include "../common/include/sb_insts.h"
+#include "../common/include/ss_insts.h"
 #include "../common/include/sim_timing.h"
 #include <inttypes.h>
 
@@ -33,16 +33,16 @@ r for(int i = 0; i < ALEN; ++i) {
   }
 
   //Version 3: (uses accumulator)
-  SB_CONFIG(dot_red_config,dot_red_size); 
-  SB_WAIT_ALL();
+  SS_CONFIG(dot_red_config,dot_red_size); 
+  SS_WAIT_ALL();
 
   begin_roi();
 
-  SB_2D_CONST(P_dot_red_reset, 2,ALEN/16-1, 1,1, ALEN);
-  SB_DMA_READ(array, 8, 8,                      ALEN*ALEN*sizeof(uint16_t)/8, P_dot_red_A);
-  SB_DMA_READ(vec,   0, ALEN*sizeof(uint16_t),  ALEN,                         P_dot_red_B);
-  SB_DMA_WRITE_SHF16(P_dot_red_R,8,8,ALEN/4,&out2);
-  SB_WAIT_ALL();
+  SS_2D_CONST(P_dot_red_reset, 2,ALEN/16-1, 1,1, ALEN);
+  SS_DMA_READ(array, 8, 8,                      ALEN*ALEN*sizeof(uint16_t)/8, P_dot_red_A);
+  SS_DMA_READ(vec,   0, ALEN*sizeof(uint16_t),  ALEN,                         P_dot_red_B);
+  SS_DMA_WRITE_SHF16(P_dot_red_R,8,8,ALEN/4,&out2);
+  SS_WAIT_ALL();
 
   end_roi();
 

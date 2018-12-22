@@ -3,7 +3,7 @@
 #include <string>
 #include <sstream>
 #include "test.dfg.h"
-#include "../../common/include/sb_insts.h"
+#include "../../common/include/ss_insts.h"
 #include "../../common/include/sim_timing.h"
 #include <inttypes.h>
 #include <sstream>
@@ -53,25 +53,25 @@ int main() {
   }
   */
 
-  // SB_SCRATCH_DMA_STORE(0, 8, 8, num_inputs/4, &out_n[0]);
-  // SB_SCRATCH_DMA_STORE(0, 8, 8, num_inputs/4, &x[0]);
-  // SB_WAIT_SCR_WR();
+  // SS_SCRATCH_DMA_STORE(0, 8, 8, num_inputs/4, &out_n[0]);
+  // SS_SCRATCH_DMA_STORE(0, 8, 8, num_inputs/4, &x[0]);
+  // SS_WAIT_SCR_WR();
 
   uint16_t n_val[num_inputs];
   uint16_t n_ind[num_inputs];
   begin_roi();
-  SB_CONFIG(test_config, test_size);
+  SS_CONFIG(test_config, test_size);
 
-  SB_REPEAT_PORT(4);
-  // SB_SCRATCH_READ(0, (num_inputs*2), P_test_neuron);
-  SB_DMA_READ(&out_n[0], 8, 8, num_inputs/4, P_test_neuron);
-  SB_CONST(P_test_const, fused_const, num_inputs);
-  SB_CONST(P_test_dummy, 1, num_inputs);
-  SB_DMA_WRITE_SIMP(P_test_nval, num_inputs*2, &n_val[0]);
-  SB_DMA_WRITE_SIMP(P_test_nind, num_inputs*2, &n_ind[0]);
-  SB_RECV(P_test_done, temp);
-  SB_RESET();
-  SB_WAIT_ALL();
+  SS_REPEAT_PORT(4);
+  // SS_SCRATCH_READ(0, (num_inputs*2), P_test_neuron);
+  SS_DMA_READ(&out_n[0], 8, 8, num_inputs/4, P_test_neuron);
+  SS_CONST(P_test_const, fused_const, num_inputs);
+  SS_CONST(P_test_dummy, 1, num_inputs);
+  SS_DMA_WRITE_SIMP(P_test_nval, num_inputs*2, &n_val[0]);
+  SS_DMA_WRITE_SIMP(P_test_nind, num_inputs*2, &n_ind[0]);
+  SS_RECV(P_test_done, temp);
+  SS_RESET();
+  SS_WAIT_ALL();
   end_roi();
   sb_stats();
   return 0;

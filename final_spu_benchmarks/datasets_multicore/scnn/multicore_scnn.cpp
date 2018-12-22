@@ -3,7 +3,7 @@
 #include <sstream>
 #include <vector>
 #include "scnn.dfg.h"
-#include "/home/vidushi/ss-stack/ss-workloads/common/include/sb_insts.h"
+#include "/home/vidushi/ss-stack/ss-workloads/common/include/ss_insts.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/net_util_func.h"
 #include "/home/vidushi/ss-stack/ss-scheduler/src/config/fixed_point.h"
@@ -109,17 +109,17 @@ int count=0;
 void load_weights_in_linear_scratch(int y, int x) {
 
   unsigned size_synapse = synapse_val[y][x].size();
-  SB_DMA_SCRATCH_LOAD(&synapse_val[y][x][0], 2, 2, size_synapse, getLinearAddr(getLinearOffset(1,2)));
-  SB_DMA_SCRATCH_LOAD(&synapse_ind[y][x][0], 2, 2, size_synapse, getLinearAddr(getLinearOffset(2,2)));
-  // SB_WAIT_SCR_WR();
+  SS_DMA_SCRATCH_LOAD(&synapse_val[y][x][0], 2, 2, size_synapse, getLinearAddr(getLinearOffset(1,2)));
+  SS_DMA_SCRATCH_LOAD(&synapse_ind[y][x][0], 2, 2, size_synapse, getLinearAddr(getLinearOffset(2,2)));
+  // SS_WAIT_SCR_WR();
   count++;
 }
 
 void broadcast_weights(unsigned size_synapse) {
   // linear scr -> remote port
   uint64_t mask = SENTINAL; // derive from here
-  SB_SCR_REM_PORT(getLinearAddr(getLinearOffset(1,2)), 2, 2, size_synapse, mask, P_IND_1);
-  SB_SCR_REM_PORT(getLinearAddr(getLinearOffset(2,2)), 2, 2, size_synapse, mask, P_IND_2);
+  SS_SCR_REM_PORT(getLinearAddr(getLinearOffset(1,2)), 2, 2, size_synapse, mask, P_IND_1);
+  SS_SCR_REM_PORT(getLinearAddr(getLinearOffset(2,2)), 2, 2, size_synapse, mask, P_IND_2);
 }
 
 // working on act of neuron_i_val[z][y]
@@ -138,78 +138,78 @@ void kernel(int x, int y, int z) {
   int cur_val_scr_offset = getBankedOffset(3,4); // same size?
   int cur_ind_scr_offset = getBankedOffset(4,4); // same size?
 
-  SB_CONST_SCR(0, 0, Tx*Ty*Tn);
-  SB_WAIT_ALL();
-  // SB_WAIT_SCR_WR();
+  SS_CONST_SCR(0, 0, Tx*Ty*Tn);
+  SS_WAIT_ALL();
+  // SS_WAIT_SCR_WR();
 
-  SB_CONFIG(scnn_config,scnn_size);
+  SS_CONFIG(scnn_config,scnn_size);
 
   // re-sparsification code
   // TODO: should read from banked scratchpad
   // FIXME: check the initial value
-  // SB_DMA_READ(&out_n[x*Tn][z*(Kx*Ky)], 2, 2, num_inputs, P_scnn_neuron);
-  SB_SCRATCH_READ(prev_val_scr_offset, num_inputs*2, P_scnn_neuron);
-  SB_CONST(P_scnn_constt, fused_const, num_inputs);
-  SB_CONST(P_scnn_dummy, 1, num_inputs);
+  // SS_DMA_READ(&out_n[x*Tn][z*(Kx*Ky)], 2, 2, num_inputs, P_scnn_neuron);
+  SS_SCRATCH_READ(prev_val_scr_offset, num_inputs*2, P_scnn_neuron);
+  SS_CONST(P_scnn_constt, fused_const, num_inputs);
+  SS_CONST(P_scnn_dummy, 1, num_inputs);
   // TODO: should write to? maybe memory here (but ideally?)
   // Write to banked scratchpad addresses otherwise malloc required (overwrite
   // over the previous one because result cannot be generated unless it is read
   // -- so only 2 partitions should be fine)
-  SB_SCR_WRITE(P_scnn_inval, num_inputs*2*8, prev_val_scr_offset);
-  SB_SCR_WRITE(P_scnn_inval, num_inputs*2*8, prev_ind_scr_offset);
-  // SB_DMA_WRITE_SIMP(P_scnn_inval, num_inputs*2, &neuron_o_val[z][x*Tn][0]);
-  // SB_DMA_WRITE_SIMP(P_scnn_inind, num_inputs*2, &neuron_o_ind[z][x*Tn][0]);
+  SS_SCR_WRITE(P_scnn_inval, num_inputs*2*8, prev_val_scr_offset);
+  SS_SCR_WRITE(P_scnn_inval, num_inputs*2*8, prev_ind_scr_offset);
+  // SS_DMA_WRITE_SIMP(P_scnn_inval, num_inputs*2, &neuron_o_val[z][x*Tn][0]);
+  // SS_DMA_WRITE_SIMP(P_scnn_inind, num_inputs*2, &neuron_o_ind[z][x*Tn][0]);
 
   // convolution code 
-  SB_REPEAT_PORT(size_neuron_tile);
-  SB_RECURRENCE(P_IND_1, P_scnn_sval, size_synapse);
+  SS_REPEAT_PORT(size_neuron_tile);
+  SS_RECURRENCE(P_IND_1, P_scnn_sval, size_synapse);
 
-  SB_REPEAT_PORT(size_neuron_tile);
-  SB_RECURRENCE(P_IND_2, P_scnn_sind, size_synapse);
+  SS_REPEAT_PORT(size_neuron_tile);
+  SS_RECURRENCE(P_IND_2, P_scnn_sind, size_synapse);
 
   // TODO: should be coming from banked scratchpad
   // for(unsigned is=0; is<size_synapse; ++is) {
-  //   SB_DMA_READ(&neuron_i_val[x][y][0], sizeof(uint16_t), sizeof(uint16_t), neuron_i_val[x][y].size(), P_scnn_nval);
-  //   SB_DMA_READ(&neuron_i_ind[x][y][0], sizeof(uint16_t), sizeof(uint16_t), neuron_i_ind[x][y].size(), P_scnn_nval);
+  //   SS_DMA_READ(&neuron_i_val[x][y][0], sizeof(uint16_t), sizeof(uint16_t), neuron_i_val[x][y].size(), P_scnn_nval);
+  //   SS_DMA_READ(&neuron_i_ind[x][y][0], sizeof(uint16_t), sizeof(uint16_t), neuron_i_ind[x][y].size(), P_scnn_nval);
   // }
   for(unsigned is=0; is<size_synapse; ++is) {
-    SB_SCRATCH_READ(cur_val_scr_offset, neuron_i_val[x][y].size()*2, P_scnn_nval);
-    SB_SCRATCH_READ(cur_ind_scr_offset, neuron_i_val[x][y].size()*2, P_scnn_nind);
+    SS_SCRATCH_READ(cur_val_scr_offset, neuron_i_val[x][y].size()*2, P_scnn_nval);
+    SS_SCRATCH_READ(cur_ind_scr_offset, neuron_i_val[x][y].size()*2, P_scnn_nind);
   }
  
-  SB_CONST(P_scnn_Ky, Ky, num_comp_inst);
-  SB_CONST(P_scnn_Ty, Ty, num_comp_inst);
-  SB_CONST(P_scnn_const, Ty-Ky+1, num_comp_inst);
+  SS_CONST(P_scnn_Ky, Ky, num_comp_inst);
+  SS_CONST(P_scnn_Ty, Ty, num_comp_inst);
+  SS_CONST(P_scnn_const, Ty-Ky+1, num_comp_inst);
 
-  SB_CONFIG_ATOMIC_SCR_OP(T16, T16, T16);
-  SB_ATOMIC_SCR_OP(P_scnn_C, P_scnn_D, 0, num_comp_inst, 0);
+  SS_CONFIG_ATOMIC_SCR_OP(T16, T16, T16);
+  SS_ATOMIC_SCR_OP(P_scnn_C, P_scnn_D, 0, num_comp_inst, 0);
 
   //----------------------------
-  SB_WAIT_SCR_ATOMIC();
+  SS_WAIT_SCR_ATOMIC();
   uint64_t done;
-  SB_RECV(P_scnn_done, done);
-  SB_RESET();
-  SB_WAIT_ALL();
+  SS_RECV(P_scnn_done, done);
+  SS_RESET();
+  SS_WAIT_ALL();
 }
 
 void send_halos(long tid) {
   // this is important to know this address
   // TODO: make scr_scr_port also 8-bit wide
   // for the first linear line, TODO: check this location
-  SB_SCR_REM_SCR(getBankedOffset(3,4), 8, 8, (Tx)*2/8, getRemoteBankedOffset(tid+1, 4, 4)+(Tx*Ty*2), 0);
-  SB_SCR_REM_SCR(getBankedOffset(4,4), 8, 8, (Tx)*2/8, getRemoteBankedOffset(tid+1, 4, 4)+(Tx*Ty*2)+(Ty)*2, 0);
+  SS_SCR_REM_SCR(getBankedOffset(3,4), 8, 8, (Tx)*2/8, getRemoteBankedOffset(tid+1, 4, 4)+(Tx*Ty*2), 0);
+  SS_SCR_REM_SCR(getBankedOffset(4,4), 8, 8, (Tx)*2/8, getRemoteBankedOffset(tid+1, 4, 4)+(Tx*Ty*2)+(Ty)*2, 0);
   // TODO: add for other boundaries
 }
 
 void convolution_layer_blocked(long tid) {
   // wait on the halos
-  // SB_WAIT_DF((Tx*Ty*4)*2, 0);
+  // SS_WAIT_DF((Tx*Ty*4)*2, 0);
   load_weights_in_linear_scratch(0,0);
   int stride = (Nx*Ny)/(Tx*Ty);
   for(int i=0; i<Nn/Tn; ++i) {
 	for(int j=0; j<Ni; ++j){
 	  // all of them use the same weights
-      SB_WAIT_SCR_WR();
+      SS_WAIT_SCR_WR();
 	  if(j+1<Ni && tid==count) load_weights_in_linear_scratch(j+1, i);
 	  if(tid==count) broadcast_weights(synapse_val[j][i].size());
 	  for(int k=tid*stride; k<stride*(1+tid); ++k) {

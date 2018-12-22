@@ -9,7 +9,7 @@
 #include "eie.dfg.h"
 #include "sparsify.dfg.h"
 // #include "small_sp.dfg.h"
-#include "/home/vidushi/ss-stack/ss-workloads/common/include/sb_insts.h"
+#include "/home/vidushi/ss-stack/ss-workloads/common/include/ss_insts.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
 #include "/home/vidushi/ss-stack/ss-scheduler/src/config/fixed_point.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/net_util_func.h"
@@ -49,45 +49,45 @@ void mv_merged(long tid) {
   int end_col = start_col+ncol;
   
   unsigned nweight_load = wgt_ptr[end_col] - wgt_ptr[start_col];
-  SB_CONFIG(eie_config,eie_size);
+  SS_CONFIG(eie_config,eie_size);
  
-  SB_DMA_SCRATCH_LOAD(&wgt_ind[start_col][0], 2, 2, nweight_load, 0);
-  SB_DMA_SCRATCH_LOAD(&wgt_val[start_col][0], 2, 2, nweight_load, getLinearAddr(getLinearOffset(1,2))); 
-  SB_WAIT_SCR_WR();
+  SS_DMA_SCRATCH_LOAD(&wgt_ind[start_col][0], 2, 2, nweight_load, 0);
+  SS_DMA_SCRATCH_LOAD(&wgt_val[start_col][0], 2, 2, nweight_load, getLinearAddr(getLinearOffset(1,2))); 
+  SS_WAIT_SCR_WR();
  
   // write to dma, sure?
-  SB_DMA_WRITE(P_eie_out_val, 2, 2, ncol, &out_vec[0]);
+  SS_DMA_WRITE(P_eie_out_val, 2, 2, ncol, &out_vec[0]);
   int i = tid;
   int stride=0; int scr_offset = getLinearAddr(getLinearOffset(1,2));
 
   // col1
-  SB_SCRATCH_READ(stride, wgt_val[i].size()*2, P_eie_wind0);
-  SB_SCRATCH_READ(scr_offset+stride, wgt_ind[i].size()*2, P_eie_wval0);
-  SB_CONST(P_eie_wind0, SENTINAL16, 1);
-  SB_CONST(P_eie_wval0, 0, 1);
+  SS_SCRATCH_READ(stride, wgt_val[i].size()*2, P_eie_wind0);
+  SS_SCRATCH_READ(scr_offset+stride, wgt_ind[i].size()*2, P_eie_wval0);
+  SS_CONST(P_eie_wind0, SENTINAL16, 1);
+  SS_CONST(P_eie_wval0, 0, 1);
 
   // col2
   stride += wgt_val[i].size()*2;
-  SB_SCRATCH_READ(stride, wgt_val[i+1].size()*2, P_eie_wind1);
-  SB_SCRATCH_READ(scr_offset+stride, wgt_ind[i+1].size()*2, P_eie_wval1);
-  SB_CONST(P_eie_wind1, SENTINAL16, 1);
-  SB_CONST(P_eie_wval1, 0, 1);
+  SS_SCRATCH_READ(stride, wgt_val[i+1].size()*2, P_eie_wind1);
+  SS_SCRATCH_READ(scr_offset+stride, wgt_ind[i+1].size()*2, P_eie_wval1);
+  SS_CONST(P_eie_wind1, SENTINAL16, 1);
+  SS_CONST(P_eie_wval1, 0, 1);
 
   // col3
   stride += wgt_val[i+1].size();
-  SB_SCRATCH_READ(stride, wgt_val[i+2].size()*2, P_eie_wind2);
-  SB_SCRATCH_READ(scr_offset+stride, wgt_ind[i+2].size()*2, P_eie_wval2);
-  SB_CONST(P_eie_wind2, SENTINAL16, 1);
-  SB_CONST(P_eie_wval2, 0, 1);
+  SS_SCRATCH_READ(stride, wgt_val[i+2].size()*2, P_eie_wind2);
+  SS_SCRATCH_READ(scr_offset+stride, wgt_ind[i+2].size()*2, P_eie_wval2);
+  SS_CONST(P_eie_wind2, SENTINAL16, 1);
+  SS_CONST(P_eie_wval2, 0, 1);
 
   // col4
   stride += wgt_val[i+2].size();
-  SB_SCRATCH_READ(stride, wgt_val[i+3].size()*2, P_eie_wind3);
-  SB_SCRATCH_READ(scr_offset + stride, wgt_ind[i+3].size()*2, P_eie_wval3);
-  SB_CONST(P_eie_wind3, SENTINAL16, 1);
-  SB_CONST(P_eie_wval3, 0, 1);
+  SS_SCRATCH_READ(stride, wgt_val[i+3].size()*2, P_eie_wind3);
+  SS_SCRATCH_READ(scr_offset + stride, wgt_ind[i+3].size()*2, P_eie_wval3);
+  SS_CONST(P_eie_wind3, SENTINAL16, 1);
+  SS_CONST(P_eie_wval3, 0, 1);
   
-  SB_WAIT_ALL(); 
+  SS_WAIT_ALL(); 
 }
 
 void sparsify(){
@@ -96,25 +96,25 @@ void sparsify(){
   int vec_width=8;
   int pad_size = M%vec_width;
   
-  SB_CONFIG(sparsify_config, sparsify_size);
+  SS_CONFIG(sparsify_config, sparsify_size);
 
-  SB_DMA_READ(&activations[0], 2, 2, M, P_sparsify_A);
-  SB_DMA_READ(&counter[0], 2, 2, M, P_sparsify_B);
+  SS_DMA_READ(&activations[0], 2, 2, M, P_sparsify_A);
+  SS_DMA_READ(&counter[0], 2, 2, M, P_sparsify_B);
   
-  SB_CONST(P_sparsify_sentinal, SENTINAL16, M+2); // max M times needed
+  SS_CONST(P_sparsify_sentinal, SENTINAL16, M+2); // max M times needed
 
   // has to be non-zero to be sent from here
-  SB_CONST(P_sparsify_A, SENTINAL16, pad_size+vec_width); 
-  SB_CONST(P_sparsify_B, SENTINAL16, pad_size+vec_width);
+  SS_CONST(P_sparsify_A, SENTINAL16, pad_size+vec_width); 
+  SS_CONST(P_sparsify_B, SENTINAL16, pad_size+vec_width);
 
   // number of elements according to the port width
-  SB_REM_PORT(P_sparsify_val, M, mask, P_eie_aval);
-  SB_REM_PORT(P_sparsify_ind, M, mask, P_eie_aind);
+  SS_REM_PORT(P_sparsify_val, M, mask, P_eie_aval);
+  SS_REM_PORT(P_sparsify_ind, M, mask, P_eie_aind);
 
   uint16_t temp;
-  SB_RECV(P_sparsify_signal, temp);
-  SB_RESET();
-  SB_WAIT_ALL();
+  SS_RECV(P_sparsify_signal, temp);
+  SS_RESET();
+  SS_WAIT_ALL();
 }
 
 void *entry_point(void *threadid) {

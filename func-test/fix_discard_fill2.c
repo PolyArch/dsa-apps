@@ -17,16 +17,16 @@ int main(int argc, char* argv[]) {
     answer[i] = i + 1;
   }
 
-  SB_FILL_MODE(STRIDE_DISCARD_FILL);
+  SS_FILL_MODE(STRIDE_DISCARD_FILL);
 
   begin_roi();
-  SB_CONFIG(add1_vec_config,add1_vec_size);
+  SS_CONFIG(add1_vec_config,add1_vec_size);
 
-  SB_DMA_READ(input,           M * 8, M * 8, N, P_add1_vec_in);
-  SB_DMA_WRITE(P_add1_vec_out, M * 8, M * 8, N, output);
+  SS_DMA_READ(input,           M * 8, M * 8, N, P_add1_vec_in);
+  SS_DMA_WRITE(P_add1_vec_out, M * 8, M * 8, N, output);
 
 
-  SB_WAIT_ALL();
+  SS_WAIT_ALL();
   end_roi();
 
   compare<uint64_t>(argv[0], answer, output, TOTAL);

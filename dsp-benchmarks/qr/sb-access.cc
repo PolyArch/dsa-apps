@@ -3,7 +3,7 @@
 #include <iostream>
 #include <algorithm>
 //#include "matvec.h"
-#include "sb_insts.h"
+#include "ss_insts.h"
 #include "finalize.dfg.h"
 #include "nmlz.dfg.h"
 #include "norm.dfg.h"
@@ -29,14 +29,14 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *tau) {
     int n = N - i;
     complex<float> normx(0);
     {
-      SB_CONFIG(norm_config, norm_size);
+      SS_CONFIG(norm_config, norm_size);
       int pad = get_pad(n, 6);
-      SB_DMA_READ(a + i * N + i, 8 * N, 8, n, P_norm_A); SB_CONST(P_norm_A, 0, pad);
-      SB_CONST(P_norm_reset, 0, (n + pad) / 6 - 1);
-      SB_CONST(P_norm_reset, 1, 1);
-      SB_GARBAGE(P_norm_O, (n + pad) / 6 - 1);
-      SB_DMA_WRITE(P_norm_O, 8, 8, 1, &normx);
-      SB_WAIT_ALL();
+      SS_DMA_READ(a + i * N + i, 8 * N, 8, n, P_norm_A); SS_CONST(P_norm_A, 0, pad);
+      SS_CONST(P_norm_reset, 0, (n + pad) / 6 - 1);
+      SS_CONST(P_norm_reset, 1, 1);
+      SS_GARBAGE(P_norm_O, (n + pad) / 6 - 1);
+      SS_DMA_WRITE(P_norm_O, 8, 8, 1, &normx);
+      SS_WAIT_ALL();
       normx = sqrt(normx.real() + normx.imag());
     }
     //float normx = 0;
@@ -52,16 +52,16 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *tau) {
     complex<float> u1 = 1.0f / (w[0] - s * normx);
     w[0] = 1.0f;
     {
-      SB_CONFIG(nmlz_config, nmlz_size);
+      SS_CONFIG(nmlz_config, nmlz_size);
       int pad = get_pad(n - 1, 4);
-      SB_DMA_READ(a + (i + 1) * N + i, 8 * N, 8, n - 1, P_nmlz_A); SB_CONST(P_nmlz_A, 0, pad);
-      SB_CONST(P_nmlz_B, *((uint64_t*) &u1), n - 1 + pad);
-      //SB_DMA_WRITE(P_nmlz_AB, 8 * N, 8, n - 1, a + (i + 1) * N + i);
-      SB_DMA_WRITE(P_nmlz_AB, 8, 8, n - 1, ws + i * N);
-      SB_DMA_WRITE(P_nmlz_AB_, 8, 8, n - 1, w + 1);
-      SB_GARBAGE(P_nmlz_AB, pad);
-      SB_GARBAGE(P_nmlz_AB_, pad);
-      SB_WAIT_ALL();
+      SS_DMA_READ(a + (i + 1) * N + i, 8 * N, 8, n - 1, P_nmlz_A); SS_CONST(P_nmlz_A, 0, pad);
+      SS_CONST(P_nmlz_B, *((uint64_t*) &u1), n - 1 + pad);
+      //SS_DMA_WRITE(P_nmlz_AB, 8 * N, 8, n - 1, a + (i + 1) * N + i);
+      SS_DMA_WRITE(P_nmlz_AB, 8, 8, n - 1, ws + i * N);
+      SS_DMA_WRITE(P_nmlz_AB_, 8, 8, n - 1, w + 1);
+      SS_GARBAGE(P_nmlz_AB, pad);
+      SS_GARBAGE(P_nmlz_AB_, pad);
+      SS_WAIT_ALL();
     }
     //for (int j = i + 1; j < N; ++j) {
     //  w[j - i] *= u1;
@@ -83,37 +83,37 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *tau) {
       int B(P_vcmm_B);
       int C(P_vcmm_C);
       int O(P_vcmm_O);
-      SB_CONFIG(vcmm_config, vcmm_size);
-      SB_CONST(C, 0, (mat_width) + pad);
-      SB_REPEAT_PORT((mat_width + pad) / 4);
-      SB_DMA_READ(vec, 8, 8, mat_height, B);
+      SS_CONFIG(vcmm_config, vcmm_size);
+      SS_CONST(C, 0, (mat_width) + pad);
+      SS_REPEAT_PORT((mat_width + pad) / 4);
+      SS_DMA_READ(vec, 8, 8, mat_height, B);
       for (int _i_(0); _i_ < (0) + (mat_height); ++_i_) {
-        SB_DMA_READ((mat) + _i_ * (mat_stride), 8, 8, (mat_width), A);
-        SB_CONST(A, 0, pad);
-        //SB_CONST(B, *((uint64_t*)(vec) + _i_), ((mat_width) + pad) / 4);
+        SS_DMA_READ((mat) + _i_ * (mat_stride), 8, 8, (mat_width), A);
+        SS_CONST(A, 0, pad);
+        //SS_CONST(B, *((uint64_t*)(vec) + _i_), ((mat_width) + pad) / 4);
         if (_i_ != (mat_height) - 1) {
-          SB_RECURRENCE(O, C, (mat_width) + pad);
+          SS_RECURRENCE(O, C, (mat_width) + pad);
         } else {
-          SB_DMA_WRITE(O, 8, 8, (mat_width), (res));
-          SB_GARBAGE(O, pad);
+          SS_DMA_WRITE(O, 8, 8, (mat_width), (res));
+          SS_GARBAGE(O, pad);
         }
       }
-      SB_WAIT_ALL();
+      SS_WAIT_ALL();
     } while (false);
 
     {
       int pad = (n - 1) & 1;
-      SB_CONFIG(finalize_config, finalize_size);
-      SB_CONST(P_finalize_TAU, *((uint64_t*)(tau + i)), n * (n - 1 + pad));
-      SB_REPEAT_PORT((n - 1 + pad) / 2);
-      SB_DMA_READ(w, 8, 8, n, P_finalize_B);
+      SS_CONFIG(finalize_config, finalize_size);
+      SS_CONST(P_finalize_TAU, *((uint64_t*)(tau + i)), n * (n - 1 + pad));
+      SS_REPEAT_PORT((n - 1 + pad) / 2);
+      SS_DMA_READ(w, 8, 8, n, P_finalize_B);
       for (int j = 0; j < n; ++j) {
-        SB_DMA_READ(a + (j + i) * N + i + 1, 0, 8 * (n - 1), 1, P_finalize_C); SB_CONST(P_finalize_C, 0, pad);
-        //SB_CONST(P_finalize_B, *((uint64_t*)(w + j)), (n - 1 + pad) / 2);
-        SB_DMA_READ(v, 0, 8 * (n - 1), 1, P_finalize_A); SB_CONST(P_finalize_A, 0, pad);
-        SB_DMA_WRITE(P_finalize_O, 0, 8 * (n - 1), 1, a + (j + i) * N + i + 1); SB_GARBAGE(P_finalize_O, pad);
+        SS_DMA_READ(a + (j + i) * N + i + 1, 0, 8 * (n - 1), 1, P_finalize_C); SS_CONST(P_finalize_C, 0, pad);
+        //SS_CONST(P_finalize_B, *((uint64_t*)(w + j)), (n - 1 + pad) / 2);
+        SS_DMA_READ(v, 0, 8 * (n - 1), 1, P_finalize_A); SS_CONST(P_finalize_A, 0, pad);
+        SS_DMA_WRITE(P_finalize_O, 0, 8 * (n - 1), 1, a + (j + i) * N + i + 1); SS_GARBAGE(P_finalize_O, pad);
       }
-      SB_WAIT_ALL();
+      SS_WAIT_ALL();
     }
     //for (int j = i; j < N; ++j) {
     //  for (int k = i + 1; k < N; ++k) {
@@ -141,54 +141,54 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *tau) {
       int B(P_vcmm_B);
       int C(P_vcmm_C);
       int O(P_vcmm_O);
-      SB_CONFIG(vcmm_config, vcmm_size);
-      SB_CONST(C, 0, (mat_width) + pad);
+      SS_CONFIG(vcmm_config, vcmm_size);
+      SS_CONST(C, 0, (mat_width) + pad);
       for (int _i_(0); _i_ < (0) + (mat_height); ++_i_) {
-        SB_DMA_READ((mat) + _i_ * (mat_stride), 8, 8, (mat_width), A);
-        SB_CONST(A, 0, pad);
-        SB_CONST(B, *((uint64_t*)(vec) + _i_), ((mat_width) + pad) / 4);
+        SS_DMA_READ((mat) + _i_ * (mat_stride), 8, 8, (mat_width), A);
+        SS_CONST(A, 0, pad);
+        SS_CONST(B, *((uint64_t*)(vec) + _i_), ((mat_width) + pad) / 4);
         if (_i_ != (mat_height) - 1) {
-          SB_RECURRENCE(O, C, (mat_width) + pad);
+          SS_RECURRENCE(O, C, (mat_width) + pad);
         } else {
-          SB_DMA_WRITE(O, 8, 8, (mat_width), (res));
-          SB_GARBAGE(O, pad);
+          SS_DMA_WRITE(O, 8, 8, (mat_width), (res));
+          SS_GARBAGE(O, pad);
         }
       }
-      SB_WAIT_ALL();
+      SS_WAIT_ALL();
     } while (false);
 
     complex<float> neg(-tau[i]);
     {
-      SB_CONFIG(nmlz_config, nmlz_size);
+      SS_CONFIG(nmlz_config, nmlz_size);
       //nmlz1:
       int pad = get_pad(n - 1, 4);
-      SB_DMA_READ(v, 0, 8 * (n - 1), 1, P_nmlz_A); SB_CONST(P_nmlz_A, 0, pad);
-      SB_CONST(P_nmlz_B, *((uint64_t*)&neg), n - 1 + pad);
-      SB_DMA_WRITE(P_nmlz_AB, 8, 8, n - 1, q + i * N + i + 1); SB_GARBAGE(P_nmlz_AB, pad);
-      SB_GARBAGE(P_nmlz_AB_, n - 1 + pad);
+      SS_DMA_READ(v, 0, 8 * (n - 1), 1, P_nmlz_A); SS_CONST(P_nmlz_A, 0, pad);
+      SS_CONST(P_nmlz_B, *((uint64_t*)&neg), n - 1 + pad);
+      SS_DMA_WRITE(P_nmlz_AB, 8, 8, n - 1, q + i * N + i + 1); SS_GARBAGE(P_nmlz_AB, pad);
+      SS_GARBAGE(P_nmlz_AB_, n - 1 + pad);
 
       //nmlz2:
-      SB_DMA_READ(a + (i + 1) * N + i, 8 * N, 8, n - 1, P_nmlz_A); SB_CONST(P_nmlz_A, 0, pad);
-      SB_CONST(P_nmlz_B, *((uint64_t*)&neg), n - 1 + pad);
-      SB_DMA_WRITE(P_nmlz_AB, 8 * N, 8, n - 1, q + (i + 1) * N + i); SB_GARBAGE(P_nmlz_AB, pad);
-      SB_GARBAGE(P_nmlz_AB_, n - 1 + pad);
+      SS_DMA_READ(a + (i + 1) * N + i, 8 * N, 8, n - 1, P_nmlz_A); SS_CONST(P_nmlz_A, 0, pad);
+      SS_CONST(P_nmlz_B, *((uint64_t*)&neg), n - 1 + pad);
+      SS_DMA_WRITE(P_nmlz_AB, 8 * N, 8, n - 1, q + (i + 1) * N + i); SS_GARBAGE(P_nmlz_AB, pad);
+      SS_GARBAGE(P_nmlz_AB_, n - 1 + pad);
 
-      SB_WAIT_ALL();
+      SS_WAIT_ALL();
     }
 
     {
       int pad = (n - 1) & 1;
-      SB_CONFIG(finalize_config, finalize_size);
-      SB_CONST(P_finalize_TAU, *((uint64_t*)(tau + i)), (n - 1) * (n - 1 + pad));
-      SB_REPEAT_PORT((n - 1 + pad) / 2);
-      SB_DMA_READ(w, 8, 8, n - 1, P_finalize_B);
+      SS_CONFIG(finalize_config, finalize_size);
+      SS_CONST(P_finalize_TAU, *((uint64_t*)(tau + i)), (n - 1) * (n - 1 + pad));
+      SS_REPEAT_PORT((n - 1 + pad) / 2);
+      SS_DMA_READ(w, 8, 8, n - 1, P_finalize_B);
       for (int j = 0; j < n - 1; ++j) {
-        SB_DMA_READ(q + (j + i + 1) * N + i + 1, 0, 8 * (n - 1), 1, P_finalize_C); SB_CONST(P_finalize_C, 0, pad);
-        //SB_CONST(P_finalize_B, *((uint64_t*)(w + j)), (n - 1 + pad) / 2);
-        SB_DMA_READ(v, 0, 8 * (n - 1), 1, P_finalize_A); SB_CONST(P_finalize_A, 0, pad);
-        SB_DMA_WRITE(P_finalize_O, 0, 8 * (n - 1), 1, q + (j + i + 1) * N + i + 1); SB_GARBAGE(P_finalize_O, pad);
+        SS_DMA_READ(q + (j + i + 1) * N + i + 1, 0, 8 * (n - 1), 1, P_finalize_C); SS_CONST(P_finalize_C, 0, pad);
+        //SS_CONST(P_finalize_B, *((uint64_t*)(w + j)), (n - 1 + pad) / 2);
+        SS_DMA_READ(v, 0, 8 * (n - 1), 1, P_finalize_A); SS_CONST(P_finalize_A, 0, pad);
+        SS_DMA_WRITE(P_finalize_O, 0, 8 * (n - 1), 1, q + (j + i + 1) * N + i + 1); SS_GARBAGE(P_finalize_O, pad);
       }
-      SB_WAIT_ALL();
+      SS_WAIT_ALL();
     }
 
     q[i * N + i] = 1.0f - tau[i];

@@ -12,7 +12,7 @@
 #include <vector>
 #include <assert.h>
 #include "ac.dfg.h"
-#include "/home/vidushi/ss-stack/ss-workloads/common/include/sb_insts.h"
+#include "/home/vidushi/ss-stack/ss-workloads/common/include/ss_insts.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
 #include "/home/vidushi/ss-stack/ss-scheduler/src/config/fixed_point.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/net_util_func.h"
@@ -58,11 +58,11 @@ vector<int> shadow_ptr;
 void load_linear_scratch(long tid) {
   int n_times = height_ptr[end_index[tid]]-height_ptr[start_index[tid]];
   int start_id = height_ptr[start_index[tid]];
-  SB_DMA_SCRATCH_LOAD(&ac_prop.nodeType[start_id], 1, 1, 4*n_times, getLinearAddr(0));
-  SB_DMA_SCRATCH_LOAD(&ac_prop.c0[start_id], 1, 1, 4*n_times, getLinearAddr(getLinearOffset(1,3)));
-  SB_DMA_SCRATCH_LOAD(&ac_prop.c1[start_id], 1, 1, 4*n_times, getLinearAddr(getLinearOffset(2,3)));
-  // SB_WAIT_SCR_WR();
-  SB_WAIT_ALL();
+  SS_DMA_SCRATCH_LOAD(&ac_prop.nodeType[start_id], 1, 1, 4*n_times, getLinearAddr(0));
+  SS_DMA_SCRATCH_LOAD(&ac_prop.c0[start_id], 1, 1, 4*n_times, getLinearAddr(getLinearOffset(1,3)));
+  SS_DMA_SCRATCH_LOAD(&ac_prop.c1[start_id], 1, 1, 4*n_times, getLinearAddr(getLinearOffset(2,3)));
+  // SS_WAIT_SCR_WR();
+  SS_WAIT_ALL();
 }
 
 void compute(bool enable, long tid, int input_id) {
@@ -83,34 +83,34 @@ void compute(bool enable, long tid, int input_id) {
     
 	// reads from linear scratchpad
     // 8 * num_iters bytes
-	SB_SCRATCH_READ(getLinearAddr(0+linear_offset), 8*num_iters, P_ac_nodeType);
-    SB_SCRATCH_READ(getLinearAddr(getLinearOffset(1,3)+linear_offset), 8*num_iters, P_IND_1);
-    SB_SCRATCH_READ(getLinearAddr(getLinearOffset(2,3)+linear_offset), 8*num_iters, P_IND_2);
+	SS_SCRATCH_READ(getLinearAddr(0+linear_offset), 8*num_iters, P_ac_nodeType);
+    SS_SCRATCH_READ(getLinearAddr(getLinearOffset(1,3)+linear_offset), 8*num_iters, P_IND_1);
+    SS_SCRATCH_READ(getLinearAddr(getLinearOffset(2,3)+linear_offset), 8*num_iters, P_IND_2);
 
-	SB_CONST(P_ac_const, fused_const, num_iters);
+	SS_CONST(P_ac_const, fused_const, num_iters);
 
 	// indirect reads from banked scratchpad
 	// _index_addr + index * _ind_mult + _offsets[_index_in_offsets]*_data_bytes;
-	SB_CONFIG_INDIRECT1(T32, T32, 2, 2);
+	SS_CONFIG_INDIRECT1(T32, T32, 2, 2);
     // 4 * 2 * 2 * num_iters bytes
-    SB_INDIRECT_SCR(P_IND_1, vr_offset-2*start_index[tid], 2*num_iters, P_ac_c1vf);
-    SB_CONFIG_INDIRECT1(T32, T32, 2, 2);
-    SB_INDIRECT_SCR(P_IND_2, (vr_offset+16*num_iters-2*start_index[tid]), 2*num_iters, P_ac_c2vf);
+    SS_INDIRECT_SCR(P_IND_1, vr_offset-2*start_index[tid], 2*num_iters, P_ac_c1vf);
+    SS_CONFIG_INDIRECT1(T32, T32, 2, 2);
+    SS_INDIRECT_SCR(P_IND_2, (vr_offset+16*num_iters-2*start_index[tid]), 2*num_iters, P_ac_c2vf);
 
     // direct banked scratch write in sequence
-	SB_SCR_WRITE(P_ac_vrf, 8*2*num_iters, vr_offset+32*num_iters);
+	SS_SCR_WRITE(P_ac_vrf, 8*2*num_iters, vr_offset+32*num_iters);
 
-    SB_WAIT_ALL();
+    SS_WAIT_ALL();
   }
 }
 
 void receive_data(bool enable, long tid){
   if(!enable) return;
   if(tid==0){
-    SB_WAIT_SCR_WR();
+    SS_WAIT_SCR_WR();
   } else {
     int num_nodes = shadow_ptr[tid]-shadow_ptr[tid-1];
-    SB_WAIT_DF(num_nodes, 0);
+    SS_WAIT_DF(num_nodes, 0);
   }
 }
 
@@ -122,12 +122,12 @@ void send_data(bool enable, long tid, int input_id){
 
   if(tid==NUM_THREADS-1) { // send to memory
     // TODO: check! (both vr and flag?)
-    SB_SCRATCH_DMA_STORE(src_offset, 4, 4, (shadow_ptr[tid]-shadow_ptr[tid-1])*2, &ac[input_id][0].vr);
+    SS_SCRATCH_DMA_STORE(src_offset, 4, 4, (shadow_ptr[tid]-shadow_ptr[tid-1])*2, &ac[input_id][0].vr);
   } else {  // send to the next core
     int total_nodes = shadow_ptr[tid]-shadow_ptr[tid-1]; 
     // FIXME: source offset would be different
     // cout << "SOURCE OFFSET: " << src_offset << " REMOTE OFFSET: " << rem_offset << " number of nodes: " << total_nodes << endl;
-    SB_SCR_REM_SCR(src_offset, 4, 4, total_nodes, rem_offset, 0);
+    SS_SCR_REM_SCR(src_offset, 4, 4, total_nodes, rem_offset, 0);
   }
 }
 
@@ -144,7 +144,7 @@ void *entry_point(void *threadid) {
 
   int recv_offset = 0;   
   begin_roi();
-  SB_CONFIG(ac_config,ac_size);
+  SS_CONFIG(ac_config,ac_size);
   load_linear_scratch(tid);
   // triple buffering here -- tid=1 will start after first round
   
@@ -164,7 +164,7 @@ void *entry_point(void *threadid) {
     if(i%3==0) {
       if(tid==0 && cond1) {
         recv_offset = getBankedOffset((3-i)%3,3);
-        SB_DMA_SCRATCH_LOAD(&ac[i][0].vr, 4, 4, shadow_ptr[tid], recv_offset);
+        SS_DMA_SCRATCH_LOAD(&ac[i][0].vr, 4, 4, shadow_ptr[tid], recv_offset);
       }
       receive_data(cond1, tid); // doesn't work for tid=1 at the first time
       compute(cond2, tid, i-3*tid);
@@ -172,7 +172,7 @@ void *entry_point(void *threadid) {
     } else if(i%3==1) {
       if(tid==0 && cond1) {
         recv_offset = getBankedOffset((3-i)%3,3);
-        SB_DMA_SCRATCH_LOAD(&ac[i][0].vr, 4, 4, shadow_ptr[tid], recv_offset);
+        SS_DMA_SCRATCH_LOAD(&ac[i][0].vr, 4, 4, shadow_ptr[tid], recv_offset);
       }
       receive_data(cond1, tid);
       compute(cond2, tid, i-1-3*tid);
@@ -180,7 +180,7 @@ void *entry_point(void *threadid) {
     } else {
       if(tid==0 && cond1) {
         recv_offset = getBankedOffset((3-i)%3,3);
-        SB_DMA_SCRATCH_LOAD(&ac[i][0].vr, 4, 4, shadow_ptr[tid], recv_offset);
+        SS_DMA_SCRATCH_LOAD(&ac[i][0].vr, 4, 4, shadow_ptr[tid], recv_offset);
       }
       receive_data(cond1, tid);
       compute(cond2, tid, i-2-3*tid);

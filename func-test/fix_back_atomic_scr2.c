@@ -20,34 +20,34 @@ int main() {
     x[i] = i;
   }
 
-  SB_CONFIG(add_offset_config,add_offset_size);
+  SS_CONFIG(add_offset_config,add_offset_size);
   
-  //SB_CONST_SCR(0, 0, (64*2+2));
-  //SB_WAIT_SCR_WR();
+  //SS_CONST_SCR(0, 0, (64*2+2));
+  //SS_WAIT_SCR_WR();
  
   for(int i = 0; i < 1; ++i) {
     begin_roi();
 
-    //SB_DMA_READ(&ind[0], 8, 8, N/2, P_IND_1);
-    //SB_CONFIG_INDIRECT1(T64, T64, 1, 1);
-    //SB_INDIRECT(P_IND_1, &x[0], N/2, P_add_offset_A);
-    SB_DMA_READ(&x[0], 8, 8, N, P_add_offset_A);
+    //SS_DMA_READ(&ind[0], 8, 8, N/2, P_IND_1);
+    //SS_CONFIG_INDIRECT1(T64, T64, 1, 1);
+    //SS_INDIRECT(P_IND_1, &x[0], N/2, P_add_offset_A);
+    SS_DMA_READ(&x[0], 8, 8, N, P_add_offset_A);
 
-    SB_CONST(P_add_offset_const, 1, N/2);
+    SS_CONST(P_add_offset_const, 1, N/2);
 
-    SB_ATOMIC_SCR_OP(P_add_offset_C, P_add_offset_D, 0, N, 0);
-    //SB_WAIT_SCR_WR();
-    //SB_DMA_WRITE(P_add_offset_C,8,8,N,&output[0]);
-    //SB_DMA_WRITE(P_add_offset_D,8,8,N,&output[0]);
+    SS_ATOMIC_SCR_OP(P_add_offset_C, P_add_offset_D, 0, N, 0);
+    //SS_WAIT_SCR_WR();
+    //SS_DMA_WRITE(P_add_offset_C,8,8,N,&output[0]);
+    //SS_DMA_WRITE(P_add_offset_D,8,8,N,&output[0]);
 
-    //SB_WAIT_SCR_ATOMIC();
+    //SS_WAIT_SCR_ATOMIC();
 
     end_roi();
 
   }
 
-    SB_WAIT_ALL();
+    SS_WAIT_ALL();
 
 
-  //SB_WAIT_ALL();
+  //SS_WAIT_ALL();
 }

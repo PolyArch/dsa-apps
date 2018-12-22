@@ -66,19 +66,19 @@ int main(int argc, char* argv[]) {
   }
 
   begin_roi();
-  SB_CONFIG(none_config,none_size);
-  SB_DMA_READ(&in64[0],8,8,5,P_none_in);
+  SS_CONFIG(none_config,none_size);
+  SS_DMA_READ(&in64[0],8,8,5,P_none_in);
 
-  SB_REPEAT_PORT(7);
-  SB_DMA_READ(&in64[5],8,8,3,P_none_in);
+  SS_REPEAT_PORT(7);
+  SS_DMA_READ(&in64[5],8,8,3,P_none_in);
 
-  SB_REPEAT_PORT(4);
-  SB_DMA_READ(&in64[8],8,8,6,P_none_in);
+  SS_REPEAT_PORT(4);
+  SS_DMA_READ(&in64[8],8,8,6,P_none_in);
 
-  SB_DMA_READ(&in64[14],8,8,2,P_none_in);
+  SS_DMA_READ(&in64[14],8,8,2,P_none_in);
 
-  SB_DMA_WRITE(P_none_out,8,8,total_rep_i,&out_big[0]);
-  SB_WAIT_ALL();
+  SS_DMA_WRITE(P_none_out,8,8,total_rep_i,&out_big[0]);
+  SS_WAIT_ALL();
   end_roi();
 
   compare<DTYPE>(argv[0],out_big,answer,ASIZE*repeat);

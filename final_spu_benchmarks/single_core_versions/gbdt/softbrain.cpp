@@ -6,7 +6,7 @@
 #include "stall_none.dfg.h"
 #include "final_redn.dfg.h"
 #include "map.dfg.h"
-#include "../../common/include/sb_insts.h"
+#include "../../common/include/ss_insts.h"
 #include "../../common/include/sim_timing.h"
 #include <inttypes.h>
 #include <sstream>
@@ -107,27 +107,27 @@ class DecisionTree {
       int j=0;
 	  // for instruction stalls
 	  // 64*8*64 bits / 512 = 64 cycles
-	  SB_CONST_SCR(0, 0, (64*8));
-      SB_WAIT_SCR_RD(); // should prevent write because my atomic scr is both rd and wr but in wr controller?
-      SB_WAIT_SCR_WR();
+	  SS_CONST_SCR(0, 0, (64*8));
+      SS_WAIT_SCR_RD(); // should prevent write because my atomic scr is both rd and wr but in wr controller?
+      SS_WAIT_SCR_WR();
 
-	  SB_CONFIG(stall_none_config,stall_none_size);
-      SB_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_TRIP0);
-      SB_CONFIG_INDIRECT(T64, T64, M+2);
-      SB_INDIRECT(P_IND_TRIP0, &data[0][j], n, P_stall_none_A);
+	  SS_CONFIG(stall_none_config,stall_none_size);
+      SS_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_TRIP0);
+      SS_CONFIG_INDIRECT(T64, T64, M+2);
+      SS_INDIRECT(P_IND_TRIP0, &data[0][j], n, P_stall_none_A);
       
-      SB_CONFIG_INDIRECT(T64, T64, M+2);
-      SB_INDIRECT(P_IND_TRIP1, &data[0][M], n, P_stall_none_label);
+      SS_CONFIG_INDIRECT(T64, T64, M+2);
+      SS_INDIRECT(P_IND_TRIP1, &data[0][M], n, P_stall_none_label);
 
-      SB_CONFIG_INDIRECT(T64, T64, M+2);
-      SB_INDIRECT(P_IND_TRIP2, &data[0][M+1], n, P_stall_none_const);
+      SS_CONFIG_INDIRECT(T64, T64, M+2);
+      SS_INDIRECT(P_IND_TRIP2, &data[0][M+1], n, P_stall_none_const);
 
-      SB_CONST(P_stall_none_local_offset, local_offset, n);
+      SS_CONST(P_stall_none_local_offset, local_offset, n);
 
-      SB_CONFIG_ATOMIC_SCR_OP(T16, T64, T64);
-      SB_ATOMIC_SCR_OP(P_stall_none_C, P_stall_none_D, offset, 2*n*4, 0);
-      SB_WAIT_SCR_WR();
-      SB_WAIT_ALL();
+      SS_CONFIG_ATOMIC_SCR_OP(T16, T64, T64);
+      SS_ATOMIC_SCR_OP(P_stall_none_C, P_stall_none_D, offset, 2*n*4, 0);
+      SS_WAIT_SCR_WR();
+      SS_WAIT_ALL();
 
 
 
@@ -141,138 +141,138 @@ class DecisionTree {
         // 4 feat values at a time
 		/*
 
-        SB_CONST_SCR(0, 0, (64*8));
-        SB_WAIT_SCR_RD(); // should prevent write because my atomic scr is both rd and wr but in wr controller?
-        SB_WAIT_SCR_WR();
+        SS_CONST_SCR(0, 0, (64*8));
+        SS_WAIT_SCR_RD(); // should prevent write because my atomic scr is both rd and wr but in wr controller?
+        SS_WAIT_SCR_WR();
 
 
 
-        SB_CONFIG(stall_none_config,stall_none_size);
+        SS_CONFIG(stall_none_config,stall_none_size);
                 
 
-        // SB_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_1);
-        // SB_CONFIG_INDIRECT2(T64, T64, M+2, M-j, M+1-j);
-        // SB_INDIRECT(P_IND_1, &data[0][j], n, P_stall_none_A);
-        // SB_INDIRECT(P_IND_1, &data[0][j], n, P_stall_none_label);
-        // SB_INDIRECT(P_IND_1, &data[0][j], n, P_stall_none_const);
+        // SS_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_1);
+        // SS_CONFIG_INDIRECT2(T64, T64, M+2, M-j, M+1-j);
+        // SS_INDIRECT(P_IND_1, &data[0][j], n, P_stall_none_A);
+        // SS_INDIRECT(P_IND_1, &data[0][j], n, P_stall_none_label);
+        // SS_INDIRECT(P_IND_1, &data[0][j], n, P_stall_none_const);
         // TODO: I can use offset list here now
-        SB_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_TRIP0);
-        SB_CONFIG_INDIRECT(T64, T64, M+2);
-        SB_INDIRECT(P_IND_TRIP0, &data[0][j], n, P_stall_none_A);
+        SS_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_TRIP0);
+        SS_CONFIG_INDIRECT(T64, T64, M+2);
+        SS_INDIRECT(P_IND_TRIP0, &data[0][j], n, P_stall_none_A);
         
-        SB_CONFIG_INDIRECT(T64, T64, M+2);
-        SB_INDIRECT(P_IND_TRIP1, &data[0][M], n, P_stall_none_label);
+        SS_CONFIG_INDIRECT(T64, T64, M+2);
+        SS_INDIRECT(P_IND_TRIP1, &data[0][M], n, P_stall_none_label);
 
-        SB_CONFIG_INDIRECT(T64, T64, M+2);
-        SB_INDIRECT(P_IND_TRIP2, &data[0][M+1], n, P_stall_none_const);
+        SS_CONFIG_INDIRECT(T64, T64, M+2);
+        SS_INDIRECT(P_IND_TRIP2, &data[0][M+1], n, P_stall_none_const);
 
-        SB_CONST(P_stall_none_local_offset, local_offset, n);
+        SS_CONST(P_stall_none_local_offset, local_offset, n);
 
-        SB_CONFIG_ATOMIC_SCR_OP(T16, T64, T64);
-        SB_ATOMIC_SCR_OP(P_stall_none_C, P_stall_none_D, offset, 2*n*4, 0);
-        SB_WAIT_SCR_WR();
-        SB_WAIT_ALL();
-
-
+        SS_CONFIG_ATOMIC_SCR_OP(T16, T64, T64);
+        SS_ATOMIC_SCR_OP(P_stall_none_C, P_stall_none_D, offset, 2*n*4, 0);
+        SS_WAIT_SCR_WR();
+        SS_WAIT_ALL();
 
 
-        // SB_CONFIG(none_config,none_size);
+
+
+        // SS_CONFIG(none_config,none_size);
         //         
-        // SB_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_TRIP0);
-        // SB_CONFIG_INDIRECT(T64, T64, M+2);
-        // SB_INDIRECT(P_IND_TRIP0, &data[0][j], n, P_none_A);
+        // SS_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_TRIP0);
+        // SS_CONFIG_INDIRECT(T64, T64, M+2);
+        // SS_INDIRECT(P_IND_TRIP0, &data[0][j], n, P_none_A);
         // 
-        // SB_CONFIG_INDIRECT(T64, T64, M+2);
-        // SB_REPEAT_PORT(4);
-        // SB_INDIRECT(P_IND_TRIP1, &data[0][M], n, P_none_label);
+        // SS_CONFIG_INDIRECT(T64, T64, M+2);
+        // SS_REPEAT_PORT(4);
+        // SS_INDIRECT(P_IND_TRIP1, &data[0][M], n, P_none_label);
 
-        // SB_CONFIG_INDIRECT(T64, T64, M+2);
-        // SB_REPEAT_PORT(4);
-        // SB_INDIRECT(P_IND_TRIP2, &data[0][M+1], n, P_none_const);
+        // SS_CONFIG_INDIRECT(T64, T64, M+2);
+        // SS_REPEAT_PORT(4);
+        // SS_INDIRECT(P_IND_TRIP2, &data[0][M+1], n, P_none_const);
 
-        // SB_CONST(P_none_local_offset, local_offset, n);
+        // SS_CONST(P_none_local_offset, local_offset, n);
 
-        // SB_CONFIG_ATOMIC_SCR_OP(T16, T64, T64);
-        // SB_ATOMIC_SCR_OP(P_none_C, P_none_D, offset, 2*n*4, 0);
-        // SB_WAIT_ALL();
+        // SS_CONFIG_ATOMIC_SCR_OP(T16, T64, T64);
+        // SS_ATOMIC_SCR_OP(P_none_C, P_none_D, offset, 2*n*4, 0);
+        // SS_WAIT_ALL();
 
-        SB_CONFIG(test_config,test_size);
+        SS_CONFIG(test_config,test_size);
 
         for(int f=0; f<4; ++f){
           for(int i=0; i<2; ++i) { 
-            SB_SCRATCH_READ(64*i+128*f, 64*8, P_test_P);
-            SB_CONST(P_test_Q, 0, 64);
-            SB_SCR_WRITE(P_test_T, 8*64, 64*i+128*f);
-            SB_WAIT_SCR_WR();
+            SS_SCRATCH_READ(64*i+128*f, 64*8, P_test_P);
+            SS_CONST(P_test_Q, 0, 64);
+            SS_SCR_WRITE(P_test_T, 8*64, 64*i+128*f);
+            SS_WAIT_SCR_WR();
           }
-          SB_WAIT_ALL();
+          SS_WAIT_ALL();
         }
         
-        SB_CONFIG(test_config,test_size);
+        SS_CONFIG(test_config,test_size);
         // for(int f=0; f<4; ++f){
         // only this thing is left----------------
         for(int f=0; f<1; ++f){
           // reduction step: this can be vectorized if we are ready to reconfigure
-          SB_REPEAT_PORT(iters);
-          SB_SCRATCH_READ(63+128*f, 8, P_test_max_label);
-          SB_REPEAT_PORT(iters);
-          SB_SCRATCH_READ(64*2+128*f - 1, 8, P_test_max_count);
+          SS_REPEAT_PORT(iters);
+          SS_SCRATCH_READ(63+128*f, 8, P_test_max_label);
+          SS_REPEAT_PORT(iters);
+          SS_SCRATCH_READ(64*2+128*f - 1, 8, P_test_max_count);
         
-          SB_SCRATCH_READ(128*f, 8*iters, P_test_label);
-          SB_SCRATCH_READ(64+128*f, 8*iters, P_test_count);
-          SB_CONST(P_test_const1, 1, iters*n_f);
-          SB_CONST(P_test_const2, 0, iters*n_f);
+          SS_SCRATCH_READ(128*f, 8*iters, P_test_label);
+          SS_SCRATCH_READ(64+128*f, 8*iters, P_test_count);
+          SS_CONST(P_test_const1, 1, iters*n_f);
+          SS_CONST(P_test_const2, 0, iters*n_f);
        
-          SB_SCR_WRITE(P_test_final_entr, 8*1, 128*f+64*2+j);
-          SB_SCR_WRITE(P_test_split_thres, 8*1, 128*f+64*2+1+j);
+          SS_SCR_WRITE(P_test_final_entr, 8*1, 128*f+64*2+j);
+          SS_SCR_WRITE(P_test_split_thres, 8*1, 128*f+64*2+1+j);
 
-          SB_WAIT_SCR_WR();
-          SB_WAIT_ALL();
+          SS_WAIT_SCR_WR();
+          SS_WAIT_ALL();
         }
 		*/
       }
-      // SB_WAIT_ALL();
+      // SS_WAIT_ALL();
       // end_roi();
       // sb_stats();
 	  /*
       int m=8;
-      SB_CONFIG(final_redn_config, final_redn_size);
-      SB_SCR_PORT_STREAM(64*2, 8*2, 8, (m-1), P_final_redn_cur_entr);
-      SB_CONST(P_final_redn_const1, 1, m-1);
-      SB_CONST(P_final_redn_const2, 0, m-1);
+      SS_CONFIG(final_redn_config, final_redn_size);
+      SS_SCR_PORT_STREAM(64*2, 8*2, 8, (m-1), P_final_redn_cur_entr);
+      SS_CONST(P_final_redn_const1, 1, m-1);
+      SS_CONST(P_final_redn_const2, 0, m-1);
       // let's write it in dma
-      SB_SCR_WRITE(P_final_redn_split_feat_id, 8*1, 64*2+m+1);
-      SB_WAIT_SCR_WR();
-      SB_WAIT_SCR_RD();
+      SS_SCR_WRITE(P_final_redn_split_feat_id, 8*1, 64*2+m+1);
+      SS_WAIT_SCR_WR();
+      SS_WAIT_SCR_RD();
       // could have stored directly to dram
-      SB_SCRATCH_DMA_STORE(64*2+m+1, 8, 8, 1, &node->info.split_feat_id);
-      SB_WAIT_ALL();
-      SB_SCRATCH_DMA_STORE(64*2+node->info.split_feat_id*2+1, 8, 8, 1, &node->info.thres);
-      SB_WAIT_ALL();
+      SS_SCRATCH_DMA_STORE(64*2+m+1, 8, 8, 1, &node->info.split_feat_id);
+      SS_WAIT_ALL();
+      SS_SCRATCH_DMA_STORE(64*2+node->info.split_feat_id*2+1, 8, 8, 1, &node->info.thres);
+      SS_WAIT_ALL();
 
       double split_thres = node->info.thres; 
       int feat_id = node->info.split_feat_id;
 
       // ideally should be in different scratchpad
-      SB_CONFIG(map_config, map_size);
+      SS_CONFIG(map_config, map_size);
 
       // extra read of id's: do something
-      SB_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_1);
-      SB_CONFIG_INDIRECT(T64, T64, M+2);
-      SB_INDIRECT(P_IND_1, &data[0][feat_id], n, P_map_feat_val);
-      SB_CONST(P_map_split_thres, split_thres, n);
-      SB_CONST(P_map_child1_offset, 0, n);
-      SB_CONST(P_map_child2_offset, 64, n);
-      SB_DMA_READ(&node->inst_id[0], 8, 8, n, P_map_node_id);
+      SS_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_1);
+      SS_CONFIG_INDIRECT(T64, T64, M+2);
+      SS_INDIRECT(P_IND_1, &data[0][feat_id], n, P_map_feat_val);
+      SS_CONST(P_map_split_thres, split_thres, n);
+      SS_CONST(P_map_child1_offset, 0, n);
+      SS_CONST(P_map_child2_offset, 64, n);
+      SS_DMA_READ(&node->inst_id[0], 8, 8, n, P_map_node_id);
 
-      SB_CONFIG_ATOMIC_SCR_OP(T64, T64, T64);
-      // SB_ATOMIC_SCR_OP(P_map_offset, P_IND_DOUB1, 0, n, 3); // I want just update
-      SB_ATOMIC_SCR_OP(P_map_offset, P_map_id, 0, n, 3); // I want just update
+      SS_CONFIG_ATOMIC_SCR_OP(T64, T64, T64);
+      // SS_ATOMIC_SCR_OP(P_map_offset, P_IND_DOUB1, 0, n, 3); // I want just update
+      SS_ATOMIC_SCR_OP(P_map_offset, P_map_id, 0, n, 3); // I want just update
  
       // indirect wr to only scr possible: not allowed to use output port as
       // indirect port? (weird): should i remove that condition?
-      // SB_INDIRECT_WR(P_map_offset, 0, n, P_map_id); // it is not mapping correct value as the output...need to see
-      SB_WAIT_ALL();
+      // SS_INDIRECT_WR(P_map_offset, 0, n, P_map_id); // it is not mapping correct value as the output...need to see
+      SS_WAIT_ALL();
 	  */
 
 

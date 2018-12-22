@@ -3,7 +3,7 @@
 
 #include <complex>
 #include <algorithm>
-#include "sb_insts.h"
+#include "ss_insts.h"
 //#include "mmv.dfg.h"
 //#include "mmvc.dfg.h"
 //#include "vmm.dfg.h"
@@ -61,21 +61,21 @@
     int O(!is_conj ? P_mmv_O : P_mmvc_O); \
     int reset(!is_conj ? P_mmv_reset : P_mmvc_reset); \
     if (is_conj) {\
-      SB_CONFIG(mmvc_config, mmvc_size); \
+      SS_CONFIG(mmvc_config, mmvc_size); \
     } else { \
-      SB_CONFIG(mmv_config, mmv_size); \
+      SS_CONFIG(mmv_config, mmv_size); \
     } \
     for (int _i_(0); _i_ < (mat_height); ++_i_) { \
-      SB_DMA_READ((mat) + _i_ * (mat_stride), 8, 8, mat_width, A); \
-      SB_CONST(A, 0, pad); \
-      SB_DMA_READ((vec), 8, 8, mat_width, B); \
-      SB_CONST(B, 0, pad); \
-      SB_CONST(reset, 0, ((mat_width) + pad) / 4 - 1); \
-      SB_CONST(reset, 1, 1); \
-      SB_GARBAGE(O, ((mat_width) + pad) / 4 - 1); \
-      SB_DMA_WRITE(O, 8, 8, 1, (res) + _i_); \
+      SS_DMA_READ((mat) + _i_ * (mat_stride), 8, 8, mat_width, A); \
+      SS_CONST(A, 0, pad); \
+      SS_DMA_READ((vec), 8, 8, mat_width, B); \
+      SS_CONST(B, 0, pad); \
+      SS_CONST(reset, 0, ((mat_width) + pad) / 4 - 1); \
+      SS_CONST(reset, 1, 1); \
+      SS_GARBAGE(O, ((mat_width) + pad) / 4 - 1); \
+      SS_DMA_WRITE(O, 8, 8, 1, (res) + _i_); \
     } \
-    SB_WAIT_ALL(); \
+    SS_WAIT_ALL(); \
   } while(false)
 
 #define REVELmat_mul_vec(mat, mat_height, mat_width, mat_stride, vec, is_conj, res) \
@@ -86,16 +86,16 @@
     int O(is_conj ? P_mmvc_O : P_mmv_O); \
     int reset(is_conj ? P_mmvc_reset : P_mmv_reset); \
     if (is_conj) {\
-      SB_CONFIG(mmvc_config, mmvc_size); \
+      SS_CONFIG(mmvc_config, mmvc_size); \
     } else { \
-      SB_CONFIG(mmv_config, mmv_size); \
+      SS_CONFIG(mmv_config, mmv_size); \
     } \
-    SB_FILL_MODE(STRIDE_ZERO_FILL); \
-    SB_DMA_READ(mat, 8 * (mat_stride), 8 * (mat_width), mat_height, A); \
-    SB_DMA_READ((vec), 0, 8 * (mat_width), mat_height, B); \
-    SB_2D_CONST(reset, 2, ((mat_width) + pad) / 4 - 1, 1, 1, mat_height); \
-    SB_DMA_WRITE(O, 8, 8, mat_height, res); \
-    SB_WAIT_ALL(); \
+    SS_FILL_MODE(STRIDE_ZERO_FILL); \
+    SS_DMA_READ(mat, 8 * (mat_stride), 8 * (mat_width), mat_height, A); \
+    SS_DMA_READ((vec), 0, 8 * (mat_width), mat_height, B); \
+    SS_2D_CONST(reset, 2, ((mat_width) + pad) / 4 - 1, 1, 1, mat_height); \
+    SS_DMA_WRITE(O, 8, 8, mat_height, res); \
+    SS_WAIT_ALL(); \
   } while(false)
 
 #define CPUvec_mul_mat(mat, mat_height, mat_width, mat_stride, vec, is_conj, res) \
@@ -116,23 +116,23 @@
     int C(is_conj ? P_vcmm_C : P_vmm_C); \
     int O(is_conj ? P_vcmm_O : P_vmm_O); \
     if (is_conj) { \
-      SB_CONFIG(vcmm_config, vcmm_size); \
+      SS_CONFIG(vcmm_config, vcmm_size); \
     } else { \
-      SB_CONFIG(vmm_config, vmm_size); \
+      SS_CONFIG(vmm_config, vmm_size); \
     } \
-    SB_CONST(C, 0, (mat_width) + pad); \
+    SS_CONST(C, 0, (mat_width) + pad); \
     for (int _i_(0); _i_ < (0) + (mat_height); ++_i_) { \
-      SB_DMA_READ((mat) + _i_ * (mat_stride), 8, 8, (mat_width), A); \
-      SB_CONST(A, 0, pad); \
-      SB_CONST(B, *((uint64_t*)(vec) + _i_), ((mat_width) + pad) / 4); \
+      SS_DMA_READ((mat) + _i_ * (mat_stride), 8, 8, (mat_width), A); \
+      SS_CONST(A, 0, pad); \
+      SS_CONST(B, *((uint64_t*)(vec) + _i_), ((mat_width) + pad) / 4); \
       if (_i_ != (mat_height) - 1) { \
-        SB_RECURRENCE(O, C, (mat_width) + pad); \
+        SS_RECURRENCE(O, C, (mat_width) + pad); \
       } else { \
-        SB_DMA_WRITE(O, 8, 8, (mat_width), (res)); \
-        SB_GARBAGE(O, pad); \
+        SS_DMA_WRITE(O, 8, 8, (mat_width), (res)); \
+        SS_GARBAGE(O, pad); \
       } \
     } \
-    SB_WAIT_ALL(); \
+    SS_WAIT_ALL(); \
   } while (false)
 
 
@@ -144,19 +144,19 @@
     int C(is_conj ? P_vcmm_C : P_vmm_C); \
     int O(is_conj ? P_vcmm_O : P_vmm_O); \
     if (is_conj) { \
-      SB_CONFIG(vcmm_config, vcmm_size); \
+      SS_CONFIG(vcmm_config, vcmm_size); \
     } else { \
-      SB_CONFIG(vmm_config, vmm_size); \
+      SS_CONFIG(vmm_config, vmm_size); \
     } \
-    SB_FILL_MODE(STRIDE_ZERO_FILL); \
-    SB_DMA_READ(mat, 8 * (mat_stride), 8 * (mat_width), (mat_height), A); \
-    SB_CONST(C, 0, (mat_width) + pad); \
-    SB_RECURRENCE(O, C, ((mat_width) + pad) * ((mat_height) - 1)); \
-    SB_REPEAT_PORT(((mat_width) + pad) / 4); \
-    SB_DMA_READ((vec), 8, 8, (mat_height), B); \
-    SB_DMA_WRITE(O, 8, 8, (mat_width), (res)); \
-    SB_GARBAGE(O, pad); \
-    SB_WAIT_ALL(); \
+    SS_FILL_MODE(STRIDE_ZERO_FILL); \
+    SS_DMA_READ(mat, 8 * (mat_stride), 8 * (mat_width), (mat_height), A); \
+    SS_CONST(C, 0, (mat_width) + pad); \
+    SS_RECURRENCE(O, C, ((mat_width) + pad) * ((mat_height) - 1)); \
+    SS_REPEAT_PORT(((mat_width) + pad) / 4); \
+    SS_DMA_READ((vec), 8, 8, (mat_height), B); \
+    SS_DMA_WRITE(O, 8, 8, (mat_width), (res)); \
+    SS_GARBAGE(O, pad); \
+    SS_WAIT_ALL(); \
   } while (false)
 
 #define CPUsub_outerx2(m, m_height, m_width, m_stride, a, b, conj_b, res, res_stride) \
@@ -178,13 +178,13 @@
       int A, B, C, O; \
       complex<float> *_m = (complex<float> *) m; \
       if (!(conj_b)) { \
-        SB_CONFIG(subouterx2_config, subouterx2_size); \
+        SS_CONFIG(subouterx2_config, subouterx2_size); \
         A      = P_subouterx2_A; \
         B      = P_subouterx2_B; \
         C      = P_subouterx2_C; \
         O      = P_subouterx2_O; \
       } else if (conj_b) { \
-        SB_CONFIG(suboutercx2_config, suboutercx2_size); \
+        SS_CONFIG(suboutercx2_config, suboutercx2_size); \
         A      = P_suboutercx2_A; \
         B      = P_suboutercx2_B; \
         C      = P_suboutercx2_C; \
@@ -192,19 +192,19 @@
       } \
       int pad = get_pad((m_width), 2); \
       if (_m != NULL) { \
-        SB_FILL_MODE(STRIDE_DISCARD_FILL); \
-        SB_DMA_READ(m, 8 * (m_stride), 8 * (m_width), (m_height), A); \
+        SS_FILL_MODE(STRIDE_DISCARD_FILL); \
+        SS_DMA_READ(m, 8 * (m_stride), 8 * (m_width), (m_height), A); \
       } else { \
-        SB_FILL_MODE(NO_FILL); \
-        SB_2D_CONST(A, 1065353216, 1, 0, m_width, (m_height) - 1); \
-        SB_CONST(A, 1065353216, 1); \
-        SB_FILL_MODE(STRIDE_DISCARD_FILL); \
+        SS_FILL_MODE(NO_FILL); \
+        SS_2D_CONST(A, 1065353216, 1, 0, m_width, (m_height) - 1); \
+        SS_CONST(A, 1065353216, 1); \
+        SS_FILL_MODE(STRIDE_DISCARD_FILL); \
       } \
-      SB_REPEAT_PORT(((m_width) + pad) / 2); \
-      SB_DMA_READ(a, 8, 8, (m_height), B); \
-      SB_DMA_READ(b, 0, 8 * (m_width), m_height, C); \
-      SB_DMA_WRITE(O, 8 * (res_stride), 8 * (m_width), m_height, res); \
-      SB_WAIT_ALL(); \
+      SS_REPEAT_PORT(((m_width) + pad) / 2); \
+      SS_DMA_READ(a, 8, 8, (m_height), B); \
+      SS_DMA_READ(b, 0, 8 * (m_width), m_height, C); \
+      SS_DMA_WRITE(O, 8 * (res_stride), 8 * (m_width), m_height, res); \
+      SS_WAIT_ALL(); \
   } while (false)
 
 #endif

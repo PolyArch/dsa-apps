@@ -5,7 +5,7 @@
 #include <sstream>
 #include <assert.h>
 #include "vec_test.dfg.h"
-#include "../../common/include/sb_insts.h"
+#include "../../common/include/ss_insts.h"
 #include "../../common/include/sim_timing.h"
 #include <inttypes.h>
 
@@ -28,10 +28,10 @@ void mv_merged(uint64_t *wgt_col_ind, uint64_t *wgt_val, int* wgt_row_ptr, uint6
   
   // int ncol = 1;
   int ncol = N/4;
-  SB_CONFIG(vec_test_config,vec_test_size);
+  SS_CONFIG(vec_test_config,vec_test_size);
   
   // std::cout << wgt_row_ptr[0]; 
-  SB_DMA_WRITE(P_vec_test_out_val, 8, 8, ncol, &out_vec[0]);
+  SS_DMA_WRITE(P_vec_test_out_val, 8, 8, ncol, &out_vec[0]);
   // need to cover 2 row groups here
   for (int i=0; i<ncol; i+=vec_width){
   // std::cout << "weight row size: " << row_size << " act size: " << act_size << "\n";
@@ -40,47 +40,47 @@ void mv_merged(uint64_t *wgt_col_ind, uint64_t *wgt_val, int* wgt_row_ptr, uint6
 	ptr1 = wgt_row_ptr[i];
     end1 = wgt_row_ptr[i+1];
 	row_size1 = (end1-ptr1);
-    SB_DMA_READ(&wgt_col_ind[ptr1], 8, 8, row_size1, P_vec_test_wind0);
-	SB_CONST(P_vec_test_wind0, sentinal, 1);
-    SB_DMA_READ(&wgt_val[ptr1], 8, 8, row_size1, P_vec_test_wval0);
-	SB_CONST(P_vec_test_wval0, 0, 1);
+    SS_DMA_READ(&wgt_col_ind[ptr1], 8, 8, row_size1, P_vec_test_wind0);
+	SS_CONST(P_vec_test_wind0, sentinal, 1);
+    SS_DMA_READ(&wgt_val[ptr1], 8, 8, row_size1, P_vec_test_wval0);
+	SS_CONST(P_vec_test_wval0, 0, 1);
 
     // ROW group 2	
 	ptr2 = wgt_row_ptr[i+1];
     end2 = wgt_row_ptr[i+2];
 	row_size2 = (end2-ptr2);
-    SB_DMA_READ(&wgt_col_ind[ptr2], 8, 8, row_size2, P_vec_test_wind1);
-	SB_CONST(P_vec_test_wind1, sentinal, 1);
-    SB_DMA_READ(&wgt_val[ptr2], 8, 8, row_size2, P_vec_test_wval1);
-	SB_CONST(P_vec_test_wval1, 0, 1);
+    SS_DMA_READ(&wgt_col_ind[ptr2], 8, 8, row_size2, P_vec_test_wind1);
+	SS_CONST(P_vec_test_wind1, sentinal, 1);
+    SS_DMA_READ(&wgt_val[ptr2], 8, 8, row_size2, P_vec_test_wval1);
+	SS_CONST(P_vec_test_wval1, 0, 1);
 
 	/*
     // ROW group 3
 	ptr3 = wgt_row_ptr[i+2];
     end3 = wgt_row_ptr[i+3];
 	row_size3 = (end3-ptr3);
-    SB_DMA_READ(&wgt_col_ind[ptr3], 8, 8, row_size3, P_vec_test_wind2);
-	SB_CONST(P_vec_test_wind2, sentinal, 1);
-    SB_DMA_READ(&wgt_val[ptr3], 8, 8, row_size3, P_vec_test_wval2);
-	SB_CONST(P_vec_test_wval2, 0, 1);
+    SS_DMA_READ(&wgt_col_ind[ptr3], 8, 8, row_size3, P_vec_test_wind2);
+	SS_CONST(P_vec_test_wind2, sentinal, 1);
+    SS_DMA_READ(&wgt_val[ptr3], 8, 8, row_size3, P_vec_test_wval2);
+	SS_CONST(P_vec_test_wval2, 0, 1);
 
 	// ROW group 4
 	ptr4 = wgt_row_ptr[i+3];
     end4 = wgt_row_ptr[i+4];
 	row_size4 = (end4-ptr4);
-    SB_DMA_READ(&wgt_col_ind[ptr4], 8, 8, row_size4, P_vec_test_wind3);
-	SB_CONST(P_vec_test_wind3, sentinal, 1);
-    SB_DMA_READ(&wgt_val[ptr4], 8, 8, row_size2, P_vec_test_wval3);
-	SB_CONST(P_vec_test_wval3, 0, 1);
+    SS_DMA_READ(&wgt_col_ind[ptr4], 8, 8, row_size4, P_vec_test_wind3);
+	SS_CONST(P_vec_test_wind3, sentinal, 1);
+    SS_DMA_READ(&wgt_val[ptr4], 8, 8, row_size2, P_vec_test_wval3);
+	SS_CONST(P_vec_test_wval3, 0, 1);
 	*/
 
 
-	SB_REPEAT_PORT(4);
-    SB_DMA_READ(&act_ind[0], 8, 8, act_size, P_vec_test_aind);
-	SB_REPEAT_PORT(4);
-    SB_DMA_READ(&act_val[0], 8, 8, act_size, P_vec_test_aval);
+	SS_REPEAT_PORT(4);
+    SS_DMA_READ(&act_ind[0], 8, 8, act_size, P_vec_test_aind);
+	SS_REPEAT_PORT(4);
+    SS_DMA_READ(&act_val[0], 8, 8, act_size, P_vec_test_aval);
   }
-  SB_WAIT_ALL(); 
+  SS_WAIT_ALL(); 
 }
 
 

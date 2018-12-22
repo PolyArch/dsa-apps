@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <time.h> 
 #include "sim_timing.h"
-#include "sb_insts.h"
+#include "ss_insts.h"
 
 using std::complex;
 
@@ -35,13 +35,13 @@ int main() {
   int m = M;
   int p = P;
   for (int i = 0; i < LANES; ++i) {
-    SB_CONTEXT(1 << i);
-    SB_CONFIG(loader_config, loader_size);
-    SB_DMA_READ(b, 0, 8 * m * p, 1, P_loader_In);
-    SB_SCR_WRITE(P_loader_Out, 8 * m * p, 0);
-    SB_WAIT_SCR_WR();
+    SS_CONTEXT(1 << i);
+    SS_CONFIG(loader_config, loader_size);
+    SS_DMA_READ(b, 0, 8 * m * p, 1, P_loader_In);
+    SS_SCR_WRITE(P_loader_Out, 8 * m * p, 0);
+    SS_WAIT_SCR_WR();
   }
-  SB_WAIT_ALL();
+  SS_WAIT_ALL();
 
   gemm(N, M, P, a, b, cc);
   begin_roi();

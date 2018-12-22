@@ -7,7 +7,7 @@ SC 2008
 
 #include "stencil.h"
 #include "stencil_sb.dfg.h"
-#include "../../../common/include/sb_insts.h"
+#include "../../../common/include/ss_insts.h"
 
 void stencil3d(TYPE C[2], TYPE orig[SIZE], TYPE sol[SIZE]) {
     int i, j, k;
@@ -33,10 +33,10 @@ void stencil3d(TYPE C[2], TYPE orig[SIZE], TYPE sol[SIZE]) {
     //    }
     //}
 
-    SB_CONFIG(stencil_sb_config,stencil_sb_size);
+    SS_CONFIG(stencil_sb_config,stencil_sb_size);
     int total_elem = (height_size-2) * (col_size-2) * (row_size-2);
-    SB_CONST(P_stencil_sb_C0, C[0], total_elem);
-    SB_CONST(P_stencil_sb_C1, C[1], total_elem);
+    SS_CONST(P_stencil_sb_C0, C[0], total_elem);
+    SS_CONST(P_stencil_sb_C1, C[1], total_elem);
 
 
     // Stencil computation
@@ -44,33 +44,33 @@ void stencil3d(TYPE C[2], TYPE orig[SIZE], TYPE sol[SIZE]) {
 //        loop_col : for(j = 1; j < col_size - 1; j++){
 //            loop_row : for(k = 1; k < row_size - 1; k++) {
           k = 1;
-          SB_DMA_READ(&orig[INDX(row_size, col_size, k, j, i)], 
+          SS_DMA_READ(&orig[INDX(row_size, col_size, k, j, i)], 
                       row_size * sizeof(TYPE), (row_size-2) * sizeof(TYPE),(col_size-2),P_stencil_sb_M);
 
-          SB_DMA_READ(&orig[INDX(row_size, col_size, k, j, i+1)], 
+          SS_DMA_READ(&orig[INDX(row_size, col_size, k, j, i+1)], 
                       row_size * sizeof(TYPE), (row_size-2) * sizeof(TYPE),(col_size-2),P_stencil_sb_MIP);
-          SB_DMA_READ(&orig[INDX(row_size, col_size, k, j, i-1)], 
+          SS_DMA_READ(&orig[INDX(row_size, col_size, k, j, i-1)], 
                       row_size * sizeof(TYPE), (row_size-2) * sizeof(TYPE),(col_size-2),P_stencil_sb_MIM);
 
 
-          SB_DMA_READ(&orig[INDX(row_size, col_size, k, j+1, i)], 
+          SS_DMA_READ(&orig[INDX(row_size, col_size, k, j+1, i)], 
                       row_size * sizeof(TYPE), (row_size-2) * sizeof(TYPE),(col_size-2),P_stencil_sb_MJP);
-          SB_DMA_READ(&orig[INDX(row_size, col_size, k, j-1, i)], 
+          SS_DMA_READ(&orig[INDX(row_size, col_size, k, j-1, i)], 
                       row_size * sizeof(TYPE), (row_size-2) * sizeof(TYPE),(col_size-2),P_stencil_sb_MJM);
 
 
-          SB_DMA_READ(&orig[INDX(row_size, col_size, k+1, j, i)], 
+          SS_DMA_READ(&orig[INDX(row_size, col_size, k+1, j, i)], 
                       row_size * sizeof(TYPE), (row_size-2) * sizeof(TYPE),(col_size-2),P_stencil_sb_MKP);
-          SB_DMA_READ(&orig[INDX(row_size, col_size, k-1, j, i)], 
+          SS_DMA_READ(&orig[INDX(row_size, col_size, k-1, j, i)], 
                       row_size * sizeof(TYPE), (row_size-2) * sizeof(TYPE),(col_size-2),P_stencil_sb_MKM);
 
          //printf("i,j,k: %d,%d,%d, %d\n",i,j,k,INDX(row_size, col_size, k, j, i));
 
-         SB_DMA_WRITE(P_stencil_sb_R, row_size*sizeof(TYPE), (row_size-2)*sizeof(TYPE), (col_size-2), &(sol[INDX(row_size, col_size, k, j, i)]) );
+         SS_DMA_WRITE(P_stencil_sb_R, row_size*sizeof(TYPE), (row_size-2)*sizeof(TYPE), (col_size-2), &(sol[INDX(row_size, col_size, k, j, i)]) );
 //      }
 //      }
    }
-   SB_WAIT_ALL();
+   SS_WAIT_ALL();
 }
 
 //                sum0 = orig[INDX(row_size, col_size, k, j, i)];

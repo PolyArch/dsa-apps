@@ -25,17 +25,17 @@ int main(int argc, char* argv[]) {
   answer[6]=4;
   answer[7]=5;
 
-  SB_CONFIG(add1_vec_o2_config,add1_vec_o2_size);
-  SB_FILL_MODE(STRIDE_DISCARD_FILL);
+  SS_CONFIG(add1_vec_o2_config,add1_vec_o2_size);
+  SS_FILL_MODE(STRIDE_DISCARD_FILL);
 
   begin_roi();
-  SB_DMA_READ(&input[0],   8, 8*6, 1, P_add1_vec_o2_in);
-  SB_DMA_READ(&input[0],   8, 8*2, 1, P_add1_vec_o2_in);
+  SS_DMA_READ(&input[0],   8, 8*6, 1, P_add1_vec_o2_in);
+  SS_DMA_READ(&input[0],   8, 8*2, 1, P_add1_vec_o2_in);
 
-  SB_DMA_WRITE(P_add1_vec_o2_outA,8,8, 6,&output[0]);
-  SB_DMA_WRITE(P_add1_vec_o2_outB,8,8, 2,&output[6]);
+  SS_DMA_WRITE(P_add1_vec_o2_outA,8,8, 6,&output[0]);
+  SS_DMA_WRITE(P_add1_vec_o2_outB,8,8, 2,&output[6]);
 
-  SB_WAIT_ALL();
+  SS_WAIT_ALL();
   end_roi();
 
   compare<uint64_t>(argv[0],answer,output,8);

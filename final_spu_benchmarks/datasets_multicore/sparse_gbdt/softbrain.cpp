@@ -3,7 +3,7 @@
 #include <math.h>
 #include <assert.h>
 #include "sparse_none.dfg.h"
-#include "../../common/include/sb_insts.h"
+#include "../../common/include/ss_insts.h"
 #include "../../common/include/sim_timing.h"
 #include <inttypes.h>
 #include <sstream>
@@ -133,50 +133,50 @@ class DecisionTree {
       // can parallelize across features
       begin_roi();
 
-	  SB_CONST_SCR(0, 0, (64*8));
-      SB_WAIT_SCR_WR();
+	  SS_CONST_SCR(0, 0, (64*8));
+      SS_WAIT_SCR_WR();
 
       for(int j=0; j<1; ++j) {
         // 4 feat values at a time
-        SB_CONFIG(sparse_none_config,sparse_none_size);
+        SS_CONFIG(sparse_none_config,sparse_none_size);
                 
 		// TODO: check chances of deadlock here
-		SB_DMA_READ(&node->inst_id[0], 8, 8, n, P_sparse_none_node_ind);
-		// SB_DMA_READ(&data_ind[0][0], 8, 8, data_size/4, P_sparse_none_feat_ind);
-		SB_DMA_READ(&data_ind[0][0], 8*(int(M/Mt)), 8, data_size, P_sparse_none_feat_ind);
-		SB_DMA_READ(&data_val[0][0], 8*(int(M/Mt)), 8, data_size, P_sparse_none_feat_val);
+		SS_DMA_READ(&node->inst_id[0], 8, 8, n, P_sparse_none_node_ind);
+		// SS_DMA_READ(&data_ind[0][0], 8, 8, data_size/4, P_sparse_none_feat_ind);
+		SS_DMA_READ(&data_ind[0][0], 8*(int(M/Mt)), 8, data_size, P_sparse_none_feat_ind);
+		SS_DMA_READ(&data_val[0][0], 8*(int(M/Mt)), 8, data_size, P_sparse_none_feat_val);
 
 		// dummy address value
-		SB_CONST(P_sparse_none_feat_val, dummy_addr, 1);
-		// SB_CONST(P_sparse_none_feat_val, dummy_addr, 10000);
-		SB_CONST(P_sparse_none_feat_ind, dummy_sentinal, 1);
-		SB_CONST(P_sparse_none_node_ind, node_sentinal, 1);
+		SS_CONST(P_sparse_none_feat_val, dummy_addr, 1);
+		// SS_CONST(P_sparse_none_feat_val, dummy_addr, 10000);
+		SS_CONST(P_sparse_none_feat_ind, dummy_sentinal, 1);
+		SS_CONST(P_sparse_none_node_ind, node_sentinal, 1);
 	
 		// value to represent that the node stream has ended
-		// SB_CONST(P_sparse_none_feat_ind, SENTINAL, 1);
-		// SB_CONST(P_sparse_none_node_ind, SENTINAL, 1);
+		// SS_CONST(P_sparse_none_feat_ind, SENTINAL, 1);
+		// SS_CONST(P_sparse_none_node_ind, SENTINAL, 1);
 		// for label, I will just do indirect read: would this be better than
 		// another level of index matching?
         
-		SB_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_1);
-        // SB_CONFIG_INDIRECT1(T64, T64, 2, 1);
-        // SB_CONFIG_INDIRECT1(T64, T64, 2*8, 1*8);
-        SB_CONFIG_INDIRECT1(T64, T64, 16, 8);
-        SB_INDIRECT(P_IND_1, &labels[0][0], n, P_sparse_none_label);
+		SS_DMA_READ(&node->inst_id[0], 8, 8, n, P_IND_1);
+        // SS_CONFIG_INDIRECT1(T64, T64, 2, 1);
+        // SS_CONFIG_INDIRECT1(T64, T64, 2*8, 1*8);
+        SS_CONFIG_INDIRECT1(T64, T64, 16, 8);
+        SS_INDIRECT(P_IND_1, &labels[0][0], n, P_sparse_none_label);
 
-		// SB_DMA_READ(&x[0], 8, 8, 2*n, P_sparse_none_label);
-		SB_CONST(P_sparse_none_local_offset, local_offset, n);
+		// SS_DMA_READ(&x[0], 8, 8, 2*n, P_sparse_none_label);
+		SS_CONST(P_sparse_none_local_offset, local_offset, n);
 
 		// we don't know how many is required!: when all the addresses are
 		// dummy, I want to reset
-        SB_CONFIG_ATOMIC_SCR_OP(T16, T64, T64);
-        SB_ATOMIC_SCR_OP(P_sparse_none_C, P_sparse_none_D, offset, 2*n*4, 0);
-		SB_RECV(P_sparse_none_all_done, y);
-		SB_RESET();
-		// SB_WAIT_SCR_WR();
-        SB_WAIT_ALL();
+        SS_CONFIG_ATOMIC_SCR_OP(T16, T64, T64);
+        SS_ATOMIC_SCR_OP(P_sparse_none_C, P_sparse_none_D, offset, 2*n*4, 0);
+		SS_RECV(P_sparse_none_all_done, y);
+		SS_RESET();
+		// SS_WAIT_SCR_WR();
+        SS_WAIT_ALL();
       }
-      // SB_WAIT_ALL();
+      // SS_WAIT_ALL();
       
       end_roi();
       sb_stats();

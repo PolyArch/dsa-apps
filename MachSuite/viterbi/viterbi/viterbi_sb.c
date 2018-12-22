@@ -1,6 +1,6 @@
 #include "viterbi.h"
 #include "viterbi_sb.dfg.h"
-#include "../../../common/include/sb_insts.h"
+#include "../../../common/include/ss_insts.h"
 #include "../../../common/include/sim_timing.h"
 
 int viterbi( tok_t obs[N_OBS], prob_t init[N_STATES], prob_t transition[N_STATES*N_STATES], prob_t emission[N_STATES*N_TOKENS], state_t path[N_OBS] )
@@ -31,25 +31,25 @@ int viterbi( tok_t obs[N_OBS], prob_t init[N_STATES], prob_t transition[N_STATES
   printf("N_OBS: %d, N_STATES %d\n", N_OBS, N_STATES);
 
   begin_roi();
-  SB_CONFIG(viterbi_sb_config,viterbi_sb_size);
+  SS_CONFIG(viterbi_sb_config,viterbi_sb_size);
 
   // Iteratively compute the probabilities over time
   L_timestep: for( t=1; t<N_OBS; t++ ) {
-    //SB_WAIT_SCR_RD();
-    //SB_DMA_SCRATCH_LOAD(&llike[t-1][0], 0, N_STATES * sizeof(TYPE), 1, 0);
-    //SB_WAIT_SCR_WR();
-    //SB_SCR_PORT_STREAM(0, 0, sizeof(TYPE)*N_STATES, N_STATES, P_viterbi_sb_llike);
+    //SS_WAIT_SCR_RD();
+    //SS_DMA_SCRATCH_LOAD(&llike[t-1][0], 0, N_STATES * sizeof(TYPE), 1, 0);
+    //SS_WAIT_SCR_WR();
+    //SS_SCR_PORT_STREAM(0, 0, sizeof(TYPE)*N_STATES, N_STATES, P_viterbi_sb_llike);
 
     L_curr_state: for( curr=0; curr<N_STATES; curr++ ) {
       // Compute likelihood HMM is in current state and where it came from.
-      SB_DMA_READ(&transition_inv[0+N_STATES*curr],8,8,N_STATES,P_viterbi_sb_trans);
-      SB_DMA_READ(&llike[t-1][0],8,8,N_STATES,P_viterbi_sb_llike);
+      SS_DMA_READ(&transition_inv[0+N_STATES*curr],8,8,N_STATES,P_viterbi_sb_trans);
+      SS_DMA_READ(&llike[t-1][0],8,8,N_STATES,P_viterbi_sb_llike);
 
-      SB_CONST(P_viterbi_sb_emission,emission[curr*N_TOKENS+obs[t]],N_STATES/4);
-      SB_CONST(P_viterbi_sb_reset,0,N_STATES/4-1);
-      SB_CONST(P_viterbi_sb_reset,1,1);
-      SB_GARBAGE(P_viterbi_sb_MR,N_STATES/4-1);
-      SB_DMA_WRITE(P_viterbi_sb_MR,8,8,1,&llike[t][curr]);
+      SS_CONST(P_viterbi_sb_emission,emission[curr*N_TOKENS+obs[t]],N_STATES/4);
+      SS_CONST(P_viterbi_sb_reset,0,N_STATES/4-1);
+      SS_CONST(P_viterbi_sb_reset,1,1);
+      SS_GARBAGE(P_viterbi_sb_MR,N_STATES/4-1);
+      SS_DMA_WRITE(P_viterbi_sb_MR,8,8,1,&llike[t][curr]);
 
       //min_p = llike[t-1][0] +
       //        transition_inv[0+N_STATES*curr] +0;
@@ -65,9 +65,9 @@ int viterbi( tok_t obs[N_OBS], prob_t init[N_STATES], prob_t transition[N_STATES
                     
       //llike[t][curr] = min_p + emission[curr*N_TOKENS+obs[t]];
     }
-    SB_WAIT_ALL();
+    SS_WAIT_ALL();
   }
-  SB_WAIT_ALL();
+  SS_WAIT_ALL();
   end_roi();
 
 

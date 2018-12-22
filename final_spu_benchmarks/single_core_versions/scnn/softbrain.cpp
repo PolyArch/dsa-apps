@@ -2,7 +2,7 @@
 #include <string>
 #include <sstream>
 #include "test.dfg.h"
-#include "../../common/include/sb_insts.h"
+#include "../../common/include/ss_insts.h"
 #include "../../common/include/sim_timing.h"
 #include <inttypes.h>
 
@@ -119,9 +119,9 @@ void convolution_layer_blocked(VTYPE (&synapse_val)[Ni][int(nnz1)], VTYPE (&syna
   int tile_no = 0;
 
   // begin_roi();
-  SB_CONFIG(test_config,test_size);
-  SB_CONST_SCR(0, 0, Tx*Tx*Tn);
-  SB_WAIT_SCR_WR();
+  SS_CONFIG(test_config,test_size);
+  SS_CONST_SCR(0, 0, Tx*Tx*Tn);
+  SS_WAIT_SCR_WR();
   // Tx*Ty*Tn output feature maps
   for (int feature_map_id = 0; feature_map_id < Ni; ++feature_map_id) {
     // load feature_map_idth neuron tile into scratchpad
@@ -137,38 +137,38 @@ void convolution_layer_blocked(VTYPE (&synapse_val)[Ni][int(nnz1)], VTYPE (&syna
     // we are covering 4 synapses and 4 neurons at a time
     for(int is=0; is<size_synapse/4; ++is) {
       // read neuron
-      SB_DMA_READ(&neuron_i_val[nval_st], 4*sizeof(VTYPE), 4*sizeof(VTYPE), size_neuron_tile/4, P_test_nval);
-      SB_DMA_READ(&neuron_i_ind[nval_st], 4*sizeof(VTYPE), 4*sizeof(VTYPE), size_neuron_tile/4, P_test_nind);
+      SS_DMA_READ(&neuron_i_val[nval_st], 4*sizeof(VTYPE), 4*sizeof(VTYPE), size_neuron_tile/4, P_test_nval);
+      SS_DMA_READ(&neuron_i_ind[nval_st], 4*sizeof(VTYPE), 4*sizeof(VTYPE), size_neuron_tile/4, P_test_nind);
     }
     
-    SB_REPEAT_PORT(size_neuron_tile/4);
-    SB_DMA_READ(&synapse_val[feature_map_id][0], 4*sizeof(VTYPE), 4*sizeof(VTYPE), size_synapse/4, P_test_sval);
+    SS_REPEAT_PORT(size_neuron_tile/4);
+    SS_DMA_READ(&synapse_val[feature_map_id][0], 4*sizeof(VTYPE), 4*sizeof(VTYPE), size_synapse/4, P_test_sval);
 
-    SB_REPEAT_PORT(size_neuron_tile/4);
-    SB_DMA_READ(&synapse_ind[feature_map_id][0], 4*sizeof(VTYPE), 4*sizeof(VTYPE), size_synapse/4, P_test_sind);
+    SS_REPEAT_PORT(size_neuron_tile/4);
+    SS_DMA_READ(&synapse_ind[feature_map_id][0], 4*sizeof(VTYPE), 4*sizeof(VTYPE), size_synapse/4, P_test_sind);
 
         
-    SB_CONST(P_test_Kx, Kxsim, num_comp_inst);
-    SB_CONST(P_test_Tx, Txsim, num_comp_inst);
-    SB_2D_CONST(P_test_const, 0, size_neuron_tile/4-1, 1, 1, size_synapse/4);
+    SS_CONST(P_test_Kx, Kxsim, num_comp_inst);
+    SS_CONST(P_test_Tx, Txsim, num_comp_inst);
+    SS_2D_CONST(P_test_const, 0, size_neuron_tile/4-1, 1, 1, size_synapse/4);
 
     for (int nn = 0; nn < Tn; nn++) {
       uint16_t a = (Nx + Kx + nn*Tx*Tx);
       uint64_t b = (a | a << 16 | (a & 0xFFFFFFFFFFFFFFFF) << 32 | (a & 0xFFFFFFFFFFFFFFFF) << 48);
-      SB_CONST(P_test_rle_const, b, num_comp_inst/Tn); 
+      SS_CONST(P_test_rle_const, b, num_comp_inst/Tn); 
     }
 
-    SB_CONFIG_ATOMIC_SCR_OP(T16, T16, T16);
-    SB_ATOMIC_SCR_OP(P_test_C, P_test_D, 0, (size_synapse*size_neuron_tile), 0);
+    SS_CONFIG_ATOMIC_SCR_OP(T16, T16, T16);
+    SS_ATOMIC_SCR_OP(P_test_C, P_test_D, 0, (size_synapse*size_neuron_tile), 0);
 
-    // SB_WAIT_ALL();
+    // SS_WAIT_ALL();
 
     // printf("done for 1 feature id: %d\n",feature_map_id);
   }
   // ReLU
   // Tn output feature maps in  dense format: should write in sparse after ReLU
-  // SB_SCRATCH_DMA_STORE(0, sizeof(VTYPE)*Nn, 4*sizeof(VTYPE), NYPAD*NXPAD*Tn/tile_factor, &neuron_n[0][0][n]);
-  SB_WAIT_ALL();
+  // SS_SCRATCH_DMA_STORE(0, sizeof(VTYPE)*Nn, 4*sizeof(VTYPE), NYPAD*NXPAD*Tn/tile_factor, &neuron_n[0][0][n]);
+  SS_WAIT_ALL();
   // printf("1 tile done\n");
   
   // end_roi();
