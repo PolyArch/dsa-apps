@@ -1,6 +1,6 @@
 ifndef SBCONFIG
 $(warning SBCONFIG is undefined, using default)
-SBCONFIG=$(SS)"/ss-scheduler/configs/revel-1x2.sbmodel"
+SBCONFIG=$(SS)"/ss-scheduler/configs/revel-1x1.sbmodel"
 endif
 
 ifndef OMP_NUM_THREADS
@@ -23,10 +23,10 @@ $(DFG_HEADERS): %.dfg.h: %.dfg
 	$(SS_TOOLS)/bin/ss_sched -a sa --max-iters 20000 -d $(FIFO_DEPTH) --verbose $(SBCONFIG) $< 
 
 IFLAGS=-I../../common/include -I../../../ss-tools/include -I../common/
-INTELI=-I /opt/intel/include 
+INTELI=-I/opt/intel/include -I/opt/intel/mkl/include/
 #CFLAGS=-O3 -std=c++17
 CFLAGS=-Ofast -std=c++17
-LMKL=-L"/opt/intel/mkl/lib" -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -ldl -lm
+LMKL=-L"/opt/intel/mkl/lib" -L"/opt/intel/lib/intel64" -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5 -lpthread -ldl -lm
 
 CC=riscv64-unknown-elf-g++
 
@@ -57,7 +57,7 @@ physical.log mkl.log: %.log: %.exe input.data ref.data
 	./$^ 2>&1 | tee $@
 
 mkl.exe: mkl.cc
-	icc $^ -o $@ $(LMKL) $(CFLAGS) $(MACROS) $(THREAD_MACROS) $(IFLAGS) $(INTELI)
+	/opt/intel/bin/icc $^ -o $@ $(LMKL) $(CFLAGS) $(MACROS) $(THREAD_MACROS) $(IFLAGS) $(INTELI)
 
 ooo.log: optimized.exe input.data ref.data
 	SBCONFIG=$(SBCONFIG) \

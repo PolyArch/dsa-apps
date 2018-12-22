@@ -13,11 +13,11 @@ complex<float> one(1, 0);
 
 void gemm(int n, int m, int p, complex<float> *a, complex<float> *b, complex<float> *c) {
   SB_CONFIG(compute_config, compute_size);
-  SB_CONST(P_compute_A, *((uint64_t*)(&one)), m * p / 4);
-  SB_DMA_READ(b, 0, 8 * m * p, 1, P_compute_B);
-  SB_CONST(P_compute_C, 0, m * p);
-  SB_SCR_WRITE(P_compute_O, 8 * m * p, 0);
-  SB_WAIT_SCR_WR();
+  //SB_CONST(P_compute_A, *((uint64_t*)(&one)), m * p / 4);
+  //SB_DMA_READ(b, 0, 8 * m * p, 1, P_compute_B);
+  //SB_CONST(P_compute_C, 0, m * p);
+  //SB_SCR_WRITE(P_compute_O, 8 * m * p, 0);
+  //SB_WAIT_SCR_WR();
 
   for (int i = 0; i < n; ++i) {
     SB_CONST(P_compute_C, 0, p);

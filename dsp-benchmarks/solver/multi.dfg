@@ -1,4 +1,4 @@
-##pragma group temporal
+#pragma group temporal
 
 Input: X
 Input: Y
