@@ -5,8 +5,8 @@
 #include <stdbool.h>
 #include <time.h>
 #include "fwd_prop.dfg.h"
-#include "../../common/include/sb_insts.h"
-#include "../../common/include/sim_timing.h"
+#include "/home/vidushi/ss-stack/ss-workloads/common/include/sb_insts.h"
+#include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
 #include <inttypes.h>
 #include <sstream>
 
@@ -23,8 +23,6 @@ struct tree {
   uint32_t child1 [2];
   uint32_t flag [2];
 };
-
-
 
 void forwardPropagation(tree* circuit, uint32_t nodes_at_level[d2-d1], uint32_t levels, uint32_t index, int no_nodes_per_cgra){
   int n_times = 0;

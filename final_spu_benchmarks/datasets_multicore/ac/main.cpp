@@ -11,6 +11,7 @@
 #include <time.h>
 #include <vector>
 #include <assert.h>
+#include <cstring>
 #include "ac.dfg.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sb_insts.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
@@ -202,8 +203,12 @@ int main() {
   char lineToRead[5000];
 
   // read height ptr
-  string str(index_file);
-  FILE *hgt = fopen(str.c_str(), "r");
+  // string str(index_file);
+  string str(dataset);
+  char a1[100] = "datasets/";
+  char b1[100] = "/final_index.data";
+  FILE *hgt = fopen(strcat(strcat(a1,str.c_str()),b1), "r");
+  // FILE *hgt = fopen(str.c_str(), "r");
   // FILE *hgt = fopen("datasets/final_index.data", "r");
 
   while(fgets(lineToRead, 5000, hgt) != NULL){
@@ -219,8 +224,12 @@ int main() {
  
   
   // read copy nodes index
-  str = shadow_file;
-  FILE *shadow = fopen(str.c_str(), "r");
+  // str = shadow_file;
+  char a2[100] = "datasets/";
+  char b2[100] = "/final_shadow_index.data";
+  FILE *shadow = fopen(strcat(strcat(a2,str.c_str()),b2), "r");
+ 
+  // FILE *shadow = fopen(str.c_str(), "r");
   // FILE *shadow = fopen("datasets/final_shadow_index.data", "r");
 
   while(fgets(lineToRead, 5000, shadow) != NULL){
@@ -252,8 +261,12 @@ int main() {
   cout << "DONE ASSIGNING START AND END INDEX\n";
 
   // read final circuit data
-  str = circuit_file;
-  FILE *ckt = fopen(str.c_str(), "r");
+  // str = circuit_file;
+  char a3[100] = "datasets/";
+  char b3[100] = "/final_circuit.data";
+  FILE *ckt = fopen(strcat(strcat(a3,str.c_str()),b3), "r");
+ 
+  // FILE *ckt = fopen(str.c_str(), "r");
   // FILE *ckt = fopen("datasets/final_circuit.data", "r");
   int cur_v=0;
 

@@ -23,7 +23,7 @@ using namespace std;
 #define max_passes 1
 #define sigma 0.5
 
-#define NUM_THREADS	2
+#define NUM_THREADS	8
 #define INT16MAX ((1<<16)-1)
 
 // input train set
@@ -95,7 +95,7 @@ void eta_calc(long tid, int i, int j, double &dp, double &norm1, double &norm2){
   
   if(data_val[i].size()==0 || data_val[j].size()==0)
 	return;
-  cout << data_val[i].size() << " " << data_val[j].size() << "\n";
+  // cout << data_val[i].size() << " " << data_val[j].size() << "\n";
   
   broadcast_eta(tid, i,j);
 
@@ -206,7 +206,7 @@ void train(long tid) {
       H = min(C, alpha[i]+alpha[j]);
     }
     // cout << "L=H?\n";
-	cout << L << " " << H << endl;
+	// cout << L << " " << H << endl;
     if(L==H) continue;
     double inter_prod = 0, norm1 = 0, norm2 = 0;
 	// cout << "Sent for eta calculation\n";
@@ -297,9 +297,9 @@ void *entry_point(void *threadid) {
      // exit(-1);
    }
 
-   begin_roi();
    SB_CONFIG(eta_config, eta_size);
    load_linear_scratch(tid);
+   begin_roi();
    train(tid);
    end_roi();
    sb_stats();
@@ -397,63 +397,3 @@ int main(){
  
   return 0;
 }
-
-/*
-void kernel_err_update(long tid, int i, int j, double diff1, double diff2, double y1, double y2){
-  
-  if(data_val[i].size()==0 || data_val[j].size()==0)  return;
-
-  // int num_inst = M;
-  int num_inst = M/NUM_THREADS;
-  double gauss_var = -1/(2*sigma*sigma); // double to fix
-  // int m=1;
-  SB_CONFIG(ksvm_config, ksvm_size);
-
-  SB_CONST(P_ksvm_gauss_var, DOUBLE_TO_FIX(gauss_var), num_inst);
-  SB_CONST(P_ksvm_alpha1, diff1, num_inst);
-  SB_CONST(P_ksvm_alpha2, diff2, num_inst);
-  SB_CONST(P_ksvm_y1, y1, num_inst);
-  SB_CONST(P_ksvm_y2, y2, num_inst);
-
-  // banked scratch read
-  SB_DMA_READ(&E[0], 8, 8, num_inst, P_ksvm_old_E);
-
-  int start_id = tid*num_inst;
-  int end_id = start_id+num_inst;
-
-  // broadcast_inst(tid, i, j);
-  // should by default be 0, so don't need to load anything here!
-  // SB_SCRATCH_READ(getLinearAddr(0), (data_ptr[end_id]-data_ptr[start_id])*4 ,P_ksvm_a_val);
-  // SB_SCRATCH_READ(getLinearAddr(getLinearOffset(1,2)) ,(data_ptr[end_id]-data_ptr[start_id])*4 ,P_ksvm_a_ind);
-
-  // for(int k=0; k<num_inst; ++k){
-  for(int k=start_id; k<end_id; ++k){
-	
-	if(data_val[k].size()==0)
-	  continue;
-
-    // local scratch read
-    SB_DMA_READ(&data_ind[k][0], 8, 8, data_ind[k].size()/2, P_ksvm_a_ind);
-    SB_DMA_READ(&data_val[k][0], 8, 8, data_val[k].size()/2, P_ksvm_a_val);
-
-    // coming from broadcast -- remove this!
-    SB_DMA_READ(&data_ind[i][0], 8, 8, data_ind[i].size()/2, P_ksvm_b_ind);
-    SB_DMA_READ(&data_val[i][0], 8, 8, data_val[i].size()/2, P_ksvm_b_val);
-    SB_DMA_READ(&data_ind[j][0], 8, 8, data_ind[j].size()/2, P_ksvm_c_ind);
-    SB_DMA_READ(&data_val[j][0], 8, 8, data_val[j].size()/2, P_ksvm_c_val);
-
-    // 32-bit sentinal?
-    SB_CONST(P_ksvm_a_ind, SENTINAL, 1);
-    SB_CONST(P_ksvm_b_ind, SENTINAL, 1);
-    SB_CONST(P_ksvm_c_ind, SENTINAL, 1);
-    SB_CONST(P_ksvm_a_val, 0, 1);
-    SB_CONST(P_ksvm_b_val, 0, 1);
-    SB_CONST(P_ksvm_c_val, 0, 1);
-  }
-
-  // may write this in banked scratch
-  SB_DMA_WRITE_SIMP(P_ksvm_E, num_inst, &E[0]);
-  SB_WAIT_ALL();
-  cout << "Kernel err calc done\n";
-}
-*/

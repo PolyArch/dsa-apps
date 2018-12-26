@@ -6,6 +6,7 @@
 #include <assert.h>
 #include <vector>
 #include <pthread.h>
+#include <cstring>
 #include "eie.dfg.h"
 #include "sparsify.dfg.h"
 // #include "small_sp.dfg.h"
@@ -14,13 +15,10 @@
 #include "/home/vidushi/ss-stack/ss-scheduler/src/config/fixed_point.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/net_util_func.h"
 #include <inttypes.h>
-#define NUM_THREADS	2
+#define NUM_THREADS	4
 #define EIE_WIDTH 4
 
 using namespace std;
-
-// #define N 9216
-// #define M 4096
 
 vector<uint16_t> act_val;
 vector<uint16_t> act_ind;
@@ -38,6 +36,27 @@ uint16_t out_vec[N];
 // Barrier variable
 pthread_barrier_t barr;
 
+void load_linear_scratchpad(long tid) {
+  int ncol = EIE_WIDTH;
+  int start_col = ncol*tid;
+  int end_col = start_col+ncol;
+ 
+  unsigned nweight_load = wgt_ptr[end_col] - wgt_ptr[start_col];
+  assert(nweight_load<4096); // 1 half can have only those many elements
+  unsigned stride=0;
+
+  for(int i=start_col; i<end_col; ++i) {
+    SB_DMA_SCRATCH_LOAD(&wgt_ind[i][0], 2, 2, wgt_ind[i].size(), getLinearAddr(0+stride));
+    SB_DMA_SCRATCH_LOAD(&wgt_val[i][0], 2, 2, wgt_ind[i].size(), getLinearAddr(getLinearOffset(1,2)+stride)); 
+    stride += wgt_ind[i].size();
+  }
+
+  // SB_DMA_SCRATCH_LOAD(&wgt_ind[start_col][0], 2, 2, nweight_load, getLinearAddr(0));
+  // SB_DMA_SCRATCH_LOAD(&wgt_val[start_col][0], 2, 2, nweight_load, getLinearAddr(getLinearOffset(1,2))); 
+  SB_WAIT_SCR_WR();
+}
+
+
 // ISSUE1: for local read, address has to be local -- mapping would help here??
 // Each core will execute 1 merge (all activations read into 1st core from DRAM
 // and then -- it broadcasts the output value; weights on the network from linear spad)
@@ -45,45 +64,39 @@ void mv_merged(long tid) {
  
   // for only 1 broadcast, ncol should be equal to the vec_width
   int ncol = EIE_WIDTH;
-  int start_col = ncol*tid;
-  int end_col = start_col+ncol;
-  
-  unsigned nweight_load = wgt_ptr[end_col] - wgt_ptr[start_col];
-  SB_CONFIG(eie_config,eie_size);
- 
-  SB_DMA_SCRATCH_LOAD(&wgt_ind[start_col][0], 2, 2, nweight_load, 0);
-  SB_DMA_SCRATCH_LOAD(&wgt_val[start_col][0], 2, 2, nweight_load, getLinearAddr(getLinearOffset(1,2))); 
-  SB_WAIT_SCR_WR();
- 
+  // int start_col = ncol*tid;
+  // int end_col = start_col+ncol;
+
   // write to dma, sure?
-  SB_DMA_WRITE(P_eie_out_val, 2, 2, ncol, &out_vec[0]);
-  int i = tid;
-  int stride=0; int scr_offset = getLinearAddr(getLinearOffset(1,2));
+  int i = tid*ncol;
+  // SB_DMA_WRITE(P_eie_out_val, 2, 2, ncol, &out_vec[i]);
+  SB_SCR_WRITE(P_eie_out_val, 2*ncol, i*2);
+  int stride=0; int scr_offset = getLinearOffset(1,2);
 
   // col1
-  SB_SCRATCH_READ(stride, wgt_val[i].size()*2, P_eie_wind0);
-  SB_SCRATCH_READ(scr_offset+stride, wgt_ind[i].size()*2, P_eie_wval0);
+  SB_SCRATCH_READ(getLinearAddr(stride), wgt_val[i].size()*2, P_eie_wind0);
+  SB_SCRATCH_READ(getLinearAddr(scr_offset+stride), wgt_ind[i].size()*2, P_eie_wval0);
   SB_CONST(P_eie_wind0, SENTINAL16, 1);
   SB_CONST(P_eie_wval0, 0, 1);
 
   // col2
   stride += wgt_val[i].size()*2;
-  SB_SCRATCH_READ(stride, wgt_val[i+1].size()*2, P_eie_wind1);
-  SB_SCRATCH_READ(scr_offset+stride, wgt_ind[i+1].size()*2, P_eie_wval1);
+  SB_SCRATCH_READ(getLinearAddr(stride), wgt_val[i+1].size()*2, P_eie_wind1);
+  SB_SCRATCH_READ(getLinearAddr(scr_offset+stride), wgt_ind[i+1].size()*2, P_eie_wval1);
   SB_CONST(P_eie_wind1, SENTINAL16, 1);
   SB_CONST(P_eie_wval1, 0, 1);
 
   // col3
-  stride += wgt_val[i+1].size();
-  SB_SCRATCH_READ(stride, wgt_val[i+2].size()*2, P_eie_wind2);
-  SB_SCRATCH_READ(scr_offset+stride, wgt_ind[i+2].size()*2, P_eie_wval2);
+  stride += wgt_val[i+1].size()*2;
+  SB_SCRATCH_READ(getLinearAddr(stride), wgt_val[i+2].size()*2, P_eie_wind2);
+  SB_SCRATCH_READ(getLinearAddr(scr_offset+stride), wgt_ind[i+2].size()*2, P_eie_wval2);
   SB_CONST(P_eie_wind2, SENTINAL16, 1);
   SB_CONST(P_eie_wval2, 0, 1);
 
   // col4
-  stride += wgt_val[i+2].size();
-  SB_SCRATCH_READ(stride, wgt_val[i+3].size()*2, P_eie_wind3);
-  SB_SCRATCH_READ(scr_offset + stride, wgt_ind[i+3].size()*2, P_eie_wval3);
+  stride += wgt_val[i+2].size()*2;
+  SB_SCRATCH_READ(getLinearAddr(stride), wgt_val[i+3].size()*2, P_eie_wind3);
+  SB_SCRATCH_READ(getLinearAddr(scr_offset + stride), wgt_ind[i+3].size()*2, P_eie_wval3);
   SB_CONST(P_eie_wind3, SENTINAL16, 1);
   SB_CONST(P_eie_wval3, 0, 1);
   
@@ -92,24 +105,26 @@ void mv_merged(long tid) {
 
 void sparsify(){
   uint64_t mask = 0;
-  addDest(mask, 1);
+  for(int i=1; i<NUM_THREADS; ++i) {
+    addDest(mask, i);
+  }
   int vec_width=8;
   int pad_size = M%vec_width;
   
-  SB_CONFIG(sparsify_config, sparsify_size);
-
   SB_DMA_READ(&activations[0], 2, 2, M, P_sparsify_A);
   SB_DMA_READ(&counter[0], 2, 2, M, P_sparsify_B);
   
-  SB_CONST(P_sparsify_sentinal, SENTINAL16, M+2); // max M times needed
+  // SB_CONST(P_sparsify_sentinal, SENTINAL16, M+2); // max M times needed
+  // to debug
+  SB_CONST(P_sparsify_sentinal, SENTINAL16, M+8); // max M times needed
 
   // has to be non-zero to be sent from here
   SB_CONST(P_sparsify_A, SENTINAL16, pad_size+vec_width); 
   SB_CONST(P_sparsify_B, SENTINAL16, pad_size+vec_width);
 
   // number of elements according to the port width
-  SB_REM_PORT(P_sparsify_val, M, mask, P_eie_aval);
-  SB_REM_PORT(P_sparsify_ind, M, mask, P_eie_aind);
+  SB_REM_PORT(P_sparsify_val, M+8, mask, P_eie_aval);
+  SB_REM_PORT(P_sparsify_ind, M+8, mask, P_eie_aind);
 
   uint16_t temp;
   SB_RECV(P_sparsify_signal, temp);
@@ -129,9 +144,19 @@ void *entry_point(void *threadid) {
      // exit(-1);
    }
 
+   if(tid!=0) {
+     SB_CONFIG(eie_config,eie_size);
+     load_linear_scratchpad(tid-1);
+   } else {
+     SB_CONFIG(sparsify_config, sparsify_size);
+   }
    begin_roi();
-   if(tid==0) sparsify();
-   else mv_merged(tid-1);
+   if(tid==0) {
+     sparsify();
+   }
+   else {
+     mv_merged(tid-1);
+   }
    end_roi();
    sb_stats();
    // pthread_exit(NULL);
@@ -149,10 +174,15 @@ int main(){
   // Reading dense activations
   char lineToRead[5000];
 
-  string str(dense_act_file);
-  FILE *dense_act_file2 = fopen(str.c_str(), "r");
+  // string str(dense_act_file);
+  string str(layer_name);
+  char s[100] = "datasets/";
+  char a[100] = "/dense_act.data";
+  // FILE *dense_act_file2 = fopen(str.c_str(), "r");
+  FILE *dense_act_file2 = fopen(strcat(strcat(s,str.c_str()),a), "r");
   // FILE *dense_act_file2 = fopen("datasets/very_small/dense_act.data", "r");
   int ind=0;
+  
   
   
   while(fgets(lineToRead, 5000, dense_act_file2) != NULL){
@@ -164,19 +194,25 @@ int main(){
 	ind++;
   } 
   fclose(dense_act_file2);
+  
   printf("Done reading dense activations\n");
 
 
   // setting the counter
   for(int i=0; i<M; ++i) {
+    // activations[i]=10*i;
 	counter[i]=i;
   }
 
   printf("Done setting counter\n");
 
-  str = wgt_ptr_file;
-  FILE *wgt_ptr_file2 = fopen(str.c_str(), "r");
-  // FILE *wgt_ptr_file = fopen("datasets/pyfc6_wgt_ptr.txt", "r");
+  // str = wgt_ptr_file;
+  // FILE *wgt_ptr_file2 = fopen(str.c_str(), "r");
+  // FILE *wgt_ptr_file = fopen("datasets/pyfc6_wgt_ptr.data", "r");
+  char p[100] = "datasets/";
+  char b[100] = "/wgt_ptr.data";
+  FILE *wgt_ptr_file2 = fopen(strcat(strcat(p,str.c_str()),b), "r");
+  // FILE *wgt_ptr_file2 = fopen(strcat(strcat(s,str.c_str()),b), "r");
  
   ind=0;
   printf("Start reading wgt ptr\n");
@@ -190,13 +226,19 @@ int main(){
   }  
   fclose(wgt_ptr_file2);
 
-  str = wgt_val_file;
-  cout << wgt_val_file << "\n";
-  FILE *wgt_val_file2 = fopen(str.c_str(), "r");
+  printf("Finished reading wgt ptr\n");
+  // str = wgt_val_file;
+  // cout << wgt_val_file << "\n";
+  char q[100] = "datasets/";
+  char c[100] = "/wgt_val.data";
+  FILE *wgt_val_file2 = fopen(strcat(strcat(q,str.c_str()),c), "r");
+ 
+  // FILE *wgt_val_file2 = fopen(str.c_str(), "r");
   // FILE *wgt_val_file = fopen("datasets/pyfc6_wgt_val.txt", "r");
  
   ind=0; int k=0;
   printf("Start reading wgt val\n");
+  /*
   
   while(fgets(lineToRead, 5000, wgt_val_file2) != NULL){
 	std::string raw(lineToRead);
@@ -213,13 +255,36 @@ int main(){
 	}
   }  
   fclose(wgt_val_file2);
+  */
 
-  str = wgt_ind_file;
-  FILE *wgt_ind_file2 = fopen(str.c_str(), "r");
+  // str = wgt_ind_file;
+
+  printf("Start reading wgt_ind activations\n");
+  int n=0; // size
+  for(int i=0; i<N; ++i) {
+    if(i>0) {
+      n = wgt_ptr[i]-wgt_ptr[i-1];
+      wgt_val[i].resize(n);
+      wgt_ind[i].resize(n);
+    } else {
+      n = wgt_ptr[i];
+      wgt_val[i].resize(n);
+      wgt_ind[i].resize(n);
+    }
+    for(int j=0; j<n; ++j) {
+      wgt_ind[i][j]=j;
+    }
+  }
+  /*
+  char r[100] = "datasets/";
+  char d[100] = "/wgt_index.data";
+  FILE *wgt_ind_file2 = fopen(strcat(strcat(r,str.c_str()),d), "r");
+ 
+
+  // FILE *wgt_ind_file2 = fopen(str.c_str(), "r");
   // FILE *wgt_ind_file = fopen("datasets/pyfc6_wgt_ind.txt", "r");
  
   ind=0; k=0;
-  printf("Start reading wgt_ind activations\n");
   
   while(fgets(lineToRead, 5000, wgt_ind_file2) != NULL){
 	std::string raw(lineToRead);
@@ -235,6 +300,11 @@ int main(){
 	}
   }  
   fclose(wgt_ind_file2);
+  */
+
+  for(int i=0; i<N; ++i) {
+    out_vec[i]=0;
+  }
 
   // sparsify();
 

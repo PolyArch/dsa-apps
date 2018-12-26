@@ -1,5 +1,5 @@
 #include <iostream>
-#include <string>
+#include <cstring>
 #include <sstream>
 #include <vector>
 #include "scnn.dfg.h"
@@ -239,8 +239,14 @@ void *entry_point(void *threadid) {
 
 void read_weights() {
 
-  string str(wgt_val_file);
-  FILE *weight_val_file = fopen(str.c_str(),"r"); 
+  string str(net_name);
+  char x1[100] = "datasets/";
+  char y1[100] = "/wgt_val.data";
+  
+  FILE *weight_val_file = fopen(strcat(strcat(x1,str.c_str()),y1), "r");
+  // FILE *weight_val_file = fopen(str.c_str(),"r"); 
+  // string str(wgt_val_file);
+  // FILE *weight_val_file = fopen(str.c_str(),"r"); 
   // FILE *weight_val_file = fopen("datasets/wgt_val.data","r"); 
   char lineToRead[5000];
   
@@ -258,8 +264,12 @@ void read_weights() {
   }
   fclose(weight_val_file);
 
-  str = wgt_ind_file;
-  FILE *weight_ind_file = fopen(str.c_str(),"r"); 
+  // str = wgt_ind_file;
+  // FILE *weight_ind_file = fopen(str.c_str(),"r"); 
+  char x2[100] = "datasets/";
+  char y2[100] = "/wgt_index.data";
+  FILE *weight_ind_file = fopen(strcat(strcat(x2,str.c_str()),y2), "r");
+ 
   // FILE *weight_ind_file = fopen("datasets/wgt_index.data","r"); 
   
   while(fgets(lineToRead, 5000, weight_ind_file)!=NULL){
@@ -277,8 +287,13 @@ void read_weights() {
   }
   fclose(weight_ind_file);
 
-  str = wgt_ptr_file;
-  FILE *weight_ptr_file = fopen(str.c_str(),"r"); 
+  // str = wgt_ptr_file;
+  // FILE *weight_ptr_file = fopen(str.c_str(),"r"); 
+
+  char x3[100] = "datasets/";
+  char y3[100] = "/wgt_ptr.data";
+  FILE *weight_ptr_file = fopen(strcat(strcat(x3,str.c_str()),y3), "r");
+ 
   // FILE *weight_ptr_file = fopen("datasets/wgt_ptr.data","r"); 
   
   while(fgets(lineToRead, 5000, weight_ptr_file)!=NULL){
@@ -296,8 +311,15 @@ void read_activations() {
 
   int dim1 = (Nx*Ny)/(Tx*Ty);
 
-  string str(act_val_file);
-  FILE *act_val = fopen(str.c_str(),"r"); 
+  // string str(act_val_file);
+  // FILE *act_val = fopen(str.c_str(),"r"); 
+
+  string str(net_name);
+  char x1[100] = "datasets/";
+  char y1[100] = "/act_val.data";
+  FILE *act_val = fopen(strcat(strcat(x1,str.c_str()),y1), "r");
+
+
   // FILE *act_val = fopen("datasets/act_val.data","r"); 
   char lineToRead[5000];
 
@@ -315,8 +337,13 @@ void read_activations() {
   }
   fclose(act_val);
 
-  str = act_ind_file;
-  FILE *act_ind = fopen(str.c_str(),"r"); 
+  // str = act_ind_file;
+  // FILE *act_ind = fopen(str.c_str(),"r"); 
+  char x2[100] = "datasets/";
+  char y2[100] = "/act_index.data";
+  FILE *act_ind = fopen(strcat(strcat(x2,str.c_str()),y2), "r");
+
+
   // FILE *act_ind = fopen("datasets/act_index.data","r"); 
   
   while(fgets(lineToRead, 5000, act_ind)!=NULL){
@@ -333,8 +360,12 @@ void read_activations() {
   }
   fclose(act_ind);
 
-  str = act_ptr_file;
-  FILE *act_ptr = fopen(str.c_str(),"r"); 
+  // str = act_ptr_file;
+  // FILE *act_ptr = fopen(str.c_str(),"r"); 
+
+  char x3[100] = "datasets/";
+  char y3[100] = "/act_ptr.data";
+  FILE *act_ptr = fopen(strcat(strcat(x3,str.c_str()),y3), "r");
   // FILE *act_ptr = fopen("datasets/act_ptr.data","r"); 
   
   while(fgets(lineToRead, 5000, act_ptr)!=NULL){

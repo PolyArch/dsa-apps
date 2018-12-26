@@ -75,6 +75,7 @@ void calc_duality_gap(double alpha[M], uint64_t y[M], double E[M], double b, dou
   SB_CONST(P_duality_gap_b, b, 1);
   SB_2D_CONST(P_duality_gap_const, 2, M-1, 1, 1, 1);
 
+  SB_STRIDE(8,8);
   SB_DMA_WRITE_SIMP(P_duality_gap_dgap, 1, &duality_gap);
   SB_WAIT_ALL();
 }
