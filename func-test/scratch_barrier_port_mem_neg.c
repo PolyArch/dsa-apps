@@ -13,16 +13,16 @@ int main(int argc, char* argv[]) {
   }
 
   begin_roi();
-  SB_CONFIG(none_config,none_size);
-  SB_DMA_SCRATCH_LOAD(input,ABYTES,ABYTES,1,0);
-  SB_WAIT_SCR_WR();
+  SS_CONFIG(none_config,none_size);
+  SS_DMA_SCRATCH_LOAD(input,ABYTES,ABYTES,1,0);
+  SS_WAIT_SCR_WR();
 
-  //SB_SCRATCH_READ(ABYTES, ABYTES, P_none_in);
+  //SS_SCRATCH_READ(ABYTES, ABYTES, P_none_in);
   //                         addr,  stride, acc_sz,  stretch,  strides,  port
-  SB_SCR_PORT_STREAM_STRETCH(ABYTES,   -8,      -8,      0,       AWORDS,  P_none_in)
+  SS_SCR_PORT_STREAM_STRETCH(ABYTES,   -8,      -8,      0,       AWORDS,  P_none_in)
 
-  SB_DMA_WRITE(P_none_out,ABYTES,ABYTES,1,&output[0]);
-  SB_WAIT_ALL();
+  SS_DMA_WRITE(P_none_out,ABYTES,ABYTES,1,&output[0]);
+  SS_WAIT_ALL();
   end_roi();
 
   compare<uint64_t>(argv[0],output,answer,AWORDS);

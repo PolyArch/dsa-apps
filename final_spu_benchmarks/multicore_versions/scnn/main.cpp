@@ -2,7 +2,7 @@
 #include <string>
 #include <sstream>
 #include "scnn.dfg.h"
-#include "/home/vidushi/ss-stack/ss-workloads/common/include/sb_insts.h"
+#include "/home/vidushi/ss-stack/ss-workloads/common/include/ss_insts.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
 #include <inttypes.h>
 #include <assert.h>
@@ -223,54 +223,54 @@ void convolution_layer_blocked(VTYPE (&synapse_val)[Ni][int(nnz1)], VTYPE (&syna
 
 
   // begin_roi();
-  SB_CONST_SCR(0, 0, Tx*Tx*Tn);
-  SB_WAIT_ALL();
-  // SB_WAIT_SCR_WR();
-  // SB_WAIT_SCR_RD();
+  SS_CONST_SCR(0, 0, Tx*Tx*Tn);
+  SS_WAIT_ALL();
+  // SS_WAIT_SCR_WR();
+  // SS_WAIT_SCR_RD();
 
-  SB_CONFIG(scnn_config,scnn_size);
+  SS_CONFIG(scnn_config,scnn_size);
 
   // re-sparsification phase code
-  SB_REPEAT_PORT(4);
-  SB_DMA_READ(&out_n[0], 8, 8, num_inputs/4, P_scnn_neuron);
-  SB_CONST(P_scnn_constt, fused_const, num_inputs);
-  SB_CONST(P_scnn_dummy, 1, num_inputs);
-  SB_DMA_WRITE_SIMP(P_scnn_inval, num_inputs*2, &n_val[0]);
-  SB_DMA_WRITE_SIMP(P_scnn_inind, num_inputs*2, &n_ind[0]);
+  SS_REPEAT_PORT(4);
+  SS_DMA_READ(&out_n[0], 8, 8, num_inputs/4, P_scnn_neuron);
+  SS_CONST(P_scnn_constt, fused_const, num_inputs);
+  SS_CONST(P_scnn_dummy, 1, num_inputs);
+  SS_DMA_WRITE_SIMP(P_scnn_inval, num_inputs*2, &n_val[0]);
+  SS_DMA_WRITE_SIMP(P_scnn_inind, num_inputs*2, &n_ind[0]);
 
 
-  SB_CONFIG_ATOMIC_SCR_OP(T16, T16, T16);
-  SB_ATOMIC_SCR_OP(P_scnn_C, P_scnn_D, 0, (size_synapse*size_neuron_tile*Ni), 0);
+  SS_CONFIG_ATOMIC_SCR_OP(T16, T16, T16);
+  SS_ATOMIC_SCR_OP(P_scnn_C, P_scnn_D, 0, (size_synapse*size_neuron_tile*Ni), 0);
 
 
-  SB_CONST(P_scnn_Kx, Kxsim, num_comp_inst*Ni);
-  SB_CONST(P_scnn_Tx, Txsim, num_comp_inst*Ni);
+  SS_CONST(P_scnn_Kx, Kxsim, num_comp_inst*Ni);
+  SS_CONST(P_scnn_Tx, Txsim, num_comp_inst*Ni);
 
-  SB_REPEAT_PORT(size_neuron_tile/4);
-  SB_DMA_READ(&synapse_val[0][0], 4*sizeof(VTYPE), 4*sizeof(VTYPE), size_synapse*Ni/4, P_scnn_sval);
+  SS_REPEAT_PORT(size_neuron_tile/4);
+  SS_DMA_READ(&synapse_val[0][0], 4*sizeof(VTYPE), 4*sizeof(VTYPE), size_synapse*Ni/4, P_scnn_sval);
 
-  SB_REPEAT_PORT(size_neuron_tile/4);
-  SB_DMA_READ(&synapse_ind[0][0], 4*sizeof(VTYPE), 4*sizeof(VTYPE), size_synapse*Ni/4, P_scnn_sind);
+  SS_REPEAT_PORT(size_neuron_tile/4);
+  SS_DMA_READ(&synapse_ind[0][0], 4*sizeof(VTYPE), 4*sizeof(VTYPE), size_synapse*Ni/4, P_scnn_sind);
 
-  SB_2D_CONST(P_scnn_const, 0, size_neuron_tile/4-1, 1, 1, size_synapse*Ni/4);
+  SS_2D_CONST(P_scnn_const, 0, size_neuron_tile/4-1, 1, 1, size_synapse*Ni/4);
 
   for (int feature_map_id = 0; feature_map_id < Ni; ++feature_map_id) {
    	// printf("size_synapse: %d size_neuron: %d num_comp_inst: %d\n",size_synapse,size_neuron_tile, num_comp_inst);
     int nval_st = neuron_ptr[feature_map_id];
     
 	for(int is=0; is<size_synapse/4; ++is) {
-      SB_DMA_READ(&neuron_i_val[nval_st], 4*sizeof(VTYPE), 4*sizeof(VTYPE), size_neuron_tile/4, P_scnn_nval);
-      SB_DMA_READ(&neuron_i_ind[nval_st], 4*sizeof(VTYPE), 4*sizeof(VTYPE), size_neuron_tile/4, P_scnn_nind);
+      SS_DMA_READ(&neuron_i_val[nval_st], 4*sizeof(VTYPE), 4*sizeof(VTYPE), size_neuron_tile/4, P_scnn_nval);
+      SS_DMA_READ(&neuron_i_ind[nval_st], 4*sizeof(VTYPE), 4*sizeof(VTYPE), size_neuron_tile/4, P_scnn_nind);
     }
     
-	SB_REPEAT_PORT(num_comp_inst/Tn);
-	SB_DMA_READ(&b[0], 8, 8, Tn, P_scnn_rle_const);
+	SS_REPEAT_PORT(num_comp_inst/Tn);
+	SS_DMA_READ(&b[0], 8, 8, Tn, P_scnn_rle_const);
   }
-  SB_WAIT_SCR_ATOMIC();
+  SS_WAIT_SCR_ATOMIC();
   uint64_t done;
-  SB_RECV(P_scnn_done, done);
-  SB_RESET();
-  SB_WAIT_ALL();
+  SS_RECV(P_scnn_done, done);
+  SS_RESET();
+  SS_WAIT_ALL();
   // end_roi();
   // sb_stats();
 }

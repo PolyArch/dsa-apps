@@ -30,18 +30,18 @@ int main(int argc, char* argv[]) {
   answer[14]=1;
   answer[15]=1;
 
-  SB_CONFIG(add1_vec_config,add1_vec_size);
-  SB_FILL_MODE(STRIDE_ZERO_FILL);
+  SS_CONFIG(add1_vec_config,add1_vec_size);
+  SS_FILL_MODE(STRIDE_ZERO_FILL);
 
   begin_roi();
-  SB_DMA_READ(&input[0],0,3*8,  3, P_add1_vec_in);
+  SS_DMA_READ(&input[0],0,3*8,  3, P_add1_vec_in);
 
 
-  SB_SCR_PORT_STREAM(0,4*8,3*8,1,P_add1_vec_in);
+  SS_SCR_PORT_STREAM(0,4*8,3*8,1,P_add1_vec_in);
 
-  SB_DMA_WRITE(P_add1_vec_out,8,8, 16,&output[0]);
+  SS_DMA_WRITE(P_add1_vec_out,8,8, 16,&output[0]);
 
-  SB_WAIT_ALL();
+  SS_WAIT_ALL();
   end_roi();
 
   compare<uint64_t>(argv[0],answer,output,16);

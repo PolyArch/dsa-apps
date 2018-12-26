@@ -3,7 +3,7 @@
 #include <math.h>
 #include <assert.h>
 #include "gbdt.dfg.h"
-#include "/home/vidushi/ss-stack/ss-workloads/common/include/sb_insts.h"
+#include "/home/vidushi/ss-stack/ss-workloads/common/include/ss_insts.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/net_util_func.h"
 #include "/home/vidushi/ss-stack/ss-scheduler/src/config/fixed_point.h"
@@ -113,60 +113,60 @@ void build_histogram(long tid, struct TNode* node) {
 
 
 
-  // SB_ADD_PORT(P_IND_1);
-  // SB_ADD_PORT(P_gbdt_node_ind1);
-  // SB_ADD_PORT(P_gbdt_node_ind2);
-  // SB_ADD_PORT(P_gbdt_node_ind3);
-  SB_DMA_READ(&a[0], 8, 8, n, P_gbdt_node_ind0);
-  SB_CONST(P_gbdt_node_ind0, SENTINAL16, 1);
+  // SS_ADD_PORT(P_IND_1);
+  // SS_ADD_PORT(P_gbdt_node_ind1);
+  // SS_ADD_PORT(P_gbdt_node_ind2);
+  // SS_ADD_PORT(P_gbdt_node_ind3);
+  SS_DMA_READ(&a[0], 8, 8, n, P_gbdt_node_ind0);
+  SS_CONST(P_gbdt_node_ind0, SENTINAL16, 1);
  
-  SB_DMA_READ(&y[0], 4, 4, n, P_gbdt_label0);
-  SB_CONST(P_gbdt_label1, 1, n);
-  // SB_CONST(P_gbdt_local_offset, local_offset, n);
-  // SB_CONST(P_gbdt_local_offset, k, n);
+  SS_DMA_READ(&y[0], 4, 4, n, P_gbdt_label0);
+  SS_CONST(P_gbdt_label1, 1, n);
+  // SS_CONST(P_gbdt_local_offset, local_offset, n);
+  // SS_CONST(P_gbdt_local_offset, k, n);
   
-  SB_CONFIG_ATOMIC_SCR_OP(T16, T32, T32);
-  SB_ATOMIC_SCR_OP(P_gbdt_C, P_gbdt_D, offset, 2*n, 0);
-  // SB_ATOMIC_SCR_OP(P_gbdt_C, P_gbdt_D, offset, 2*n*4, 0);
+  SS_CONFIG_ATOMIC_SCR_OP(T16, T32, T32);
+  SS_ATOMIC_SCR_OP(P_gbdt_C, P_gbdt_D, offset, 2*n, 0);
+  // SS_ATOMIC_SCR_OP(P_gbdt_C, P_gbdt_D, offset, 2*n*4, 0);
                
-  SB_DMA_READ(&feat_ind[0][0], 2, 2, feat_ind[0].size(), P_gbdt_feat_ind0);
-  SB_CONST(P_gbdt_feat_ind0, SENTINAL16, 1);
-  // SB_DMA_READ(&feat_ind[1][0], 2, 2, feat_ind[1].size(), P_gbdt_feat_ind1);
-  // SB_CONST(P_gbdt_feat_ind1, SENTINAL16, 1);
-  // SB_DMA_READ(&feat_ind[2][0], 2, 2, feat_ind[2].size(), P_gbdt_feat_ind2);
-  // SB_CONST(P_gbdt_feat_ind2, SENTINAL16, 1);
-  // SB_DMA_READ(&feat_ind[3][0], 2, 2, feat_ind[3].size(), P_gbdt_feat_ind3);
-  // SB_CONST(P_gbdt_feat_ind3, SENTINAL16, 1);
+  SS_DMA_READ(&feat_ind[0][0], 2, 2, feat_ind[0].size(), P_gbdt_feat_ind0);
+  SS_CONST(P_gbdt_feat_ind0, SENTINAL16, 1);
+  // SS_DMA_READ(&feat_ind[1][0], 2, 2, feat_ind[1].size(), P_gbdt_feat_ind1);
+  // SS_CONST(P_gbdt_feat_ind1, SENTINAL16, 1);
+  // SS_DMA_READ(&feat_ind[2][0], 2, 2, feat_ind[2].size(), P_gbdt_feat_ind2);
+  // SS_CONST(P_gbdt_feat_ind2, SENTINAL16, 1);
+  // SS_DMA_READ(&feat_ind[3][0], 2, 2, feat_ind[3].size(), P_gbdt_feat_ind3);
+  // SS_CONST(P_gbdt_feat_ind3, SENTINAL16, 1);
 
-  SB_DMA_READ(&feat_val[0][0], 2, 2, feat_val[0].size(), P_gbdt_feat_val0);
-  // SB_DMA_READ(&feat_val[1][0], 2, 2, feat_val[1].size(), P_gbdt_feat_val1);
-  // SB_DMA_READ(&feat_val[2][0], 2, 2, feat_val[2].size(), P_gbdt_feat_val2);
-  // SB_DMA_READ(&feat_val[3][0], 2, 2, feat_val[3].size(), P_gbdt_feat_val3);
+  SS_DMA_READ(&feat_val[0][0], 2, 2, feat_val[0].size(), P_gbdt_feat_val0);
+  // SS_DMA_READ(&feat_val[1][0], 2, 2, feat_val[1].size(), P_gbdt_feat_val1);
+  // SS_DMA_READ(&feat_val[2][0], 2, 2, feat_val[2].size(), P_gbdt_feat_val2);
+  // SS_DMA_READ(&feat_val[3][0], 2, 2, feat_val[3].size(), P_gbdt_feat_val3);
 
-  // SB_CONST(P_gbdt_feat_val, dummy_addr, 1);
-  SB_CONST(P_gbdt_feat_val0, 0, 1);
-  // SB_CONST(P_gbdt_feat_val1, 0, 1);
-  // SB_CONST(P_gbdt_feat_val2, 0, 1);
-  // SB_CONST(P_gbdt_feat_val3, 0, 1);
+  // SS_CONST(P_gbdt_feat_val, dummy_addr, 1);
+  SS_CONST(P_gbdt_feat_val0, 0, 1);
+  // SS_CONST(P_gbdt_feat_val1, 0, 1);
+  // SS_CONST(P_gbdt_feat_val2, 0, 1);
+  // SS_CONST(P_gbdt_feat_val3, 0, 1);
    
-  // SB_CONST(P_gbdt_node_ind1, SENTINAL16, 1);
-  // SB_CONST(P_gbdt_node_ind2, SENTINAL16, 1);
-  // SB_CONST(P_gbdt_node_ind3, SENTINAL16, 1);
+  // SS_CONST(P_gbdt_node_ind1, SENTINAL16, 1);
+  // SS_CONST(P_gbdt_node_ind2, SENTINAL16, 1);
+  // SS_CONST(P_gbdt_node_ind3, SENTINAL16, 1);
 
   // For now, assume linear
-  // SB_CONFIG_INDIRECT(T64, T32, 4);
-  // SB_INDIRECT(P_IND_1, &y[0], n, P_gbdt_label0);
+  // SS_CONFIG_INDIRECT(T64, T32, 4);
+  // SS_INDIRECT(P_IND_1, &y[0], n, P_gbdt_label0);
 
   // itype, dtype, mult, offset
-  // SB_CONFIG_INDIRECT1(T16, T32, 2, 1);
-  // SB_CONFIG_INDIRECT(T16, T32, 4);
+  // SS_CONFIG_INDIRECT1(T16, T32, 2, 1);
+  // SS_CONFIG_INDIRECT(T16, T32, 4);
 
 
-  // SB_CONFIG_ATOMIC_SCR_OP(T16, T64, T64);
+  // SS_CONFIG_ATOMIC_SCR_OP(T16, T64, T64);
  uint64_t y;
-  SB_RECV(P_gbdt_all_done, y);
-  SB_RESET();
-  SB_WAIT_ALL();
+  SS_RECV(P_gbdt_all_done, y);
+  SS_RESET();
+  SS_WAIT_ALL();
 
 }
 
@@ -195,11 +195,11 @@ void build_tree(struct TNode* node){
     node->child2->inst_id.resize(n);
     cout << "Starting process for a node\n";
 
-    // SB_DMA_SCRATCH_LOAD(&fixed_inst_feat[0][0], 2, 2, N*8, getLinearAddr(0));
-    // SB_WAIT_ALL();
+    // SS_DMA_SCRATCH_LOAD(&fixed_inst_feat[0][0], 2, 2, N*8, getLinearAddr(0));
+    // SS_WAIT_ALL();
  
     begin_roi();
-    SB_CONFIG(gbdt_config, gbdt_size);
+    SS_CONFIG(gbdt_config, gbdt_size);
     build_histogram(0, node);
 
     // cout << "Done with histogram building\n";

@@ -1,6 +1,6 @@
 #include "Fx16ComplexMul.dfg.h"
 #include <iostream>
-#include "sb_insts.h"
+#include "ss_insts.h"
 #include "ss-config/fixed_point.h"
 #include "check.h"
 #include <complex>
@@ -35,11 +35,11 @@ int main() {
   //complex<int16_t> imag[2];
   complex<int16_t> res[2];
 
-  SB_CONFIG(Fx16ComplexMul_config, Fx16ComplexMul_size);
-  SB_DMA_READ(array1, 8, 8, 1, P_Fx16ComplexMul_A);
-  SB_DMA_READ(array2, 8, 8, 1, P_Fx16ComplexMul_B);
-  SB_DMA_WRITE(P_Fx16ComplexMul_O, 8, 8, 1, res);
-  SB_WAIT_ALL();
+  SS_CONFIG(Fx16ComplexMul_config, Fx16ComplexMul_size);
+  SS_DMA_READ(array1, 8, 8, 1, P_Fx16ComplexMul_A);
+  SS_DMA_READ(array2, 8, 8, 1, P_Fx16ComplexMul_B);
+  SS_DMA_WRITE(P_Fx16ComplexMul_O, 8, 8, 1, res);
+  SS_WAIT_ALL();
 
   //for (int i = 0; i < 2; ++i)
     //std::cout << FIX_TO_DOUBLE(res[i].real()) << ", " << FIX_TO_DOUBLE(res[i].imag()) << "\n";

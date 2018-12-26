@@ -24,10 +24,10 @@ int main(int argc, char* argv[]) {
   }
 
   begin_roi();
-  SB_CONFIG(none_config,none_size);
-  SB_2D_CONST(P_none_in,const1,len1,const2,len2,iters);
-  SB_DMA_WRITE(P_none_out,8,8,volume,&pattern[0]);
-  SB_WAIT_ALL();
+  SS_CONFIG(none_config,none_size);
+  SS_2D_CONST(P_none_in,const1,len1,const2,len2,iters);
+  SS_DMA_WRITE(P_none_out,8,8,volume,&pattern[0]);
+  SS_WAIT_ALL();
   end_roi();
 
   compare<uint64_t>(argv[0],pattern,pattern_check,volume);

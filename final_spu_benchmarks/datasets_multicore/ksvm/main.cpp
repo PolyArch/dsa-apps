@@ -9,7 +9,7 @@
 #include "ksvm.dfg.h"
 #include "duality_gap.dfg.h"
 #include "eta.dfg.h"
-#include "/home/vidushi/ss-stack/ss-workloads/common/include/sb_insts.h"
+#include "/home/vidushi/ss-stack/ss-workloads/common/include/ss_insts.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/net_util_func.h"
 #include "/home/vidushi/ss-stack/ss-scheduler/src/config/fixed_point.h"
@@ -58,15 +58,15 @@ void broadcast_inst(long tid, int i, int j) {
   if(tid==getCoreLoc(i)) {
     int local_offset = (data_ptr[i]-data_ptr[tid*M/NUM_THREADS])*4;
     assert(data_ind[i].size() == (data_ptr[i+1]-data_ptr[i]));
-    SB_SCR_REM_PORT(getLinearAddr(local_offset), (data_ptr[i+1]-data_ptr[i])*4, mask, P_ksvm_b_val);
-    SB_SCR_REM_PORT(getLinearAddr(getLinearOffset(1,2)+local_offset), (data_ptr[i+1]-data_ptr[i])*4, mask, P_ksvm_b_ind);
+    SS_SCR_REM_PORT(getLinearAddr(local_offset), (data_ptr[i+1]-data_ptr[i])*4, mask, P_ksvm_b_val);
+    SS_SCR_REM_PORT(getLinearAddr(getLinearOffset(1,2)+local_offset), (data_ptr[i+1]-data_ptr[i])*4, mask, P_ksvm_b_ind);
   }
 
   if(tid==getCoreLoc(j)) {
     int local_offset = (data_ptr[j]-data_ptr[tid*M/NUM_THREADS])*4;
     assert(data_ind[j].size() == (data_ptr[j+1]-data_ptr[j]));
-    SB_SCR_REM_PORT(getLinearAddr(local_offset), (data_ptr[j+1]-data_ptr[j])*4, mask, P_ksvm_c_val);
-    SB_SCR_REM_PORT(getLinearAddr(getLinearOffset(1,2)+local_offset), (data_ptr[j+1]-data_ptr[j])*4, mask, P_ksvm_c_ind);
+    SS_SCR_REM_PORT(getLinearAddr(local_offset), (data_ptr[j+1]-data_ptr[j])*4, mask, P_ksvm_c_val);
+    SS_SCR_REM_PORT(getLinearAddr(getLinearOffset(1,2)+local_offset), (data_ptr[j+1]-data_ptr[j])*4, mask, P_ksvm_c_ind);
   }
 }
 
@@ -78,15 +78,15 @@ void broadcast_eta(long tid, int i, int j) {
   if(tid==getCoreLoc(i)) {
     int local_offset = (data_ptr[i]-data_ptr[tid*M/NUM_THREADS])*4;
     assert(data_ind[i].size() == (data_ptr[i+1]-data_ptr[i]));
-    SB_SCR_REM_PORT(getLinearAddr(local_offset), (data_ptr[i+1]-data_ptr[i])*4, mask, P_eta_a_val);
-    SB_SCR_REM_PORT(getLinearAddr(getLinearOffset(1,2)+local_offset), (data_ptr[i+1]-data_ptr[i])*4, mask, P_eta_a_ind);
+    SS_SCR_REM_PORT(getLinearAddr(local_offset), (data_ptr[i+1]-data_ptr[i])*4, mask, P_eta_a_val);
+    SS_SCR_REM_PORT(getLinearAddr(getLinearOffset(1,2)+local_offset), (data_ptr[i+1]-data_ptr[i])*4, mask, P_eta_a_ind);
   }
 
   if(tid==getCoreLoc(j)) {
     int local_offset = (data_ptr[j]-data_ptr[tid*M/NUM_THREADS])*4;
     assert(data_ind[j].size() == (data_ptr[j+1]-data_ptr[j]));
-    SB_SCR_REM_PORT(getLinearAddr(local_offset), (data_ptr[j+1]-data_ptr[j])*4, mask, P_eta_b_val);
-    SB_SCR_REM_PORT(getLinearAddr(getLinearOffset(1,2)+local_offset), (data_ptr[j+1]-data_ptr[j])*4, mask, P_eta_b_ind);
+    SS_SCR_REM_PORT(getLinearAddr(local_offset), (data_ptr[j+1]-data_ptr[j])*4, mask, P_eta_b_val);
+    SS_SCR_REM_PORT(getLinearAddr(getLinearOffset(1,2)+local_offset), (data_ptr[j+1]-data_ptr[j])*4, mask, P_eta_b_ind);
   }
 }
 
@@ -99,19 +99,19 @@ void eta_calc(long tid, int i, int j, double &dp, double &norm1, double &norm2){
   
   broadcast_eta(tid, i,j);
 
-  SB_2D_CONST(P_eta_const1, 2, (data_ind[i].size())/2-1, 1, 1, 1);
-  SB_2D_CONST(P_eta_const2, 2, (data_ind[i].size())/2-1, 1, 1, 1);
+  SS_2D_CONST(P_eta_const1, 2, (data_ind[i].size())/2-1, 1, 1, 1);
+  SS_2D_CONST(P_eta_const2, 2, (data_ind[i].size())/2-1, 1, 1, 1);
   
-  SB_DMA_WRITE_SIMP(P_eta_n1, 1, &norm1);
-  SB_DMA_WRITE_SIMP(P_eta_n2, 1, &norm2);
-  SB_DMA_WRITE_SIMP(P_eta_s, 1, &dp);
-  SB_WAIT_ALL();
+  SS_DMA_WRITE_SIMP(P_eta_n1, 1, &norm1);
+  SS_DMA_WRITE_SIMP(P_eta_n2, 1, &norm2);
+  SS_DMA_WRITE_SIMP(P_eta_s, 1, &dp);
+  SS_WAIT_ALL();
 
   // cout << "Eta calc done\n";
 }
 
 void calc_duality_gap(long tid, double b, double &duality_gap){
-  SB_CONFIG(duality_gap_config, duality_gap_size);
+  SS_CONFIG(duality_gap_config, duality_gap_size);
 
   int num_inst = M/NUM_THREADS;
 
@@ -119,15 +119,15 @@ void calc_duality_gap(long tid, double b, double &duality_gap){
   int end_id = start_id+num_inst;
 
 
-  SB_SCRATCH_READ(getBankedOffset(2,3), 8*num_inst, P_duality_gap_alpha);
-  SB_SCRATCH_READ(getBankedOffset(1,3), 8*num_inst, P_duality_gap_y);
-  SB_SCRATCH_READ(getBankedOffset(0,3), 8*num_inst, P_duality_gap_E);
+  SS_SCRATCH_READ(getBankedOffset(2,3), 8*num_inst, P_duality_gap_alpha);
+  SS_SCRATCH_READ(getBankedOffset(1,3), 8*num_inst, P_duality_gap_y);
+  SS_SCRATCH_READ(getBankedOffset(0,3), 8*num_inst, P_duality_gap_E);
   
-  SB_CONST(P_duality_gap_b, b, 1);
-  SB_2D_CONST(P_duality_gap_const, 2, M-1, 1, 1, 1);
+  SS_CONST(P_duality_gap_b, b, 1);
+  SS_2D_CONST(P_duality_gap_const, 2, M-1, 1, 1, 1);
 
-  SB_DMA_WRITE_SIMP(P_duality_gap_dgap, 1, &duality_gap);
-  SB_WAIT_ALL();
+  SS_DMA_WRITE_SIMP(P_duality_gap_dgap, 1, &duality_gap);
+  SS_WAIT_ALL();
   // cout << "Duality calc done\n";
 }
 
@@ -139,23 +139,23 @@ void kernel_err_update(long tid, int i, int j, double diff1, double diff2, doubl
   int num_inst = M/NUM_THREADS;
   double gauss_var = -1/(2*sigma*sigma); // double to fix
   // int m=1;
-  SB_CONFIG(ksvm_config, ksvm_size);
+  SS_CONFIG(ksvm_config, ksvm_size);
 
-  SB_CONST(P_ksvm_gauss_var, DOUBLE_TO_FIX(gauss_var), num_inst);
-  SB_CONST(P_ksvm_alpha1, diff1, num_inst);
-  SB_CONST(P_ksvm_alpha2, diff2, num_inst);
-  SB_CONST(P_ksvm_y1, y1, num_inst);
-  SB_CONST(P_ksvm_y2, y2, num_inst);
+  SS_CONST(P_ksvm_gauss_var, DOUBLE_TO_FIX(gauss_var), num_inst);
+  SS_CONST(P_ksvm_alpha1, diff1, num_inst);
+  SS_CONST(P_ksvm_alpha2, diff2, num_inst);
+  SS_CONST(P_ksvm_y1, y1, num_inst);
+  SS_CONST(P_ksvm_y2, y2, num_inst);
 
   // banked scratch read
-  SB_SCRATCH_READ(getBankedOffset(0,3), 8*num_inst, P_ksvm_old_E);
+  SS_SCRATCH_READ(getBankedOffset(0,3), 8*num_inst, P_ksvm_old_E);
 
   int start_id = tid*num_inst;
   int end_id = start_id+num_inst;
 
   broadcast_inst(tid, i, j);
-  SB_SCRATCH_READ(getLinearAddr(0), (data_ptr[end_id]-data_ptr[start_id])*4 ,P_ksvm_a_val);
-  SB_SCRATCH_READ(getLinearAddr(getLinearOffset(1,2)) ,(data_ptr[end_id]-data_ptr[start_id])*4 ,P_ksvm_a_ind);
+  SS_SCRATCH_READ(getLinearAddr(0), (data_ptr[end_id]-data_ptr[start_id])*4 ,P_ksvm_a_val);
+  SS_SCRATCH_READ(getLinearAddr(getLinearOffset(1,2)) ,(data_ptr[end_id]-data_ptr[start_id])*4 ,P_ksvm_a_ind);
 
   
   // FIXME: removing this loop gives page fault? 
@@ -165,8 +165,8 @@ void kernel_err_update(long tid, int i, int j, double diff1, double diff2, doubl
   }
 
   // write this in banked scratch
-  SB_SCR_WRITE(P_ksvm_E, num_inst*8, getBankedOffset(0,3));
-  SB_WAIT_ALL();
+  SS_SCR_WRITE(P_ksvm_E, num_inst*8, getBankedOffset(0,3));
+  SS_WAIT_ALL();
   // cout << "Kernel err calc done\n";
 }
 
@@ -210,7 +210,7 @@ void train(long tid) {
     if(L==H) continue;
     double inter_prod = 0, norm1 = 0, norm2 = 0;
 	// cout << "Sent for eta calculation\n";
-    SB_CONFIG(eta_config, eta_size);
+    SS_CONFIG(eta_config, eta_size);
     eta_calc(tid, i, j, inter_prod, norm1, norm2);
     eta = 2*inter_prod - norm1 - norm2;
     if(eta == 0) eta=2;
@@ -277,12 +277,12 @@ void load_linear_scratch(long tid) {
 
   int n_inst = M/NUM_THREADS;
   for(int i=tid*n_inst; i<(tid+1)*n_inst; ++i) {
-    SB_DMA_SCRATCH_LOAD(&data_val[i][0], 4, 4, data_val[i].size(), val_offset);
-    SB_DMA_SCRATCH_LOAD(&data_ind[i][0], 4, 4, data_ind[i].size(), val_offset);
+    SS_DMA_SCRATCH_LOAD(&data_val[i][0], 4, 4, data_val[i].size(), val_offset);
+    SS_DMA_SCRATCH_LOAD(&data_ind[i][0], 4, 4, data_ind[i].size(), val_offset);
     val_offset += data_val[i].size()*4;
     ind_offset += data_ind[i].size()*4;
   }
-  SB_WAIT_SCR_WR();
+  SS_WAIT_SCR_WR();
 }
 
 void *entry_point(void *threadid) {
@@ -297,7 +297,8 @@ void *entry_point(void *threadid) {
      // exit(-1);
    }
 
-   SB_CONFIG(eta_config, eta_size);
+   begin_roi();
+   SS_CONFIG(eta_config, eta_size);
    load_linear_scratch(tid);
    begin_roi();
    train(tid);
@@ -397,3 +398,62 @@ int main(){
  
   return 0;
 }
+/*
+void kernel_err_update(long tid, int i, int j, double diff1, double diff2, double y1, double y2){
+  
+  if(data_val[i].size()==0 || data_val[j].size()==0)  return;
+
+  // int num_inst = M;
+  int num_inst = M/NUM_THREADS;
+  double gauss_var = -1/(2*sigma*sigma); // double to fix
+  // int m=1;
+  SS_CONFIG(ksvm_config, ksvm_size);
+
+  SS_CONST(P_ksvm_gauss_var, DOUBLE_TO_FIX(gauss_var), num_inst);
+  SS_CONST(P_ksvm_alpha1, diff1, num_inst);
+  SS_CONST(P_ksvm_alpha2, diff2, num_inst);
+  SS_CONST(P_ksvm_y1, y1, num_inst);
+  SS_CONST(P_ksvm_y2, y2, num_inst);
+
+  // banked scratch read
+  SS_DMA_READ(&E[0], 8, 8, num_inst, P_ksvm_old_E);
+
+  int start_id = tid*num_inst;
+  int end_id = start_id+num_inst;
+
+  // broadcast_inst(tid, i, j);
+  // should by default be 0, so don't need to load anything here!
+  // SS_SCRATCH_READ(getLinearAddr(0), (data_ptr[end_id]-data_ptr[start_id])*4 ,P_ksvm_a_val);
+  // SS_SCRATCH_READ(getLinearAddr(getLinearOffset(1,2)) ,(data_ptr[end_id]-data_ptr[start_id])*4 ,P_ksvm_a_ind);
+
+  // for(int k=0; k<num_inst; ++k){
+  for(int k=start_id; k<end_id; ++k){
+	
+	if(data_val[k].size()==0)
+	  continue;
+
+    // local scratch read
+    SS_DMA_READ(&data_ind[k][0], 8, 8, data_ind[k].size()/2, P_ksvm_a_ind);
+    SS_DMA_READ(&data_val[k][0], 8, 8, data_val[k].size()/2, P_ksvm_a_val);
+
+    // coming from broadcast -- remove this!
+    SS_DMA_READ(&data_ind[i][0], 8, 8, data_ind[i].size()/2, P_ksvm_b_ind);
+    SS_DMA_READ(&data_val[i][0], 8, 8, data_val[i].size()/2, P_ksvm_b_val);
+    SS_DMA_READ(&data_ind[j][0], 8, 8, data_ind[j].size()/2, P_ksvm_c_ind);
+    SS_DMA_READ(&data_val[j][0], 8, 8, data_val[j].size()/2, P_ksvm_c_val);
+
+    // 32-bit sentinal?
+    SS_CONST(P_ksvm_a_ind, SENTINAL, 1);
+    SS_CONST(P_ksvm_b_ind, SENTINAL, 1);
+    SS_CONST(P_ksvm_c_ind, SENTINAL, 1);
+    SS_CONST(P_ksvm_a_val, 0, 1);
+    SS_CONST(P_ksvm_b_val, 0, 1);
+    SS_CONST(P_ksvm_c_val, 0, 1);
+  }
+
+  // may write this in banked scratch
+  SS_DMA_WRITE_SIMP(P_ksvm_E, num_inst, &E[0]);
+  SS_WAIT_ALL();
+  cout << "Kernel err calc done\n";
+}
+*/

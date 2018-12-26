@@ -15,14 +15,14 @@ int main(int argc, char* argv[]) {
   }
 
   begin_roi();
-  SB_CONFIG(multi_config,multi_size);
-  SB_DMA_READ(&input[0],8,8,  64, P_multi_inA);
-  SB_RECURRENCE(P_multi_outA,P_multi_inB,64);
+  SS_CONFIG(multi_config,multi_size);
+  SS_DMA_READ(&input[0],8,8,  64, P_multi_inA);
+  SS_RECURRENCE(P_multi_outA,P_multi_inB,64);
 
-  //SB_DMA_READ(&input[0],8,8,  64, P_multi_inB);
+  //SS_DMA_READ(&input[0],8,8,  64, P_multi_inB);
 
-  SB_DMA_WRITE(P_multi_outB,8,8, 64,&output[0]);
-  SB_WAIT_ALL();
+  SS_DMA_WRITE(P_multi_outB,8,8, 64,&output[0]);
+  SS_WAIT_ALL();
   end_roi();
 
   compare<uint64_t>(argv[0],answer,output,64);

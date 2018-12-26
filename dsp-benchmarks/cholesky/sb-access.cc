@@ -9,7 +9,7 @@
 #include "cholesky.h"
 #include "compute.dfg.h"
 #include "writeback.dfg.h"
-#include "sb_insts.h"
+#include "ss_insts.h"
 #include "matvec.h"
 
 using std::complex;
@@ -26,10 +26,10 @@ void cholesky(complex<float> *a, complex<float> *L) {
       complex<float> *bp = b + 1;
       float norm = 1 / complex_norm(div);
       div = std::conj(div * norm);
-      SB_CONFIG(writeback_config, writeback_size);
-      SB_DMA_READ(bp, 8, 8, N - i - 1, P_writeback_BP);
-      SB_CONST(P_writeback_DIV, *((uint64_t *) &div), N - i - 1);
-      SB_DMA_WRITE(P_writeback_RES, N * 8, 8, N - i - 1, L + (i + 1) * N + i);
+      SS_CONFIG(writeback_config, writeback_size);
+      SS_DMA_READ(bp, 8, 8, N - i - 1, P_writeback_BP);
+      SS_CONST(P_writeback_DIV, *((uint64_t *) &div), N - i - 1);
+      SS_DMA_WRITE(P_writeback_RES, N * 8, 8, N - i - 1, L + (i + 1) * N + i);
       /*for (int j = i + 1; j < N; ++j) {
         //L[j * N + i] = b[j - i] / div;
         L[j * N + i] = complex<float>(
@@ -46,19 +46,19 @@ void cholesky(complex<float> *a, complex<float> *L) {
         float f[2];
         uint64_t v;
       } ri_v = {v.real() * norm, v.imag() * -norm};
-      SB_WAIT_ALL();
-      SB_CONFIG(compute_config, compute_size);
+      SS_WAIT_ALL();
+      SS_CONFIG(compute_config, compute_size);
 
       int total = N - i - 1;
-      SB_DMA_READ_STRETCH(a + (i + 1) * N + (i + 1), 8 * (N + 1), 8 * total, -8, total, P_compute_Z);
-      SB_DMA_READ_STRETCH(bj, 8, 8 * total, -8, total, P_compute_B);
-      SB_CONST(P_compute_V, ri_v.v, (1 + total) * total / 2);
-      SB_CONFIG_PORT(total, -1);
-      SB_DMA_READ(bj, 8, 8, total, P_compute_A);
-      SB_DMA_WRITE(P_compute_O, 0, 8, 1, &div);
-      SB_SCR_WRITE(P_compute_O, (1 + total) * (total) * 4 - 8, 0);
+      SS_DMA_READ_STRETCH(a + (i + 1) * N + (i + 1), 8 * (N + 1), 8 * total, -8, total, P_compute_Z);
+      SS_DMA_READ_STRETCH(bj, 8, 8 * total, -8, total, P_compute_B);
+      SS_CONST(P_compute_V, ri_v.v, (1 + total) * total / 2);
+      SS_CONFIG_PORT(total, -1);
+      SS_DMA_READ(bj, 8, 8, total, P_compute_A);
+      SS_DMA_WRITE(P_compute_O, 0, 8, 1, &div);
+      SS_SCR_WRITE(P_compute_O, (1 + total) * (total) * 4 - 8, 0);
 
-      SB_WAIT_ALL();
+      SS_WAIT_ALL();
     }
   }
 
@@ -74,10 +74,10 @@ void cholesky(complex<float> *a, complex<float> *L) {
       complex<float> *bp = b + 1;
       float norm = 1 / complex_norm(div);
       div = std::conj(div * norm);
-      SB_CONFIG(writeback_config, writeback_size);
-      SB_SCRATCH_READ(0, 8 * total, P_writeback_BP);
-      SB_CONST(P_writeback_DIV, *((uint64_t *) &div), total);
-      SB_DMA_WRITE(P_writeback_RES, N * 8, 8, total, L + (i + 1) * N + i);
+      SS_CONFIG(writeback_config, writeback_size);
+      SS_SCRATCH_READ(0, 8 * total, P_writeback_BP);
+      SS_CONST(P_writeback_DIV, *((uint64_t *) &div), total);
+      SS_DMA_WRITE(P_writeback_RES, N * 8, 8, total, L + (i + 1) * N + i);
       /*for (int j = i + 1; j < N; ++j) {
         //L[j * N + i] = b[j - i] / div;
         L[j * N + i] = complex<float>(
@@ -94,19 +94,19 @@ void cholesky(complex<float> *a, complex<float> *L) {
         float f[2];
         uint64_t v;
       } ri_v = {v.real() * norm, v.imag() * -norm};
-      SB_WAIT_ALL();
+      SS_WAIT_ALL();
 
-      SB_CONFIG(compute_config, compute_size);
+      SS_CONFIG(compute_config, compute_size);
 
-      SB_SCRATCH_READ(8 * total, 4 * total * (total + 1), P_compute_Z);
-      SB_SCR_PORT_STREAM_STRETCH(0, 8, 8 * total, -8, total, P_compute_B);
-      SB_CONST(P_compute_V, *((uint64_t*) &val), (1 + total) * total / 2);
-      SB_CONFIG_PORT(total, -1);
-      SB_SCR_PORT_STREAM(0, 8, 8, total, P_compute_A);
-      SB_DMA_WRITE(P_compute_O, 0, 8, 1, &div);
-      SB_SCR_WRITE(P_compute_O, 4 * total * (total + 1) - 8, 0);
+      SS_SCRATCH_READ(8 * total, 4 * total * (total + 1), P_compute_Z);
+      SS_SCR_PORT_STREAM_STRETCH(0, 8, 8 * total, -8, total, P_compute_B);
+      SS_CONST(P_compute_V, *((uint64_t*) &val), (1 + total) * total / 2);
+      SS_CONFIG_PORT(total, -1);
+      SS_SCR_PORT_STREAM(0, 8, 8, total, P_compute_A);
+      SS_DMA_WRITE(P_compute_O, 0, 8, 1, &div);
+      SS_SCR_WRITE(P_compute_O, 4 * total * (total + 1) - 8, 0);
 
-      SB_WAIT_ALL();
+      SS_WAIT_ALL();
     }
   }
 }

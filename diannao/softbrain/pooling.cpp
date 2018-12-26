@@ -11,7 +11,7 @@ using namespace std;
 #include "pool4x4l2avg.dfg.h"
 //#include "pool_simple.h"
 
-#include "../../common/include/sb_insts.h"
+#include "../../common/include/ss_insts.h"
 
 
 #define AVG 1
@@ -175,16 +175,16 @@ void pooling_layer_sb2(VTYPE (&neuron_i)[NYPAD][NXPAD][Ni],
     for (int x = 0; x < Nx; x += Sx) {
       for(int i = 0; i < Ni; i += 2*pipedepth){
         // read an entire 2x2 tile into input buffer (1 whole tile fits in a pipe)
-        SB_DMA_READ(&neuron_i[y][x][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*pipedepth, Kx*Ky, INPUTNEURON0);
-        SB_DMA_READ(&neuron_i[y][x][i+pipedepth], sizeof(VTYPE)*Ni, sizeof(VTYPE)*pipedepth, Kx*Ky, INPUTNEURON1);
+        SS_DMA_READ(&neuron_i[y][x][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*pipedepth, Kx*Ky, INPUTNEURON0);
+        SS_DMA_READ(&neuron_i[y][x][i+pipedepth], sizeof(VTYPE)*Ni, sizeof(VTYPE)*pipedepth, Kx*Ky, INPUTNEURON1);
      
         // Activate divide to average tiles together
-        SB_CONST(INPUTPRED0, 1, pipedepth); 
-        SB_CONST(INPUTPRED1, 1, pipedepth); 
+        SS_CONST(INPUTPRED0, 1, pipedepth); 
+        SS_CONST(INPUTPRED1, 1, pipedepth); 
 
         // Write complete tiles out to mem
-        SB_DMA_WRITE(OUTPUT0, sizeof(VTYPE), sizeof(VTYPE), pipedepth, &neuron_n[yout][xout][i]);
-        SB_DMA_WRITE(OUTPUT1, sizeof(VTYPE), sizeof(VTYPE), pipedepth, &neuron_n[yout][xout][i+pipedepth]);
+        SS_DMA_WRITE(OUTPUT0, sizeof(VTYPE), sizeof(VTYPE), pipedepth, &neuron_n[yout][xout][i]);
+        SS_DMA_WRITE(OUTPUT1, sizeof(VTYPE), sizeof(VTYPE), pipedepth, &neuron_n[yout][xout][i+pipedepth]);
       }
       xout++;
     }
@@ -201,7 +201,7 @@ void pooling_layer_sb(VTYPE (&neuron_i)[NYPAD][NXPAD][Ni],
   // Stream in CGRA config (do this somewhere else?) 
   int *cgra_config;
   int cgra_cofig_sz;
-  SB_CONFIG(cgra_config, cgra_config_sz); 
+  SS_CONFIG(cgra_config, cgra_config_sz); 
 
   if(Kx < 4){
     pooling_layer_sb2(neuron_i, neuron_n);   
@@ -214,24 +214,24 @@ void pooling_layer_sb(VTYPE (&neuron_i)[NYPAD][NXPAD][Ni],
       for(int i = 0; i < Ni; i += 2*PIPEDEPTH){
         for(int ky = 0; ky < Ky; ++ky){ // each row of 4 fits in a pipe
           if(ky + 1 < Ky){ // divide on last itr
-            SB_CONST(INPUTPRED0, 0, PIPEDEPTH); 
-            SB_CONST(INPUTPRED1, 0, PIPEDEPTH); 
+            SS_CONST(INPUTPRED0, 0, PIPEDEPTH); 
+            SS_CONST(INPUTPRED1, 0, PIPEDEPTH); 
           } else {
-            SB_CONST(INPUTPRED0, 1, PIPEDEPTH); 
-            SB_CONST(INPUTPRED1, 1, PIPEDEPTH); 
+            SS_CONST(INPUTPRED0, 1, PIPEDEPTH); 
+            SS_CONST(INPUTPRED1, 1, PIPEDEPTH); 
           }
  
-          SB_DMA_READ(&neuron_i[y+ky][x][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEDEPTH, Kx, INPUTNEURON0);
-          SB_DMA_READ(&neuron_i[y+ky][x][i+PIPEDEPTH], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEDEPTH, Kx, INPUTNEURON1);
+          SS_DMA_READ(&neuron_i[y+ky][x][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEDEPTH, Kx, INPUTNEURON0);
+          SS_DMA_READ(&neuron_i[y+ky][x][i+PIPEDEPTH], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEDEPTH, Kx, INPUTNEURON1);
        
           if(ky + 1 < Ky){  // recurse until last row
-            SB_RECURRENCE(OUTPUT0, INPUTACC0, PIPEDEPTH);
-            SB_RECURRENCE(OUTPUT1, INPUTACC1, PIPEDEPTH);
+            SS_RECURRENCE(OUTPUT0, INPUTACC0, PIPEDEPTH);
+            SS_RECURRENCE(OUTPUT1, INPUTACC1, PIPEDEPTH);
           }
         }
         // Write complete tiles out to mem
-        SB_DMA_WRITE(OUTPUT0, sizeof(VTYPE), sizeof(VTYPE), PIPEDEPTH, &neuron_n[yout][xout][i]);
-        SB_DMA_WRITE(OUTPUT1, sizeof(VTYPE), sizeof(VTYPE), PIPEDEPTH, &neuron_n[yout][xout][i+PIPEDEPTH]);
+        SS_DMA_WRITE(OUTPUT0, sizeof(VTYPE), sizeof(VTYPE), PIPEDEPTH, &neuron_n[yout][xout][i]);
+        SS_DMA_WRITE(OUTPUT1, sizeof(VTYPE), sizeof(VTYPE), PIPEDEPTH, &neuron_n[yout][xout][i+PIPEDEPTH]);
       } 
       xout++;
     }
@@ -244,7 +244,7 @@ void pooling_layer_sb(VTYPE (&neuron_i)[NYPAD][NXPAD][Ni],
 //void pooling_layer_sb_simple(VTYPE (&neuron_i)[NYPAD][NXPAD][Ni],
 //                             VTYPE (&neuron_n)[NYSCL][NXSCL][Ni]) {
 //  // Stream in CGRA config (do this somewhere else?) 
-//  SB_CONFIG(pool_simple_config, pool_simple_config_sz); 
+//  SS_CONFIG(pool_simple_config, pool_simple_config_sz); 
 //}
 
 
@@ -255,7 +255,7 @@ int pooling_layer_blocked_sb_4x4_sx1_sy1(VTYPE (&neuron_i)[NYPAD][NXPAD][Ni],
   int pipedepth=16;
   int pipedepth_bytes=(pipedepth*8);
 
-  SB_CONFIG(pool4x4l2avg_config, pool4x4l2avg_size); 
+  SS_CONFIG(pool4x4l2avg_config, pool4x4l2avg_size); 
 
   VTYPE value[Ni]={0};
   for (int yy = 0; yy < Ny; yy += Ty) {
@@ -272,36 +272,36 @@ int pooling_layer_blocked_sb_4x4_sx1_sy1(VTYPE (&neuron_i)[NYPAD][NXPAD][Ni],
 
           //First three loops produce garbage
 
-          SB_CONST(P_pool4x4l2avg_Xa, 0, 2*pipedepth*1); //Initialize garbage inputs
-          SB_CONST(P_pool4x4l2avg_Xb, 0, 2*pipedepth*1);
-          SB_CONST(P_pool4x4l2avg_Xc, 0, 2*pipedepth*1);
+          SS_CONST(P_pool4x4l2avg_Xa, 0, 2*pipedepth*1); //Initialize garbage inputs
+          SS_CONST(P_pool4x4l2avg_Xb, 0, 2*pipedepth*1);
+          SS_CONST(P_pool4x4l2avg_Xc, 0, 2*pipedepth*1);
 
-          SB_DMA_READ(&neuron_i[y+0][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+3,P_pool4x4l2avg_R0);
-          SB_DMA_READ(&neuron_i[y+1][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+3,P_pool4x4l2avg_R1);
-          SB_DMA_READ(&neuron_i[y+2][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+3,P_pool4x4l2avg_R2);
-          SB_DMA_READ(&neuron_i[y+3][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+3,P_pool4x4l2avg_R3);
-          SB_DMA_READ(&neuron_i[y+4][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+3,P_pool4x4l2avg_R4);
+          SS_DMA_READ(&neuron_i[y+0][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+3,P_pool4x4l2avg_R0);
+          SS_DMA_READ(&neuron_i[y+1][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+3,P_pool4x4l2avg_R1);
+          SS_DMA_READ(&neuron_i[y+2][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+3,P_pool4x4l2avg_R2);
+          SS_DMA_READ(&neuron_i[y+3][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+3,P_pool4x4l2avg_R3);
+          SS_DMA_READ(&neuron_i[y+4][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+3,P_pool4x4l2avg_R4);
 
           //each rec has a slightly different number of iterations
-          SB_RECURRENCE(P_pool4x4l2avg_Oa,P_pool4x4l2avg_Xa,2*pipedepth*(Tx+2));  
-          SB_RECURRENCE(P_pool4x4l2avg_Ob,P_pool4x4l2avg_Xb,2*pipedepth*(Tx+2));
-          SB_RECURRENCE(P_pool4x4l2avg_Oc,P_pool4x4l2avg_Xc,2*pipedepth*(Tx+2));
+          SS_RECURRENCE(P_pool4x4l2avg_Oa,P_pool4x4l2avg_Xa,2*pipedepth*(Tx+2));  
+          SS_RECURRENCE(P_pool4x4l2avg_Ob,P_pool4x4l2avg_Xb,2*pipedepth*(Tx+2));
+          SS_RECURRENCE(P_pool4x4l2avg_Oc,P_pool4x4l2avg_Xc,2*pipedepth*(Tx+2));
 
-          SB_GARBAGE(P_pool4x4l2avg_O0,pipedepth*3);
-          SB_GARBAGE(P_pool4x4l2avg_O1,pipedepth*3);
+          SS_GARBAGE(P_pool4x4l2avg_O0,pipedepth*3);
+          SS_GARBAGE(P_pool4x4l2avg_O1,pipedepth*3);
 
-          SB_DMA_WRITE(P_pool4x4l2avg_O0,Ni*sizeof(VTYPE),pipedepth_bytes,Tx,&neuron_n[y+0][xx][iii]);
-          SB_DMA_WRITE(P_pool4x4l2avg_O1,Ni*sizeof(VTYPE),pipedepth_bytes,Tx,&neuron_n[y+1][xx][iii]);
+          SS_DMA_WRITE(P_pool4x4l2avg_O0,Ni*sizeof(VTYPE),pipedepth_bytes,Tx,&neuron_n[y+0][xx][iii]);
+          SS_DMA_WRITE(P_pool4x4l2avg_O1,Ni*sizeof(VTYPE),pipedepth_bytes,Tx,&neuron_n[y+1][xx][iii]);
 
-          SB_GARBAGE(P_pool4x4l2avg_Oa,2*pipedepth*1);
-          SB_GARBAGE(P_pool4x4l2avg_Ob,2*pipedepth*1);
-          SB_GARBAGE(P_pool4x4l2avg_Oc,2*pipedepth*1);
+          SS_GARBAGE(P_pool4x4l2avg_Oa,2*pipedepth*1);
+          SS_GARBAGE(P_pool4x4l2avg_Ob,2*pipedepth*1);
+          SS_GARBAGE(P_pool4x4l2avg_Oc,2*pipedepth*1);
 
         }
       }
     }
   }
-  SB_WAIT_ALL();
+  SS_WAIT_ALL();
   return c;
 }
 
@@ -313,7 +313,7 @@ int pooling_layer_blocked_sb_2x2_sx1_sy1(VTYPE (&neuron_i)[NYPAD][NXPAD][Ni],
   int pipedepth=16;
   int pipedepth_bytes=(pipedepth*8);
 
-  SB_CONFIG(pool2x2l4avg_config, pool2x2l4avg_size); 
+  SS_CONFIG(pool2x2l4avg_config, pool2x2l4avg_size); 
 
   for (int yy = 0; yy < Ny; yy += Ty) {
     for (int xx = 0; xx < Nx; xx += Tx) {
@@ -329,33 +329,33 @@ int pooling_layer_blocked_sb_2x2_sx1_sy1(VTYPE (&neuron_i)[NYPAD][NXPAD][Ni],
 
           //First three loops produce garbage
 
-          SB_CONST(P_pool2x2l4avg_P, 0, 4*pipedepth*1); //Initialize garbage inputs
+          SS_CONST(P_pool2x2l4avg_P, 0, 4*pipedepth*1); //Initialize garbage inputs
 
-          SB_DMA_READ(&neuron_i[y+0][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+1,P_pool2x2l4avg_R0);
-          SB_DMA_READ(&neuron_i[y+1][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+1,P_pool2x2l4avg_R1);
-          SB_DMA_READ(&neuron_i[y+2][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+1,P_pool2x2l4avg_R2);
-          SB_DMA_READ(&neuron_i[y+3][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+1,P_pool2x2l4avg_R3);
-          SB_DMA_READ(&neuron_i[y+4][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+1,P_pool2x2l4avg_R4);
+          SS_DMA_READ(&neuron_i[y+0][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+1,P_pool2x2l4avg_R0);
+          SS_DMA_READ(&neuron_i[y+1][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+1,P_pool2x2l4avg_R1);
+          SS_DMA_READ(&neuron_i[y+2][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+1,P_pool2x2l4avg_R2);
+          SS_DMA_READ(&neuron_i[y+3][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+1,P_pool2x2l4avg_R3);
+          SS_DMA_READ(&neuron_i[y+4][xx][iii],Ni*sizeof(VTYPE),pipedepth_bytes,Tx+1,P_pool2x2l4avg_R4);
 
-          SB_RECURRENCE(P_pool2x2l4avg_I,P_pool2x2l4avg_P,4*pipedepth*(Tx));  
+          SS_RECURRENCE(P_pool2x2l4avg_I,P_pool2x2l4avg_P,4*pipedepth*(Tx));  
 
-          SB_GARBAGE(P_pool2x2l4avg_O0,pipedepth*1);
-          SB_GARBAGE(P_pool2x2l4avg_O1,pipedepth*1);
-          SB_GARBAGE(P_pool2x2l4avg_O2,pipedepth*1);
-          SB_GARBAGE(P_pool2x2l4avg_O3,pipedepth*1);
+          SS_GARBAGE(P_pool2x2l4avg_O0,pipedepth*1);
+          SS_GARBAGE(P_pool2x2l4avg_O1,pipedepth*1);
+          SS_GARBAGE(P_pool2x2l4avg_O2,pipedepth*1);
+          SS_GARBAGE(P_pool2x2l4avg_O3,pipedepth*1);
 
-          SB_DMA_WRITE(P_pool2x2l4avg_O0,Ni*sizeof(VTYPE),pipedepth_bytes,Tx,&neuron_n[y+0][xx][iii]);
-          SB_DMA_WRITE(P_pool2x2l4avg_O1,Ni*sizeof(VTYPE),pipedepth_bytes,Tx,&neuron_n[y+1][xx][iii]);
-          SB_DMA_WRITE(P_pool2x2l4avg_O2,Ni*sizeof(VTYPE),pipedepth_bytes,Tx,&neuron_n[y+2][xx][iii]);
-          SB_DMA_WRITE(P_pool2x2l4avg_O3,Ni*sizeof(VTYPE),pipedepth_bytes,Tx,&neuron_n[y+3][xx][iii]);
+          SS_DMA_WRITE(P_pool2x2l4avg_O0,Ni*sizeof(VTYPE),pipedepth_bytes,Tx,&neuron_n[y+0][xx][iii]);
+          SS_DMA_WRITE(P_pool2x2l4avg_O1,Ni*sizeof(VTYPE),pipedepth_bytes,Tx,&neuron_n[y+1][xx][iii]);
+          SS_DMA_WRITE(P_pool2x2l4avg_O2,Ni*sizeof(VTYPE),pipedepth_bytes,Tx,&neuron_n[y+2][xx][iii]);
+          SS_DMA_WRITE(P_pool2x2l4avg_O3,Ni*sizeof(VTYPE),pipedepth_bytes,Tx,&neuron_n[y+3][xx][iii]);
 
-          SB_GARBAGE(P_pool2x2l4avg_I,4*pipedepth*1);
+          SS_GARBAGE(P_pool2x2l4avg_I,4*pipedepth*1);
 
         }
       }
     }
   }
-  SB_WAIT_ALL();
+  SS_WAIT_ALL();
   return c;
 }
 
@@ -367,7 +367,7 @@ int pooling_layer_blocked_sb_2x2_sx1_sy1_full_ni(VTYPE (&neuron_i)[NYPAD][NXPAD]
   int pipedepth_bytes=(pipedepth*8);
   int DP_WIDTH=8;
 
-  SB_CONFIG(pool2x2l4avg_config, pool2x2l4avg_size); 
+  SS_CONFIG(pool2x2l4avg_config, pool2x2l4avg_size); 
 
   for (int yy = 0; yy < Ny; yy += Ty) {
     for (int xx = 0; xx < Nx; xx += Tx) {
@@ -377,31 +377,31 @@ int pooling_layer_blocked_sb_2x2_sx1_sy1_full_ni(VTYPE (&neuron_i)[NYPAD][NXPAD]
         //First three loops produce garbage
 
         int ni_elem = Ni*sizeof(VTYPE)/DP_WIDTH;
-        SB_CONST(P_pool2x2l4avg_P, 0, 4*ni_elem); 
+        SS_CONST(P_pool2x2l4avg_P, 0, 4*ni_elem); 
 
-        SB_DMA_READ(&neuron_i[y+0][xx][0],Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx+1,P_pool2x2l4avg_R0);
-        SB_DMA_READ(&neuron_i[y+1][xx][0],Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx+1,P_pool2x2l4avg_R1);
-        SB_DMA_READ(&neuron_i[y+2][xx][0],Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx+1,P_pool2x2l4avg_R2);
-        SB_DMA_READ(&neuron_i[y+3][xx][0],Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx+1,P_pool2x2l4avg_R3);
-        SB_DMA_READ(&neuron_i[y+4][xx][0],Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx+1,P_pool2x2l4avg_R4);
+        SS_DMA_READ(&neuron_i[y+0][xx][0],Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx+1,P_pool2x2l4avg_R0);
+        SS_DMA_READ(&neuron_i[y+1][xx][0],Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx+1,P_pool2x2l4avg_R1);
+        SS_DMA_READ(&neuron_i[y+2][xx][0],Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx+1,P_pool2x2l4avg_R2);
+        SS_DMA_READ(&neuron_i[y+3][xx][0],Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx+1,P_pool2x2l4avg_R3);
+        SS_DMA_READ(&neuron_i[y+4][xx][0],Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx+1,P_pool2x2l4avg_R4);
 
-        SB_RECURRENCE(P_pool2x2l4avg_I,P_pool2x2l4avg_P,4*ni_elem*Tx);  
+        SS_RECURRENCE(P_pool2x2l4avg_I,P_pool2x2l4avg_P,4*ni_elem*Tx);  
 
-        SB_GARBAGE(P_pool2x2l4avg_O0,ni_elem);
-        SB_GARBAGE(P_pool2x2l4avg_O1,ni_elem);
-        SB_GARBAGE(P_pool2x2l4avg_O2,ni_elem);
-        SB_GARBAGE(P_pool2x2l4avg_O3,ni_elem);
+        SS_GARBAGE(P_pool2x2l4avg_O0,ni_elem);
+        SS_GARBAGE(P_pool2x2l4avg_O1,ni_elem);
+        SS_GARBAGE(P_pool2x2l4avg_O2,ni_elem);
+        SS_GARBAGE(P_pool2x2l4avg_O3,ni_elem);
 
-        SB_DMA_WRITE(P_pool2x2l4avg_O0,Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx,&neuron_n[y+0][xx][0]);
-        SB_DMA_WRITE(P_pool2x2l4avg_O1,Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx,&neuron_n[y+1][xx][0]);
-        SB_DMA_WRITE(P_pool2x2l4avg_O2,Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx,&neuron_n[y+2][xx][0]);
-        SB_DMA_WRITE(P_pool2x2l4avg_O3,Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx,&neuron_n[y+3][xx][0]);
+        SS_DMA_WRITE(P_pool2x2l4avg_O0,Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx,&neuron_n[y+0][xx][0]);
+        SS_DMA_WRITE(P_pool2x2l4avg_O1,Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx,&neuron_n[y+1][xx][0]);
+        SS_DMA_WRITE(P_pool2x2l4avg_O2,Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx,&neuron_n[y+2][xx][0]);
+        SS_DMA_WRITE(P_pool2x2l4avg_O3,Ni*sizeof(VTYPE),Ni*sizeof(VTYPE),Tx,&neuron_n[y+3][xx][0]);
 
-        SB_GARBAGE(P_pool2x2l4avg_I,4*ni_elem);
+        SS_GARBAGE(P_pool2x2l4avg_I,4*ni_elem);
       }
     }
   }
-  SB_WAIT_ALL();
+  SS_WAIT_ALL();
   return c;
 }
 

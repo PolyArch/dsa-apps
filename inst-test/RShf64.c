@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "RShf64.dfg.h"
 #include "check.h"
-#include "../common/include/sb_insts.h"
+#include "../common/include/ss_insts.h"
 #include "../common/include/sim_timing.h"
 #include <inttypes.h>
 
@@ -13,11 +13,11 @@ int main(int argc, char* argv[]) {
 
   //Version 1:
   begin_roi();
-  SB_CONFIG(RShf64_config,RShf64_size);
-  SB_DMA_READ(&in[0],8,8,1,P_RShf64_in1);
-  SB_CONST(P_RShf64_in2,16,1);
-  SB_DMA_WRITE(P_RShf64_out,8,8,1,&out[0]);
-  SB_WAIT_ALL();
+  SS_CONFIG(RShf64_config,RShf64_size);
+  SS_DMA_READ(&in[0],8,8,1,P_RShf64_in1);
+  SS_CONST(P_RShf64_in2,16,1);
+  SS_DMA_WRITE(P_RShf64_out,8,8,1,&out[0]);
+  SS_WAIT_ALL();
   end_roi();
 
   DTYPE expect[] = {2,3,4,0};

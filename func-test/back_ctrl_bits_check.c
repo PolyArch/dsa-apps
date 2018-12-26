@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "add_ctrl.dfg.h"
-#include "../common/include/sb_insts.h"
+#include "../common/include/ss_insts.h"
 #include "../common/include/sim_timing.h"
 #include <inttypes.h>
 #include <stdlib.h>
@@ -18,15 +18,15 @@ int main() {
   }
 
   begin_roi();
-  SB_CONFIG(add_ctrl_config,add_ctrl_size);
+  SS_CONFIG(add_ctrl_config,add_ctrl_size);
   
-  SB_DMA_READ(&x[0], 8, 8, 1, P_add_ctrl_in1);
-  // SB_DMA_READ(&x[0], 8, 8, N, P_add_ctrl_in1);
-  SB_DMA_READ(&y[0], 8, 8, N, P_add_ctrl_in2);
-  // SB_CONST(P_add_ctrl_p1, 2, N);
-  SB_CONST(P_add_ctrl_p1, 0, N-1);
-  SB_CONST(P_add_ctrl_p1, 2, 1);
-  SB_DMA_WRITE(P_add_ctrl_out, 8, 8, N, &a[0]);
-  SB_WAIT_ALL();
+  SS_DMA_READ(&x[0], 8, 8, 1, P_add_ctrl_in1);
+  // SS_DMA_READ(&x[0], 8, 8, N, P_add_ctrl_in1);
+  SS_DMA_READ(&y[0], 8, 8, N, P_add_ctrl_in2);
+  // SS_CONST(P_add_ctrl_p1, 2, N);
+  SS_CONST(P_add_ctrl_p1, 0, N-1);
+  SS_CONST(P_add_ctrl_p1, 2, 1);
+  SS_DMA_WRITE(P_add_ctrl_out, 8, 8, N, &a[0]);
+  SS_WAIT_ALL();
   end_roi();
 }

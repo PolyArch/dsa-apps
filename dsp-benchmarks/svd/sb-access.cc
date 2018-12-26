@@ -1,5 +1,5 @@
 #include "svd.h"
-#include "sb_insts.h"
+#include "ss_insts.h"
 #include "vmc.dfg.h"
 #include "vv.dfg.h"
 #include "mvc.dfg.h"
@@ -71,13 +71,13 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
   givens(a, b, alpha);
 
   c = a; s = b;
-  SB_CONST(P_aplygvs_C, *((uint64_t*)&c), _N_);
-  SB_CONST(P_aplygvs_S, *((uint64_t*)&s), _N_);
-  SB_DMA_READ(v, 8, 8, _N_, P_aplygvs_A);
-  SB_DMA_READ(v + _N_, 8, 8, _N_, P_aplygvs_B);
-  SB_DMA_WRITE(P_aplygvs_O0, 8, 8, _N_, v);
-  SB_DMA_WRITE(P_aplygvs_O1, 8, 8, _N_, v + _N_);
-  //SB_WAIT_ALL();
+  SS_CONST(P_aplygvs_C, *((uint64_t*)&c), _N_);
+  SS_CONST(P_aplygvs_S, *((uint64_t*)&s), _N_);
+  SS_DMA_READ(v, 8, 8, _N_, P_aplygvs_A);
+  SS_DMA_READ(v + _N_, 8, 8, _N_, P_aplygvs_B);
+  SS_DMA_WRITE(P_aplygvs_O0, 8, 8, _N_, v);
+  SS_DMA_WRITE(P_aplygvs_O1, 8, 8, _N_, v + _N_);
+  //SS_WAIT_ALL();
   //for (int i = 0; i < _N_; ++i) {
   //  lmm2x2(m0, m1, v[i], v[i + _N_]);
   //}
@@ -105,12 +105,12 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
     b = d[i + 1] * s;
     d[i + 1] *= -std::conj(c);
 
-    SB_CONST(P_aplygvs_C, *((uint64_t*)&c), _N_);
-    SB_CONST(P_aplygvs_S, *((uint64_t*)&s), _N_);
-    SB_DMA_READ(v + i * _N_, 8, 8, _N_, P_aplygvs_A);
-    SB_DMA_READ(v + i * _N_ + _N_, 8, 8, _N_, P_aplygvs_B);
-    SB_DMA_WRITE(P_aplygvs_O0, 8, 8, _N_, v + i * _N_);
-    SB_DMA_WRITE(P_aplygvs_O1, 8, 8, _N_, v + i * _N_ + _N_);
+    SS_CONST(P_aplygvs_C, *((uint64_t*)&c), _N_);
+    SS_CONST(P_aplygvs_S, *((uint64_t*)&s), _N_);
+    SS_DMA_READ(v + i * _N_, 8, 8, _N_, P_aplygvs_A);
+    SS_DMA_READ(v + i * _N_ + _N_, 8, 8, _N_, P_aplygvs_B);
+    SS_DMA_WRITE(P_aplygvs_O0, 8, 8, _N_, v + i * _N_);
+    SS_DMA_WRITE(P_aplygvs_O1, 8, 8, _N_, v + i * _N_ + _N_);
     //for (int j = 0; j < _N_; ++j) {
     //  lmm2x2(m0, m1, v[i * _N_ + j], v[(i + 1) * _N_ + j]);
     //}
@@ -124,7 +124,7 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
       f[i + 1] *= -std::conj(c);
     }
   }
-  SB_WAIT_ALL();
+  SS_WAIT_ALL();
 }
 
 void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
@@ -135,17 +135,17 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
       hv[j] = (i ? r : a)[j * len];
     household(hv, len, d[i]);
 
-    SB_CONFIG(vmc_config, vmc_size);
-    SB_CONST(P_vmc_C, *((uint64_t*)&_zero), len - 1);
-    SB_DMA_READ((i ? r : a) + 1, 8 * len, 8 * (len - 1), len, P_vmc_B);
-    SB_RECURRENCE(P_vmc_O, P_vmc_C, (len - 1) * (len - 1));
-    SB_REPEAT_PORT(len - 1);
-    SB_DMA_READ(hv, 8, 8, len, P_vmc_A);
+    SS_CONFIG(vmc_config, vmc_size);
+    SS_CONST(P_vmc_C, *((uint64_t*)&_zero), len - 1);
+    SS_DMA_READ((i ? r : a) + 1, 8 * len, 8 * (len - 1), len, P_vmc_B);
+    SS_RECURRENCE(P_vmc_O, P_vmc_C, (len - 1) * (len - 1));
+    SS_REPEAT_PORT(len - 1);
+    SS_DMA_READ(hv, 8, 8, len, P_vmc_A);
     //for (int k = 0; k < len; ++k) {
-    //  SB_CONST(P_vmc_A, *((uint64_t*)(hv + k)), len - 1);
+    //  SS_CONST(P_vmc_A, *((uint64_t*)(hv + k)), len - 1);
     //}
-    SB_DMA_WRITE(P_vmc_O, 8, 8, len - 1, temp + 1);
-    SB_WAIT_ALL();
+    SS_DMA_WRITE(P_vmc_O, 8, 8, len - 1, temp + 1);
+    SS_WAIT_ALL();
 
     //for (int j = 1; j < len; ++j) std::cout << temp[j] << " "; std::cout << "\n";
 
@@ -157,16 +157,16 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
     //  }
     //}
 
-    SB_CONFIG(vv_config, vv_size);
-    SB_DMA_READ((i ? r : a) + 1, 8 * len, 8 * (len - 1), len, P_vv_C);
-    SB_DMA_READ(temp + 1, 0, 8 * (len - 1), len, P_vv_A);
-    SB_DMA_WRITE(P_vv_O, 8, 8, (len - 1) * len, r);
-    SB_REPEAT_PORT(len - 1);
-    SB_DMA_READ(hv, 8, 8, len, P_vv_B);
+    SS_CONFIG(vv_config, vv_size);
+    SS_DMA_READ((i ? r : a) + 1, 8 * len, 8 * (len - 1), len, P_vv_C);
+    SS_DMA_READ(temp + 1, 0, 8 * (len - 1), len, P_vv_A);
+    SS_DMA_WRITE(P_vv_O, 8, 8, (len - 1) * len, r);
+    SS_REPEAT_PORT(len - 1);
+    SS_DMA_READ(hv, 8, 8, len, P_vv_B);
     //for (int j = 0; j < len; ++j) {
-    //  SB_CONST(P_vv_B, *((uint64_t*)(hv + j)), len - 1);
+    //  SS_CONST(P_vv_B, *((uint64_t*)(hv + j)), len - 1);
     //}
-    SB_WAIT_ALL();
+    SS_WAIT_ALL();
     
     //for (int j = 1; j < len; ++j)
     //  temp[j] = complex<float>(temp[j].real() * 2, temp[j].imag() * 2);
@@ -184,18 +184,18 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
         hv[j] = r[j];
       household(hv, len, f[i]);
 
-      SB_CONFIG(mvc_config, mvc_size);
-      SB_DMA_READ(hv, 0, 8 * len, len, P_mvc_A);
-      SB_DMA_READ(r + len, 8, 8, len * len, P_mvc_B);
-      SB_2D_CONST(P_mvc_reset, 2, len - 1, 1, 1, len);
-      SB_DMA_WRITE(P_mvc_O, 8, 8, len, temp);
+      SS_CONFIG(mvc_config, mvc_size);
+      SS_DMA_READ(hv, 0, 8 * len, len, P_mvc_A);
+      SS_DMA_READ(r + len, 8, 8, len * len, P_mvc_B);
+      SS_2D_CONST(P_mvc_reset, 2, len - 1, 1, 1, len);
+      SS_DMA_WRITE(P_mvc_O, 8, 8, len, temp);
       //for (int j = 0; j < len; ++j) {
-      //  SB_CONST(P_mvc_reset, 0, len - 1);
-      //  SB_CONST(P_mvc_reset, 1, 1);
-      //  SB_GARBAGE(P_mvc_O, len - 1);
-      //  SB_DMA_WRITE(P_mvc_O, 8, 8, 1, temp + j);
+      //  SS_CONST(P_mvc_reset, 0, len - 1);
+      //  SS_CONST(P_mvc_reset, 1, 1);
+      //  SS_GARBAGE(P_mvc_O, len - 1);
+      //  SS_DMA_WRITE(P_mvc_O, 8, 8, 1, temp + j);
       //}
-      SB_WAIT_ALL();
+      SS_WAIT_ALL();
       //for (int j = 0; j < len; ++j) {
       //  temp[j] = 0;
       //  for (int k = 0; k < len; ++k) {
@@ -204,16 +204,16 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
       //  }
       //}
 
-      SB_CONFIG(vv_config, vv_size);
-      SB_DMA_READ(r + len, 8, 8, len * len, P_vv_C);
-      SB_DMA_READ(hv, 0, 8 * len, len, P_vv_A);
-      SB_DMA_WRITE(P_vv_O, 8, 8, len * len, r);
-      SB_REPEAT_PORT(len);
-      SB_DMA_READ(temp, 8, 8, len, P_vv_B);
+      SS_CONFIG(vv_config, vv_size);
+      SS_DMA_READ(r + len, 8, 8, len * len, P_vv_C);
+      SS_DMA_READ(hv, 0, 8 * len, len, P_vv_A);
+      SS_DMA_WRITE(P_vv_O, 8, 8, len * len, r);
+      SS_REPEAT_PORT(len);
+      SS_DMA_READ(temp, 8, 8, len, P_vv_B);
       //for (int j = 0; j < len; ++j) {
-      //  SB_CONST(P_vv_B, *((uint64_t*)(temp + j)), len);
+      //  SS_CONST(P_vv_B, *((uint64_t*)(temp + j)), len);
       //}
-      SB_WAIT_ALL();
+      SS_WAIT_ALL();
       //for (int j = 0; j < len; ++j) {
       //  for (int k = 0; k < len; ++k) {
       //    complex<float> delta(complex_mul(temp[j], hv[k]));
@@ -224,24 +224,24 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
       
       if (!i) {
         v[0] = complex<float>(1, 0);
-        SB_CONFIG(vvc_config, vvc_size);
-        SB_DMA_READ(hv, 0, 8 * (_N_ - 1), _N_ - 1, P_vvc_B);
-        SB_DMA_WRITE(P_vvc_O, 8 * _N_, 8 * (_N_ - 1), _N_ - 1, v + _N_ + 1);
+        SS_CONFIG(vvc_config, vvc_size);
+        SS_DMA_READ(hv, 0, 8 * (_N_ - 1), _N_ - 1, P_vvc_B);
+        SS_DMA_WRITE(P_vvc_O, 8 * _N_, 8 * (_N_ - 1), _N_ - 1, v + _N_ + 1);
 
-        SB_2D_CONST(P_vvc_C, 1065353216, 1, 0, _N_ - 1, _N_ - 2);
-        SB_CONST(P_vvc_C, 0, 1);
+        SS_2D_CONST(P_vvc_C, 1065353216, 1, 0, _N_ - 1, _N_ - 2);
+        SS_CONST(P_vvc_C, 0, 1);
 
-        SB_REPEAT_PORT(_N_ - 1);
-        SB_DMA_READ(hv, 8, 8, _N_ - 1, P_vvc_A);
+        SS_REPEAT_PORT(_N_ - 1);
+        SS_DMA_READ(hv, 8, 8, _N_ - 1, P_vvc_A);
         //for (int j = 1; j < _N_; ++j) {
         //  //v[j] = v[j * _N_] = complex<float>(0, 0);
-        //  SB_CONST(P_vvc_A, *((uint64_t*)(hv + j - 1)), _N_ - 1);
-        //  //SB_CONST(P_vvc_C, *((uint64_t*)&_one), 1);
+        //  SS_CONST(P_vvc_A, *((uint64_t*)(hv + j - 1)), _N_ - 1);
+        //  //SS_CONST(P_vvc_C, *((uint64_t*)&_one), 1);
         //  //if (j != _N_ - 1) {
-        //  //  SB_CONST(P_vvc_C, *((uint64_t*)&_zero), _N_ - 1);
+        //  //  SS_CONST(P_vvc_C, *((uint64_t*)&_zero), _N_ - 1);
         //  //}
         //}
-        SB_WAIT_ALL();
+        SS_WAIT_ALL();
         //for (int j = 1; j < _N_; ++j) {
         //  v[j] = v[j * _N_] = complex<float>(0, 0);
         //  for (int k = 1; k < _N_; ++k) {
@@ -252,17 +252,17 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
         //  }
         //}
       } else {
-        SB_CONFIG(vm_config, vm_size);
-        SB_CONST(P_vm_C, *((uint64_t*)&_zero), _N_ - 1);
-        SB_DMA_READ(v + _N_ * (i + 1) + 1, 8 * _N_, 8 * (_N_ - 1), len, P_vm_B);
-        SB_RECURRENCE(P_vm_O, P_vm_C, (_N_ - 1) * (len - 1));
-        SB_DMA_WRITE(P_vm_O, 8, 8, _N_ - 1, temp + 1);
-        SB_REPEAT_PORT(_N_ - 1);
-        SB_DMA_READ(hv, 8, 8, _N_ - i - 1, P_vm_A);
+        SS_CONFIG(vm_config, vm_size);
+        SS_CONST(P_vm_C, *((uint64_t*)&_zero), _N_ - 1);
+        SS_DMA_READ(v + _N_ * (i + 1) + 1, 8 * _N_, 8 * (_N_ - 1), len, P_vm_B);
+        SS_RECURRENCE(P_vm_O, P_vm_C, (_N_ - 1) * (len - 1));
+        SS_DMA_WRITE(P_vm_O, 8, 8, _N_ - 1, temp + 1);
+        SS_REPEAT_PORT(_N_ - 1);
+        SS_DMA_READ(hv, 8, 8, _N_ - i - 1, P_vm_A);
         //for (int j = i + 1; j < _N_; ++j) {
-        //  SB_CONST(P_vm_A, hv + j - i - 1, _N_ - 1);
+        //  SS_CONST(P_vm_A, hv + j - i - 1, _N_ - 1);
         //}
-        SB_WAIT_ALL();
+        SS_WAIT_ALL();
         //for (int k = 1; k < _N_; ++k)
         //  temp[k] = 0;
         //for (int j = i + 1; j < _N_; ++j) {
@@ -271,16 +271,16 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
         //    temp[k] = complex<float>(complex_add(temp[k], delta));
         //  }
         //}
-        SB_CONFIG(vvc_config, vvc_size);
-        SB_DMA_READ(temp + 1, 0, 8 * (_N_ - 1), len, P_vvc_B);
-        SB_DMA_READ(v + _N_ * (i + 1) + 1, 8 * _N_, 8 * (_N_ - 1), len, P_vvc_C);
-        SB_DMA_WRITE(P_vvc_O, 8 * _N_, 8 * (_N_ - 1), len, v + _N_ * (i + 1) + 1);
-        SB_REPEAT_PORT(_N_ - 1);
-        SB_DMA_READ(hv, 8, 8, len, P_vvc_A);
+        SS_CONFIG(vvc_config, vvc_size);
+        SS_DMA_READ(temp + 1, 0, 8 * (_N_ - 1), len, P_vvc_B);
+        SS_DMA_READ(v + _N_ * (i + 1) + 1, 8 * _N_, 8 * (_N_ - 1), len, P_vvc_C);
+        SS_DMA_WRITE(P_vvc_O, 8 * _N_, 8 * (_N_ - 1), len, v + _N_ * (i + 1) + 1);
+        SS_REPEAT_PORT(_N_ - 1);
+        SS_DMA_READ(hv, 8, 8, len, P_vvc_A);
         //for (int k = 0; k < len; ++k) {
-        //  SB_CONST(P_vvc_A, *((uint64_t*)(hv + k)), _N_ - 1);
+        //  SS_CONST(P_vvc_A, *((uint64_t*)(hv + k)), _N_ - 1);
         //}
-        SB_WAIT_ALL();
+        SS_WAIT_ALL();
         //for (int k = 1; k < _N_; ++k)
         //  temp[k] = complex<float>(temp[k].real() * 2, temp[k].imag() * 2);
         //for (int k = 1; k < _N_; ++k) {
@@ -295,7 +295,7 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
   f[_N_ - 2] = r[0];
   d[_N_ - 1] = r[1];
 
-  SB_CONFIG(aplygvs_config, aplygvs_size);
+  SS_CONFIG(aplygvs_config, aplygvs_size);
   int left = 0, right = _N_ - 1;
   while (left < right) {
     while (left < _N_ - 1 && fabs(f[left].real()) < eps && fabs(f[left].imag()) < eps)
@@ -316,14 +316,14 @@ void svd(complex<float> *a, complex<float> *u, float *s, complex<float> *v) {
     s[i] = sqrt(complex_norm(d[i]));
   }
 
-  SB_CONFIG(finalize_config, finalize_size);
-  SB_DMA_READ(v, 0, 8 * _N_ * _N_, _N_, P_finalize_A);
-  SB_2D_CONST(P_finalize_reset, 2, _N_ / 4 - 1, 1, 1, _N_ * _N_);
-  SB_DMA_WRITE(P_finalize_O, 0, 8 * _N_ * _N_, 1, u);
+  SS_CONFIG(finalize_config, finalize_size);
+  SS_DMA_READ(v, 0, 8 * _N_ * _N_, _N_, P_finalize_A);
+  SS_2D_CONST(P_finalize_reset, 2, _N_ / 4 - 1, 1, 1, _N_ * _N_);
+  SS_DMA_WRITE(P_finalize_O, 0, 8 * _N_ * _N_, 1, u);
   for (int i = 0; i < _N_; ++i) {
-    SB_DMA_READ(a + i * _N_, 0, 8 * _N_, _N_, P_finalize_B);
+    SS_DMA_READ(a + i * _N_, 0, 8 * _N_, _N_, P_finalize_B);
   }
-  SB_WAIT_ALL();
+  SS_WAIT_ALL();
 
   //for (int i = 0; i < _N_; ++i) {
   //  for (int j = 0; j < _N_; ++j) {

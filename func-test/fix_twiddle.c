@@ -8,14 +8,14 @@ uint64_t answer64[4];
 int main(int argc, char* argv[]) {
   init();
 
-  SB_CONFIG(twiddle_config,twiddle_size);
+  SS_CONFIG(twiddle_config,twiddle_size);
 
-  SB_CONST(P_twiddle_in,0x0003000200010000,1);
-  SB_DMA_WRITE(P_twiddle_out_normal,8,8,1,&out64[0]);
-  SB_DMA_WRITE(P_twiddle_out_reverse,8,8,1,&out64[1]);
-  SB_DMA_WRITE(P_twiddle_out_red_add1,8,8,1,&out64[2]);
-  SB_DMA_WRITE(P_twiddle_out_upper,8,8,1,&out64[3]);
-  SB_WAIT_ALL();
+  SS_CONST(P_twiddle_in,0x0003000200010000,1);
+  SS_DMA_WRITE(P_twiddle_out_normal,8,8,1,&out64[0]);
+  SS_DMA_WRITE(P_twiddle_out_reverse,8,8,1,&out64[1]);
+  SS_DMA_WRITE(P_twiddle_out_red_add1,8,8,1,&out64[2]);
+  SS_DMA_WRITE(P_twiddle_out_upper,8,8,1,&out64[3]);
+  SS_WAIT_ALL();
 
   answer64[0]=0x0003000200010000;
   answer64[1]=0x0000000100020003;

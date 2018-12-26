@@ -13,7 +13,7 @@ const complex<float> _zero(0, 0);
 #include <complex>
 #include <cmath>
 #include <algorithm>
-#include "sb_insts.h"
+#include "ss_insts.h"
 
 using std::complex;
 

@@ -6,7 +6,7 @@
 #include <time.h>
 #include "test.dfg.h"
 #include "fwd_prop.dfg.h"
-#include "../../common/include/sb_insts.h"
+#include "../../common/include/ss_insts.h"
 #include "../../common/include/sim_timing.h"
 #include <inttypes.h>
 #include <sstream>
@@ -42,7 +42,7 @@ void forwardPropagation(tree* circuit, uint64_t nodes_at_level[d2-d1], uint64_t 
 	std::cout << *(&circuit[47].child0+(sizeof(tree)*1*(i-47)/8)) << "\n";
   }
   */
-  SB_CONFIG(fwd_prop_config,fwd_prop_size);
+  SS_CONFIG(fwd_prop_config,fwd_prop_size);
 
   for (d=d-1; d >= 0; d--) {
     // start with i
@@ -51,41 +51,41 @@ void forwardPropagation(tree* circuit, uint64_t nodes_at_level[d2-d1], uint64_t 
 	// std::cout << i << " " << n_times << "\n";
    
     // std::cout << "number of elements at the level: " << d << " are " << n_times << " with the starting index: " << i << std::endl;
-    SB_DMA_READ(&circuit[i].nodeType, sizeof(tree), 8, n_times, P_fwd_prop_nodeType);
-    // SB_DMA_READ(&circuit[i].nodeType, 8, 8, n_times, P_fwd_prop_nodeType);
-    // SB_DMA_READ(&circuit[i].child0, 8, 8, n_times, P_IND_1);
-    SB_DMA_READ(&circuit[i].child0, sizeof(tree), 8, n_times, P_IND_1);
-    SB_DMA_READ(&circuit[i].child1, sizeof(tree), 8, n_times, P_IND_2);
+    SS_DMA_READ(&circuit[i].nodeType, sizeof(tree), 8, n_times, P_fwd_prop_nodeType);
+    // SS_DMA_READ(&circuit[i].nodeType, 8, 8, n_times, P_fwd_prop_nodeType);
+    // SS_DMA_READ(&circuit[i].child0, 8, 8, n_times, P_IND_1);
+    SS_DMA_READ(&circuit[i].child0, sizeof(tree), 8, n_times, P_IND_1);
+    SS_DMA_READ(&circuit[i].child1, sizeof(tree), 8, n_times, P_IND_2);
 
-	// SB_CONFIG_INDIRECT1(T64,T64,1,&circuit.flag[0]-&circuit.vr[0]);
-	// SB_CONFIG_INDIRECT1(T64,T64,1,offset);
-	// SB_CONFIG_INDIRECT1(T64,T64,(offset*6),offset);
-	// SB_CONFIG_INDIRECT1(T64,T64,1,1);
-	SB_CONFIG_INDIRECT1(T64,T64,sizeof(struct tree)/8,4*sizeof(uint64_t)/8);
-    SB_INDIRECT(P_IND_1, &circuit[i].vr, n_times, P_fwd_prop_c1vf);
+	// SS_CONFIG_INDIRECT1(T64,T64,1,&circuit.flag[0]-&circuit.vr[0]);
+	// SS_CONFIG_INDIRECT1(T64,T64,1,offset);
+	// SS_CONFIG_INDIRECT1(T64,T64,(offset*6),offset);
+	// SS_CONFIG_INDIRECT1(T64,T64,1,1);
+	SS_CONFIG_INDIRECT1(T64,T64,sizeof(struct tree)/8,4*sizeof(uint64_t)/8);
+    SS_INDIRECT(P_IND_1, &circuit[i].vr, n_times, P_fwd_prop_c1vf);
 
-	// SB_CONFIG_INDIRECT1(T64,T64,1,offset);
-	// SB_CONFIG_INDIRECT1(T64,T64,(offset*6),offset);
-	// SB_CONFIG_INDIRECT1(T64,T64,1,1);
-	SB_CONFIG_INDIRECT1(T64,T64,sizeof(struct tree)/8,4*sizeof(uint64_t)/8);
-    SB_INDIRECT(P_IND_2, &circuit[i].vr, n_times, P_fwd_prop_c2vf);
+	// SS_CONFIG_INDIRECT1(T64,T64,1,offset);
+	// SS_CONFIG_INDIRECT1(T64,T64,(offset*6),offset);
+	// SS_CONFIG_INDIRECT1(T64,T64,1,1);
+	SS_CONFIG_INDIRECT1(T64,T64,sizeof(struct tree)/8,4*sizeof(uint64_t)/8);
+    SS_INDIRECT(P_IND_2, &circuit[i].vr, n_times, P_fwd_prop_c2vf);
 
-    // SB_CONFIG_INDIRECT(T64,T64,1);
+    // SS_CONFIG_INDIRECT(T64,T64,1);
 	// // Oh it will read like vector!
-    // SB_INDIRECT(P_IND_1, &circuit.vr[i], n_times, P_fwd_prop_c1vr);
-    // SB_INDIRECT(P_IND_1, &circuit.flag[i], n_times, P_fwd_prop_c1vr);
+    // SS_INDIRECT(P_IND_1, &circuit.vr[i], n_times, P_fwd_prop_c1vr);
+    // SS_INDIRECT(P_IND_1, &circuit.flag[i], n_times, P_fwd_prop_c1vr);
 
-	// SB_CONFIG_INDIRECT(T64,T64,1);
+	// SS_CONFIG_INDIRECT(T64,T64,1);
 	// // Oh it will read like vector!
-    // SB_INDIRECT(P_IND_2, &circuit.vr[i], n_times, P_fwd_prop_c2vr);
-    // SB_INDIRECT(P_IND_2, &circuit.flag[i], n_times, P_fwd_prop_c2vr);
+    // SS_INDIRECT(P_IND_2, &circuit.vr[i], n_times, P_fwd_prop_c2vr);
+    // SS_INDIRECT(P_IND_2, &circuit.flag[i], n_times, P_fwd_prop_c2vr);
 
 
-	SB_DMA_WRITE(P_fwd_prop_vr, sizeof(tree), 8, n_times, &circuit[i].vr);
-	SB_DMA_WRITE(P_fwd_prop_flag, sizeof(tree), 8, n_times, &circuit[i].flag);
+	SS_DMA_WRITE(P_fwd_prop_vr, sizeof(tree), 8, n_times, &circuit[i].vr);
+	SS_DMA_WRITE(P_fwd_prop_flag, sizeof(tree), 8, n_times, &circuit[i].flag);
 
-    // SB_WAIT_COMPUTE();
-    SB_WAIT_ALL();
+    // SS_WAIT_COMPUTE();
+    SS_WAIT_ALL();
     // i+=nodes_at_level[d];
   }
   // std::cout << "Number of computations done: " << i << std::endl;
@@ -209,7 +209,7 @@ void backPropagation(tree circuit, int nodes_at_level[d2-d1], int levels){
   int n_times = 0;
   int i=0;
   // int levels = d2-d1-1;
-  SB_CONFIG(test_config,test_size);
+  SS_CONFIG(test_config,test_size);
 
   // for (int d = 0; d < levels && i<no_nodes_per_cgra; d++) {
   for (int d = 0; d < levels-1; d++) {
@@ -217,24 +217,24 @@ void backPropagation(tree circuit, int nodes_at_level[d2-d1], int levels){
     n_times = nodes_at_level[d];
     
     // std::cout << "number of elements at the level: " << n_times << std::endl;
-    SB_DMA_READ(&circuit.nodeType[i], 8, 8, n_times, P_test_nodeType);
-    SB_DMA_READ(&circuit.dr[i], 8, 8, n_times, P_test_dr);
-    SB_DMA_READ(&circuit.flag[i], 8, 8, n_times, P_test_flag);
-    SB_DMA_READ(&circuit.vr[i], 8, 8, n_times, P_test_vr);
-    SB_DMA_READ(&circuit.child0[i], 8, 8, n_times, P_IND_DOUB0);
-    SB_DMA_READ(&circuit.child1[i], 8, 8, n_times, P_IND_1);
-    SB_DMA_READ(&circuit.child1[i], 8, 8, n_times,P_IND_2);
-    SB_CONFIG_INDIRECT(T64,T64,1);
-    SB_INDIRECT(P_IND_DOUB0, &circuit.vr[i], n_times, P_test_c1vr);
-    SB_CONFIG_INDIRECT(T64,T64,1);
-    SB_INDIRECT(P_IND_1, &circuit.vr[i], n_times, P_test_c2vr);
+    SS_DMA_READ(&circuit.nodeType[i], 8, 8, n_times, P_test_nodeType);
+    SS_DMA_READ(&circuit.dr[i], 8, 8, n_times, P_test_dr);
+    SS_DMA_READ(&circuit.flag[i], 8, 8, n_times, P_test_flag);
+    SS_DMA_READ(&circuit.vr[i], 8, 8, n_times, P_test_vr);
+    SS_DMA_READ(&circuit.child0[i], 8, 8, n_times, P_IND_DOUB0);
+    SS_DMA_READ(&circuit.child1[i], 8, 8, n_times, P_IND_1);
+    SS_DMA_READ(&circuit.child1[i], 8, 8, n_times,P_IND_2);
+    SS_CONFIG_INDIRECT(T64,T64,1);
+    SS_INDIRECT(P_IND_DOUB0, &circuit.vr[i], n_times, P_test_c1vr);
+    SS_CONFIG_INDIRECT(T64,T64,1);
+    SS_INDIRECT(P_IND_1, &circuit.vr[i], n_times, P_test_c2vr);
 
-    SB_CONFIG_INDIRECT(T64,T64,1);
-    SB_INDIRECT_WR(P_IND_DOUB1, &circuit.dr[i], n_times, P_test_c0dr);
-    SB_CONFIG_INDIRECT(T64,T64,1);
-    SB_INDIRECT_WR(P_IND_2, &circuit.dr[i], n_times, P_test_c1dr);
+    SS_CONFIG_INDIRECT(T64,T64,1);
+    SS_INDIRECT_WR(P_IND_DOUB1, &circuit.dr[i], n_times, P_test_c0dr);
+    SS_CONFIG_INDIRECT(T64,T64,1);
+    SS_INDIRECT_WR(P_IND_2, &circuit.dr[i], n_times, P_test_c1dr);
 
-    SB_WAIT_ALL();
+    SS_WAIT_ALL();
     i+=nodes_at_level[d];
   }
   // std::cout << "Number of computations done: " << i << std::endl;

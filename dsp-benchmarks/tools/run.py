@@ -49,31 +49,36 @@ def run(sizes, template, softbrains, log = 'log'):
 
         print('Run Case %s...' % env)
         for sb in softbrains:
-            raw = subprocess.check_output('%s make sb-%s.log' % (env, sb), shell=True).decode('utf-8')
+            print('Run %s...' % sb)
+            try:
+                raw = subprocess.check_output('%s make sb-%s.log' % (env, sb), shell=True).decode('utf-8')
 
-            cycle = None
-            brkd  = None
-            ipc   = None
-            accel = []
-            for line in raw.split('\n'):
-                if line.startswith('Cycles: '):
-                    cycle = line.lstrip('Cycles: ').rstrip()
-                elif line.startswith('ACCEL'):
-                    if brkd is not None:
-                        accel.append((ipc, brkd))
-                    brkd = {}
-                elif line.startswith('Cycle Breakdown: '):
-                    for attr in line[len('Cycle Breakdown: '):].rstrip().split(' '):
-                        cont, perc = attr.split(':')
-                        brkd[cont] = float(perc)
-                elif line.startswith('CGRA Insts / Cycle: '):
-                    ipc = float(line.lstrip('CGRA Insts / Cycle: ').rstrip(' (overall activity factor)'))
-            
-            if brkd is not None:
-                accel.append((ipc, brkd))
-            with open(log, 'a') as f:
-                res = ('%s %s %s ' % (env, sb, cycle)) + str(accel)
-                f.write(res + '\n')
+                cycle = None
+                brkd  = None
+                ipc   = None
+                accel = []
+                for line in raw.split('\n'):
+                    if line.startswith('Cycles: '):
+                        cycle = line.lstrip('Cycles: ').rstrip()
+                    elif line.startswith('ACCEL'):
+                        if brkd is not None:
+                            accel.append((ipc, brkd))
+                        brkd = {}
+                    elif line.startswith('Cycle Breakdown: '):
+                        for attr in line[len('Cycle Breakdown: '):].rstrip().split(' '):
+                            cont, perc = attr.split(':')
+                            brkd[cont] = float(perc)
+                    elif line.startswith('CGRA Insts / Cycle: '):
+                        ipc = float(line.lstrip('CGRA Insts / Cycle: ').rstrip(' (overall activity factor)'))
+                
+                if brkd is not None:
+                    accel.append((ipc, brkd))
+                with open(log, 'a') as f:
+                    res = ('%s %s %s ' % (env, sb, cycle)) + str(accel)
+                    f.write(res + '\n')
+            except:
+                print('%s %s error occur!\n' % (env, sb))
+                quit()
 
 
 if __name__ == '__main__':

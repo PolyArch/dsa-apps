@@ -22,18 +22,18 @@ int main(int argc, char* argv[]) {
   }
 
   begin_roi();
-  SB_CONFIG(none_config,none_size);
+  SS_CONFIG(none_config,none_size);
 
-  SB_DMA_READ(&ind_array[0],8,8,AWORDS,P_IND_1);
+  SS_DMA_READ(&ind_array[0],8,8,AWORDS,P_IND_1);
 
-  SB_CONFIG_INDIRECT(T64,T64,8); //itype, dtype, mult
-  SB_INDIRECT(P_IND_1,&ind_ind_array[0],AWORDS,P_IND_2);
+  SS_CONFIG_INDIRECT(T64,T64,8); //itype, dtype, mult
+  SS_INDIRECT(P_IND_1,&ind_ind_array[0],AWORDS,P_IND_2);
 
-  SB_CONFIG_INDIRECT(T64,T64,8); //itype, dtype, mult
-  SB_INDIRECT(P_IND_2,&data_array[0],AWORDS,P_none_in);
+  SS_CONFIG_INDIRECT(T64,T64,8); //itype, dtype, mult
+  SS_INDIRECT(P_IND_2,&data_array[0],AWORDS,P_none_in);
 
-  SB_DMA_WRITE(P_none_out,8,8,AWORDS,&output[0]);
-  SB_WAIT_ALL();
+  SS_DMA_WRITE(P_none_out,8,8,AWORDS,&output[0]);
+  SS_WAIT_ALL();
   end_roi();
 
   compare<uint64_t>(argv[0],output,known,(int)AWORDS);

@@ -16,34 +16,34 @@ int main(int argc, char* argv[]) {
 
   begin_roi();
 
-  SB_SET_ACCEL(1); //alternative to context when you don't need sharing
-  SB_CONFIG(add1_config,add1_size);
-  SB_DMA_READ(&in[0],ABYTES,ABYTES,1,P_add1_in);
-  SB_SCR_WRITE(P_add1_out,ABYTES,0);
-  SB_WAIT_SCR_WR();
-  SB_SCRATCH_STORE_REMOTE(0,ABYTES,ABYTES,1,0); 
+  SS_SET_ACCEL(1); //alternative to context when you don't need sharing
+  SS_CONFIG(add1_config,add1_size);
+  SS_DMA_READ(&in[0],ABYTES,ABYTES,1,P_add1_in);
+  SS_SCR_WRITE(P_add1_out,ABYTES,0);
+  SS_WAIT_SCR_WR();
+  SS_SCRATCH_STORE_REMOTE(0,ABYTES,ABYTES,1,0); 
 
-  //SB_SET_ACCEL(1); //alternative to context when you don't need sharing
-  //SB_CONFIG(add1_config,add1_size);
-  //SB_SCRATCH_LOAD_REMOTE(0,ABYTES,ABYTES,0,1,0); //stretch parameter added
-  //SB_WAIT_SCR_WR();
-  //SB_SCRATCH_READ(0, ABYTES, P_add1_in);
-  //SB_DMA_WRITE(P_add1_out,8,8,AWORDS,&out2[0]);
+  //SS_SET_ACCEL(1); //alternative to context when you don't need sharing
+  //SS_CONFIG(add1_config,add1_size);
+  //SS_SCRATCH_LOAD_REMOTE(0,ABYTES,ABYTES,0,1,0); //stretch parameter added
+  //SS_WAIT_SCR_WR();
+  //SS_SCRATCH_READ(0, ABYTES, P_add1_in);
+  //SS_DMA_WRITE(P_add1_out,8,8,AWORDS,&out2[0]);
 
-  //SB_SET_ACCEL(2);
-  //SB_CONFIG(none_config,none_size);
-  //SB_SCRATCH_LOAD_REMOTE(0,ABYTES,ABYTES,0,1,0);
-  //SB_WAIT_SCR_WR();
-  //SB_SCRATCH_READ(0, ABYTES, P_none_in);
-  //SB_DMA_WRITE(P_none_out,8,8,AWORDS,&out[0]);
+  //SS_SET_ACCEL(2);
+  //SS_CONFIG(none_config,none_size);
+  //SS_SCRATCH_LOAD_REMOTE(0,ABYTES,ABYTES,0,1,0);
+  //SS_WAIT_SCR_WR();
+  //SS_SCRATCH_READ(0, ABYTES, P_none_in);
+  //SS_DMA_WRITE(P_none_out,8,8,AWORDS,&out[0]);
 
 
-  SB_SET_ACCEL(SHARED_SP_INDEX);
-  SB_WAIT_SCR_WR();
-  SB_SCRATCH_DMA_STORE(0,8,8,AWORDS,&out2[0]);
+  SS_SET_ACCEL(SHARED_SP_INDEX);
+  SS_WAIT_SCR_WR();
+  SS_SCRATCH_DMA_STORE(0,8,8,AWORDS,&out2[0]);
 
-  SB_CONTEXT(SHARED_SP|0x1);
-  SB_WAIT_ALL();
+  SS_CONTEXT(SHARED_SP|0x1);
+  SS_WAIT_ALL();
 
   end_roi();
 

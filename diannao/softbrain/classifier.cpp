@@ -4,7 +4,7 @@
 #include <inttypes.h>
 
 #include "red32to1sig.dfg.h"
-#include "../../common/include/sb_insts.h"
+#include "../../common/include/ss_insts.h"
 
 using namespace std;
 
@@ -64,41 +64,41 @@ int classifier_layer_sb(VTYPE (&synapse)[Nn][Ni], VTYPE (&neuron_i)[Ni], VTYPE (
   // Stream in CGRA config (do this somewhere else?) 
   if (profiling)
     begin_roi();
-  SB_CONFIG(red32to1sig_config, red32to1sig_size);
+  SS_CONFIG(red32to1sig_config, red32to1sig_size);
 
   // Stream in inputs to scratch
-  SB_DMA_SCRATCH_LOAD(&neuron_i, sizeof(VTYPE)*4, sizeof(VTYPE)*4, Ni/4, 0); 
-  SB_WAIT_SCR_WR();
+  SS_DMA_SCRATCH_LOAD(&neuron_i, sizeof(VTYPE)*4, sizeof(VTYPE)*4, Ni/4, 0); 
+  SS_WAIT_SCR_WR();
 
   int Tail = Ni % (PIPEDEPTH * 4);
   int Ni_ = Ni - Tail;
   for(int n = 0; n < Nn; n += pipedepth){
-    SB_CONST(P_red32to1sig_acc, 0, pipedepth); 
+    SS_CONST(P_red32to1sig_acc, 0, pipedepth); 
 
     for(int i = 0; i < Ni_; i+= PIPEWIDTH*4){
       // Enable sigmoid on final itr
       //if(i + PIPEWIDTH*4 < Ni){   
-        SB_CONST(P_red32to1sig_pred, 0, pipedepth); 
-        SB_RECURRENCE(P_red32to1sig_out, P_red32to1sig_acc, pipedepth);
+        SS_CONST(P_red32to1sig_pred, 0, pipedepth); 
+        SS_RECURRENCE(P_red32to1sig_out, P_red32to1sig_acc, pipedepth);
       //} else {
-        //SB_CONST(P_red32to1sig_pred, 1, pipedepth); 
+        //SS_CONST(P_red32to1sig_pred, 1, pipedepth); 
       //}
       
-      SB_DMA_READ(&synapse[n][i],  sizeof(VTYPE)*Ni, 4*sizeof(VTYPE)*PIPEWIDTH, pipedepth, P_red32to1sig_S); //Read Synapses 
-      SB_SCR_PORT_STREAM(i*sizeof(VTYPE), 0, 4*sizeof(VTYPE)*PIPEWIDTH, pipedepth, P_red32to1sig_N); //Read Neurons
+      SS_DMA_READ(&synapse[n][i],  sizeof(VTYPE)*Ni, 4*sizeof(VTYPE)*PIPEWIDTH, pipedepth, P_red32to1sig_S); //Read Synapses 
+      SS_SCR_PORT_STREAM(i*sizeof(VTYPE), 0, 4*sizeof(VTYPE)*PIPEWIDTH, pipedepth, P_red32to1sig_N); //Read Neurons
     }
 
     if (Ni_ != Ni) {
-      SB_CONST(P_red32to1sig_pred, 1, pipedepth); 
-      SB_DMA_READ(&synapse[n][Ni_],  sizeof(VTYPE)*Ni, 4*sizeof(VTYPE)*PIPEWIDTH, pipedepth, P_red32to1sig_S); //Read Synapses 
-      SB_SCR_PORT_STREAM(Ni_*sizeof(VTYPE), 0, 4*sizeof(VTYPE)*PIPEWIDTH, pipedepth, P_red32to1sig_N); //Read Neurons
+      SS_CONST(P_red32to1sig_pred, 1, pipedepth); 
+      SS_DMA_READ(&synapse[n][Ni_],  sizeof(VTYPE)*Ni, 4*sizeof(VTYPE)*PIPEWIDTH, pipedepth, P_red32to1sig_S); //Read Synapses 
+      SS_SCR_PORT_STREAM(Ni_*sizeof(VTYPE), 0, 4*sizeof(VTYPE)*PIPEWIDTH, pipedepth, P_red32to1sig_N); //Read Neurons
     }
 
     // write completed outputs out to memory
-    SB_DMA_WRITE_SHF16(P_red32to1sig_out, 4*sizeof(VTYPE), 4*sizeof(VTYPE), pipedepth/4, &neuron_n[n]); 
+    SS_DMA_WRITE_SHF16(P_red32to1sig_out, 4*sizeof(VTYPE), 4*sizeof(VTYPE), pipedepth/4, &neuron_n[n]); 
   } 
 
-  SB_WAIT_ALL();
+  SS_WAIT_ALL();
   if (profiling)
     end_roi();
   return 0;

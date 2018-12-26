@@ -5,7 +5,7 @@
 #include "red32to1sig.dfg.h"
 #include "red16to1sig.dfg.h"
 #include "red8to1sig.dfg.h"
-#include "../../common/include/sb_insts.h"
+#include "../../common/include/ss_insts.h"
 
 
 using namespace std;
@@ -216,7 +216,7 @@ int convolution_layer_sb_inner_doublebuf(
   //int tn_elem = Tn * sizeof(VTYPE) / DATA_WIDTH;
 
   // Stream in CGRA config (do this somewhere else?) 
-  SB_CONFIG(red32to1sig_config, red32to1sig_size);
+  SS_CONFIG(red32to1sig_config, red32to1sig_size);
 
   unsigned even_addr=0;
   unsigned odd_addr=2048; //(Ni * sizeof(VTYPE) * Kx);
@@ -233,7 +233,7 @@ int convolution_layer_sb_inner_doublebuf(
           for (int x = xx; x < xx + Tx; x += Sx) { // tiling for x;
             for (int nn = nnn; nn < nnn + Tnn; nn += Tn) {
 
-              SB_CONST(P_red32to1sig_acc, 0, Tn); 
+              SS_CONST(P_red32to1sig_acc, 0, Tn); 
 
               int t=0;
               int l=Ky*Kx*Ni;
@@ -242,62 +242,62 @@ int convolution_layer_sb_inner_doublebuf(
 
                 //Do kx=0 load
                 if(even_phase) {
-                  SB_DMA_SCRATCH_LOAD(&neuron_i[y+ky][x+0][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), 1, even_addr);
+                  SS_DMA_SCRATCH_LOAD(&neuron_i[y+ky][x+0][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), 1, even_addr);
                 } else {
-                  SB_DMA_SCRATCH_LOAD(&neuron_i[y+ky][x+0][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), 1, odd_addr);
+                  SS_DMA_SCRATCH_LOAD(&neuron_i[y+ky][x+0][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), 1, odd_addr);
                 }
-                SB_WAIT_SCR_WR();
+                SS_WAIT_SCR_WR();
       
 
                 for (int kx = 0; kx < Kx; kx++) {
-                  SB_WAIT_SCR_RD();
+                  SS_WAIT_SCR_RD();
 
                   for (int ii=0; ii < Ni -Ti+1; ii += Ti) {
 
                     t+=Ti;
                     if(t!=l) {
-                      SB_CONST(P_red32to1sig_pred, 0, Tn); 
+                      SS_CONST(P_red32to1sig_pred, 0, Tn); 
                     } else {
-                      SB_CONST(P_red32to1sig_pred, 1, Tn);
+                      SS_CONST(P_red32to1sig_pred, 1, Tn);
                     }
                     
                     if(even_phase) {
-                      SB_SCR_PORT_STREAM(even_addr+(ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_N);
+                      SS_SCR_PORT_STREAM(even_addr+(ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_N);
                     } else {
-                      SB_SCR_PORT_STREAM(odd_addr +(ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_N);
+                      SS_SCR_PORT_STREAM(odd_addr +(ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_N);
                     }
 
                     #if SHARED == 1
-                    SB_DMA_READ(&synapse[ky][kx][nn][ii],             sizeof(VTYPE)*Ni, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_S); 
+                    SS_DMA_READ(&synapse[ky][kx][nn][ii],             sizeof(VTYPE)*Ni, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_S); 
                     #else 
-                    SB_DMA_READ(&synapse[yout][xout][ky][kx][nn][ii], sizeof(VTYPE)*Ni, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_S); 
+                    SS_DMA_READ(&synapse[yout][xout][ky][kx][nn][ii], sizeof(VTYPE)*Ni, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_S); 
                     #endif
 
-                    //SB_WAIT(2);
+                    //SS_WAIT(2);
 
                     if(t!=l) {
-                      SB_RECURRENCE(P_red32to1sig_out, P_red32to1sig_acc, Tn);
+                      SS_RECURRENCE(P_red32to1sig_out, P_red32to1sig_acc, Tn);
                     }
                   }
 
                   // Load next version of kx
                   if(kx+1!=Kx) {
                     if(even_phase) { //load to odd_addr if 
-                      SB_DMA_SCRATCH_LOAD(&neuron_i[y+ky][x+kx+1][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), 1, odd_addr);
+                      SS_DMA_SCRATCH_LOAD(&neuron_i[y+ky][x+kx+1][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), 1, odd_addr);
                     } else {
-                      SB_DMA_SCRATCH_LOAD(&neuron_i[y+ky][x+kx+1][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), 1, even_addr);
+                      SS_DMA_SCRATCH_LOAD(&neuron_i[y+ky][x+kx+1][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), 1, even_addr);
                     }
                   }
 
                   even_phase=!even_phase;
-                  SB_WAIT_SCR_WR();
+                  SS_WAIT_SCR_WR();
 
                 }
 
                }
 
               // write completed outputs out to memory
-              SB_DMA_WRITE_SHF16(P_red32to1sig_out, 4*sizeof(VTYPE), 4*sizeof(VTYPE), Tn/4, &neuron_n[yout][xout][nn]);
+              SS_DMA_WRITE_SHF16(P_red32to1sig_out, 4*sizeof(VTYPE), 4*sizeof(VTYPE), Tn/4, &neuron_n[yout][xout][nn]);
 
             }
             xout++; 
@@ -307,7 +307,7 @@ int convolution_layer_sb_inner_doublebuf(
       }
     }
   }
-  SB_WAIT(0);
+  SS_WAIT(0);
 
   return 0;
 }
@@ -326,7 +326,7 @@ int convolution_layer_sb_doublebuf_ni8(
   //int tn_elem = Tn * sizeof(VTYPE) / DATA_WIDTH;
 
   // Stream in CGRA config (do this somewhere else?) 
-  SB_CONFIG(red8to1sig_config, red8to1sig_size);
+  SS_CONFIG(red8to1sig_config, red8to1sig_size);
 
   unsigned even_addr=0;
   unsigned odd_addr=2048; (Ni * sizeof(VTYPE) * Kx);
@@ -343,62 +343,62 @@ int convolution_layer_sb_doublebuf_ni8(
           for (int x = xx; x < xx + Tx; x += Sx) { // tiling for x;
             for (int nn = nnn; nn < nnn + Tnn; nn += Tn) {
 
-              SB_CONST(P_red8to1sig_acc, 0, Tn); 
+              SS_CONST(P_red8to1sig_acc, 0, Tn); 
 
               int t=0;
               int l=Ky*Kx*Ni;
 
               //Do ky=0 load
               if(even_phase) {
-                SB_DMA_SCRATCH_LOAD(&neuron_i[y+0][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
+                SS_DMA_SCRATCH_LOAD(&neuron_i[y+0][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
               } else {
-                SB_DMA_SCRATCH_LOAD(&neuron_i[y+0][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
+                SS_DMA_SCRATCH_LOAD(&neuron_i[y+0][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
               }
-              SB_WAIT_SCR_WR();
+              SS_WAIT_SCR_WR();
 
               for (int ky = 0; ky < Ky; ky++) {  // sliding window;
 
-                SB_WAIT_SCR_RD();
+                SS_WAIT_SCR_RD();
       
                 for (int kx = 0; kx < Kx; kx++) {
                   for (int ii=0; ii < Ni -Ti+1; ii += Ti) {
 
                     t+=Ti;
                     if(t!=l) {
-                      SB_CONST(P_red8to1sig_pred, 0, Tn/2); 
+                      SS_CONST(P_red8to1sig_pred, 0, Tn/2); 
                     } else {
-                      SB_CONST(P_red8to1sig_pred, 1, Tn/2);
+                      SS_CONST(P_red8to1sig_pred, 1, Tn/2);
                     }
 
                     if(even_phase) {
-                      SB_SCR_PORT_STREAM(even_addr+(kx*Ni+ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn/2, P_red8to1sig_N);
+                      SS_SCR_PORT_STREAM(even_addr+(kx*Ni+ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn/2, P_red8to1sig_N);
                     } else {
-                      SB_SCR_PORT_STREAM(odd_addr +(kx*Ni+ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn/2, P_red8to1sig_N);
+                      SS_SCR_PORT_STREAM(odd_addr +(kx*Ni+ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn/2, P_red8to1sig_N);
                     }
 
                     #if SHARED == 1
-                    SB_DMA_READ(&synapse[ky][kx][nn][ii],             sizeof(VTYPE)*Ni, sizeof(VTYPE)*Ti, Tn, P_red8to1sig_S); 
+                    SS_DMA_READ(&synapse[ky][kx][nn][ii],             sizeof(VTYPE)*Ni, sizeof(VTYPE)*Ti, Tn, P_red8to1sig_S); 
                     #else 
-                    SB_DMA_READ(&synapse[yout][xout][ky][kx][nn][ii], sizeof(VTYPE)*Ni, sizeof(VTYPE)*Ti, Tn, P_red8to1sig_S); 
+                    SS_DMA_READ(&synapse[yout][xout][ky][kx][nn][ii], sizeof(VTYPE)*Ni, sizeof(VTYPE)*Ti, Tn, P_red8to1sig_S); 
                     #endif
 
                     //if(kx==0 && ii==0) { //first time in loop, do scratch read
-                    //  SB_WAIT_SCR_RD_QUEUED();
+                    //  SS_WAIT_SCR_RD_QUEUED();
       
                     //  // Load next version of ky
                     //  if(ky+1!=Ky) {
                     //    if(even_phase) { //load to odd_addr if 
-                    //      SB_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
+                    //      SS_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
                     //    } else {
-                    //      SB_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
+                    //      SS_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
                     //    }
                     //  }
                     //} 
 
-                    //SB_WAIT(2);
+                    //SS_WAIT(2);
 
                     if(t!=l) {
-                      SB_RECURRENCE(P_red8to1sig_out, P_red8to1sig_acc, Tn);
+                      SS_RECURRENCE(P_red8to1sig_out, P_red8to1sig_acc, Tn);
                     }
 
 
@@ -408,18 +408,18 @@ int convolution_layer_sb_doublebuf_ni8(
                 // Load next version of ky
                 if(ky+1!=Ky) {
                   if(even_phase) { //load to odd_addr if 
-                    SB_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
+                    SS_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
                   } else {
-                    SB_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
+                    SS_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
                   }
                 }
 
                 even_phase=!even_phase;
-                SB_WAIT_SCR_WR();
+                SS_WAIT_SCR_WR();
               }
 
               // write completed outputs out to memory
-              SB_DMA_WRITE_SHF16(P_red8to1sig_out, 4*sizeof(VTYPE), 4*sizeof(VTYPE), Tn/4, &neuron_n[yout][xout][nn]);
+              SS_DMA_WRITE_SHF16(P_red8to1sig_out, 4*sizeof(VTYPE), 4*sizeof(VTYPE), Tn/4, &neuron_n[yout][xout][nn]);
             }
             xout++; 
           }
@@ -428,7 +428,7 @@ int convolution_layer_sb_doublebuf_ni8(
       }
     }
   }
-  SB_WAIT(0);
+  SS_WAIT(0);
 
   return 0;
 }
@@ -448,7 +448,7 @@ int convolution_layer_sb_doublebuf_ni16(
   //int tn_elem = Tn * sizeof(VTYPE) / DATA_WIDTH;
 
   // Stream in CGRA config (do this somewhere else?) 
-  SB_CONFIG(red16to1sig_config, red16to1sig_size);
+  SS_CONFIG(red16to1sig_config, red16to1sig_size);
 
   unsigned even_addr=0;
   unsigned odd_addr=2048; (Ni * sizeof(VTYPE) * Kx);
@@ -465,62 +465,62 @@ int convolution_layer_sb_doublebuf_ni16(
           for (int x = xx; x < xx + Tx; x += Sx) { // tiling for x;
             for (int nn = nnn; nn < nnn + Tnn; nn += Tn) {
 
-              SB_CONST(P_red16to1sig_acc, 0, Tn); 
+              SS_CONST(P_red16to1sig_acc, 0, Tn); 
 
               int t=0;
               int l=Ky*Kx*Ni;
 
               //Do ky=0 load
               if(even_phase) {
-                SB_DMA_SCRATCH_LOAD(&neuron_i[y+0][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
+                SS_DMA_SCRATCH_LOAD(&neuron_i[y+0][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
               } else {
-                SB_DMA_SCRATCH_LOAD(&neuron_i[y+0][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
+                SS_DMA_SCRATCH_LOAD(&neuron_i[y+0][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
               }
-              SB_WAIT_SCR_WR();
+              SS_WAIT_SCR_WR();
 
               for (int ky = 0; ky < Ky; ky++) {  // sliding window;
 
-                SB_WAIT_SCR_RD();
+                SS_WAIT_SCR_RD();
       
                 for (int kx = 0; kx < Kx; kx++) {
                   for (int ii=0; ii < Ni -Ti+1; ii += Ti) {
 
                     t+=Ti;
                     if(t!=l) {
-                      SB_CONST(P_red16to1sig_pred, 0, Tn/2); 
+                      SS_CONST(P_red16to1sig_pred, 0, Tn/2); 
                     } else {
-                      SB_CONST(P_red16to1sig_pred, 1, Tn/2);
+                      SS_CONST(P_red16to1sig_pred, 1, Tn/2);
                     }
 
                     if(even_phase) {
-                      SB_SCR_PORT_STREAM(even_addr+(kx*Ni+ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn/2, P_red16to1sig_N);
+                      SS_SCR_PORT_STREAM(even_addr+(kx*Ni+ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn/2, P_red16to1sig_N);
                     } else {
-                      SB_SCR_PORT_STREAM(odd_addr +(kx*Ni+ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn/2, P_red16to1sig_N);
+                      SS_SCR_PORT_STREAM(odd_addr +(kx*Ni+ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn/2, P_red16to1sig_N);
                     }
 
                     #if SHARED == 1
-                    SB_DMA_READ(&synapse[ky][kx][nn][ii],             sizeof(VTYPE)*Ni, sizeof(VTYPE)*Ti, Tn, P_red16to1sig_S); 
+                    SS_DMA_READ(&synapse[ky][kx][nn][ii],             sizeof(VTYPE)*Ni, sizeof(VTYPE)*Ti, Tn, P_red16to1sig_S); 
                     #else 
-                    SB_DMA_READ(&synapse[yout][xout][ky][kx][nn][ii], sizeof(VTYPE)*Ni, sizeof(VTYPE)*Ti, Tn, P_red16to1sig_S); 
+                    SS_DMA_READ(&synapse[yout][xout][ky][kx][nn][ii], sizeof(VTYPE)*Ni, sizeof(VTYPE)*Ti, Tn, P_red16to1sig_S); 
                     #endif
 
                     //if(kx==0 && ii==0) { //first time in loop, do scratch read
-                    //  SB_WAIT_SCR_RD_QUEUED();
+                    //  SS_WAIT_SCR_RD_QUEUED();
       
                     //  // Load next version of ky
                     //  if(ky+1!=Ky) {
                     //    if(even_phase) { //load to odd_addr if 
-                    //      SB_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
+                    //      SS_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
                     //    } else {
-                    //      SB_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
+                    //      SS_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
                     //    }
                     //  }
                     //} 
 
-                    //SB_WAIT(2);
+                    //SS_WAIT(2);
 
                     if(t!=l) {
-                      SB_RECURRENCE(P_red16to1sig_out, P_red16to1sig_acc, Tn);
+                      SS_RECURRENCE(P_red16to1sig_out, P_red16to1sig_acc, Tn);
                     }
 
 
@@ -530,18 +530,18 @@ int convolution_layer_sb_doublebuf_ni16(
                 // Load next version of ky
                 if(ky+1!=Ky) {
                   if(even_phase) { //load to odd_addr if 
-                    SB_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
+                    SS_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
                   } else {
-                    SB_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
+                    SS_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
                   }
                 }
 
                 even_phase=!even_phase;
-                SB_WAIT_SCR_WR();
+                SS_WAIT_SCR_WR();
               }
 
               // write completed outputs out to memory
-              SB_DMA_WRITE_SHF16(P_red16to1sig_out, 4*sizeof(VTYPE), 4*sizeof(VTYPE), Tn/4, &neuron_n[yout][xout][nn]);
+              SS_DMA_WRITE_SHF16(P_red16to1sig_out, 4*sizeof(VTYPE), 4*sizeof(VTYPE), Tn/4, &neuron_n[yout][xout][nn]);
             }
             xout++; 
           }
@@ -550,7 +550,7 @@ int convolution_layer_sb_doublebuf_ni16(
       }
     }
   }
-  SB_WAIT(0);
+  SS_WAIT(0);
 
   return 0;
 }
@@ -570,7 +570,7 @@ int convolution_layer_sb_doublebuf(
   //int tn_elem = Tn * sizeof(VTYPE) / DATA_WIDTH;
 
   // Stream in CGRA config (do this somewhere else?) 
-  SB_CONFIG(red32to1sig_config, red32to1sig_size);
+  SS_CONFIG(red32to1sig_config, red32to1sig_size);
 
   unsigned even_addr=0;
   unsigned odd_addr=2048; (Ni * sizeof(VTYPE) * Kx);
@@ -587,7 +587,7 @@ int convolution_layer_sb_doublebuf(
           for (int x = xx; x < xx + Tx; x += Sx) { // tiling for x;
             for (int nn = nnn; nn < nnn + Tnn; nn += Tn) {
 
-              SB_CONST(P_red32to1sig_acc, 0, Tn); 
+              SS_CONST(P_red32to1sig_acc, 0, Tn); 
 
               int t=0;
               int l=Ky*Kx*Ni;
@@ -595,51 +595,51 @@ int convolution_layer_sb_doublebuf(
 
               //Do ky=0 load
               if(even_phase) {
-                SB_DMA_SCRATCH_LOAD(&neuron_i[y+0][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
+                SS_DMA_SCRATCH_LOAD(&neuron_i[y+0][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
               } else {
-                SB_DMA_SCRATCH_LOAD(&neuron_i[y+0][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
+                SS_DMA_SCRATCH_LOAD(&neuron_i[y+0][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
               }
-              SB_WAIT_SCR_WR();
+              SS_WAIT_SCR_WR();
 
               for (int ky = 0; ky < Ky; ky++) {  // sliding window;
 
-                SB_WAIT_SCR_RD();
+                SS_WAIT_SCR_RD();
       
                 for (int kx = 0; kx < Kx; kx++) {
                   for (int ii=0; ii < Ni -Ti+1; ii += Ti) {
 
                     t+=Ti;
                     if(t!=l) {
-                      SB_CONST(P_red32to1sig_pred, 0, Tn); 
+                      SS_CONST(P_red32to1sig_pred, 0, Tn); 
                     } else {
-                      SB_CONST(P_red32to1sig_pred, 1, Tn);
+                      SS_CONST(P_red32to1sig_pred, 1, Tn);
                     }
 
                     if(even_phase) {
-                      SB_SCR_PORT_STREAM(even_addr+(kx*Ni+ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_N);
+                      SS_SCR_PORT_STREAM(even_addr+(kx*Ni+ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_N);
                     } else {
-                      SB_SCR_PORT_STREAM(odd_addr +(kx*Ni+ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_N);
+                      SS_SCR_PORT_STREAM(odd_addr +(kx*Ni+ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_N);
                     }
 
-                    SB_DMA_READ(&synapse[ky][kx][nn][ii],  sizeof(VTYPE)*Ni, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_S); 
+                    SS_DMA_READ(&synapse[ky][kx][nn][ii],  sizeof(VTYPE)*Ni, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_S); 
 
                     //if(kx==0 && ii==0) { //first time in loop, do scratch read
-                    //  SB_WAIT_SCR_RD_QUEUED();
+                    //  SS_WAIT_SCR_RD_QUEUED();
       
                     //  // Load next version of ky
                     //  if(ky+1!=Ky) {
                     //    if(even_phase) { //load to odd_addr if 
-                    //      SB_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
+                    //      SS_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
                     //    } else {
-                    //      SB_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
+                    //      SS_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
                     //    }
                     //  }
                     //} 
 
-                    //SB_WAIT(2);
+                    //SS_WAIT(2);
 
                     if(t!=l) {
-                      SB_RECURRENCE(P_red32to1sig_out, P_red32to1sig_acc, Tn);
+                      SS_RECURRENCE(P_red32to1sig_out, P_red32to1sig_acc, Tn);
                     }
 
 
@@ -649,18 +649,18 @@ int convolution_layer_sb_doublebuf(
                 // Load next version of ky
                 if(ky+1!=Ky) {
                   if(even_phase) { //load to odd_addr if 
-                    SB_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
+                    SS_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, odd_addr);
                   } else {
-                    SB_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
+                    SS_DMA_SCRATCH_LOAD(&neuron_i[y+ky+1][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, even_addr);
                   }
                 }
 
                 even_phase=!even_phase;
-                SB_WAIT_SCR_WR();
+                SS_WAIT_SCR_WR();
               }
 
               // write completed outputs out to memory
-              SB_DMA_WRITE_SHF16(P_red32to1sig_out, 4*sizeof(VTYPE), 4*sizeof(VTYPE), Tn/4, &neuron_n[yout][xout][nn]);
+              SS_DMA_WRITE_SHF16(P_red32to1sig_out, 4*sizeof(VTYPE), 4*sizeof(VTYPE), Tn/4, &neuron_n[yout][xout][nn]);
             }
             xout++; 
           }
@@ -669,7 +669,7 @@ int convolution_layer_sb_doublebuf(
       }
     }
   }
-  SB_WAIT(0);
+  SS_WAIT(0);
 
   return 0;
 }
@@ -689,7 +689,7 @@ int convolution_layer_sb_small_kernel(
   //int tn_elem = Tn * sizeof(VTYPE) / DATA_WIDTH;
 
   // Stream in CGRA config (do this somewhere else?) 
-  SB_CONFIG(red32to1sig_config, red32to1sig_size);
+  SS_CONFIG(red32to1sig_config, red32to1sig_size);
 
   for (int yy = 0; yy < Ny; yy += Ty) {
     for (int xx = 0; xx < Nx; xx += Tx) {
@@ -700,13 +700,13 @@ int convolution_layer_sb_small_kernel(
 
           for (int x = xx; x < xx + Tx; x += Sx) { // tiling for x;
             for(int ky = 0; ky < Ky; ky++) {
-              SB_DMA_SCRATCH_LOAD(&neuron_i[y+ky][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, (Ni * sizeof(VTYPE) * Kx) * ky);
+              SS_DMA_SCRATCH_LOAD(&neuron_i[y+ky][x][0], sizeof(VTYPE) * Ni, Ni * sizeof(VTYPE), Kx, (Ni * sizeof(VTYPE) * Kx) * ky);
             }
-            SB_WAIT(1);
+            SS_WAIT(1);
 
             for (int nn = nnn; nn < nnn + Tnn; nn += Tn) {
 
-              SB_CONST(P_red32to1sig_acc, 0, Tn); 
+              SS_CONST(P_red32to1sig_acc, 0, Tn); 
 
               int t=0;
               int l=Ky*Kx*Ni;
@@ -716,29 +716,29 @@ int convolution_layer_sb_small_kernel(
                   for (int ii=0; ii < Ni -Ti+1; ii += Ti) {
                     t+=Ti;
                     if(t!=l) {
-                      SB_CONST(P_red32to1sig_pred, 0, Tn); 
-                      SB_RECURRENCE(P_red32to1sig_out, P_red32to1sig_acc, Tn);
+                      SS_CONST(P_red32to1sig_pred, 0, Tn); 
+                      SS_RECURRENCE(P_red32to1sig_out, P_red32to1sig_acc, Tn);
                     } else {
-                      SB_CONST(P_red32to1sig_pred, 1, Tn);
+                      SS_CONST(P_red32to1sig_pred, 1, Tn);
                     }
 
-                    //SB_CONST(P_red32to1sig_S, 1, Tn*Ti/4);
-                    //SB_CONST(P_red32to1sig_N, 1, Tn*Ti/4);
+                    //SS_CONST(P_red32to1sig_S, 1, Tn*Ti/4);
+                    //SS_CONST(P_red32to1sig_N, 1, Tn*Ti/4);
 
-                    //SB_DMA_READ(&neuron_i[y+ky][x+kx][ii],       0,                sizeof(VTYPE)*Ti, Tn, P_red32to1sig_N); 
-                    SB_SCR_PORT_STREAM(((ky*Kx+kx)*Ni+ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_N);
-                    SB_DMA_READ(&synapse[ky][kx][nn][ii], sizeof(VTYPE)*Ni, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_S); 
+                    //SS_DMA_READ(&neuron_i[y+ky][x+kx][ii],       0,                sizeof(VTYPE)*Ti, Tn, P_red32to1sig_N); 
+                    SS_SCR_PORT_STREAM(((ky*Kx+kx)*Ni+ii)*sizeof(VTYPE), 0, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_N);
+                    SS_DMA_READ(&synapse[ky][kx][nn][ii], sizeof(VTYPE)*Ni, sizeof(VTYPE)*Ti, Tn, P_red32to1sig_S); 
 
-                    //SB_WAIT(2);
+                    //SS_WAIT(2);
 
                   }
                 }
               }
 
               // write completed outputs out to memory
-              SB_DMA_WRITE_SHF16(P_red32to1sig_out, 4*sizeof(VTYPE), 4*sizeof(VTYPE), Tn/4, &neuron_n[yout][xout][nn]);
+              SS_DMA_WRITE_SHF16(P_red32to1sig_out, 4*sizeof(VTYPE), 4*sizeof(VTYPE), Tn/4, &neuron_n[yout][xout][nn]);
 
-              SB_WAIT(0);
+              SS_WAIT(0);
             }
             xout++; 
           }
@@ -747,7 +747,7 @@ int convolution_layer_sb_small_kernel(
       }
     }
   }
-  SB_WAIT(0);
+  SS_WAIT(0);
 
   return 0;
 
@@ -914,7 +914,7 @@ int convolution_layer_sb(
   // Stream in CGRA config 
   int *cgra_config;
   int cgra_cofig_sz;
-  DMA_SB_CONFIG(cgra_config, cgra_config_sz);
+  DMA_SS_CONFIG(cgra_config, cgra_config_sz);
  
   if(Kx * Ky * Ni > SCRATCHSIZE){       // input neurons don't fit in scratch
     convolution_layer_sb_tiled(synapse, neuron_i, neuron_n); // call tiled version
@@ -927,7 +927,7 @@ int convolution_layer_sb(
   for (int y = 0; y < Ny; y += Sy) {
     int xout = 0;
     for (int x = 0; x < Nx; x += Sx) {
-      SB_DMA_SCRATCH_LOAD(&neuron_i[y][x][0], sizeof(VTYPE) * Ni * Nx, sizeof(VTYPE) * Ni * Kx, Ky, neuron_i_scratch);
+      SS_DMA_SCRATCH_LOAD(&neuron_i[y][x][0], sizeof(VTYPE) * Ni * Nx, sizeof(VTYPE) * Ni * Kx, Ky, neuron_i_scratch);
       for(int n = 0; n < Nn + PIPEDEPTH; n += 2*PIPEDEPTH){ // each pipe does PIPEDEPTH output layers
         pipedepth = PIPEDEPTH;  // see note at header of fxn
         if(n > Nn){
@@ -937,36 +937,36 @@ int convolution_layer_sb(
           for(int kx = 0; kx < Kx; ++kx){ 
             for(int i = 0; i < Ni; i+=PIPEWIDTH){   // ...and input layers
               if((kx + 1 < Kx) || (ky + 1 < Ky) || i + PIPEWIDTH < Ni){ // activate sigmoid on last part of last tile
-                SB_CONST(INPUTPRED0, 0, pipedepth); 
-                SB_CONST(INPUTPRED1, 0, pipedepth); 
+                SS_CONST(INPUTPRED0, 0, pipedepth); 
+                SS_CONST(INPUTPRED1, 0, pipedepth); 
               } else {
-                SB_CONST(INPUTPRED0, 1, pipedepth); 
-                SB_CONST(INPUTPRED1, 1, pipedepth); 
+                SS_CONST(INPUTPRED0, 1, pipedepth); 
+                SS_CONST(INPUTPRED1, 1, pipedepth); 
               }
               for(int nn = 0; nn < pipedepth; ++nn){ // Both pipes get PIPEDEPTH copies of same neurons
-                SB_SCRATCH_READ(&neuron_i_scratch[ky][kx][i], PIPEWIDTH*sizeof(VTYPE), INPUTNEURON0);  
-                SB_SCRATCH_READ(&neuron_i_scratch[ky][kx][i], PIPEWIDTH*sizeof(VTYPE), INPUTNEURON1);  
+                SS_SCRATCH_READ(&neuron_i_scratch[ky][kx][i], PIPEWIDTH*sizeof(VTYPE), INPUTNEURON0);  
+                SS_SCRATCH_READ(&neuron_i_scratch[ky][kx][i], PIPEWIDTH*sizeof(VTYPE), INPUTNEURON1);  
               } 
           
               // Each entry gets weights for different output layers
               #if SHARED == 1
-                SB_DMA_READ((&synapse)[ky][kx][n][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEWIDTH, pipedepth, INPUTWEIGHT0); 
-                SB_DMA_READ((&synapse)[ky][kx][n+pipedepth][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEWIDTH, pipedepth, INPUTWEIGHT1); 
+                SS_DMA_READ((&synapse)[ky][kx][n][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEWIDTH, pipedepth, INPUTWEIGHT0); 
+                SS_DMA_READ((&synapse)[ky][kx][n+pipedepth][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEWIDTH, pipedepth, INPUTWEIGHT1); 
               #else
-                SB_DMA_READ((&synapse)[yout][xout][ky][kx][n][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEWIDTH, pipedepth, INPUTWEIGHT0); 
-                SB_DMA_READ((&synapse)[yout][xout][ky][kx][n+pipedepth][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEWIDTH, pipedepth, INPUTWEIGHT1); 
+                SS_DMA_READ((&synapse)[yout][xout][ky][kx][n][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEWIDTH, pipedepth, INPUTWEIGHT0); 
+                SS_DMA_READ((&synapse)[yout][xout][ky][kx][n+pipedepth][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEWIDTH, pipedepth, INPUTWEIGHT1); 
               #endif
 
               if(ky + 1 < Ky || kx + 1 < Kx || i + PIPEWIDTH < Ni){ // don't recurse on last pass
-                SB_RECURRENCE(OUTPUT0, INPUTACC0, pipedepth); // until input stack complete
-                SB_RECURRENCE(OUTPUT1, INPUTACC1, pipedepth);
+                SS_RECURRENCE(OUTPUT0, INPUTACC0, pipedepth); // until input stack complete
+                SS_RECURRENCE(OUTPUT1, INPUTACC1, pipedepth);
               }
             }
           }
         }
         // Write completed input stacks out to mem
-        SB_DMA_WRITE(OUTPUT0, sizeof(VTPYE), sizeof(VTYPE), pipedepth, &neuron_n[yout][xout][n]);
-        SB_DMA_WRITE(OUTPUT1, sizeof(VTPYE), sizeof(VTYPE), pipedepth, &neuron_n[yout][xout][n+pipedepth]);
+        SS_DMA_WRITE(OUTPUT0, sizeof(VTPYE), sizeof(VTYPE), pipedepth, &neuron_n[yout][xout][n]);
+        SS_DMA_WRITE(OUTPUT1, sizeof(VTPYE), sizeof(VTYPE), pipedepth, &neuron_n[yout][xout][n+pipedepth]);
       }
       xout++; 
     }
@@ -1017,51 +1017,51 @@ std::pair<int,int>  convolution_layer_sb_tiled(
     int xout = 0;
     for (int x = 0; x < Nx; x += Sx) {
       for(int ii = 0; ii < Ni; ii += ti){ // Tile input stack (checked to fit evenly)
-        SB_DMA_SCRATCH_LOAD(&neuron_i[y][x][ii], sizeof(VTYPE)*Ni*Nx, sizeof(VTYPE)*ti*Kx, Ky, neuron_i_scratch);
+        SS_DMA_SCRATCH_LOAD(&neuron_i[y][x][ii], sizeof(VTYPE)*Ni*Nx, sizeof(VTYPE)*ti*Kx, Ky, neuron_i_scratch);
         for(int n = 0; n < Nn; n += 2*pipedepth){ // each pipe does PIPEDEPTH output layers
           // If not first ii itr, load output acc. from scratch
           if(ii != 0){ 
-            SB_SCRATCH_READ(&neruon_n_scratch[n], sizeof(VTYPE)*pipedepth, INPUTACC0); 
-            SB_SCRATCH_READ(&neruon_n_scratch[n+pipedepth], sizeof(VTYPE)*pipedepth, INPUTACC1); 
+            SS_SCRATCH_READ(&neruon_n_scratch[n], sizeof(VTYPE)*pipedepth, INPUTACC0); 
+            SS_SCRATCH_READ(&neruon_n_scratch[n+pipedepth], sizeof(VTYPE)*pipedepth, INPUTACC1); 
           }
           for(int ky = 0; ky < Ky; ++ky){ // Spin through windows...
             for(int kx = 0; kx < Kx; ++kx){ 
               for(int i = ii; i < ii + ti; i+=PIPEWIDTH){   // ...and input layers
                 if((kx + 1 < Kx) || (ky + 1 < Ky) || i + PIPEWIDTH < Ni){ // activate sigmoid on last part of last tile
-                  SB_CONST(INPUTPRED0, 0, pipedepth); 
-                  SB_CONST(INPUTPRED1, 0, pipedepth); 
+                  SS_CONST(INPUTPRED0, 0, pipedepth); 
+                  SS_CONST(INPUTPRED1, 0, pipedepth); 
                 } else {
-                  SB_CONST(INPUTPRED0, 1, pipedepth); 
-                  SB_CONST(INPUTPRED1, 1, pipedepth); 
+                  SS_CONST(INPUTPRED0, 1, pipedepth); 
+                  SS_CONST(INPUTPRED1, 1, pipedepth); 
                 }
                 for(int nn = 0; nn < pipedepth; ++nn){ // Both pipes get PIPEDEPTH copies of same neurons
-                  SB_SCRATCH_READ(&neuron_i_scratch[ky][kx][i], PIPEWIDTH*sizeof(VTYPE), INPUTNEURON0);  
-                  SB_SCRATCH_READ(&neuron_i_scratch[ky][kx][i], PIPEWIDTH*sizeof(VTYPE), INPUTNEURON1);  
+                  SS_SCRATCH_READ(&neuron_i_scratch[ky][kx][i], PIPEWIDTH*sizeof(VTYPE), INPUTNEURON0);  
+                  SS_SCRATCH_READ(&neuron_i_scratch[ky][kx][i], PIPEWIDTH*sizeof(VTYPE), INPUTNEURON1);  
                 } 
           
                 // Each entry gets weights for different output layers
                 #if SHARED == 1
-                  SB_DMA_READ(&synapse[ky][kx][n][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEWIDTH, pipedepth, INPUTWEIGHT0); 
-                  SB_DMA_READ(&synapse[ky][kx][n+pipedepth][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEWIDTH, pipedepth, INPUTWEIGHT1); 
+                  SS_DMA_READ(&synapse[ky][kx][n][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEWIDTH, pipedepth, INPUTWEIGHT0); 
+                  SS_DMA_READ(&synapse[ky][kx][n+pipedepth][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEWIDTH, pipedepth, INPUTWEIGHT1); 
                 #else
-                  SB_DMA_READ(&synapse[yout][xout][ky][kx][n][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEWIDTH, pipedepth, INPUTWEIGHT0); 
-                  SB_DMA_READ(&synapse[yout][xout][ky][kx][n+PIPEWIDTH][i], sizeof(VTYPE)*Ni, 
+                  SS_DMA_READ(&synapse[yout][xout][ky][kx][n][i], sizeof(VTYPE)*Ni, sizeof(VTYPE)*PIPEWIDTH, pipedepth, INPUTWEIGHT0); 
+                  SS_DMA_READ(&synapse[yout][xout][ky][kx][n+PIPEWIDTH][i], sizeof(VTYPE)*Ni, 
                               sizeof(VTYPE)*PIPEWIDTH, pipedepth, INPUTWEIGHT1); 
                 #endif
 
                 if(ky + 1 < Ky || kx + 1 < Kx || i + PIPEWIDTH < ii + ti){ // don't recurse on last pass
-                  SB_RECURRENCE(OUTPUT0, INPUTACC0, pipedepth);
-                  SB_RECURRENCE(OUTPUT1, INPUTACC1, pipedepth);
+                  SS_RECURRENCE(OUTPUT0, INPUTACC0, pipedepth);
+                  SS_RECURRENCE(OUTPUT1, INPUTACC1, pipedepth);
                 }
               }
             }
           }
           if(ii + ti < Ni){ // Not done, write acc out to scratch
-            SB_SCRATCH_WRITE(OUTPUT0, sizeof(VTYPE), sizeof(VTYPE), pipedepth, &neuron_n_scratch[n]); 
-            SB_SCRATCH_WRITE(OUTPUT1, sizeof(VTYPE), sizeof(VTYPE), pipedepth, &neuron_n_scratch[n+pipedepth]); 
+            SS_SCRATCH_WRITE(OUTPUT0, sizeof(VTYPE), sizeof(VTYPE), pipedepth, &neuron_n_scratch[n]); 
+            SS_SCRATCH_WRITE(OUTPUT1, sizeof(VTYPE), sizeof(VTYPE), pipedepth, &neuron_n_scratch[n+pipedepth]); 
           } else { // Done, write out to mem
-            SB_DMA_WRITE(OUTPUT0, sizeof(VTYPE), sizeof(VTYPE), pipedepth, &neuron_n[yout][xout][n]);
-            SB_DMA_WRITE(OUTPUT1, sizeof(VTYPE), sizeof(VTYPE), pipedepth, &neuron_n[yout][xout][n+pipedepth]);
+            SS_DMA_WRITE(OUTPUT0, sizeof(VTYPE), sizeof(VTYPE), pipedepth, &neuron_n[yout][xout][n]);
+            SS_DMA_WRITE(OUTPUT1, sizeof(VTYPE), sizeof(VTYPE), pipedepth, &neuron_n[yout][xout][n+pipedepth]);
           }
         }
       }

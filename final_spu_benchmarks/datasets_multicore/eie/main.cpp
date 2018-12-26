@@ -10,7 +10,7 @@
 #include "eie.dfg.h"
 #include "sparsify.dfg.h"
 // #include "small_sp.dfg.h"
-#include "/home/vidushi/ss-stack/ss-workloads/common/include/sb_insts.h"
+#include "/home/vidushi/ss-stack/ss-workloads/common/include/ss_insts.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
 #include "/home/vidushi/ss-stack/ss-scheduler/src/config/fixed_point.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/net_util_func.h"
@@ -99,8 +99,8 @@ void mv_merged(long tid) {
   SB_SCRATCH_READ(getLinearAddr(scr_offset + stride), wgt_ind[i+3].size()*2, P_eie_wval3);
   SB_CONST(P_eie_wind3, SENTINAL16, 1);
   SB_CONST(P_eie_wval3, 0, 1);
-  
-  SB_WAIT_ALL(); 
+
+  SS_WAIT_ALL(); 
 }
 
 void sparsify(){
@@ -111,25 +111,39 @@ void sparsify(){
   int vec_width=8;
   int pad_size = M%vec_width;
   
+<<<<<<< HEAD
   SB_DMA_READ(&activations[0], 2, 2, M, P_sparsify_A);
   SB_DMA_READ(&counter[0], 2, 2, M, P_sparsify_B);
   
   // SB_CONST(P_sparsify_sentinal, SENTINAL16, M+2); // max M times needed
   // to debug
   SB_CONST(P_sparsify_sentinal, SENTINAL16, M+8); // max M times needed
+=======
+  SS_CONFIG(sparsify_config, sparsify_size);
+
+  SS_DMA_READ(&activations[0], 2, 2, M, P_sparsify_A);
+  SS_DMA_READ(&counter[0], 2, 2, M, P_sparsify_B);
+  
+  SS_CONST(P_sparsify_sentinal, SENTINAL16, M+2); // max M times needed
+>>>>>>> 8e46c867d6bfb7c97b01b1b6dc5f5d9f5de894df
 
   // has to be non-zero to be sent from here
-  SB_CONST(P_sparsify_A, SENTINAL16, pad_size+vec_width); 
-  SB_CONST(P_sparsify_B, SENTINAL16, pad_size+vec_width);
+  SS_CONST(P_sparsify_A, SENTINAL16, pad_size+vec_width); 
+  SS_CONST(P_sparsify_B, SENTINAL16, pad_size+vec_width);
 
   // number of elements according to the port width
+<<<<<<< HEAD
   SB_REM_PORT(P_sparsify_val, M+8, mask, P_eie_aval);
   SB_REM_PORT(P_sparsify_ind, M+8, mask, P_eie_aind);
+=======
+  SS_REM_PORT(P_sparsify_val, M, mask, P_eie_aval);
+  SS_REM_PORT(P_sparsify_ind, M, mask, P_eie_aind);
+>>>>>>> 8e46c867d6bfb7c97b01b1b6dc5f5d9f5de894df
 
   uint16_t temp;
-  SB_RECV(P_sparsify_signal, temp);
-  SB_RESET();
-  SB_WAIT_ALL();
+  SS_RECV(P_sparsify_signal, temp);
+  SS_RESET();
+  SS_WAIT_ALL();
 }
 
 void *entry_point(void *threadid) {
