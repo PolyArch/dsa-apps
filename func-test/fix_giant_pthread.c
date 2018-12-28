@@ -1,0 +1,100 @@
+#include "testing.h"
+#include <stdlib.h>
+#include <pthread.h>
+
+#define VTYPE uint64_t
+// #define GSIZE 1024*1024*128
+// #define GSIZE 1024
+#define GSIZE 512
+// #define NUM_THREADS	13
+#define NUM_THREADS	5
+
+// Barrier variable
+pthread_barrier_t barr;
+char* giant_array;
+
+void compute(long tid) {
+  int n = GSIZE/NUM_THREADS;
+
+#if ACCEL == 1
+  // accelerated version
+  SS_CONFIG(none_config,none_size);
+  SS_DMA_READ(&giant_array[tid*n], 8, 8, n/8, P_none_in);
+  SS_DMA_WRITE(P_none_out, 8, 8, n/8, &giant_array[tid*n]);
+  SS_WAIT_ALL();
+ 
+  /*
+  if(tid<2) {
+  // if(1) {
+    // accelerated version
+    SS_CONFIG(none_config,none_size);
+    SS_DMA_READ(&giant_array[tid*n], 8, 8, n/8, P_none_in);
+    // SS_SCRATCH_READ(0, 8*(n/8), P_none_in);
+    SS_DMA_WRITE(P_none_out, 8, 8, n/8, &giant_array[tid*n]);
+    // SS_SCR_WRITE(P_none_out, 8*(n/8), 0);
+    SS_WAIT_ALL();
+  } else {
+    SS_CONFIG(none_config,none_size);
+    SS_SCRATCH_READ(0, 8*(n/8), P_none_in);
+    SS_SCR_WRITE(P_none_out, 8*(n/8), 0);
+    SS_WAIT_ALL();
+  }
+  */
+  
+#else
+  // non-accelerated version
+  for(int i=0; i<n; ++i) {
+    giant_array[tid*n+i] = giant_array[tid*n+i];
+  }
+#endif
+}
+
+void *entry_point(void *threadid) {
+  
+   long tid;
+   tid = (long)threadid;
+   // Synchronization point
+   int rc = pthread_barrier_wait(&barr);
+   if(rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD)
+   {
+     printf("Could not wait on barrier\n");
+     // exit(-1);
+   }
+
+   compute(tid);
+   return NULL;
+}
+
+
+int main() {
+  giant_array = (char*) aligned_alloc(64, GSIZE);
+
+ // Barrier initialization
+  if(pthread_barrier_init(&barr, NULL, NUM_THREADS))
+  {
+    printf("Could not create a barrier\n");
+    return -1;
+  }
+
+  pthread_t threads[NUM_THREADS];
+  int rc;
+  long t;
+  for(t=0;t<NUM_THREADS;t++){
+    printf("In main: creating thread %ld\n", t);
+	// it should diverge instead of being done serially with the host thread?: put a barrier
+    rc = pthread_create(&threads[t], NULL, entry_point, (void *)t);     
+	if (rc){
+      printf("ERROR; return code from pthread_create() is %d\n", rc);
+	  return 0;
+    }
+  }
+  
+  for(int i = 0; i < NUM_THREADS; ++i) {
+    if(pthread_join(threads[i], NULL)) {
+  	printf("Could not join thread %d\n", i);
+      return -1;
+    }
+  }
+  delete giant_array;
+  return 0;
+}

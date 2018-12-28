@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "add_ctrl.dfg.h"
-#include "../common/include/ss_insts.h"
+#include "../../ss-tools/include/ss-intrin/ss_insts.h"
 #include "../common/include/sim_timing.h"
 #include <inttypes.h>
 #include <stdlib.h>
