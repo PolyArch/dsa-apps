@@ -1,0 +1,154 @@
+Input16: nval[8]
+Input16: nind[8]
+Input16: sval
+Input16: sind
+Input16: const #send ty-ky+1
+Input16: ty
+Input16: ky
+Input16: neuron
+Input16: num_in
+Input16: acc_ctrl
+Input16: sind_ctrl
+Input16: nind_ctrl[8]
+
+#Convolution dfg-------------------
+
+#activations
+
+fnind0 = Acc16(nind0, nind_ctrl0)
+fnind1 = Acc16(nind1, nind_ctrl1)
+fnind2 = Acc16(nind2, nind_ctrl2)
+fnind3 = Acc16(nind3, nind_ctrl3)
+fnind4 = Acc16(nind4, nind_ctrl4)
+fnind5 = Acc16(nind5, nind_ctrl5)
+fnind6 = Acc16(nind6, nind_ctrl6)
+fnind7 = Acc16(nind7, nind_ctrl7)
+
+# HACK -- we should have it from the act we read
+tx0 = Mod16(Div16(fnind0,ty),ty)
+tx1 = Mod16(Div16(fnind1,ty),ty)
+tx2 = Mod16(Div16(fnind2,ty),ty)
+tx3 = Mod16(Div16(fnind3,ty),ty)
+tx4 = Mod16(Div16(fnind4,ty),ty)
+tx5 = Mod16(Div16(fnind5,ty),ty)
+tx6 = Mod16(Div16(fnind6,ty),ty)
+tx7 = Mod16(Div16(fnind7,ty),ty)
+
+# tx0 = Div16(fnind0,ty)
+# tx1 = Div16(fnind1,ty)
+# tx2 = Div16(fnind2,ty)
+# tx3 = Div16(fnind3,ty)
+# tx4 = Div16(fnind4,ty)
+# tx5 = Div16(fnind5,ty)
+# tx6 = Div16(fnind6,ty)
+# tx7 = Div16(fnind7,ty)
+
+ty0 = Mod16(fnind0,ty)
+ty1 = Mod16(fnind1,ty)
+ty2 = Mod16(fnind2,ty)
+ty3 = Mod16(fnind3,ty)
+ty4 = Mod16(fnind4,ty)
+ty5 = Mod16(fnind5,ty)
+ty6 = Mod16(fnind6,ty)
+ty7 = Mod16(fnind7,ty)
+
+fsind = Acc16(sind, sind_ctrl)
+
+sx = Div16(fsind,ky)
+sy = Mod16(fsind,ky)
+
+# should be less than Tx*Ty
+part10 = Add16(Mul16(tx0,const),ty0)
+part11 = Add16(Mul16(tx1,const),ty1)
+part12 = Add16(Mul16(tx2,const),ty2)
+part13 = Add16(Mul16(tx3,const),ty3)
+part14 = Add16(Mul16(tx4,const),ty4)
+part15 = Add16(Mul16(tx5,const),ty5)
+part16 = Add16(Mul16(tx6,const),ty6)
+part17 = Add16(Mul16(tx7,const),ty7)
+
+# should be less than Kx*Ky
+part2 = Add16(Mul16(sx,const),sy)
+part3 = Add16(const,1)
+
+# Formula = (tix-kix+1)(ty-ky+1) + (tiy-kiy+1)
+# = (tx0-sx0+1)(const+1) + (ty0-sy0+1)
+# = (tx0*const+ty0 + const+1 - sx*const-sy + tx0-sx+1
+val0 = Add16(Sub16(part10,part2),part3)
+val1 = Add16(Sub16(part11,part2),part3)
+val2 = Add16(Sub16(part12,part2),part3)
+val3 = Add16(Sub16(part13,part2),part3)
+val4 = Add16(Sub16(part14,part2),part3)
+val5 = Add16(Sub16(part15,part2),part3)
+val6 = Add16(Sub16(part16,part2),part3)
+val7 = Add16(Sub16(part17,part2),part3)
+
+part40 = Add16(Sub16(tx0,sx),1) 
+part41 = Add16(Sub16(tx1,sx),1) 
+part42 = Add16(Sub16(tx2,sx),1) 
+part43 = Add16(Sub16(tx3,sx),1) 
+part44 = Add16(Sub16(tx4,sx),1) 
+part45 = Add16(Sub16(tx5,sx),1) 
+part46 = Add16(Sub16(tx6,sx),1) 
+part47 = Add16(Sub16(tx7,sx),1) 
+
+C0 = Add16(val0,part40)
+C1 = Add16(val1,part41)
+C2 = Add16(val2,part42)
+C3 = Add16(val3,part43)
+C4 = Add16(val4,part44)
+C5 = Add16(val5,part45)
+C6 = Add16(val6,part46)
+C7 = Add16(val7,part47)
+
+# C0 = Acc16(val0,0)
+# C1 = Acc16(val1,0)
+# C2 = Acc16(val2,0)
+# C3 = Acc16(val3,0)
+# C4 = Acc16(val4,0)
+# C5 = Acc16(val5,0)
+# C6 = Acc16(val6,0)
+# C7 = Acc16(val7,0)
+
+# output values
+D0 = Mul16(nval0, sval)
+D1 = Mul16(nval1, sval)
+D2 = Mul16(nval2, sval)
+D3 = Mul16(nval3, sval)
+D4 = Mul16(nval4, sval)
+D5 = Mul16(nval5, sval)
+D6 = Mul16(nval6, sval)
+D7 = Mul16(nval7, sval)
+
+A00 = C3 C2
+A10 = C7 C6
+B00 = D3 D2
+B10 = D7 D6
+
+A0 = A00 C1 C0
+A1 = A10 C5 C4
+B0 = B00 D1 D0
+B1 = B10 D5 D4
+
+#Re-sparsification dfg--------------------------
+
+relu = ReLU16(neuron)
+
+flag = ICmpNE16(relu,0)
+
+# acc_ctrl = Mul16(Not16(flag),2)
+
+# inind = Acc16(1, 0, control=flag{0:d})
+count = Acc16(1, acc_ctrl) #always add
+
+inind = Keep16(1, flag)
+inval = Keep16(1, flag)
+
+ctrl = ICmpNE16(count, num_in)
+done = Keep16(1, Not16(ctrl))
+
+Output: A [2]
+Output: B [2]
+Output16: inval
+Output16: inind
+Output16: done

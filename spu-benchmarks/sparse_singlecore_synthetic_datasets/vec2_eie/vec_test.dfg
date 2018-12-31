@@ -1,0 +1,45 @@
+Input: wval0
+Input: wind0
+Input: wval1
+Input: wind1
+Input: aval
+Input: aind
+
+nval = Extract16(aval) 
+nind = Extract16(aind) 
+
+P00 = IndexMatch16(wind0:16:0,nind)
+P10 = IndexMatch16(wind0:16:1,nind)
+P20 = IndexMatch16(wind0:16:2,nind)
+P30 = IndexMatch16(wind0:16:3,nind)
+
+E00 = Mul16(wval0,nval,control=P00{1:b2,2:b1})
+E10 = Mul16(wval0,nval,control=P10{1:b2,2:b1})
+E20 = Mul16(wval0,nval,control=P20{1:b2,2:b1})
+E30 = Mul16(wval0,nval,control=P30{1:b2,2:b1})
+
+R00 = Acc16(E00,P00,control=P00{0:d,1:d,2:d})
+R10 = Acc16(E10,P10,control=P10{0:d,1:d,2:d})
+R20 = Acc16(E20,P20,control=P20{0:d,1:d,2:d})
+R30 = Acc16(E30,P30,control=P30{0:d,1:d,2:d})
+
+out_val0 = R00 R10 R20 R30
+
+P01 = IndexMatch16(wind1:16:0,nind)
+P11 = IndexMatch16(wind1:16:1,nind)
+P21 = IndexMatch16(wind1:16:2,nind)
+P31 = IndexMatch16(wind1:16:3,nind)
+
+E01 = Mul16(wval1,nval,control=P01{1:b2,2:b1})
+E11 = Mul16(wval1,nval,control=P11{1:b2,2:b1})
+E21 = Mul16(wval1,nval,control=P21{1:b2,2:b1})
+E31 = Mul16(wval1,nval,control=P31{1:b2,2:b1})
+
+R01 = Acc16(E01,P01,control=P01{0:d,1:d,2:d})
+R11 = Acc16(E11,P11,control=P11{0:d,1:d,2:d})
+R21 = Acc16(E21,P21,control=P21{0:d,1:d,2:d})
+R31 = Acc16(E31,P31,control=P31{0:d,1:d,2:d})
+
+out_val1 = R01 R11 R21 R31
+
+Output: out_val [2]
