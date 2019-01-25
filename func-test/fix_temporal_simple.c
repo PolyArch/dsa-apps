@@ -14,14 +14,14 @@ int main(int argc, char* argv[]) {
     answer[i+64] = i+16;
   }
 
-  SB_CONFIG(temporal_config,temporal_size);
+  SS_CONFIG(temporal_config,temporal_size);
 
   begin_roi();
-  SB_DMA_READ(&input[0],8,8,  64, P_temporal_DI);
-  SB_DMA_READ(&input[0],8,8,  64, P_temporal_TI);
-  SB_DMA_WRITE(P_temporal_DO,8,8, 64,&output[0]);
-  SB_DMA_WRITE(P_temporal_TO,8,8, 64,&output[64]);
-  SB_WAIT_ALL();
+  SS_DMA_READ(&input[0],8,8,  64, P_temporal_DI);
+  SS_DMA_READ(&input[0],8,8,  64, P_temporal_TI);
+  SS_DMA_WRITE(P_temporal_DO,8,8, 64,&output[0]);
+  SS_DMA_WRITE(P_temporal_TO,8,8, 64,&output[64]);
+  SS_WAIT_ALL();
   end_roi();
 
   compare<uint64_t>(argv[0],answer,output,128);

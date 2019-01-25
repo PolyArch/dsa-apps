@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <time.h> 
-#include "sb_insts.h"
+#include "ss_insts.h"
 #include "sim_timing.h"
 #include "loader.dfg.h"
 #include "fileop.h"
@@ -32,11 +32,11 @@ int main() {
   read_n_float_complex(input_data, _M_, b);
 
   for (int i = 0; i < LANES; ++i) {
-    SB_CONTEXT(1 << i);
-    SB_CONFIG(loader_config, loader_size);
-    SB_DMA_READ(a, 0, 8 * _N_, 1, P_loader_In);
-    SB_SCR_WRITE(P_loader_Out, 8 * _N_, 0);
-    SB_WAIT_ALL();
+    SS_CONTEXT(1 << i);
+    SS_CONFIG(loader_config, loader_size);
+    SS_DMA_READ(a, 0, 8 * _N_, 1, P_loader_In);
+    SS_SCR_WRITE(P_loader_Out, 8 * _N_, 0);
+    SS_WAIT_ALL();
   }
 
   int n;

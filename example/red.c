@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "red.dfg.h"
-#include "../common/include/sb_insts.h"
+#include "../common/include/ss_insts.h"
 #include "../common/include/sim_timing.h"
 #include <inttypes.h>
 
@@ -33,9 +33,9 @@ int main(int argc, char* argv[]) {
 
 
   //Version 3: (uses accumulator)
-  SB_CONFIG(red_config,red_size);
+  SS_CONFIG(red_config,red_size);
 
-  SB_WAIT_ALL();
+  SS_WAIT_ALL();
 
 
   for(int i = 0; i < ALEN; ++i) {
@@ -46,16 +46,16 @@ int main(int argc, char* argv[]) {
 
   begin_roi();
 
-  SB_CONST(P_red_reset,0, ALEN/32-1);
-  //SB_CONST(P_red_A,1, ALEN/4);
-  //SB_DMA_READ(array, 8, 8, (argc&0x100)*ALEN*sizeof(uint16_t)/8, P_red_A);
-  SB_DMA_READ(array, 8, 8, ALEN*sizeof(uint16_t)/8, P_red_A);
+  SS_CONST(P_red_reset,0, ALEN/32-1);
+  //SS_CONST(P_red_A,1, ALEN/4);
+  //SS_DMA_READ(array, 8, 8, (argc&0x100)*ALEN*sizeof(uint16_t)/8, P_red_A);
+  SS_DMA_READ(array, 8, 8, ALEN*sizeof(uint16_t)/8, P_red_A);
 
-  SB_CONST(P_red_reset,1, 1);
-  SB_GARBAGE(P_red_O, ALEN/32-1);
-  SB_DMA_WRITE(P_red_O,8,8,1,&accum16);
+  SS_CONST(P_red_reset,1, 1);
+  SS_GARBAGE(P_red_O, ALEN/32-1);
+  SS_DMA_WRITE(P_red_O,8,8,1,&accum16);
 
-  SB_WAIT_ALL();
+  SS_WAIT_ALL();
 
 
   end_roi();

@@ -1,0 +1,72 @@
+Input16: A[8]
+Input16: B[8]
+Input16: sentinal
+
+# LEVEL-1
+
+C10 = Control16(A0, A1)
+C11 = Control16(A2, A3)
+C12 = Control16(A4, A5)
+C13 = Control16(A6, A7)
+
+# Bs10 = RShf16(C10,1)
+# Bs11 = RShf16(C11,1)
+# Bs12 = RShf16(C12,1)
+# Bs13 = RShf16(C13,1)
+
+# imval10 = Min16(A0, A1, control=Bs10{1:b1,2:b2})
+# imval11 = Min16(A2, A3, control=Bs11{1:b1,2:b2})
+# imval12 = Min16(A4, A5, control=Bs12{1:b1,2:b2})
+# imval13 = Min16(A6, A7, control=Bs13{1:b1,2:b2})
+
+imval10 = Select16(A0, A1, C10)
+imval11 = Select16(A2, A3, C11)
+imval12 = Select16(A4, A5, C12)
+imval13 = Select16(A6, A7, C13)
+
+imind10 = Select16(B0, B1, C10)
+imind11 = Select16(B2, B3, C11)
+imind12 = Select16(B4, B5, C12)
+imind13 = Select16(B6, B7, C13)
+
+# LEVEL-2
+
+C20 = Control16(imval10, imval11)
+C21 = Control16(imval12, imval13)
+
+# Bs20 = RShf16(C20, 1)
+# Bs21 = RShf16(C21, 1)
+
+# imval20 = Min16(imval10, imval11, control=Bs20{1:b1,2:b2})
+# imval21 = Min16(imval12, imval13, control=Bs21{1:b1,2:b2})
+
+imval20 = Select16(imval10, imval11, C20)
+imval21 = Select16(imval12, imval13, C21)
+
+imind20 = Select16(imind10, imind11, C20)
+imind21 = Select16(imind12, imind13, C21)
+
+# LEVEL-3
+
+C30 = Control16(imval20, imval21)
+
+# Bs30 = RShf16(C30, 1)
+
+# imval = Min16(imval20, imval21, control=Bs30{1:b1,2:b2})
+
+imval = Select16(imval20, imval21, C30)
+
+imind = Select16(imind20, imind21, C30)
+
+# LEVEL-4
+
+Z = ICmpEQ(imval, 0)
+val = Keep16(imval, 1, control=Z{1:d})
+ind = Keep16(imind, 1, control=Z{1:d})
+
+temp = ICmpEq16(ind, sentinal)
+signal = Keep16(2, temp)
+
+Output16: val
+Output16: ind
+Output16: signal

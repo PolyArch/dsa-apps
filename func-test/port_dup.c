@@ -11,10 +11,10 @@ int main(int argc, char* argv[]) {
   }
 
   begin_roi();
-  SB_CONFIG(mul_by_2_config,mul_by_2_size);
-  SB_DMA_READ(&in[0],ABYTES,ABYTES,1,P_mul_by_2_in);
-  SB_DMA_WRITE(P_mul_by_2_out,8,8,AWORDS,&out[0]);
-  SB_WAIT_ALL();
+  SS_CONFIG(mul_by_2_config,mul_by_2_size);
+  SS_DMA_READ(&in[0],ABYTES,ABYTES,1,P_mul_by_2_in);
+  SS_DMA_WRITE(P_mul_by_2_out,8,8,AWORDS,&out[0]);
+  SS_WAIT_ALL();
   end_roi();
 
   compare<DTYPE>(argv[0],out,answer,ASIZE);

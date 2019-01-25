@@ -7,7 +7,7 @@ In Proceedings of the 3rd Workshop on General-Purpose Computation on Graphics Pr
 
 #include "md.h"
 #include "md_sb.dfg.h"
-#include "../../../common/include/sb_insts.h"
+#include "../../../common/include/ss_insts.h"
 
 void md_kernel(TYPE force_x[nAtoms],
                TYPE force_y[nAtoms],
@@ -23,48 +23,48 @@ void md_kernel(TYPE force_x[nAtoms],
 
     int32_t i;//, j, jidx;
 
-    SB_CONFIG(md_sb_config,md_sb_size);
+    SS_CONFIG(md_sb_config,md_sb_size);
 
-    //SB_DMA_READ(&NL[0],8,8,nAtoms*maxNeighbors,P_IND_TRIP0);
-    //SB_INDIRECT64(P_IND_TRIP0,&position_x[0],nAtoms*maxNeighbors,P_md_sb_jx);
-    //SB_INDIRECT64(P_IND_TRIP1,&position_y[0],nAtoms*maxNeighbors,P_md_sb_jy);
-    //SB_INDIRECT64(P_IND_TRIP2,&position_z[0],nAtoms*maxNeighbors,P_md_sb_jz);
+    //SS_DMA_READ(&NL[0],8,8,nAtoms*maxNeighbors,P_IND_TRIP0);
+    //SS_INDIRECT64(P_IND_TRIP0,&position_x[0],nAtoms*maxNeighbors,P_md_sb_jx);
+    //SS_INDIRECT64(P_IND_TRIP1,&position_y[0],nAtoms*maxNeighbors,P_md_sb_jy);
+    //SS_INDIRECT64(P_IND_TRIP2,&position_z[0],nAtoms*maxNeighbors,P_md_sb_jz);
 
     loop_i : for (i = 0; i < nAtoms; i++){
          i_x = position_x[i];
          i_y = position_y[i];
          i_z = position_z[i];
 
-         SB_DMA_READ(&NL[i*maxNeighbors],8,8,maxNeighbors,P_IND_TRIP0);
-         SB_INDIRECT(P_IND_TRIP0,&position_x[0],maxNeighbors,P_md_sb_jx);
-         SB_INDIRECT(P_IND_TRIP1,&position_y[0],maxNeighbors,P_md_sb_jy);
-         SB_INDIRECT(P_IND_TRIP2,&position_z[0],maxNeighbors,P_md_sb_jz);
+         SS_DMA_READ(&NL[i*maxNeighbors],8,8,maxNeighbors,P_IND_TRIP0);
+         SS_INDIRECT(P_IND_TRIP0,&position_x[0],maxNeighbors,P_md_sb_jx);
+         SS_INDIRECT(P_IND_TRIP1,&position_y[0],maxNeighbors,P_md_sb_jy);
+         SS_INDIRECT(P_IND_TRIP2,&position_z[0],maxNeighbors,P_md_sb_jz);
 
-         //SB_DMA_READ(&NL[i*maxNeighbors],8,8,maxNeighbors,P_IND_1);
-         //SB_INDIRECT64(P_IND_1,&position_x[0],maxNeighbors,P_md_sb_jx);
-         //SB_DMA_READ(&NL[i*maxNeighbors],8,8,maxNeighbors,P_IND_2);
-         //SB_INDIRECT64(P_IND_2,&position_y[0],maxNeighbors,P_md_sb_jy);
-         //SB_DMA_READ(&NL[i*maxNeighbors],8,8,maxNeighbors,P_IND_3);
-         //SB_INDIRECT64(P_IND_3,&position_z[0],maxNeighbors,P_md_sb_jz);
+         //SS_DMA_READ(&NL[i*maxNeighbors],8,8,maxNeighbors,P_IND_1);
+         //SS_INDIRECT64(P_IND_1,&position_x[0],maxNeighbors,P_md_sb_jx);
+         //SS_DMA_READ(&NL[i*maxNeighbors],8,8,maxNeighbors,P_IND_2);
+         //SS_INDIRECT64(P_IND_2,&position_y[0],maxNeighbors,P_md_sb_jy);
+         //SS_DMA_READ(&NL[i*maxNeighbors],8,8,maxNeighbors,P_IND_3);
+         //SS_INDIRECT64(P_IND_3,&position_z[0],maxNeighbors,P_md_sb_jz);
 
-         //SB_DMA_READ(&NL[i*maxNeighbors],8,8,maxNeighbors,P_md_sb_jx);
-         //SB_DMA_READ(&NL[i*maxNeighbors],8,8,maxNeighbors,P_md_sb_jy);
-         //SB_DMA_READ(&NL[i*maxNeighbors],8,8,maxNeighbors,P_md_sb_jz);
+         //SS_DMA_READ(&NL[i*maxNeighbors],8,8,maxNeighbors,P_md_sb_jx);
+         //SS_DMA_READ(&NL[i*maxNeighbors],8,8,maxNeighbors,P_md_sb_jy);
+         //SS_DMA_READ(&NL[i*maxNeighbors],8,8,maxNeighbors,P_md_sb_jz);
 
-         SB_CONST(P_md_sb_ix,i_x,maxNeighbors);
-         SB_CONST(P_md_sb_iy,i_y,maxNeighbors);
-         SB_CONST(P_md_sb_iz,i_z,maxNeighbors);
+         SS_CONST(P_md_sb_ix,i_x,maxNeighbors);
+         SS_CONST(P_md_sb_iy,i_y,maxNeighbors);
+         SS_CONST(P_md_sb_iz,i_z,maxNeighbors);
 
-         SB_CONST(P_md_sb_reset,0,maxNeighbors-1);
-         SB_CONST(P_md_sb_reset,1,1);
+         SS_CONST(P_md_sb_reset,0,maxNeighbors-1);
+         SS_CONST(P_md_sb_reset,1,1);
 
-         SB_GARBAGE(P_md_sb_A1,maxNeighbors-1);
-         SB_GARBAGE(P_md_sb_A2,maxNeighbors-1);
-         SB_GARBAGE(P_md_sb_A3,maxNeighbors-1);
+         SS_GARBAGE(P_md_sb_A1,maxNeighbors-1);
+         SS_GARBAGE(P_md_sb_A2,maxNeighbors-1);
+         SS_GARBAGE(P_md_sb_A3,maxNeighbors-1);
 
-         SB_DMA_WRITE(P_md_sb_A1,8,8,1,&force_x[i]);
-         SB_DMA_WRITE(P_md_sb_A2,8,8,1,&force_y[i]);
-         SB_DMA_WRITE(P_md_sb_A3,8,8,1,&force_z[i]);
+         SS_DMA_WRITE(P_md_sb_A1,8,8,1,&force_x[i]);
+         SS_DMA_WRITE(P_md_sb_A2,8,8,1,&force_y[i]);
+         SS_DMA_WRITE(P_md_sb_A3,8,8,1,&force_z[i]);
 
          //loop_j : for( j = 0; j < maxNeighbors; j++){
          //    // Get neighbor
@@ -95,5 +95,5 @@ void md_kernel(TYPE force_x[nAtoms],
          //force_z[i] = fz;
          //printf("dF=%lf,%lf,%lf\n", fx, fy, fz);
     }
-    SB_WAIT_ALL();
+    SS_WAIT_ALL();
 }

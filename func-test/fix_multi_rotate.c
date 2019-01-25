@@ -18,18 +18,18 @@ int main(int argc, char* argv[]) {
 
   for(int i = 0; i < 15; ++i) {
 
-    SB_CONTEXT(0x0001);
-    SB_CONFIG(add1_config,add1_size);
-    SB_DMA_READ(&in[0],ABYTES,ABYTES,1,P_add1_in);
-    SB_DMA_WRITE(P_add1_out,8,8,AWORDS,&out2[0]);
+    SS_CONTEXT(0x0001);
+    SS_CONFIG(add1_config,add1_size);
+    SS_DMA_READ(&in[0],ABYTES,ABYTES,1,P_add1_in);
+    SS_DMA_WRITE(P_add1_out,8,8,AWORDS,&out2[0]);
   
-    SB_CONTEXT(0x0002);
-    SB_CONFIG(none_config,none_size);
-    SB_DMA_READ(&in[0],ABYTES,ABYTES,1,P_none_in);
-    SB_DMA_WRITE(P_none_out,8,8,AWORDS,&out[0]);
+    SS_CONTEXT(0x0002);
+    SS_CONFIG(none_config,none_size);
+    SS_DMA_READ(&in[0],ABYTES,ABYTES,1,P_none_in);
+    SS_DMA_WRITE(P_none_out,8,8,AWORDS,&out[0]);
   
-    SB_CONTEXT(0x0003);
-    SB_WAIT_ALL();
+    SS_CONTEXT(0x0003);
+    SS_WAIT_ALL();
   
     end_roi();
   

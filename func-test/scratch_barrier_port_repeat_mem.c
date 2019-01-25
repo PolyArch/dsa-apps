@@ -8,10 +8,10 @@ DTYPE out_big[ASIZE*MAX_REPEAT];
 int main(int argc, char* argv[]) {
   init();
 
-  SB_CONFIG(none_config,none_size);
-  SB_DMA_READ(&in[0],ABYTES,ABYTES,1,P_none_in);
-  SB_SCR_WRITE(P_none_out,ABYTES,0);
-  SB_WAIT_SCR_WR();
+  SS_CONFIG(none_config,none_size);
+  SS_DMA_READ(&in[0],ABYTES,ABYTES,1,P_none_in);
+  SS_SCR_WRITE(P_none_out,ABYTES,0);
+  SS_WAIT_SCR_WR();
 
   uint64_t* answer64 = (uint64_t*) &answer[0];
   uint64_t* out64    = (uint64_t*) &out_big[0];
@@ -25,10 +25,10 @@ int main(int argc, char* argv[]) {
     }
   
     begin_roi();
-    SB_REPEAT_PORT(repeat);
-    SB_SCRATCH_READ(0, ABYTES, P_none_in);
-    SB_DMA_WRITE(P_none_out,8,8,AWORDS*repeat,&out_big[0]);
-    SB_WAIT_ALL();
+    SS_REPEAT_PORT(repeat);
+    SS_SCRATCH_READ(0, ABYTES, P_none_in);
+    SS_DMA_WRITE(P_none_out,8,8,AWORDS*repeat,&out_big[0]);
+    SS_WAIT_ALL();
     end_roi();
   
     compare<DTYPE>(argv[0],out_big,answer,ASIZE*repeat);

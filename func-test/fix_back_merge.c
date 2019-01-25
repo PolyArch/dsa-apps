@@ -12,7 +12,7 @@ int main(int argc, char* argv[]) {
   uint64_t z_answer[N*2];
   uint64_t z_output[N*2];
 
-  SB_CONFIG(merge_config,merge_size);
+  SS_CONFIG(merge_config,merge_size);
 
   int xp=0, yp=0;
   for(uint64_t i=0; i<2*N; ++i) {
@@ -24,11 +24,11 @@ int main(int argc, char* argv[]) {
   }
 
   begin_roi(); 
-  SB_DMA_READ(&x[0], 8, 8, N+1, P_merge_in1);
-  SB_DMA_READ(&y[0], 8, 8, N+1, P_merge_in2);
+  SS_DMA_READ(&x[0], 8, 8, N+1, P_merge_in1);
+  SS_DMA_READ(&y[0], 8, 8, N+1, P_merge_in2);
 
-  SB_DMA_WRITE(P_merge_out, 8, 8, N*2, &z_output[0]);
-  SB_WAIT_ALL();
+  SS_DMA_WRITE(P_merge_out, 8, 8, N*2, &z_output[0]);
+  SS_WAIT_ALL();
   end_roi();
 
   compare<uint64_t>(argv[0],z_answer,z_output,2*N);

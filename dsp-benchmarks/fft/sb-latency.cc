@@ -2,7 +2,7 @@
 #include <cmath>
 #include <algorithm>
 #include <cstring>
-#include "sb_insts.h"
+#include "ss_insts.h"
 #include "sim_timing.h"
 #include "compute.dfg.h"
 #include "fine1.dfg.h"
@@ -19,65 +19,65 @@ complex<float> *fft(complex<float> *from, complex<float> *to, complex<float> *w)
   int N = _N_;
   complex<float> *_w = w + _N_ - 2;
 
-  SB_CONTEXT(255);
-  SB_CONFIG(compute_config, compute_size);
+  SS_CONTEXT(255);
+  SS_CONFIG(compute_config, compute_size);
 
   int blocks = N / 2;
   int span = 2;
 
   for (int i = 0; i < 8; ++i) {
-    SB_CONTEXT(1 << i);
-    SB_DMA_READ(from + i * blocks / 8,          0, blocks, 1, P_compute_L);
-    SB_DMA_READ(from + blocks + i * blocks / 8, 0, blocks, 1, P_compute_R);
-    SB_CONST(P_compute_W, 1065353216, N / 64);
+    SS_CONTEXT(1 << i);
+    SS_DMA_READ(from + i * blocks / 8,          0, blocks, 1, P_compute_L);
+    SS_DMA_READ(from + blocks + i * blocks / 8, 0, blocks, 1, P_compute_R);
+    SS_CONST(P_compute_W, 1065353216, N / 64);
 
-    SB_SCR_WRITE(P_compute_A, N / 2, 0);
-    SB_SCR_WRITE(P_compute_B, N / 2, N / 2);
+    SS_SCR_WRITE(P_compute_A, N / 2, 0);
+    SS_SCR_WRITE(P_compute_B, N / 2, N / 2);
   }
 
-  SB_CONTEXT(255);
-  SB_WAIT_SCR_WR();
+  SS_CONTEXT(255);
+  SS_WAIT_SCR_WR();
 
   blocks >>= 1;
   span <<= 1;
 
   int scr = 0;
 
-  SB_CONTEXT(1);
+  SS_CONTEXT(1);
   while (blocks >= 4) {
     _w -= span / 2;
 
-    SB_SCR_PORT_STREAM(scr             , 2 * blocks * 8, blocks * 8, span / 2, P_compute_L);
-    SB_SCR_PORT_STREAM(scr + blocks * 8, 2 * blocks * 8, blocks * 8, span / 2, P_compute_R);
-    SB_REPEAT_PORT(blocks / 4);
-    SB_DMA_READ(_w, 0, 4 * span, 1, P_compute_W);
+    SS_SCR_PORT_STREAM(scr             , 2 * blocks * 8, blocks * 8, span / 2, P_compute_L);
+    SS_SCR_PORT_STREAM(scr + blocks * 8, 2 * blocks * 8, blocks * 8, span / 2, P_compute_R);
+    SS_REPEAT_PORT(blocks / 4);
+    SS_DMA_READ(_w, 0, 4 * span, 1, P_compute_W);
 
     scr ^= 8192;
-    SB_SCR_WRITE(P_compute_A, N * 4, scr);
-    SB_SCR_WRITE(P_compute_B, N * 4, scr + N * 4);
-    SB_WAIT_SCR_WR();
+    SS_SCR_WRITE(P_compute_A, N * 4, scr);
+    SS_SCR_WRITE(P_compute_B, N * 4, scr + N * 4);
+    SS_WAIT_SCR_WR();
 
     blocks >>= 1;
     span <<= 1;
   }
 
   _w -= span / 2;
-  SB_WAIT_ALL();
+  SS_WAIT_ALL();
   
-  SB_CONFIG(fine2_config, fine2_size);
-  SB_SCRATCH_READ(scr, 8 * N, P_fine2_V);
-  SB_DMA_READ(_w, 0, N * 2, 1, P_fine2_W);
+  SS_CONFIG(fine2_config, fine2_size);
+  SS_SCRATCH_READ(scr, 8 * N, P_fine2_V);
+  SS_DMA_READ(_w, 0, N * 2, 1, P_fine2_W);
   scr ^= 8192;
-  SB_SCR_WRITE(P_fine2_A, N * 4, scr);
-  SB_SCR_WRITE(P_fine2_B, N * 4, scr + N * 4);
-  SB_WAIT_ALL();
+  SS_SCR_WRITE(P_fine2_A, N * 4, scr);
+  SS_SCR_WRITE(P_fine2_B, N * 4, scr + N * 4);
+  SS_WAIT_ALL();
 
-  SB_CONFIG(fine1_config, fine1_size);
-  SB_DMA_READ(w, 8, 8, N / 2, P_fine1_W);
-  SB_SCRATCH_READ(scr, N * 8, P_fine1_V);
-  SB_DMA_WRITE(P_fine1_A, 0, 4 * N, 1, to);
-  SB_DMA_WRITE(P_fine1_B, 0, 4 * N, 1, to + N / 2);
-  SB_WAIT_ALL();
+  SS_CONFIG(fine1_config, fine1_size);
+  SS_DMA_READ(w, 8, 8, N / 2, P_fine1_W);
+  SS_SCRATCH_READ(scr, N * 8, P_fine1_V);
+  SS_DMA_WRITE(P_fine1_A, 0, 4 * N, 1, to);
+  SS_DMA_WRITE(P_fine1_B, 0, 4 * N, 1, to + N / 2);
+  SS_WAIT_ALL();
 
   if (!_first_time)
     end_roi();

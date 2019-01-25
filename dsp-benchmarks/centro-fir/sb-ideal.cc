@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <iostream>
 #include "ss-config/fixed_point.h"
-#include "sb_insts.h"
+#include "ss_insts.h"
 
 #include "compute.dfg.h"
 
@@ -15,22 +15,22 @@ using std::complex;
 complex<float> _zero(0, 0);
 
 void filter(int n, int m, complex<float> *a, complex<float> *b, complex<float> *c, complex<float> *) {
-  SB_CONFIG(compute_config, compute_size);
+  SS_CONFIG(compute_config, compute_size);
   int len = n - m + 1;
   int pad = (VEC - (len & (VEC - 1))) & (VEC - 1);
   int mid = m >> 1;
-  SB_DMA_SCRATCH_LOAD(a, 8, 8, n, 0);
-  SB_WAIT_SCR_WR();
-  //SB_REPEAT_PORT((len + pad) / VEC);
-  //SB_DMA_READ(b, 8, 8, mid, P_compute_B);
-  SB_CONST(P_compute_C, 0, len + pad);
-  SB_RECURRENCE(P_compute_O, P_compute_C, mid * (len + pad));
+  SS_DMA_SCRATCH_LOAD(a, 8, 8, n, 0);
+  SS_WAIT_SCR_WR();
+  //SS_REPEAT_PORT((len + pad) / VEC);
+  //SS_DMA_READ(b, 8, 8, mid, P_compute_B);
+  SS_CONST(P_compute_C, 0, len + pad);
+  SS_RECURRENCE(P_compute_O, P_compute_C, mid * (len + pad));
   for (int i = 0; i < mid; ++i) {
-    SB_CONST(P_compute_B, *((uint64_t*)(b + i)), (len + pad) / VEC);
-    SB_SCRATCH_READ(i * 8, 8 * len, P_compute_AL);
-    SB_CONST(P_compute_AL, 0, pad);
-    SB_SCRATCH_READ((m - 1 - i) * 8, 8 * len, P_compute_AR);
-    SB_CONST(P_compute_AR, 0, pad);
+    SS_CONST(P_compute_B, *((uint64_t*)(b + i)), (len + pad) / VEC);
+    SS_SCRATCH_READ(i * 8, 8 * len, P_compute_AL);
+    SS_CONST(P_compute_AL, 0, pad);
+    SS_SCRATCH_READ((m - 1 - i) * 8, 8 * len, P_compute_AR);
+    SS_CONST(P_compute_AR, 0, pad);
   }
   /*for (int j = 0; j < mid; ++j) {
     for (int i = 0; i < len; ++i) {
@@ -40,13 +40,13 @@ void filter(int n, int m, complex<float> *a, complex<float> *b, complex<float> *
       c[i] = complex<float>(complex_add(c[i], delta));
     }
   }*/
-  SB_SCRATCH_READ(mid * 8, 8 * len, P_compute_AL);
-  //SB_DMA_READ(a + mid, 0, 8 * len, 1, P_compute_AL);
-  SB_CONST(P_compute_AL, 0, pad);
-  SB_CONST(P_compute_AR, 0, len + pad);
-  SB_CONST(P_compute_B, *((uint64_t*) b + mid), (len + pad) / VEC);
-  SB_DMA_WRITE(P_compute_O, 8, 8, len + pad, c);
-  SB_WAIT_ALL();
+  SS_SCRATCH_READ(mid * 8, 8 * len, P_compute_AL);
+  //SS_DMA_READ(a + mid, 0, 8 * len, 1, P_compute_AL);
+  SS_CONST(P_compute_AL, 0, pad);
+  SS_CONST(P_compute_AR, 0, len + pad);
+  SS_CONST(P_compute_B, *((uint64_t*) b + mid), (len + pad) / VEC);
+  SS_DMA_WRITE(P_compute_O, 8, 8, len + pad, c);
+  SS_WAIT_ALL();
   /*for (int i = 0; i < len; ++i) {
     complex<float> delta(complex_mul(a[i + mid + 1], b[mid + 1]));
     c[i] = complex<float>(complex_add(c[i], delta));

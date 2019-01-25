@@ -21,11 +21,11 @@ int main(int argc, char* argv[]) {
     }
   
     begin_roi();
-    SB_CONFIG(none_config,none_size);
-    SB_REPEAT_PORT(repeat);
-    SB_DMA_READ(&in[0],ABYTES,ABYTES,1,P_none_in);
-    SB_DMA_WRITE(P_none_out,8*repeat,8*repeat,AWORDS,&out_big[0]);
-    SB_WAIT_ALL();
+    SS_CONFIG(none_config,none_size);
+    SS_REPEAT_PORT(repeat);
+    SS_DMA_READ(&in[0],ABYTES,ABYTES,1,P_none_in);
+    SS_DMA_WRITE(P_none_out,8*repeat,8*repeat,AWORDS,&out_big[0]);
+    SS_WAIT_ALL();
     end_roi();
  
     compare<DTYPE>(argv[0],out_big,answer,ASIZE*repeat);

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "Constant.dfg.h"
 #include "check.h"
-#include "../common/include/sb_insts.h"
+#include "../common/include/ss_insts.h"
 #include "../common/include/sim_timing.h"
 #include <inttypes.h>
 
@@ -13,10 +13,10 @@ int main(int argc, char* argv[]) {
 
   //Version 1:
   begin_roi();
-  SB_CONFIG(Constant_config,Constant_size);
-  SB_DMA_READ(&in[0],8,8,2,P_Constant_in);
-  SB_DMA_WRITE(P_Constant_out,8,8,2,&out[0]);
-  SB_WAIT_ALL();
+  SS_CONFIG(Constant_config,Constant_size);
+  SS_DMA_READ(&in[0],8,8,2,P_Constant_in);
+  SS_DMA_WRITE(P_Constant_out,8,8,2,&out[0]);
+  SS_WAIT_ALL();
   end_roi();
 
   //DTYPE expect[] = {10,200,300,10,10,600,700,10};

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "Max16x4.dfg.h"
 #include "check.h"
-#include "../common/include/sb_insts.h"
+#include "../common/include/ss_insts.h"
 #include "../common/include/sim_timing.h"
 #include <inttypes.h>
 
@@ -14,11 +14,11 @@ int main(int argc, char* argv[]) {
 
   //Version 1:
   begin_roi();
-  SB_CONFIG(Max16x4_config,Max16x4_size);
-  SB_DMA_READ(&in1[0],8,8,1,P_Max16x4_in1);
-  SB_DMA_READ(&in2[0],8,8,1,P_Max16x4_in2);
-  SB_DMA_WRITE(P_Max16x4_out,8,8,1,&out[0]);
-  SB_WAIT_ALL();
+  SS_CONFIG(Max16x4_config,Max16x4_size);
+  SS_DMA_READ(&in1[0],8,8,1,P_Max16x4_in1);
+  SS_DMA_READ(&in2[0],8,8,1,P_Max16x4_in2);
+  SS_DMA_WRITE(P_Max16x4_out,8,8,1,&out[0]);
+  SS_WAIT_ALL();
   end_roi();
 
   DTYPE expect[] = {100,200,300,400};
