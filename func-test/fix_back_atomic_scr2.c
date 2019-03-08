@@ -25,8 +25,9 @@ int main() {
   //SS_CONST_SCR(0, 0, (64*2+2));
   //SS_WAIT_SCR_WR();
  
+  begin_roi();
   for(int i = 0; i < 1; ++i) {
-    begin_roi();
+    // begin_roi();
 
     //SS_DMA_READ(&ind[0], 8, 8, N/2, P_IND_1);
     //SS_CONFIG_INDIRECT1(T64, T64, 1, 1);
@@ -42,11 +43,14 @@ int main() {
 
     //SS_WAIT_SCR_ATOMIC();
 
-    end_roi();
+    // end_roi();
 
   }
 
     SS_WAIT_ALL();
+
+    end_roi();
+    sb_stats();
 
 
   //SS_WAIT_ALL();

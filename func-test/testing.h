@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "none.dfg.h"
+#include "none16.dfg.h"
 #include "check.h"
 #include "../../ss-tools/include/ss-intrin/ss_insts.h"
 #include "../common/include/sim_timing.h"

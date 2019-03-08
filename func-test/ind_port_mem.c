@@ -10,7 +10,7 @@ int main(int argc, char* argv[]) {
 
   for(int i = 0; i<AWORDS; ++i) {
     ind_array[i]=i + i/2 + i/5 + i/10;
-    //std::cout << i << "->" << ind_array[i] << "\n";
+    // std::cout << i << "->" << ind_array[i] << "\n";
     known[i]=ind_array[i]*2;
   }
 
