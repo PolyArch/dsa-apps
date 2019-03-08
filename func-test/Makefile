@@ -31,7 +31,7 @@ $(DFG_HEADERS): %.dfg.h: %.dfg
 	$(RISCV)/bin/ss_sched -a sa $(SBCONFIG) $<
 
 OPT?=-O3
-CFLAGS=$(OPT) -g -ggdb -gdwarf-3 -static
+CFLAGS=$(OPT) -g -ggdb -gdwarf-3 -static --std=c++11
 #--std=c++11 
 
 $(TESTSN):  bin/% : %.c $(DFG_HEADERS) $(HEADERS) bin
