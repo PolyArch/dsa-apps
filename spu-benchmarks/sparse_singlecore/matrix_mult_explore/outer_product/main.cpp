@@ -32,21 +32,14 @@ vector<uint16_t> act_ind;
 // vector<uint16_t> wgt_ind[M];
 vector<uint16_t> wgt_val;
 vector<uint16_t> wgt_ind;
-uint16_t wgt_ptr[M+1];
+uint16_t wgt_ptr[M+2];
 
 
 uint16_t out_vec[N];
 
+// 12132 = 16384
 // Assuming 16-bit compute only now (4-bit could improve things)
 void mv() {
-
-  // cout << "Act size: " << act_val.size() << endl;
-  // cout << "Wgt size: " << wgt_val.size() << endl;
-  /*int asize = act_val.size();
-  for(int i=0; i<asize; ++i) {
-    cout << "Activation indices: " << act_ind[i] << endl;
-    cout << "Correpsonding ptrs: " << wgt_ptr[act_ind[i]] << " " << wgt_ptr[act_ind[i]+1] << endl; 
-  }*/
 
   // read activations -- move to linear scratchpad later
   SS_VREPEAT_PORT(P_eie_row_size2);
@@ -57,18 +50,22 @@ void mv() {
   SS_INDIRECT(P_IND_1, &wgt_ptr[0], act_ind.size(), P_eie_offset_list);
 
   // use 2D_SCR when weights are in scratchpad
-  SS_CONFIG_INDIRECT1(T16,T16,2,1);
+  // FIXME:this value should not be 0
+  // SS_CONFIG_INDIRECT1(T16,T16,2,1);
+  SS_CONFIG_INDIRECT1(T16,T16,4,1); // multiplier for offset
   SS_INDIRECT_2D(P_eie_start_ind, &wgt_val[0], act_val.size(), 4, 2, P_eie_row_size1, P_eie_wval); // in reality, this is also unknown (should be M)
 
-  // since I know, let's get it working using the actual size (actually wgt we will know)
+  // FIXME: this should be sentinal later
+  // SS_CONST(P_eie_wval, 0, 8); // this doesn't make any sense
+  // SS_CONST(P_eie_aval, 0, 1);
+
   // FIXME:CHECKME sum up the value in the output
   SS_CONFIG_ATOMIC_SCR_OP(T16, T16, T16);
-  SS_ATOMIC_SCR_OP(P_eie_addr, P_eie_val, 0, wgt_val.size()/2, 0);
-  
-  // need an and signal to reset: wait on everything except atomic scr
-  // wait until ports are free (don't think of streams)
-  // SS_WAIT_COMPUTE(); // Let's see what happens here
-  // SS_RESET();
+  SS_ATOMIC_SCR_OP(P_eie_addr, P_eie_val, 0, wgt_val.size()/2, 0);  
+ 
+  uint16_t x;
+  SS_RECV(P_eie_done, x);
+  SS_RESET();
   SS_WAIT_ALL(); 
 }
 
@@ -88,6 +85,7 @@ void read_act() {
 	iss >> ind >> val;
 	act_ind.push_back(ind);
     act_val.push_back(val);
+    // cout << "Ind: " << ind << " val: " << val << endl;
   }  
   fclose(act_file);
  
@@ -123,6 +121,21 @@ int main(){
 
     // FIXME: confirm this is correct
     if(second_index!=prev_index) {
+      // to make the column sizes multiple of 4
+      int prev_col_size = count-wgt_ptr[prev_index];
+      int pad_size = (int)prev_col_size%4; // vec width
+      if(pad_size!=0) {
+        pad_size = 4 - pad_size;
+        for(int i=0; i<pad_size; ++i) {
+          wgt_val.push_back(1);
+          wgt_val.push_back(1);
+          // FIXME: later, this should be 0 and later sentinal
+          // wgt_val.push_back(0);
+          // wgt_val.push_back(0);
+ 
+        }
+        count += pad_size;
+      }
       wgt_ptr[second_index] = count;
       for(int i=second_index-1; i>prev_index; --i) {
         wgt_ptr[i] = count;
@@ -131,12 +144,46 @@ int main(){
     }
     count++;
   }  
+
+  int prev_col_size = count-wgt_ptr[prev_index];
+  int pad_size = (int)prev_col_size%4; // vec width
+  if(pad_size!=0) {
+     pad_size = 4 - pad_size;
+     for(int i=0; i<pad_size; ++i) {
+       // wgt_val.push_back(0);
+       // wgt_val.push_back(0);
+       wgt_val.push_back(1);
+       wgt_val.push_back(1);
+     }
+     count += pad_size;
+   }
   wgt_ptr[M]=count;
+  for(int i=M-1; i>prev_index; --i) {
+    wgt_ptr[i] = count;
+  }
+    
   fclose(wgt_file);
 
-  /*for(int i=0; i<4; ++i) {
-    cout << "Address of wgt_val at i: " << i << " is: " << &wgt_val[i] << " and value: " << wgt_val[i] << endl;
+  // preprocess_weights();
+
+  /*cout << "Activation values: ";
+  for(int i=0; i<4; ++i) {
+    cout << act_val[i] << endl;
   }*/
+  /*for(int i=0; i<M; ++i) {
+    // cout << "Address of wgt_val at i: " << i << " is: " << &wgt_val[i] << " and value: " << wgt_val[i] << endl;
+    cout << "Index pointer at column i: " << i << " is: " << wgt_ptr[i] << endl;
+  }*/
+
+
+  // Pre-processing here: 0 at the end of both col and row vector
+  act_val.push_back(0);
+  act_ind.push_back(M);
+  for(int i=0; i<4; ++i) {
+    wgt_val.push_back(0); // val
+    wgt_val.push_back(M); // col-index
+  }
+  wgt_ptr[M+1] = wgt_ptr[M]+4;
 
   printf("Finished reading wgt file\n");
 
@@ -157,3 +204,20 @@ int main(){
  
   return 0;
 }
+
+/*void preprocess_weights() {
+  int col_size=-1;
+  int cur_pad_size=-1;
+  int acc_pad_size=0;
+  for(int i=0; i<M; ++i) { // for M columns in wgt
+    col_size = wgt_ptr[i+1]-wgt_ptr[i];
+    cur_pad_size = int(col_size%4);
+    if(cur_pad_size!=0) cur_pad_size = 4-cur_pad_size;
+    for(int j=0; j<cur_pad_size; ++j) { // both index and val are 0
+      wgt_val.push_back(0);
+      wgt_val.push_back(0);
+    }
+    acc_pad_size += cur_pad_size;
+    wgt_ptr[i+1] += acc_pad_size;
+  }
+}*/

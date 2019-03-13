@@ -15,7 +15,7 @@ with open('input_weights.data', 'w') as f_input:
         prev_ind = 0
         for i in range(col_nnz):
             #generate ith non-zero value
-            random.seed(i)
+            random.seed(i+j)
             static_sparse_id = int(i/ratio)
             if(prev_ind != static_sparse_id):
                 ind = random.randint(prev_ind+1, static_sparse_id)

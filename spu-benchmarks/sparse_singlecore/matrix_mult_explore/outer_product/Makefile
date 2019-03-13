@@ -8,7 +8,7 @@ N=4
 endif
 
 ifndef M
-M=32
+M=4096
 endif
 
 TESTS=main

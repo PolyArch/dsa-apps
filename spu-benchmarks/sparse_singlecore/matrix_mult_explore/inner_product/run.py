@@ -12,8 +12,8 @@ cases = []
 # cases.append((0.67,0.3))
 # cases.append((0.80,0.5))
 # cases.append((0.86,0.7))
-# cases.append((0.89,0.9))
-cases.append((1,1))
+cases.append((0.75,0.75))
+# cases.append((1,1))
 
 
 

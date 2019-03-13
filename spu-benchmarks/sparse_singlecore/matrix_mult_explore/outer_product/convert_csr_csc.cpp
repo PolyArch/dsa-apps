@@ -13,7 +13,7 @@
 using namespace std;
 
 #define N 4
-#define M 128
+#define M 4096
 
 uint16_t matrix[N][M];
 

@@ -31,8 +31,13 @@ y = E0 E1
 val = x out_val2 out_val3
 addr = y E2 E3
 
+# check the sentinal
+flag = ICmpEq16(out_val0, 0)
+done = Keep(1, flag)
+
 Output: val
-Output16: addr
+Output: addr
 Output16: row_size1
 Output16: row_size2
 Output16: start_ind
+Output16: done
