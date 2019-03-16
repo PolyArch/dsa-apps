@@ -1,0 +1,48 @@
+Input16: dest_id [4]
+Input16: prev_vert_pr
+# Input16: offset_list [2]
+Input16: offset_list0
+Input16: offset_list1
+# Input16: R
+
+# Put index calculation formula here
+E0 = dest_id0
+E1 = dest_id1
+E2 = dest_id2
+E3 = dest_id3
+
+temp = Sub16(offset_list1, offset_list0)
+# repeat 1/d -- d times
+# TODO: add later
+# edge_wgt = Div16(1,temp,control=R{0:b2})
+
+# same output value for the same working vertex
+# out_val = Mul16(edge_wgt,prev_vert_pr)
+out_val = Mul16(1,prev_vert_pr)
+
+start_ind = offset_list0
+
+row_size1 = temp
+row_size2 = Div16(temp, 4) # vec width
+row_size3 = row_size2
+
+x = out_val out_val
+val = x out_val out_val
+
+y = E0 E1
+addr = y E2 E3
+
+# check the sentinal
+end_signal = Add16(dest_id0, prev_vert_pr)
+# end_signal = Add16(dest_id1, prev_vert_pr)
+flag = ICmpEq16(end_signal, 40)
+# flag = ICmpEq16(end_signal, 39)
+done = Keep(1, flag)
+
+Output: val
+Output: addr
+Output16: row_size1
+Output16: row_size2
+# Output16: row_size3
+Output16: start_ind
+Output16: done
