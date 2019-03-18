@@ -12,8 +12,6 @@
 #include <string>
 
 #define NUM_THREADS 2
-#define NUM_VERT_PER_THREAD V/NUM_THREADS
-#define EFF_VERT_PER_THREAD (V/NUM_THREADS+1)
 
 using namespace std;
 
@@ -26,9 +24,9 @@ struct edge_info {
   // uint16_t wgt;
 };
 
-uint16_t cur_vertex_data[V+NUM_THREADS]; // output vector
-uint16_t prev_vertex_data[V+NUM_THREADS]; // input vector
-uint16_t offset[V+2*(NUM_THREADS-1)+1]; // matrix ptr
+uint16_t cur_vertex_data[V+1]; // output vector
+uint16_t prev_vertex_data[V+1]; // input vector
+uint16_t offset[V+2]; // matrix ptr
 // Oh, this could be more than edges -- edges is without padding
 // Also, I need to know the new value -- let's take it as a vector
 // edge_info neighbor[E]; // matrix non-zero values
@@ -38,48 +36,46 @@ vector<uint16_t> neighbor; // matrix non-zero values
 // |___|___|
 // |___|___|
 // |___|___|
+// TODO: padding, fix done (maybe involve all 4 vals, use both edge dest and
+// val)
 // Another difference is that it is dense vector, decide dataset size
 // Should we exploit the fact that there is no point of weights? TODO: we can
 // just count that const here -- real data to be read is the earlier pr value,
 // and dest vertex id
-// this should work on columns in range of tid, and a tile of vector
-// FIXME: now difference doesn't seem correct
 void mv(long tid) {
   
-  // 0..1676 (both included), 1677..3353
-  int start_col = tid*EFF_VERT_PER_THREAD;
-  int end_col = (tid+1)*EFF_VERT_PER_THREAD; // not sure if correct
-  // end_col-start_col is V here
-  // start_col = tid*(EFF_VERT_PER_THREAD+1);
-  // end_col = (tid+1)*(EFF_VERT_PER_THREAD+1); // not sure if correct
+  // this should work on columns in range of tid, and a tile of vector
+  int start_col = tid*(V/NUM_THREADS);
+  int end_col = (tid+1)*(V/NUM_THREADS);
 
   // cout << "Start col: " << start_col << " and col: " << end_col << endl;
-  // cout << "offset1: " << offset[start_col] << " offset2: " << offset[end_col] << " size of edges: " << offset[end_col]-offset[start_col] << endl;
+  /*if(tid==1) {
+    SS_WAIT_ALL();
+    return;
+  }*/
   
   SS_VREPEAT_PORT(P_pr_row_size2);
-  SS_DMA_READ(&prev_vertex_data[start_col], 2, 2, end_col-start_col, P_pr_prev_vert_pr);
+  SS_DMA_READ(&prev_vertex_data[0], 2, 2, V+1, P_pr_prev_vert_pr);
 
   // TODO: add later
   // SS_VREPEAT_PORT(P_pr_row_size3);
   // SS_CONST(P_pr_R, 0, V);
 
   // last should be V+1-V, ... V-V-1,...1..0
-  SS_CONST(P_pr_offset_list0,offset[start_col],1);
+  SS_CONST(P_pr_offset_list0,offset[0],1);
 
   SS_ADD_PORT(P_pr_offset_list0);
-  SS_DMA_READ(&offset[start_col+1], 2, 2, end_col-start_col-1, P_pr_offset_list1);
+  SS_DMA_READ(&offset[1], 2, 2, V, P_pr_offset_list1);
 
-  SS_CONST(P_pr_offset_list1,offset[end_col],1);
+  SS_CONST(P_pr_offset_list1,offset[V+1],1);
 
   // edge weight can be calculated inside dfg
   SS_CONFIG_INDIRECT(T16,T16,2); // multiplier for offset
-  // SS_INDIRECT_2D(P_pr_start_ind, &neighbor[offset[start_col]], end_col-start_col+1, 2, 2, P_pr_row_size1, P_pr_dest_id);
-  // index should be taken care of by indices in the offset...
-  SS_INDIRECT_2D(P_pr_start_ind, &neighbor[0], end_col-start_col, 2, 2, P_pr_row_size1, P_pr_dest_id);
+  SS_INDIRECT_2D(P_pr_start_ind, &neighbor[0], V+1, 2, 2, P_pr_row_size1, P_pr_dest_id);
 
   SS_CONFIG_ATOMIC_SCR_OP(T16, T16, T16);
   // for multicore, only change is that it has to do remote update
-  SS_ATOMIC_SCR_OP(P_pr_addr, P_pr_val, 0, offset[end_col]-offset[start_col], 0);  
+  SS_ATOMIC_SCR_OP(P_pr_addr, P_pr_val, 0, neighbor.size(), 0);  
   // SS_ATOMIC_SCR_OP(P_pr_addr, P_pr_val, getRemoteBankedOffset(1,0,1), neighbor.size(), 0);  
  
   uint16_t x;
@@ -100,8 +96,6 @@ void read_input_file() {
   int prev_offset=0;
   int e=-1, prev_v=-1; // indices start from 0
   int prev_col_size=-1; int pad_size=-1;
-  int part=0;
-  bool pad_phase=false;
   while(fgets(linetoread, 5000, graph_file) != NULL) {
     std::string raw(linetoread);
     std::istringstream iss(raw.c_str());
@@ -113,52 +107,39 @@ void read_input_file() {
     // src = src-1; dst = dst-1;
 // FOR CSR
     iss >> src >> dst; 
-    // cout << "Read tuple: " << src << " " << dst << endl;
+    // cout << src << " " << dst << endl;
     ++e;
     // cout << "Neighbor at e: " << e << " is: " << neighbor[e] << endl;
-    
-    // FIXME: add for padding in between them -- can bother for later
-    if(src!=0 && pad_phase && src > 10) { // padded value: after a partition
-      // cout << "INSERTING OFFSET AT VERTEX: " << (prev_v+1+part) << " and the value of number of edges till now: " << e << endl;
-      ++part;
-      offset[prev_v+1+part] = e;
-      // neighbor.push_back(dst);
-      prev_v = src;
-      pad_phase = false;
-    } else if(src!=prev_v && !pad_phase) {
+    if(src!=prev_v) {
 
       // Padding here
       if(prev_v==-1) {
         prev_col_size=0;
       } else {
-        prev_col_size = e - offset[prev_v+part];
+        prev_col_size = e - offset[prev_v];
       }
-
       // cout << "prev_v: " << prev_v << " and col size: " << prev_col_size << endl;
       pad_size = (int)prev_col_size%4;
       if(pad_size!=0) {
         pad_size = 4 - pad_size;
         // cout << "PAD SIZE: " << pad_size << " when dest id: " << dst << endl;
-        for(int k=0; k<pad_size; ++k) {
+        for(uint16_t k=0; k<pad_size; ++k) {
           neighbor.push_back(0);
         }
         e += pad_size;
       }
 
-      offset[prev_v+1+part]=e;
-      // cout << (prev_v+1+part) << " OFFSET: " << e << endl;
-      int k=prev_v+1+part;
+      offset[prev_v+1]=e;
+      // cout << (prev_v+1) << " OFFSET: " << e << endl;
+      int k=prev_v+1;
       while(offset[--k]==0 && k>0) {
         offset[k]=prev_offset;
       }
       prev_offset=e;
-      if(src==0 && prev_v!=-1) { // don't change at padding
-        pad_phase=true;
-      } else {
-        prev_v = src;
-      }
+      prev_v=src;
     }
     neighbor.push_back(dst);
+    // cout << _neighbor[e].wgt << " " << _neighbor[e].dst_id << " " << _offset[prev_v-1] << endl;
   }
   // offset[V] = E;
   
@@ -176,12 +157,11 @@ void read_input_file() {
   }
   // cout << "FINAL NEIGHBOR SIZE: " << neighbor.size() << endl; 
   // offset[V] = e;
-  offset[V+2*(NUM_THREADS-1)] = neighbor.size();
-  int k=V+2*(NUM_THREADS-1);
+  offset[V] = neighbor.size();
+  int k=V;
   while(offset[--k]==0 && k>0) { // offset[0] should be 0
     offset[k]=prev_offset;
   }
-  // cout << "Offset at 1: " << offset[1] << endl;
   fclose(graph_file);
   cout << "Done reading graph file!\n";
 }
@@ -212,32 +192,28 @@ void *entry_point(void *threadid) {
 }
  
 void init_prev_pr() {
-  for(int i=0; i<V+NUM_THREADS; ++i) {
+  for(int i=0; i<V; ++i) {
     prev_vertex_data[i] = 1;
   }
 }
 
-// FIXME: need to match for variable number of threads -- need better formula
 void pad_both_at_end() {
-  // add at the end of each partition
-  // prev_vertex_data[V] = V; make sure it is V for NUM_THREADS=1
-  for(int i=1; i<=NUM_THREADS; ++i) {
-    // int ind = i*NUM_VERT_PER_THREAD;
-    // prev_vertex_data[ind+i] = V;
-    int ind = i*EFF_VERT_PER_THREAD;
-    prev_vertex_data[ind-1] = V;
-    cout << "Value entered at a location: " << ind-1 << endl; 
+  // prev_vertex_data[V] = 0;
+  prev_vertex_data[V] = V;
+  offset[V+1] = offset[V]+4;
+  for(int i=0; i<4; ++i) {
+    // neighbor.push_back(0);
+    neighbor.push_back(1);
   }
 }
 
 void print_neighbor() {
-  /*for(int i=0; i<=V+2; ++i) {
+  for(int i=0; i<V+2; ++i) {
     cout << "Index pointer at column i: " << i << " is: " << offset[i] << endl;
-  }*/
-  cout << "Address at neighbor 0: " << &neighbor[0] << endl;
-  for(unsigned i=0; i<neighbor.size(); ++i) {
-    cout << "Neighbor at i: " << neighbor[i] << endl;
   }
+  /*for(unsigned i=0; i<neighbor.size(); ++i) {
+    cout << "Neighbor at i: " << neighbor[i] << endl;
+  }*/
 }
 
 int main() {
@@ -245,7 +221,7 @@ int main() {
   init_prev_pr(); // make sure this is not 0 (actually I should fix my sentinal problem)
   pad_both_at_end();
   // print_neighbor();
-
+ 
   // Barrier initialization
   if(pthread_barrier_init(&barr, NULL, NUM_THREADS))
   {
@@ -253,11 +229,11 @@ int main() {
     return -1;
   }
  
-  int final_num_threads = NUM_THREADS;
-  pthread_t threads[final_num_threads];
+  pthread_t threads[NUM_THREADS];
+  // pthread_t threads[NUM_THREADS+1]; // last one is the dummy thread for memory broadcast
   int rc;
   long t;
-  for(t=0;t<final_num_threads;t++){
+  for(t=0;t<NUM_THREADS;t++){
     printf("In main: creating thread %ld\n", t);
     rc = pthread_create(&threads[t], NULL, entry_point, (void *)t);
     if (rc){
@@ -266,7 +242,7 @@ int main() {
     }
   }
 
-  for(int i = 0; i < final_num_threads; ++i) {
+  for(int i = 0; i < NUM_THREADS; ++i) {
     if(pthread_join(threads[i], NULL)) {
   	printf("Could not join thread %d\n", i);
       return 0;

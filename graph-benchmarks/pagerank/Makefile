@@ -1,25 +1,30 @@
+ifndef data_file
+data_file=\"datasets/rome99_csr\"
+endif
+
 ifndef csr_file
-# csr_file=\"example.csv\"
-# csr_file=\"cycle_example.csv\"
-# csr_file=\"datasets/directed_uniform/rome99_csr\"
-csr_file=\"datasets/bcspwr01.mtx\"
+# csr_file=\"datasets/bcspwr01.mtx\"
+csr_file=\"datasets/rome_99\"
 endif
 
 ifndef C
-C=1
+C=4
 endif
 
 ifndef V
-V=39
+# V=39
+# V=3353
+V=3352
 endif
 
 ifndef E
-E=85
+# E=85
+E=8859
 endif
 
 include /home/vidushi/ss-stack/ss-workloads/spu-benchmarks/common/Makefile.inc
 
-MACROS = -DV=$(V) -DE=$(E) -Dcsr_file=$(csr_file) -DC=$(C)
+MACROS = -DV=$(V) -DE=$(E) -Dcsr_file=$(csr_file) -DC=$(C) -Ddata_file=$(data_file)
 
 DFGS=pr.dfg
 
@@ -27,6 +32,10 @@ DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
 	ss_sched $(SBCONFIG) $<
+
+csr: make_unweighted.cpp
+	g++ -std=c++11 make_unweighted.cpp $(MACROS) -o csr
+	./csr
 
 $(TEST_OBJS): $(TESTC) $(DFG_HEADERS) # inst_id.data
 	 $(CC) -c $< $(CFLAGS) $(MACROS) -I. -static -o $(@)

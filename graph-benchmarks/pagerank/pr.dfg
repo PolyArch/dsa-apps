@@ -34,9 +34,9 @@ addr = y E2 E3
 
 # check the sentinal
 end_signal = Add16(dest_id0, prev_vert_pr)
-# end_signal = Add16(dest_id1, prev_vert_pr)
-flag = ICmpEq16(end_signal, 40)
-# flag = ICmpEq16(end_signal, 39)
+# second is 1721 or 25 (Why?) reading some wrong value
+# flag = ICmpEq16(end_signal, 3377) # Why, don't know the reason?
+flag = ICmpEq16(end_signal, 3353)
 done = Keep(1, flag)
 
 Output: val
