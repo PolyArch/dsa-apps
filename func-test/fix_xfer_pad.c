@@ -15,6 +15,7 @@ void test_zero_xfer() {
   for (int i = 0; i < ASIZE; ++i)
     a[i] = i;
 
+  SS_FILL_MODE(NO_FILL);
   SS_CONTEXT(1 | 2);
   SS_CONFIG(add1_vec_o2_config, add1_vec_o2_size);
   SS_CONTEXT(1);
@@ -23,7 +24,7 @@ void test_zero_xfer() {
   SS_GARBAGE(P_add1_vec_o2_outB, ASIZE / 2);
 
   SS_FILL_MODE(STRIDE_ZERO_FILL);
-  SS_STRIDE(16, 16);
+  SS_SET_ITER(2);
   SS_XFER_RIGHT_PAD(P_add1_vec_o2_outA, P_add1_vec_o2_in, ASIZE / 2);
 
   SS_CONTEXT(2);
@@ -46,6 +47,7 @@ void test_discard_xfer() {
   for (int i = 0; i < ASIZE; ++i)
     a[i] = i;
 
+  SS_FILL_MODE(NO_FILL);
   SS_CONTEXT(1 | 2);
   SS_CONFIG(add1_vec_o2_config, add1_vec_o2_size);
 
@@ -55,7 +57,7 @@ void test_discard_xfer() {
   SS_GARBAGE(P_add1_vec_o2_outB, ASIZE / 2);
 
   SS_FILL_MODE(STRIDE_DISCARD_FILL);
-  SS_STRIDE(16, 16);
+  SS_SET_ITER(2);
   SS_XFER_RIGHT_PAD(P_add1_vec_o2_outA, P_add1_vec_o2_in, ASIZE / 2);
 
   SS_CONTEXT(2);

@@ -22,9 +22,11 @@ int main(int argc, char* argv[]) {
   int iters=0;
   for(int i = 1; i <= AWORDS; ++i) {
     input[i-1]=i;
-    answer+=i*i;
     iters+=i;
   }
+  for (int i = 0; i < AWORDS; ++i)
+    for (int j = i; j < AWORDS; ++j)
+      answer += input[j];
 
   //Do the triangle sum
   begin_roi();
