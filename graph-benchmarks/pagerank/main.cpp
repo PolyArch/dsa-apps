@@ -20,6 +20,7 @@ using namespace std;
 // Barrier variable
 pthread_barrier_t barr;
 pthread_barrier_t barr2;
+pthread_barrier_t barr3;
 
 struct edge_info {
   uint16_t dst_id;
@@ -43,21 +44,24 @@ vector<uint16_t> neighbor; // matrix non-zero values
 // just count that const here -- real data to be read is the earlier pr value,
 // and dest vertex id
 // this should work on columns in range of tid, and a tile of vector
-// FIXME: now difference doesn't seem correct
 void mv(long tid) {
+
+  uint64_t mask=0;
+  for(int i=0; i<NUM_THREADS; ++i) {
+    if(i!=tid) { addDest(mask,i); }
+  }
   
   // 0..1676 (both included), 1677..3353
   int start_col = tid*EFF_VERT_PER_THREAD;
   int end_col = (tid+1)*EFF_VERT_PER_THREAD; // not sure if correct
-  // end_col-start_col is V here
-  // start_col = tid*(EFF_VERT_PER_THREAD+1);
-  // end_col = (tid+1)*(EFF_VERT_PER_THREAD+1); // not sure if correct
+    
+  SS_CONFIG_ATOMIC_SCR_OP(T16, T16, T16);
+  SS_ATOMIC_SCR_OP(P_pr_addr, P_pr_val, 0, offset[end_col]-offset[start_col], 0);  
+ 
+  SS_DMA_READ(&prev_vertex_data[start_col], 2, 2, end_col-start_col, P_pr_pass1);
 
-  // cout << "Start col: " << start_col << " and col: " << end_col << endl;
-  // cout << "offset1: " << offset[start_col] << " offset2: " << offset[end_col] << " size of edges: " << offset[end_col]-offset[start_col] << endl;
-  
   SS_VREPEAT_PORT(P_pr_row_size2);
-  SS_DMA_READ(&prev_vertex_data[start_col], 2, 2, end_col-start_col, P_pr_prev_vert_pr);
+  SS_RECURRENCE(P_pr_pass2, P_pr_prev_vert_pr, end_col-start_col);
 
   // TODO: add later
   // SS_VREPEAT_PORT(P_pr_row_size3);
@@ -73,19 +77,15 @@ void mv(long tid) {
 
   // edge weight can be calculated inside dfg
   SS_CONFIG_INDIRECT(T16,T16,2); // multiplier for offset
-  // SS_INDIRECT_2D(P_pr_start_ind, &neighbor[offset[start_col]], end_col-start_col+1, 2, 2, P_pr_row_size1, P_pr_dest_id);
-  // index should be taken care of by indices in the offset...
   SS_INDIRECT_2D(P_pr_start_ind, &neighbor[0], end_col-start_col, 2, 2, P_pr_row_size1, P_pr_dest_id);
 
-  SS_CONFIG_ATOMIC_SCR_OP(T16, T16, T16);
-  // for multicore, only change is that it has to do remote update
-  SS_ATOMIC_SCR_OP(P_pr_addr, P_pr_val, 0, offset[end_col]-offset[start_col], 0);  
-  // SS_ATOMIC_SCR_OP(P_pr_addr, P_pr_val, getRemoteBankedOffset(1,0,1), neighbor.size(), 0);  
- 
   uint16_t x;
   SS_RECV(P_pr_done, x);
   SS_RESET();
-  SS_WAIT_ALL(); 
+
+  SS_GLOBAL_WAIT();
+  SS_WAIT_ALL();
+
 }
 
 void read_input_file() {
@@ -106,23 +106,12 @@ void read_input_file() {
     std::string raw(linetoread);
     std::istringstream iss(raw.c_str());
     uint16_t src, dst, wgt;
-    // char ignore;
-    // iss >> src >> dst; //  >> wgt;
-// FOR INITIAL 1-based graph
-    // iss >> dst >> src; //  >> wgt;
-    // src = src-1; dst = dst-1;
-// FOR CSR
     iss >> src >> dst; 
-    // cout << "Read tuple: " << src << " " << dst << endl;
     ++e;
-    // cout << "Neighbor at e: " << e << " is: " << neighbor[e] << endl;
     
-    // FIXME: add for padding in between them -- can bother for later
     if(src!=0 && pad_phase && src > 10) { // padded value: after a partition
-      // cout << "INSERTING OFFSET AT VERTEX: " << (prev_v+1+part) << " and the value of number of edges till now: " << e << endl;
       ++part;
       offset[prev_v+1+part] = e;
-      // neighbor.push_back(dst);
       prev_v = src;
       pad_phase = false;
     } else if(src!=prev_v && !pad_phase) {
@@ -132,17 +121,6 @@ void read_input_file() {
         prev_col_size=0;
       } else {
         prev_col_size = e - offset[prev_v+part];
-      }
-
-      // cout << "prev_v: " << prev_v << " and col size: " << prev_col_size << endl;
-      pad_size = (int)prev_col_size%4;
-      if(pad_size!=0) {
-        pad_size = 4 - pad_size;
-        // cout << "PAD SIZE: " << pad_size << " when dest id: " << dst << endl;
-        for(int k=0; k<pad_size; ++k) {
-          neighbor.push_back(0);
-        }
-        e += pad_size;
       }
 
       offset[prev_v+1+part]=e;
@@ -162,26 +140,11 @@ void read_input_file() {
   }
   // offset[V] = E;
   
-  // cout << "AFTER LAST EDGE E IS: " << e << endl;
-  // Padding here
-  // prev_col_size = e - offset[prev_v];
-  // FIXME: confirm this
-  pad_size = (int)neighbor.size()%4;
-  if(pad_size!=0) {
-    pad_size = 4 - pad_size;
-    for(uint16_t k=0; k<pad_size; ++k) {
-      neighbor.push_back(0);
-    }
-    e += pad_size;
-  }
-  // cout << "FINAL NEIGHBOR SIZE: " << neighbor.size() << endl; 
-  // offset[V] = e;
   offset[V+2*(NUM_THREADS-1)] = neighbor.size();
   int k=V+2*(NUM_THREADS-1);
   while(offset[--k]==0 && k>0) { // offset[0] should be 0
-    offset[k]=prev_offset;
+    offset[k]=neighbor.size(); // prev_offset;
   }
-  // cout << "Offset at 1: " << offset[1] << endl;
   fclose(graph_file);
   cout << "Done reading graph file!\n";
 }
@@ -190,7 +153,6 @@ void *entry_point(void *threadid) {
 
   long tid;
   tid = (long)threadid;
-  // cout << "Before synch came here for tid: " << tid << endl;
   
   // Synchronization point
   int rc = pthread_barrier_wait(&barr);
@@ -200,14 +162,16 @@ void *entry_point(void *threadid) {
     // exit(-1);
   }
 
-  // cout << "After synch came here for tid: " << tid << endl;
-
   begin_roi();
   SS_CONFIG(pr_config, pr_size);
   mv(tid);
   end_roi();
   sb_stats();
+
+  cout << "Returned back with tid: " << tid << endl;
+
   pthread_barrier_wait(&barr2);
+
   return NULL;
 }
  
@@ -252,6 +216,19 @@ int main() {
     printf("Could not create a barrier\n");
     return -1;
   }
+
+  if(pthread_barrier_init(&barr2, NULL, NUM_THREADS))
+  {
+    printf("Could not create a barrier\n");
+    return -1;
+  }
+
+
+  if(pthread_barrier_init(&barr3, NULL, NUM_THREADS))
+  {
+    printf("Could not create a barrier\n");
+    return -1;
+  }
  
   int final_num_threads = NUM_THREADS;
   pthread_t threads[final_num_threads];
@@ -274,3 +251,24 @@ int main() {
   }
   return 0;
 }
+
+// different barrier
+// SS_REM_PORT(P_pr_barrier_o, 1, mask, P_pr_barrier_i);
+// cr_base_addr, stride, access_size, num_strides, val_por    t, scratch_type
+/*
+SS_CONST(P_pr_barrier_i, 1, 1);
+SS_REM_SCRATCH(0, 8, 8, 1, P_pr_barrier_o, 0);
+SS_WAIT_DF(NUM_THREADS-1,0);
+*/
+/*
+SS_WAIT_ALL(); 
+// FIXME: 2 problems here: 1) doesn't work -- packet to core 1 is lost (god knows may skip -- can see later -- 2 streams ne send kiya router ko to gadbad ho gayi jaane dete hn) 2) it's wrong
+pthread_barrier_wait(&barr3);
+int k=16; // should be 1
+SS_CONST(P_pr_barrier_i, 1, k);
+SS_REM_PORT(P_pr_barrier_o, k, mask, P_pr_barrier_i2);
+// SS_REM_PORT(P_pr_barrier_o, 1, mask, P_pr_barrier_i2);
+SS_SCR_WRITE(P_pr_barrier_o2, (NUM_THREADS-1)*8*k, 0); // this should be garbage though
+
+SS_WAIT_ALL(); 
+*/
