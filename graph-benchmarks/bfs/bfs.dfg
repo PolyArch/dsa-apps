@@ -15,8 +15,11 @@ prev_dist = Keep16(prev_dens_dist, active_flag)
 prev_ind = Acc16(1, Mul16(Not(active_flag),2))
 
 # phase2_signal = ICmpEQ(prev_dens_dist, 0) # iter won't be 0
-phase2_signal = ICmpEQ(prev_dens_dist, 65534) # iter won't be 0
-active_list_size = Acc16(1, Mul16(Not(active_flag),4), control=phase2_signal{0:d})
+
+phase2_signal = ICmpEQ(prev_dens_dist, 65534) # this tells if discard or not
+# active_list_size = Acc16(1, Mul16(Not(active_flag),4), control=phase2_signal{0:d})
+temp_list_size = Acc16(1, Mul16(Not(active_flag),4))
+active_list_size = Keep16(temp_list_size, phase2_signal)
 
 temp = Sub16(offset_list1, offset_list0)
 

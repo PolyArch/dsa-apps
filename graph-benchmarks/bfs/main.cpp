@@ -115,22 +115,14 @@ void mv_complete(long tid) {
     SS_DCONST(P_IND_1, 0, 1, T16);
   }
 
-  /*
-  // SS_CONST(P_bfs_pass1, V, 1);
-  SS_DCONST(P_bfs_pass1, V, 1, T16);
-  // (tid+1)*(EFF_VERT_PER_THREAD) + NUM_THREADS-3
-  // FIXME: yeh second vale ka theek nahi h kya?
-  SS_DCONST(P_IND_1, end_col+NUM_THREADS-3, 1, T16);
-  */
-
   do {
 
+    // FIXME: this could not be pushed to cmd queue
     SS_DCONST(P_bfs_pass1, V, 1, T16);
     SS_DCONST(P_IND_1, end_col+NUM_THREADS-3, 1, T16);
 
-    // num_active_vert_per_core = prev_dist_ind[tid].size();
     // cout << "Active vertex for tid: " << tid << " and number of active vertex: " << num_active_vert_per_core << " and cur iter count: " << iter << endl;
-    cout << "Active vertex for tid: " << tid << " and cur iter count: " << iter << endl;
+    // cout << "Active vertex for tid: " << tid << " and cur iter count: " << iter << endl;
     
     SS_CONFIG_ATOMIC_SCR_OP(T16, T16, T16);
     SS_ATOMIC_SCR_OP(P_bfs_addr, P_bfs_val, 0, offset[end_col]-offset[start_col], 2);  
@@ -153,7 +145,7 @@ void mv_complete(long tid) {
     // SS_STREAM_RESET();
 
     SS_GLOBAL_WAIT();
-    SS_WAIT_ALL();
+    // SS_WAIT_ALL();
     
     int num_dens_vert_per_core = V/NUM_THREADS;
     
@@ -166,20 +158,21 @@ void mv_complete(long tid) {
     SS_REPEAT_PORT(1);
     SS_RECURRENCE(P_bfs_prev_dist, P_bfs_pass1, num_dens_vert_per_core);
     SS_REPEAT_PORT(1);
-    // FIXME: yeh nahi uthaya kya?
     SS_RECURRENCE(P_bfs_prev_ind, P_IND_1, num_dens_vert_per_core);
     
     active_list_size=0;
     SS_RECV(P_bfs_active_list_size, active_list_size);
 
-    // Basically it should until in use output ports are empty
-    SS_STREAM_RESET();
-    SS_WAIT_STREAMS(); // wait until all streams are done -- not for CGRA )just wait for above one)
+    // FIXME: there might be some issues with multiple barriers
+    // Basically it should not be issued until in use output ports are empty
+    SS_STREAM_RESET(); // this should be a barrier in itself -- but anyways
+    SS_WAIT_STREAMS(); // wait until all streams are done -- not for CGRA (just wait for above one)
     
-    cout << "New active list size: " << active_list_size << endl;
+    // cout << "New active list size: " << active_list_size << endl;
 
     iter++;
-  } while(active_list_size!=0);
+  } while(iter!=2); // Ideally, complete active list should be empty
+  // } while(active_list_size!=0);
   
   SS_RESET(); // to reset last sentinals
   SS_WAIT_ALL();
