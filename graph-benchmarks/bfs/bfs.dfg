@@ -6,10 +6,17 @@ Input16: pass1
 Input: barrier_i
 Input: barrier_i2
 
-E0 = dest_id0
-E1 = dest_id1
-E2 = dest_id2
-E3 = dest_id3
+# Sparsification code -- find the set of active vertices
+Input16: prev_dens_dist
+Input16: cur_iter
+
+active_flag = ICmpEQ(prev_dens_dist, cur_iter)
+prev_dist = Keep16(prev_dens_dist, active_flag)
+prev_ind = Acc16(1, Mul16(Not(active_flag),2))
+
+# phase2_signal = ICmpEQ(prev_dens_dist, 0) # iter won't be 0
+phase2_signal = ICmpEQ(prev_dens_dist, 65534) # iter won't be 0
+active_list_size = Acc16(1, Mul16(Not(active_flag),4), control=phase2_signal{0:d})
 
 temp = Sub16(offset_list1, offset_list0)
 
@@ -27,8 +34,8 @@ row_size2 = Div16(temp, 1)
 x = out_val0 out_val1
 val = x out_val2 out_val3
 
-y = E0 E1
-addr = y E2 E3
+y = dest_id0 dest_id1
+addr = y dest_id2 dest_id3
 
 # check the sentinal
 end_signal = Add16(dest_id0, prev_vert_dist0)
@@ -51,16 +58,6 @@ Output16: pass2
 Output: barrier_o
 Output: barrier_o2
 
-# Sparsification code -- find the set of active vertices
-# it will just introduce some new stall
-# Input16: old_dist
-# Input16: new_dist
-# 
-# new_old_dist = Min16(old_dist, new_dist)
-# active_flag = ICmpEQ16(old_dist, new_old_dist)
-# 
-# prev_dist = Keep16(new_old_dist, active_flag)
-# prev_ind = Acc16(1, 1, control=active_flag{0:d})
-# 
-# Output16: prev_dist # recur to pass1
-# Output16: prev_ind # send to offset list
+Output16: prev_dist # recur to pass1
+Output16: prev_ind # send to offset list
+Output: active_list_size

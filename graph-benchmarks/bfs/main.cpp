@@ -15,6 +15,8 @@
 #define NUM_VERT_PER_THREAD V/NUM_THREADS
 #define EFF_VERT_PER_THREAD (V/NUM_THREADS+1)
 
+#define INF 65535
+
 using namespace std;
 
 // Barrier variable
@@ -44,101 +46,143 @@ vector<uint16_t> prev_dist_ind[NUM_THREADS]; // input vector
 uint16_t offset[V+2*(NUM_THREADS-1)+1]; // matrix ptr
 vector<uint16_t> neighbor; // matrix non-zero values
 
-bool spu_resparsify() {
-  // read from banked scratchpad and send it back -- this can be parallelized
-  // I guess -- but we will first implement separate
-  return false;
-}
-
 void mv(long tid) {
 
   int start_col = tid*EFF_VERT_PER_THREAD;
   int end_col = (tid+1)*EFF_VERT_PER_THREAD; // not sure if correct
-  bool should_iter=false;
 
-  do {
-
-    unsigned num_active_vert_per_core = prev_dist_ind[tid].size();
-    // cout << "Active vertex for tid: " << tid << " and number of active vertex: " << num_active_vert_per_core << endl;
-    
-    SS_CONFIG_ATOMIC_SCR_OP(T16, T16, T16);
-    SS_ATOMIC_SCR_OP(P_bfs_addr, P_bfs_val, 0, offset[end_col]-offset[start_col], 2);  
+  unsigned num_active_vert_per_core = prev_dist_ind[tid].size();
+  // cout << "Active vertex for tid: " << tid << " and number of active vertex: " << num_active_vert_per_core << endl;
+  
+  SS_CONFIG_ATOMIC_SCR_OP(T16, T16, T16);
+  SS_ATOMIC_SCR_OP(P_bfs_addr, P_bfs_val, 0, offset[end_col]-offset[start_col], 2);  
  
-    // reading column/prev_vert_dist of active vertices
-    SS_DMA_READ(&prev_dist_val[tid][0], 2, 2, num_active_vert_per_core, P_bfs_pass1);
-    SS_VREPEAT_PORT(P_bfs_row_size2);
-    SS_RECURRENCE(P_bfs_pass2, P_bfs_prev_vert_dist, num_active_vert_per_core);
+  // reading column/prev_vert_dist of active vertices
+  SS_DMA_READ(&prev_dist_val[tid][0], 2, 2, num_active_vert_per_core, P_bfs_pass1);
+  SS_VREPEAT_PORT(P_bfs_row_size2);
+  SS_RECURRENCE(P_bfs_pass2, P_bfs_prev_vert_dist, num_active_vert_per_core);
 
-    // reading column/prev_vert_ind of active vertices
-    SS_DMA_READ(&prev_dist_ind[tid][0], 2, 2, num_active_vert_per_core, P_IND_1);
-    SS_CONFIG_INDIRECT1(T16,T16,2,1);
-    SS_INDIRECT(P_IND_1, &offset[0], num_active_vert_per_core, P_bfs_offset_list);
+  // reading column/prev_vert_ind of active vertices
+  SS_DMA_READ(&prev_dist_ind[tid][0], 2, 2, num_active_vert_per_core, P_IND_1);
+  SS_CONFIG_INDIRECT1(T16,T16,2,1);
+  SS_INDIRECT(P_IND_1, &offset[0], num_active_vert_per_core, P_bfs_offset_list);
 
-    SS_CONFIG_INDIRECT(T16,T16,2); // multiplier for offset
-    SS_INDIRECT_2D(P_bfs_start_ind, &neighbor[0], num_active_vert_per_core, 2, 2, P_bfs_row_size1, P_bfs_dest_id);
+  SS_CONFIG_INDIRECT(T16,T16,2); // multiplier for offset
+  SS_INDIRECT_2D(P_bfs_start_ind, &neighbor[0], num_active_vert_per_core, 2, 2, P_bfs_row_size1, P_bfs_dest_id);
 
-    uint16_t x;
-    SS_RECV(P_bfs_done, x);
-    SS_RESET();
+  uint16_t x;
+  SS_RECV(P_bfs_done, x);
+  SS_RESET();
 
-    SS_GLOBAL_WAIT();
-    SS_WAIT_ALL();
+  SS_GLOBAL_WAIT();
+  SS_WAIT_ALL();
 
-    should_iter = spu_resparsify();
-
-  } while(should_iter);
 }
+
+// initial old_dist is source with 0 dist and others with inf, put same thing
+// in banked scratchpad
+void preprocess_scratch_distance() {
+  // SS_CONST_SCR(getLinearAddr(getLinearOffset(0,2)), 0, 1, 2);
+  // SS_CONST_SCR(getLinearAddr(getLinearOffset(0,2))+2, INF, 4000, 2);
+  SS_CONST_SCR(getBankedOffset(0,2), 0, 1, 2);
+  SS_CONST_SCR(getBankedOffset(0,2)+2, INF, 4000, 2);
+  SS_WAIT_ALL();
+}
+
+/*
+ * Idea2: keep old_vert_dist dense version in both linear and banked scratchpad
+ * For the apply phase, copy the sparse version in linear scratchpad (very slow
+ * indirect writes -- possible?) and copy the data in the port
+ * For the compute phase, it has sparse data in the port and dense already in
+ * linear scratchpad
+*/
 
 void mv_complete(long tid) {
 
   int start_col = tid*EFF_VERT_PER_THREAD;
   int end_col = (tid+1)*EFF_VERT_PER_THREAD; // not sure if correct
-  bool should_iter=false;
+  int iter=0;
+  uint64_t active_list_size=0; // no active vertex at start
+  if(tid==0) {
+    active_list_size=1; // single source
+  }
+  // unsigned num_active_vert_per_core = prev_dist_ind[tid].size();
+  
+  // Just read const initial values to the first core
+  if(tid==0) {
+    // SS_CONST(P_bfs_pass1, 0, 1);
+    SS_DCONST(P_bfs_pass1, 0, 1, T16);
+    SS_DCONST(P_IND_1, 0, 1, T16);
+  }
 
-  unsigned num_active_vert_per_core = prev_dist_ind[tid].size();
-  // first send the pre-initialized stuff
-  SS_DMA_READ(&prev_dist_val[tid][0], 2, 2, num_active_vert_per_core, P_bfs_pass1);
-  SS_DMA_READ(&prev_dist_ind[tid][0], 2, 2, num_active_vert_per_core, P_IND_1);
+  /*
+  // SS_CONST(P_bfs_pass1, V, 1);
+  SS_DCONST(P_bfs_pass1, V, 1, T16);
+  // (tid+1)*(EFF_VERT_PER_THREAD) + NUM_THREADS-3
+  // FIXME: yeh second vale ka theek nahi h kya?
+  SS_DCONST(P_IND_1, end_col+NUM_THREADS-3, 1, T16);
+  */
 
   do {
 
-    num_active_vert_per_core = prev_dist_ind[tid].size();
-    // cout << "Active vertex for tid: " << tid << " and number of active vertex: " << num_active_vert_per_core << endl;
+    SS_DCONST(P_bfs_pass1, V, 1, T16);
+    SS_DCONST(P_IND_1, end_col+NUM_THREADS-3, 1, T16);
+
+    // num_active_vert_per_core = prev_dist_ind[tid].size();
+    // cout << "Active vertex for tid: " << tid << " and number of active vertex: " << num_active_vert_per_core << " and cur iter count: " << iter << endl;
+    cout << "Active vertex for tid: " << tid << " and cur iter count: " << iter << endl;
     
     SS_CONFIG_ATOMIC_SCR_OP(T16, T16, T16);
     SS_ATOMIC_SCR_OP(P_bfs_addr, P_bfs_val, 0, offset[end_col]-offset[start_col], 2);  
  
     // reading column/prev_vert_dist of active vertices
     SS_VREPEAT_PORT(P_bfs_row_size2);
-    SS_RECURRENCE(P_bfs_pass2, P_bfs_prev_vert_dist, num_active_vert_per_core);
+    SS_RECURRENCE(P_bfs_pass2, P_bfs_prev_vert_dist, active_list_size+1);
 
     // reading column/prev_vert_ind of active vertices
     SS_CONFIG_INDIRECT1(T16,T16,2,1);
-    SS_INDIRECT(P_IND_1, &offset[0], num_active_vert_per_core, P_bfs_offset_list);
+    SS_INDIRECT(P_IND_1, &offset[0], active_list_size+1, P_bfs_offset_list);
 
     SS_CONFIG_INDIRECT(T16,T16,2); // multiplier for offset
-    SS_INDIRECT_2D(P_bfs_start_ind, &neighbor[0], num_active_vert_per_core, 2, 2, P_bfs_row_size1, P_bfs_dest_id);
+    SS_INDIRECT_2D(P_bfs_start_ind, &neighbor[0], active_list_size+1, 2, 2, P_bfs_row_size1, P_bfs_dest_id);
 
     uint16_t x;
     SS_RECV(P_bfs_done, x);
-    SS_RESET();
+    // SS_DMA_WRITE(P_bfs_done, 2, 2, 1, &x); // had to garbage
+    SS_RESET(); // should be that wait for outputs, clear all
+    // SS_STREAM_RESET();
 
     SS_GLOBAL_WAIT();
     SS_WAIT_ALL();
+    
+    int num_dens_vert_per_core = V/NUM_THREADS;
+    
+    SS_SCRATCH_READ(0, 2*num_dens_vert_per_core, P_bfs_prev_dens_dist);
+    
+    // because 65535 is already infinity
+    SS_DCONST(P_bfs_prev_dens_dist, 65534, 1, T16); // padding
+    SS_DCONST(P_bfs_cur_iter, iter+1, num_dens_vert_per_core+1, T16); 
+    
+    SS_REPEAT_PORT(1);
+    SS_RECURRENCE(P_bfs_prev_dist, P_bfs_pass1, num_dens_vert_per_core);
+    SS_REPEAT_PORT(1);
+    // FIXME: yeh nahi uthaya kya?
+    SS_RECURRENCE(P_bfs_prev_ind, P_IND_1, num_dens_vert_per_core);
+    
+    active_list_size=0;
+    SS_RECV(P_bfs_active_list_size, active_list_size);
 
-    // read all vertices -- let's use linear scratchpad for old_dist
-    // but we will need to move data from linear to banked scratchpad
-    // SS_SCRATCH_READ(0, 2*V/NUM_THREADS, P_bfs_old_dist);
-    // SS_SCRATCH_READ(0, 2*V/NUM_THREADS, P_bfs_old_dist);
-    //
-    // SS_RECURRENCE(P_bfs_prev_dist, P_bfs_prev_dist_val, 1000); // might have
-    // to reset
-    // SS_RECURRENCE(P_bfs_prev_ind, P_IND_1, 1000); // need to fix variable
-    // bit widths
+    // Basically it should until in use output ports are empty
+    SS_STREAM_RESET();
+    SS_WAIT_STREAMS(); // wait until all streams are done -- not for CGRA )just wait for above one)
+    
+    cout << "New active list size: " << active_list_size << endl;
 
-    should_iter = spu_resparsify();
-
-  } while(should_iter);
+    iter++;
+  } while(active_list_size!=0);
+  
+  SS_RESET(); // to reset last sentinals
+  SS_WAIT_ALL();
 }
 
 void read_input_file() {
@@ -217,7 +261,9 @@ void *entry_point(void *threadid) {
 
   begin_roi();
   SS_CONFIG(bfs_config, bfs_size);
-  mv(tid);
+  preprocess_scratch_distance();
+  // mv(tid);
+  mv_complete(tid);
   end_roi();
   sb_stats();
 
@@ -259,21 +305,6 @@ void preprocess_prev_dist() {
   }
 }
 
-/*
-// FIXME: need to match for variable number of threads -- need better formula
-void pad_both_at_end() {
-  // add at the end of each partition
-  // prev_vertex_data[V] = V; make sure it is V for NUM_THREADS=1
-  for(int i=1; i<=NUM_THREADS; ++i) {
-    // int ind = i*NUM_VERT_PER_THREAD;
-    // prev_vertex_data[ind+i] = V;
-    int ind = i*EFF_VERT_PER_THREAD;
-    prev_vertex_data[ind-1] = V;
-    cout << "Value entered at a location: " << ind-1 << endl; 
-  }
-}
-*/
-
 void print_neighbor() {
   for(int i=0; i<=V+2; ++i) {
     cout << "Index pointer at column i: " << i << " is: " << offset[i] << endl;
@@ -292,13 +323,15 @@ void print_cur_dist() {
   }
 }
 
+
 int main() {
   read_input_file();
   // init_prev_dist(); // make sure this is not 0 (actually I should fix my sentinal problem)
-  preprocess_prev_dist(); // this should not be needed ideally
+  // preprocess_prev_dist(); // this should not be needed ideally
   // pad_both_at_end();
   // print_neighbor();
-  print_cur_dist();
+  // print_cur_dist();
+  // preprocess_scratch_distance();
 
   // Barrier initialization
   if(pthread_barrier_init(&barr, NULL, NUM_THREADS))
@@ -334,3 +367,93 @@ int main() {
   }
   return 0;
 }
+
+// keep the sparse version in linear scratchpad and dense version in the
+// banked scratchpad -- Is it good decision?
+// For compute phase, we need old_vert_dist in sparse format, edge in dense
+// format, new_vert_dist in dense (no need to rd)
+// For apply phase, we need both old_vert_dist and new_vert_dist in dense
+// format
+/*
+void mv_complete(long tid) {
+
+  int start_col = tid*EFF_VERT_PER_THREAD;
+  int end_col = (tid+1)*EFF_VERT_PER_THREAD; // not sure if correct
+  bool should_iter=false;
+  int iter=0;
+  uint64_t active_list_size=1; // single source
+  // unsigned num_active_vert_per_core = prev_dist_ind[tid].size();
+  
+  // first send the pre-initialized stuff -- read from linear scratchpad
+  SS_SCRATCH_READ(getLinearAddr(getLinearOffset(0,2)), 2*active_list_size, P_bfs_prev_vert_dist);
+  // FIXME: need to make sure that this datawidth works
+  SS_SCRATCH_READ(getLinearAddr(getLinearOffset(1,2)), 2*active_list_size, P_IND_1);
+
+  do {
+
+    // num_active_vert_per_core = prev_dist_ind[tid].size();
+    // cout << "Active vertex for tid: " << tid << " and number of active vertex: " << num_active_vert_per_core << " and cur iter count: " << iter << endl;
+    cout << "Active vertex for tid: " << tid << " and cur iter count: " << iter << endl;
+    
+    SS_CONFIG_ATOMIC_SCR_OP(T16, T16, T16);
+    SS_ATOMIC_SCR_OP(P_bfs_addr, P_bfs_val, 0, offset[end_col]-offset[start_col], 2);  
+ 
+    // reading column/prev_vert_dist of active vertices
+    SS_VREPEAT_PORT(P_bfs_row_size2);
+    SS_RECURRENCE(P_bfs_pass2, P_bfs_prev_vert_dist, active_list_size);
+
+    // reading column/prev_vert_ind of active vertices
+    SS_CONFIG_INDIRECT1(T16,T16,2,1);
+    SS_INDIRECT(P_IND_1, &offset[0], active_list_size, P_bfs_offset_list);
+
+    SS_CONFIG_INDIRECT(T16,T16,2); // multiplier for offset
+    SS_INDIRECT_2D(P_bfs_start_ind, &neighbor[0], active_list_size, 2, 2, P_bfs_row_size1, P_bfs_dest_id);
+
+    uint16_t x;
+    SS_RECV(P_bfs_done, x);
+    SS_RESET();
+
+    SS_GLOBAL_WAIT();
+    SS_WAIT_ALL();
+
+    int num_dens_vert_per_core = V/NUM_THREADS;
+    SS_SCRATCH_READ(0, 2*num_dens_vert_per_core, P_bfs_prev_dens_dist);
+    // SS_CONST(P_bfs_prev_dens_dist, 1, 1); // padding
+    SS_CONST(P_bfs_prev_dens_dist, 0, 1); // padding
+    SS_CONST(P_bfs_cur_iter, iter+1, num_dens_vert_per_core+1); 
+    // Save it to linear scratchpad otherwise rd/wr problem?
+    // SS_RECURRENCE(P_bfs_prev_dist, P_bfs_prev_vert_dist, num_dens_vert_per_core);
+    // SS_RECURRENCE(P_bfs_prev_ind, P_IND_1, num_dens_vert_per_core);
+    // TODO: write in linear scratchpad
+    SS_SCR_WRITE(P_bfs_prev_dist, num_dens_vert_per_core*2, getLinearAddr(getLinearOffset(0,2)));
+    SS_SCR_WRITE(P_bfs_prev_ind, num_dens_vert_per_core*2, getLinearAddr(getLinearOffset(1,2)));
+    // can't i just wait on read streams to be done
+    active_list_size=0;
+    SS_RECV(P_bfs_active_list_size, active_list_size);
+    // Oh this will clear the incoming ports as well -- so maybe let it work
+    SS_RESET(); 
+    // it got values 967, 556
+    // cout << "New active list size: " << active_list_size << endl;
+
+    SS_GLOBAL_WAIT(); // not sure, just not to create issues
+    SS_WAIT_ALL();
+
+    SS_CONST(P_bfs_prev_vert_dist, 1, 1);
+    // TODO: may be wrong! because of endianness
+    SS_2D_CONST(P_IND_1, 24, 1, 13, 1, 1);
+    // SS_CONST(P_IND_1, 3352, 1);
+    // SS_CONST(P_IND_1, 0, 1);
+ 
+
+    // scratch read to the corresponding ports
+    SS_SCRATCH_READ(getLinearAddr(getLinearOffset(0,2)), 2*active_list_size, P_bfs_prev_vert_dist);
+    SS_SCRATCH_READ(getLinearAddr(getLinearOffset(1,2)), 2*active_list_size, P_IND_1);
+    SS_GLOBAL_WAIT();
+    SS_WAIT_ALL();
+
+    iter++;
+    should_iter = active_list_size!=0; // spu_resparsify();
+
+  } while(should_iter);
+}
+*/
