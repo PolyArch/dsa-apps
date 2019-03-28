@@ -12,7 +12,9 @@ Input16: cur_iter
 
 active_flag = ICmpEQ(prev_dens_dist, cur_iter)
 prev_dist = Keep16(prev_dens_dist, active_flag)
-prev_ind = Acc16(1, Mul16(Not(active_flag),2))
+inc_prev_ind = Acc16(1, Mul16(Not(active_flag),2))
+
+prev_ind = Sub16(inc_prev_ind,1)
 
 # phase2_signal = ICmpEQ(prev_dens_dist, 0) # iter won't be 0
 
@@ -42,8 +44,11 @@ addr = y dest_id2 dest_id3
 
 # check the sentinal
 end_signal = Add16(dest_id0, prev_vert_dist0)
+# flag = ICmpEq16(end_signal, 41)
+# done = Keep(1, flag)
+
 flag = ICmpEq16(end_signal, 3353)
-done = Keep(1, flag)
+done = Keep16(1, flag)
 
 pass2 = pass1
 # TODO: could be done using indirect ports
@@ -55,6 +60,7 @@ Output: addr
 Output16: row_size1
 Output16: row_size2
 Output16: start_ind
+# Output: done
 Output16: done
 
 Output16: pass2

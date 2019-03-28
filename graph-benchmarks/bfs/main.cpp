@@ -15,6 +15,8 @@
 #define NUM_VERT_PER_THREAD V/NUM_THREADS
 #define EFF_VERT_PER_THREAD (V/NUM_THREADS+1)
 
+#define MAX_ITER 4
+
 #define INF 65535
 
 using namespace std;
@@ -103,6 +105,9 @@ void mv_complete(long tid) {
   int end_col = (tid+1)*EFF_VERT_PER_THREAD; // not sure if correct
   int iter=0;
   uint64_t active_list_size=0; // no active vertex at start
+  
+  begin_roi();
+
   if(tid==0) {
     active_list_size=1; // single source
   }
@@ -110,17 +115,15 @@ void mv_complete(long tid) {
   
   // Just read const initial values to the first core
   if(tid==0) {
-    // SS_CONST(P_bfs_pass1, 0, 1);
     SS_DCONST(P_bfs_pass1, 0, 1, T16);
     SS_DCONST(P_IND_1, 0, 1, T16);
   }
 
   do {
 
-    // FIXME: this could not be pushed to cmd queue
     SS_DCONST(P_bfs_pass1, V, 1, T16);
     SS_DCONST(P_IND_1, end_col+NUM_THREADS-3, 1, T16);
-
+  
     // cout << "Active vertex for tid: " << tid << " and number of active vertex: " << num_active_vert_per_core << " and cur iter count: " << iter << endl;
     // cout << "Active vertex for tid: " << tid << " and cur iter count: " << iter << endl;
     
@@ -144,7 +147,8 @@ void mv_complete(long tid) {
     SS_RESET(); // should be that wait for outputs, clear all
     // SS_STREAM_RESET();
 
-    SS_GLOBAL_WAIT();
+    // SS_GLOBAL_WAIT();
+    SS_GLOBAL_WAIT(NUM_THREADS);
     // SS_WAIT_ALL();
     
     int num_dens_vert_per_core = V/NUM_THREADS;
@@ -163,19 +167,19 @@ void mv_complete(long tid) {
     active_list_size=0;
     SS_RECV(P_bfs_active_list_size, active_list_size);
 
-    // FIXME: there might be some issues with multiple barriers
-    // Basically it should not be issued until in use output ports are empty
     SS_STREAM_RESET(); // this should be a barrier in itself -- but anyways
     SS_WAIT_STREAMS(); // wait until all streams are done -- not for CGRA (just wait for above one)
-    
     // cout << "New active list size: " << active_list_size << endl;
 
     iter++;
-  } while(iter!=2); // Ideally, complete active list should be empty
+  } while(iter!=MAX_ITER); // Ideally, complete active list should be empty
   // } while(active_list_size!=0);
   
   SS_RESET(); // to reset last sentinals
   SS_WAIT_ALL();
+
+  end_roi();
+  sb_stats();
 }
 
 void read_input_file() {
@@ -195,8 +199,9 @@ void read_input_file() {
   while(fgets(linetoread, 5000, graph_file) != NULL) {
     std::string raw(linetoread);
     std::istringstream iss(raw.c_str());
-    uint16_t src, dst, wgt;
+    uint16_t src, dst;
     iss >> src >> dst; 
+    // cout << src << " " << dst << endl;
     ++e;
     
     if(src!=0 && pad_phase && src > 10) { // padded value: after a partition
@@ -252,13 +257,13 @@ void *entry_point(void *threadid) {
     // exit(-1);
   }
 
-  begin_roi();
+  // begin_roi();
   SS_CONFIG(bfs_config, bfs_size);
   preprocess_scratch_distance();
   // mv(tid);
   mv_complete(tid);
-  end_roi();
-  sb_stats();
+  // end_roi();
+  // sb_stats();
 
   cout << "Returned back with tid: " << tid << endl;
 

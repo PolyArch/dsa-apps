@@ -3,23 +3,27 @@
 import subprocess
 
 cases = []
-# file, N, M
-# cases.append(("datasets/very_small.data", 10, 136))
-# cases.append(("datasets/small_mslr.train", 50, 136))
-# cases.append(("datasets/binned_small_mslr.train", 100, 136))
-# cases.append(("datasets/mslr.train", 1000, 136))
-# cases.append(("datasets/mslr.train", 500, 136))
-cases.append(("datasets/mslr.train", 5000, 136))
-# cases.append(("datasets/test", 250, 136))
+# data_file, csr_file, V, E
+cases.append(("datasets/rome99_csr","datasets/rome_99",3352,8859))
+# cases.append(("datasets/fb_csr","datasets/fb_99",50516,1638612))
 
-subprocess.call('source ~/ss-stack/setup.sh', shell=True)
 
-for f, n, m in cases:
+
+for data_file, csr_file, v, e  in cases:
     subprocess.call('make clean', shell=True)
-    env = "file=\\\\\\\"%s\\\\\\\" N=%d M=%d" % (f, n, m)
-    print(env)
+    subprocess.call('make cleandata', shell=True)
+    env1 = "V=%d E=%d" % (v,e)
+    env2 = " data_file=\\\\\\\"%s\\\\\\\" csr_file=\\\\\\\"%s\\\\\\\"" % (data_file, csr_file)
+    env = env1 + env2
     subprocess.call('make %s' % env, shell=True)
+    subprocess.call('make csr %s' % env, shell=True)
     raw = subprocess.check_output('make run', shell=True).decode('utf-8')
+    
+    log_file = 'logs/%s.log' % ('x_%0.2f' % (syn_sp))
+    f = open(log_file,'w+')
+    f.write('%s' %raw)
+    f.close()
+
 
     cycles = None
     for line in raw.split('\n'):
@@ -28,8 +32,6 @@ for f, n, m in cases:
             break
 
     if cycles is None:
-        print(f, n, m, "???")
+        print(syn_sp, act_sp, "???")
     else:
-        print(f, n, m, cycles)
-
-    # subprocess.call('make clean', shell=True)
+        print(syn_sp, act_sp, cycles)

@@ -15,8 +15,7 @@
 #include "assert.h"
 using namespace std;
 
-#define V 3353
-#define NUM_THREADS 2
+#define VEC_WIDTH 4
 
 void read_input_file() {
   string str1(csr_file);
@@ -27,28 +26,35 @@ void read_input_file() {
 
   char linetoread[5000];
 
-  cout << "start reading graph input file!\n";
+  // cout << "start reading graph input file!\n";
   int tile = V/NUM_THREADS;
   int count = 1;
   int cur_border = count*tile;
+  --cur_border; // it has to be before next one starts
 
   while(fgets(linetoread, 5000, graph_file) != NULL) { // && csr_file1.is_open()) {
     std::string raw(linetoread);
     std::istringstream iss(raw.c_str());
     int src, dst, wgt;
     iss >> src >> dst >> wgt;  
-    // cout << src << dst << wgt << endl;
-    if(src>=cur_border) {
+    // cout << src << " " << dst << " " << wgt << endl;
+    // Instead of padding
+    if(dst>=V) dst = V-1;
+    if(src >= V) continue;
+    // if(src>=cur_border) { // should be after 1676
+    if(src>cur_border) { // should be after 1676
+      cout << "Current border is: " << cur_border << endl;
       cout << "IDENTIFIED BORDER, putting pad\n";
       // csr_file1 << "border" << endl;
-      for(int i=0; i<4; ++i) {
+      for(int i=0; i<2*VEC_WIDTH; ++i) {
         csr_file1 << "0 1" << endl;
       }
       cur_border = (++count)*tile;
+      --cur_border;
     }
     csr_file1 << src << " " << dst << endl;
   }
-  for(int i=0; i<4; ++i) {
+  for(int i=0; i<2*VEC_WIDTH; ++i) {
     csr_file1 << "0 1" << endl;
   }
 

@@ -1,30 +1,38 @@
 ifndef data_file
-data_file=\"../pagerank/datasets/rome99_csr\"
+# data_file=\"datasets/rome99_csr\"
+data_file=\"datasets/fb_csr\"
 endif
 
 ifndef csr_file
 # csr_file=\"datasets/bcspwr01.mtx\"
-csr_file=\"../pagerank/datasets/rome_99\"
+# csr_file=\"datasets/rome_99\"
+csr_file=\"datasets/fb_99\"
 endif
 
 ifndef C
-C=4
+C=8
+endif
+
+ifndef NUM_THREADS
+NUM_THREADS=2
 endif
 
 ifndef V
 # V=39
 # V=3353
-V=3352
+# V=3352
+V=50516
 endif
 
 ifndef E
 # E=85
-E=8859
+# E=8859
+E=1638612
 endif
 
 include /home/vidushi/ss-stack/ss-workloads/spu-benchmarks/common/Makefile.inc
 
-MACROS = -DV=$(V) -DE=$(E) -Dcsr_file=$(csr_file) -DC=$(C) -Ddata_file=$(data_file)
+MACROS = -DV=$(V) -DE=$(E) -Dcsr_file=$(csr_file) -DC=$(C) -Ddata_file=$(data_file) -DNUM_THREADS=$(NUM_THREADS)
 
 DFGS=bfs.dfg
 
