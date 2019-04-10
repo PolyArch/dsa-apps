@@ -28,7 +28,7 @@ void kernel() {
 
   // this should read 3*2 8-byte elements
   SS_CONFIG_INDIRECT(T16,T16,2);
-  SS_INDIRECT_2D(P_IND_2, &data_array[0], AWORDS, 8, 8, P_IND_3, P_none16_in);
+  SS_INDIRECT_2D(P_IND_2, &data_array[0], AWORDS, 2, 2, P_IND_3, P_none16_in);
 
   // for my case, this should be non-determinate
   SS_DMA_WRITE(P_none16_out,2,2,2*AWORDS,&output[0]);
