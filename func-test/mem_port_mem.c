@@ -3,8 +3,8 @@
 void test_new() {
   init();
   SS_CONFIG(none_config,none_size);
-  SS_DMA_RD_INNER(in, ASIZE, sizeof(DTYPE), P_none_in);
-  SS_DMA_WR_INNER(out, ASIZE, sizeof(DTYPE), P_none_out);
+  SS_DMA_RD_INNER(in, ASIZE * sizeof(DTYPE), P_none_in);
+  SS_DMA_WR_INNER(out, ASIZE * sizeof(DTYPE), P_none_out);
   SS_WAIT_ALL();
 }
 
