@@ -53,29 +53,31 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
   SS_CONST(P_aplygvs_mat1, *((uint64_t*) &b), 1);
   SS_CONST(P_aplygvs_mat2, *((uint64_t*) (d + 0)), 1);
   SS_CONST(P_aplygvs_mat3, *((uint64_t*) (f + 0)), 1);
-  SS_DMA_READ(f + 1, 8, 8, n - 2, P_aplygvs_F);
-  SS_CONST(P_aplygvs_F, 0, 1);
-  SS_DMA_READ(d + 1, 8, 8, n - 1, P_aplygvs_D);
+  //SS_DMA_READ(f + 1, 8, 8, n - 2, P_aplygvs_F);
+  //SS_DMA_READ(d + 1, 8, 8, n - 1, P_aplygvs_D);
   SS_GARBAGE(P_aplygvs_F_, 1);
   SS_DMA_WRITE(P_aplygvs_F_, 8, 8, n - 2, f);
   SS_DMA_WRITE(P_aplygvs_D_, 8, 8, n - 1, d);
 
   for (int i = 1; i < n - 1; ++i) {
-    //complex<float> buffer[4];
-    //SS_RECV(P_aplygvs_mat_, buffer[0]);
-    //SS_RECV(P_aplygvs_mat_, buffer[1]);
-    //SS_RECV(P_aplygvs_mat_, buffer[2]);
-    //SS_RECV(P_aplygvs_mat_, buffer[3]);
-    //std::cout << buffer[0] << ", " << buffer[1] << ", " << buffer[2] << ", " << buffer[3] << "\n";
-    //SS_CONST(P_aplygvs_mat, *((uint64_t*) (buffer + 0)), 1);
-    //SS_CONST(P_aplygvs_mat, *((uint64_t*) (buffer + 1)), 1);
-    //SS_CONST(P_aplygvs_mat, *((uint64_t*) (buffer + 2)), 1);
-    //SS_CONST(P_aplygvs_mat, *((uint64_t*) (buffer + 3)), 1);
+    SS_CONST(P_aplygvs_F, *((uint64_t*)(f + i)), 1);
+    SS_CONST(P_aplygvs_D, *((uint64_t*)(d + i)), 1);
 
-    SS_RECURRENCE(P_aplygvs_mat_0, P_aplygvs_mat0, 1);
-    SS_RECURRENCE(P_aplygvs_mat_1, P_aplygvs_mat1, 1);
-    SS_RECURRENCE(P_aplygvs_mat_2, P_aplygvs_mat2, 1);
-    SS_RECURRENCE(P_aplygvs_mat_3, P_aplygvs_mat3, 1);
+    complex<float> buffer[4];
+    SS_RECV(P_aplygvs_mat_0, buffer[0]);
+    SS_RECV(P_aplygvs_mat_1, buffer[1]);
+    SS_RECV(P_aplygvs_mat_2, buffer[2]);
+    SS_RECV(P_aplygvs_mat_3, buffer[3]);
+    //std::cout << buffer[0] << ", " << buffer[1] << ", " << buffer[2] << ", " << buffer[3] << "\n";
+    SS_CONST(P_aplygvs_mat0, *((uint64_t*) (buffer + 0)), 1);
+    SS_CONST(P_aplygvs_mat1, *((uint64_t*) (buffer + 1)), 1);
+    SS_CONST(P_aplygvs_mat2, *((uint64_t*) (buffer + 2)), 1);
+    SS_CONST(P_aplygvs_mat3, *((uint64_t*) (buffer + 3)), 1);
+
+    //SS_RECURRENCE(P_aplygvs_mat_0, P_aplygvs_mat0, 1);
+    //SS_RECURRENCE(P_aplygvs_mat_1, P_aplygvs_mat1, 1);
+    //SS_RECURRENCE(P_aplygvs_mat_2, P_aplygvs_mat2, 1);
+    //SS_RECURRENCE(P_aplygvs_mat_3, P_aplygvs_mat3, 1);
 
     SS_REPEAT_PORT(N);
     SS_RECURRENCE(P_aplygvs_rot0, P_aplygvs_C, 1);
@@ -92,6 +94,8 @@ void implicit_kernel(complex<float> *d, complex<float> *f, complex<float> *v, in
     //SS_RECV(P_aplygvs_rot, s);
     //std::cout << c << ", " << s << std::endl;
   }
+  SS_CONST(P_aplygvs_F, 0, 1);
+  SS_CONST(P_aplygvs_D, *((uint64_t*)(d + n - 1)), 1);
 
   //SS_GARBAGE(P_aplygvs_D_, 1);
   //SS_GARBAGE(P_aplygvs_F_, 1);

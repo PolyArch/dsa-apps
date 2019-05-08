@@ -16,7 +16,7 @@ endif
 
 DFG = compute.dfg loader.dfg
 
-SOFTBRAINS = sb-origin sb-new sb-latency
+SOFTBRAINS = sb-origin sb-new sb-latency sb-limited
 
 SCALE=$(N) $(M) $(P)
 
@@ -29,7 +29,7 @@ endif
 include ../common/Makefile.inc
 
 # The GeMM implemented in both old Softbrain and REVEL.
-sb-origin.o sb-new.o: %.o: %.cc compute.dfg.h loader.dfg.h
+sb-origin.o sb-new.o sb-limited.o: %.o: %.cc compute.dfg.h loader.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
 sb-latency.o: %.o: %.cc compute.dfg.h loader.dfg.h
