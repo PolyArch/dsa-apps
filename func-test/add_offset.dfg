@@ -1,10 +1,22 @@
-Input: A[2]
-Input: const
+Input16: A [4]
+Input16: const [4]
 
-C0 = A0
-C1 = Add64(A0,64)
-D0 = A1
-D1 = const
+temp1 = A0 A1
+temp2 = const0 const1
+C = temp1 A2 A3
+D = temp2 const0 const1
 
-Output: C[2]
-Output: D[2]
+Output: C
+Output: D
+
+
+# Input: A[2]
+# Input: const
+# 
+# C0 = A0
+# C1 = Add64(A0,64)
+# D0 = A1
+# D1 = const
+# 
+# Output: C[2]
+# Output: D[2]

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "none.dfg.h"
 #include "none16.dfg.h"
+#include "none16_vec.dfg.h"
 #include "check.h"
 #include "ss_insts.h"
 #include "../common/include/sim_timing.h"

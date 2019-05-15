@@ -10,13 +10,23 @@ struct item_array {
   uint64_t item4;
 } array[LEN];
 
+uint64_t ind_array[LEN];
+uint64_t known[LEN*3];
+uint64_t output[LEN*3];
+
+void kernel() {
+  SS_DMA_READ(&ind_array[0],8,8,LEN,P_IND_1);
+
+  //itype, dtype, mult, offset
+  SS_CONFIG_INDIRECT2(T64,T64,sizeof(item_array), 2, 3);  //2 offsets for item 3 and item 4
+  SS_INDIRECT(P_IND_1,&array[0],LEN,P_none_in);
+
+  SS_DMA_WRITE(P_none_out,8,8,LEN*3,&output[0]);
+  SS_WAIT_ALL();
+}
+
 int main(int argc, char* argv[]) {
   init();
-
-  uint64_t ind_array[LEN];
-  uint64_t known[LEN*3];
-  uint64_t output[LEN*3];
-
 
   for(int i = 0; i<LEN; ++i) {
     array[i].item1 = i+1;
@@ -37,15 +47,9 @@ int main(int argc, char* argv[]) {
 
   SS_CONFIG(none_config,none_size);
 
+  kernel();
   begin_roi();
-  SS_DMA_READ(&ind_array[0],8,8,LEN,P_IND_1);
-
-  //itype, dtype, mult, offset
-  SS_CONFIG_INDIRECT2(T64,T64,sizeof(item_array), 2, 3);  //2 offsets for item 3 and item 4
-  SS_INDIRECT(P_IND_1,&array[0],LEN,P_none_in);
-
-  SS_DMA_WRITE(P_none_out,8,8,LEN*3,&output[0]);
-  SS_WAIT_ALL();
+  kernel();
   end_roi();
 
   compare<uint64_t>(argv[0],output,known,(int)LEN);

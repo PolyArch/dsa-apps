@@ -12,7 +12,8 @@ int main(int argc, char* argv[]) {
 
   SS_CONFIG(add1_config,add1_size);
 
-  for(int i = 0; i < 3; ++i) {
+  // for(int i = 0; i < 3; ++i) {
+  for(int i = 1; i < 2; ++i) {
     if(i==1) {
       begin_roi();
     }
