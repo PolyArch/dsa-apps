@@ -16,8 +16,8 @@ TESTS=$(TESTS_SMALL) $(TESTS_MEDIUM) $(TESTS_LARGE) $(TESTSN)
 
 all: bin $(TESTS) 
 
-# CPP=riscv64-unknown-elf-g++
-CPP=riscv64-unknown-linux-gnu-g++ 
+CPP=riscv64-unknown-elf-g++
+#CPP=riscv64-unknown-linux-gnu-g++ 
 
 DFGS = $(wildcard *.dfg)
 DFG_HEADERS = $(DFGS:.dfg=.dfg.h)

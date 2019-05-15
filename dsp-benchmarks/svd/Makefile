@@ -9,7 +9,7 @@ SCALE=$(N)
 
 MACROS=-D _N_=$(N)
 
-SOFTBRAINS = sb-origin sb-new sb-access sb-conc
+SOFTBRAINS = sb-origin sb-new sb-access sb-conc sb-limited
 
 include ../common/Makefile.inc
 
@@ -20,4 +20,7 @@ sb-conc.o: %.o: %.cc  sb-new.cc hhr.dfg.h fused.dfg.h aplygvs.dfg.h finalize.dfg
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
 sb-new.o: sb-new.cc hhr.dfg.h fused.dfg.h aplygvs.dfg.h finalize.dfg.h
+	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
+
+sb-limited.o: sb-limited.cc hhr.dfg.h fused.dfg.h aplygvs.dfg.h finalize.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3

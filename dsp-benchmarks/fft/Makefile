@@ -1,10 +1,10 @@
 ifndef N
-N=1024
+N=64
 endif
 
 DFG = compute0.dfg compute1.dfg compute_rec.dfg compute.dfg manager.dfg fine2.dfg fine1.dfg manager8.dfg fine.dfg
 
-SOFTBRAINS = sb-origin sb-new sb-multi sb-reconfig sb-256
+SOFTBRAINS = sb-origin sb-new sb-multi sb-reconfig sb-256 sb-limited
 
 SCALE=$(N)
 
@@ -18,7 +18,7 @@ include ../common/Makefile.inc
 sb-reconfig.o sb-origin.o: %.o: %.cc compute.dfg.h fine2.dfg.h fine1.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
-sb-multi.o sb-new.o: %.o: %.cc manager.dfg.h compute.dfg.h fine2.dfg.h fine1.dfg.h manager8.dfg.h
+sb-limited.o sb-multi.o sb-new.o: %.o: %.cc compute.dfg.h fine2.dfg.h fine1.dfg.h #manager8.dfg.h manager.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
 sb-256.o: %.o: %.cc compute.dfg.h fine.dfg.h

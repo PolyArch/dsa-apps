@@ -39,21 +39,29 @@ void cholesky(complex<float> *a, complex<float> *L) {
     int n = N - i;
     int padded = (n - 1 + (n & 1));
 
-    SS_RECURRENCE(P_multi2_O, P_multi2_VAL, 1);
+    complex<float> aii;
+    SS_RECV(P_multi2_O, aii);
+    //SS_RECURRENCE(P_multi2_O, P_multi2_VAL, 1);
     SS_SCR_WRITE(P_multi2_O, padded * 8, addr);
+    SS_CONST(P_multi2_VAL, *((uint64_t*)&aii), 1);
 
     SS_SCR_WRITE(P_multi2_O, n * n / 2 * 8, array);
 
     SS_WAIT_SCR_WR();
 
-    SS_REPEAT_PORT(n - 1);
-    SS_RECURRENCE(P_multi2_invsqrt, P_multi2_DIV, 1);
+    //SS_REPEAT_PORT(n - 1);
+    //SS_RECURRENCE(P_multi2_invsqrt, P_multi2_DIV, 1);
+    uint64_t T_T;
+    SS_RECV(P_multi2_invsqrt, T_T);
+    SS_CONST(P_multi2_DIV, T_T, n - 1);
     SS_SCRATCH_READ(addr, (n - 1) * 8, P_multi2_VEC);
     SS_DMA_WRITE(P_multi2_fin, 8 * N, 8, (n - 1), L + (i + 1) * N + i);
     SS_DMA_WRITE(P_multi2_sqrt, 0, 8, 1, L + i * N + i);
 
-    SS_REPEAT_PORT(n * n / 4);
-    SS_RECURRENCE(P_multi2_invpure, P_multi2_V, 1);
+    //SS_REPEAT_PORT(n * n / 4);
+    //SS_RECURRENCE(P_multi2_invpure, P_multi2_V, 1);
+    SS_RECV(P_multi2_invpure, T_T);
+    SS_CONST(P_multi2_V, T_T, n * n / 4);
     SS_FILL_MODE(STRIDE_ZERO_FILL);
     SS_SCR_PORT_STREAM_STRETCH(addr, 8, 8 * (n - 1), -8, (n - 1), P_multi2_B);
     SS_FILL_MODE(NO_FILL);

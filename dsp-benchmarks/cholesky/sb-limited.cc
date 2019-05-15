@@ -39,8 +39,11 @@ void cholesky(complex<float> *a, complex<float> *L) {
     int n = N - i;
     int padded = (n - 1 + (n & 1));
 
-    SS_RECURRENCE(P_multi2_O, P_multi2_VAL, 1);
+    complex<float> aii;
+    SS_RECV(P_multi2_O, aii);
+    //SS_RECURRENCE(P_multi2_O, P_multi2_VAL, 1);
     SS_SCR_WRITE(P_multi2_O, padded * 8, addr);
+    SS_CONST(P_multi2_VAL, *((uint64_t*)&aii), 1);
 
     SS_SCR_WRITE(P_multi2_O, n * n / 2 * 8, array);
 

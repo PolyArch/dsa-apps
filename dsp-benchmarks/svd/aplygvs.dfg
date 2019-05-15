@@ -31,7 +31,10 @@ Output: O1
 
 Input: D #d[i+1]
 Input: F #f[i+1]
-Input: mat[4]
+Input: mat0
+Input: mat1
+Input: mat2
+Input: mat3
 
 # mat[0] = (f[i-1] || something - mu)
 # mat[1] = b
@@ -142,7 +145,11 @@ fccc  = FAddSub32x2(rfccc, ifccc)
 mat_3 = CplxMulCons(fccc, 3212836864)
 #mat_3 = NegCplxMulConj(F, cc);
 
-Output: rot[2]
-Output: mat_[4]
+Output: rot0
+Output: rot1
+Output: mat_0
+Output: mat_1
+Output: mat_2
+Output: mat_3
 Output: D_
 Output: F_
