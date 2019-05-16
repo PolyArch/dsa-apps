@@ -1,0 +1,23 @@
+Input8: A
+
+# B = Add8(A,2)
+B = A
+
+Output8: B
+
+# Input:A
+# # Input:B
+# 
+# B = Add64(A,2)
+# 
+# # B0 = Add64(A0,2)
+# # B1 = Add64(A1,2)
+# # B2 = Add64(A2,2)
+# # B3 = Add64(A3,2)
+# # B4 = Add64(A4,2)
+# # B5 = Add64(A5,2)
+# # B6 = Add64(A6,2)
+# # B7 = Add64(A7,2)
+# 
+# Output: B
+# # Output: B [8]
