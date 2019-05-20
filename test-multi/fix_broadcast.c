@@ -1,43 +1,41 @@
-#include <pthread.h>
-#include <stdio.h>
 #include <assert.h>
-#include "/home/vidushi/ss-stack/ss-tools/include/ss-intrin/ss_insts.h"
-#include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
-#include "/home/vidushi/ss-stack/ss-workloads/common/include/net_util_func.h"
-#include "none_8.dfg.h"
+#include "testing.h"
+#include "none.dfg.h"
 
-#define NUM_THREADS 2
+#define NUM_THREADS 4
 
-#define N 8
+#define N 4096
+#define T 2
+#define VTYPE uint64_t
+int c=1;
 
-uint64_t a[2*N];
-uint64_t b[2*N];
+VTYPE a[N];
+VTYPE b[NUM_THREADS*N];
 
 // Barrier variable
 pthread_barrier_t barr;
 
-
+// read from memory->core with tid=0, then broadcast to all other cores
 void remPort(long tid) {
 
   uint64_t mask=0;
   for(int i=1; i<NUM_THREADS; ++i) addDest(mask,i);
 
-   begin_roi();
-   SS_CONFIG(none_8_config,none_8_size);
-   SS_STRIDE(1,1);
+   if(c==T) begin_roi();
+   SS_CONFIG(none_config,none_size);
    if(tid==0){
-     SS_DMA_READ_SIMP(&a[tid*N], N, P_none_8_A);
-     SS_REM_PORT(P_none_8_B, N, mask, P_none_8_A);
-     SS_DMA_READ_SIMP(&a[tid*N], N, P_IND_1);
-     SS_REM_PORT(P_IND_1, N, mask, P_IND_1);
+     SS_DMA_READ(&a[0], 8, 8, N, P_none_in);
+     SS_REM_PORT(P_none_out, N, mask, P_none_in);
    } else {
-     SS_DMA_WRITE_SIMP(P_IND_1, N, &b[0]);
-     SS_DMA_WRITE_SIMP(P_none_8_B, N, &b[0]);
+     SS_DMA_WRITE(P_none_out, 8, 8, N, &b[tid*N]);
    }
    SS_WAIT_ALL();
+   // SS_GLOBAL_WAIT(); // this will give approx equal cycles
 
-   end_roi();
-   sb_stats();
+   if(c==T) {
+     end_roi();
+     sb_stats();
+   }
 }
 
 void *entry_point(void *threadid) {
@@ -51,18 +49,16 @@ void *entry_point(void *threadid) {
      printf("Could not wait on barrier\n");
      // exit(-1);
    }
-
+ 
    remPort(tid);
-   // pthread_exit(NULL);
    return NULL;
 }
 
 
 int main(){
   // data generation
-  for(uint64_t i=0; i<N; i++){
+  for(int i=0; i<N; i++){
     a[i] = i;
-    b[i] = i;
   }
   
   // assert(NUM_THREADS<C);
@@ -78,19 +74,24 @@ int main(){
   int rc;
   long t;
   
-  for(t=0;t<NUM_THREADS;t++){
-    printf("In main: creating thread %ld\n", t);
-    rc = pthread_create(&threads[t], NULL, entry_point, (void *)t);
-    if (rc){
-      printf("ERROR; return code from pthread_create() is %d\n", rc);
-	  return 0;
+
+  for(int r=1; r<=T; ++r) {
+    c=r;
+    for(t=0;t<NUM_THREADS;t++){
+      printf("In main: creating thread %ld\n", t);
+      rc = pthread_create(&threads[t], NULL, entry_point, (void *)t);
+      if (rc){
+        printf("ERROR; return code from pthread_create() is %d\n", rc);
+        return 0;
+      }
     }
-  }
-   
-  for(int i = 0; i < NUM_THREADS; ++i) {
-    if(pthread_join(threads[i], NULL)) {
-  	printf("Could not join thread %d\n", i);
-      return -1;
+     
+    // this is a barrier or not?
+    for(int i = 0; i < NUM_THREADS; ++i) {
+      if(pthread_join(threads[i], NULL)) {
+    	printf("Could not join thread %d\n", i);
+        return -1;
+      }
     }
   }
 

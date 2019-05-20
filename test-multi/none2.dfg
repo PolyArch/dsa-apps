@@ -1,12 +1,5 @@
-Input: ind_in
+Input16: A 
 
-ind_out=ind_in
+B = Add16(A,2)
 
-Output: ind_out
----
-
-Input: in
-out=in
-
-Output: out
-
+Output16: B

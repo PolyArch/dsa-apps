@@ -5,18 +5,15 @@
 #define VTYPE uint64_t
 // #define GSIZE 1024*128*1024
 // #define GSIZE 1024*128*128
-#define GSIZE 1024
+#define GSIZE 3276800
 // #define GSIZE 512
 // #define NUM_THREADS	1
-#define NUM_THREADS	5
+#define NUM_THREADS	1
 // #define NUM_THREADS	3
 
 // Barrier variable
 pthread_barrier_t barr;
 char* giant_array;
-// uint64_t giant_array[GSIZE];
-// uint32_t giant_array[GSIZE];
-// char giant_array[GSIZE];
 
 void compute(long tid) {
   int n = GSIZE/NUM_THREADS;
@@ -27,35 +24,11 @@ void compute(long tid) {
 #if ACCEL == 1
   // accelerated version
   SS_CONFIG(none_config,none_size);
-  // SS_DMA_READ(&giant_array[3], 8, 8, n/8, P_none_in);
-  // SS_DMA_WRITE(P_none_out, 8, 8, n/8, &giant_array[3]);
  
   SS_DMA_READ(&giant_array[(tid*n)], 8, 8, n/8, P_none_in);
-  // SS_DMA_READ(&giant_array[3], 8, 8, n/8, P_none_in);
-  // SS_SCR_WRITE(P_none_out, 8*(n/8), 0);
   SS_DMA_WRITE(P_none_out, 8, 8, n/8, &giant_array[(tid*n/8)*8]);
-  // SS_DMA_WRITE(P_none_out, 8, 8, n/8, &giant_array[(tid*n)]);
-  // SS_DMA_READ(&giant_array[(tid*n/8)*8], 8, 8, n/8, P_none_in);
-  // SS_DMA_WRITE(P_none_out, 8, 8, n/8, &giant_array[(tid*n/8)*8]);
   SS_WAIT_ALL();
  
-  /*
-  if(tid<2) {
-  // if(1) {
-    // accelerated version
-    SS_CONFIG(none_config,none_size);
-    SS_DMA_READ(&giant_array[tid*n], 8, 8, n/8, P_none_in);
-    // SS_SCRATCH_READ(0, 8*(n/8), P_none_in);
-    SS_DMA_WRITE(P_none_out, 8, 8, n/8, &giant_array[tid*n]);
-    // SS_SCR_WRITE(P_none_out, 8*(n/8), 0);
-    SS_WAIT_ALL();
-  } else {
-    SS_CONFIG(none_config,none_size);
-    SS_SCRATCH_READ(0, 8*(n/8), P_none_in);
-    SS_SCR_WRITE(P_none_out, 8*(n/8), 0);
-    SS_WAIT_ALL();
-  }
-  */
   
 #else
   // non-accelerated version

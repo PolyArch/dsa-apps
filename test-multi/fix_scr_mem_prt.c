@@ -1,33 +1,27 @@
 #include "testing.h"
 #define NUM_THREADS	2
 
-#define VTYPE uint64_t
+#define N 8
 
-#define N 128
-
-VTYPE a[2*N];
-VTYPE b[2*N];
-VTYPE c[2*N];
-VTYPE d[2*N];
+uint16_t a[2*N];
+uint16_t b[2*N];
+uint16_t c[2*N];
+uint16_t d[2*N];
 // Barrier variable
 pthread_barrier_t barr;
 
-// copy from a port to a global scratchpad location
-void execute_code(long tid) {
-  int d = sizeof(VTYPE);
-
+void scr_rem_port_code(long tid) {
    begin_roi();
-   SS_CONFIG(none_config,none_size);
+   SS_CONFIG(none2_config,none2_size);
    if(tid==0){
-	 SS_DMA_READ(&a[0], d, d, N, P_none_in);
-     SS_REM_SCRATCH(32768, d, d, N, P_none_out, 0);
+	 SS_DMA_READ(&a[0], 2, 2, N, P_none2_A);
+	 SS_SCR_WRITE(P_none2_B, N*2, 0);
+	 SS_WAIT_SCR_WR();
+	 SS_SCR_REM_PORT(0, N*2, 2, P_none2_A);
    } else if(tid==1){
-     SS_WAIT_DF(N*d,0); // 64-bytes will be written
-     SS_SCRATCH_READ(0, N*d, P_none_in);
-	 SS_DMA_WRITE(P_none_out, d, d, N, &b[0]);
+	 SS_DMA_WRITE(P_none2_B, 2, 2, N, &b[0]);
    }
    SS_WAIT_ALL();
-   
    end_roi();
    sb_stats();
 }
@@ -45,14 +39,14 @@ void *entry_point(void *threadid) {
      // exit(-1);
    }
 
-   execute_code(tid);
+   scr_rem_port_code(tid);
    return NULL;
 }
 
 
 int main(){
   // What should changing this matter?
-  for(VTYPE i=0; i<N; i++){
+  for(uint16_t i=0; i<N; i++){
     a[i] = i;
     b[i] = i;
     c[i] = i;
@@ -90,3 +84,4 @@ int main(){
    
   return 0;
 };
+

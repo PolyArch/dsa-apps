@@ -29,7 +29,7 @@ IFLAGS = -I$(SS)/ss-tools/include/ss-intrin
 bin:
 	mkdir -p bin
 
-# not even doing this
+# It should not be executed if no dfg is changed?
 $(DFG_HEADERS): %.dfg.h: %.dfg
 	$(RISCV)/bin/ss_sched -a sa $(SBCONFIG) $<
 

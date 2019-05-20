@@ -1,13 +1,19 @@
 #include <stdio.h>
+#include <iostream>
+#include <pthread.h>
+#include <cassert>
 #include "none.dfg.h"
 #include "none16.dfg.h"
 #include "none16_vec.dfg.h"
+#include "none2.dfg.h"
 #include "check.h"
-#include "ss_insts.h"
+#include "/home/vidushi/ss-stack/ss-tools/include/ss-intrin/ss_insts.h"
+#include "/home/vidushi/ss-stack/ss-workloads/common/include/net_util_func.h"
 #include "../common/include/sim_timing.h"
 #include <inttypes.h>
 #include <stdlib.h>
 
+using namespace std;
 
 //top level should define ASIZE
 
