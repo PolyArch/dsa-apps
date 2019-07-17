@@ -29,7 +29,7 @@ bin:
 	mkdir -p bin
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
-	$(RISCV)/bin/ss_sched -a sa $(SBCONFIG) $<
+	$(RISCV)/bin/ss_sched -v -a sa $(SBCONFIG) $<
 
 OPT?=-O3
 CFLAGS=$(OPT) -g -ggdb -gdwarf-3 -static --std=c++11

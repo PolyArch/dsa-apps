@@ -1,5 +1,5 @@
 #!/bin/bash
-export SBCONFIG=$SS_TOOLS/configs/revel-1x2.sbmodel
+export SBCONFIG=$SS/ss-scheduler/configs/revel-1x2.sbmodel
 
 #export LD_LIBRARY_PATH=~/ss-stack/ss_tools/lib
 
