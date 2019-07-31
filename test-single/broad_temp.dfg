@@ -1,0 +1,9 @@
+#pragma group temporal
+
+Input64: A
+Input64: B[2]
+
+C0 = Add64(A, B0)
+C1 = Add64(A, B1)
+
+Output64: C[2]
