@@ -14,9 +14,9 @@ P=64
 endif
 
 
-DFG = compute.dfg loader.dfg
+DFG = compute.dfg loader.dfg temporal.dfg
 
-SOFTBRAINS = sb-origin sb-new sb-latency sb-limited
+SOFTBRAINS = sb-origin sb-new sb-latency sb-limited sb-ds
 
 SCALE=$(N) $(M) $(P)
 
@@ -33,4 +33,7 @@ sb-origin.o sb-new.o sb-limited.o: %.o: %.cc compute.dfg.h loader.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
 sb-latency.o: %.o: %.cc compute.dfg.h loader.dfg.h
+	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
+
+sb-ds.o: sb-ds.cc temporal.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
