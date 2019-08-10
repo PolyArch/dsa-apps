@@ -48,12 +48,12 @@ mms = FRed32x2(mms_)
 F_ = RealSqrt(mms)
 #F_ = CplxGivensRes(mat0, mat1)
 
-cc = CplxConj(mat0)
-c = CplxDivCons(cc, F_)
+cjmat0 = CplxConj(mat0)
+c = CplxDivCons(cjmat0, F_)
 #c = CplxGivensCos(mat0, mat1)
 
-ss = CplxConj(mat1)
-s = CplxDivCons(ss, F_)
+cjmat1 = CplxConj(mat1)
+s = CplxDivCons(cjmat1, F_)
 #s = CplxGivensSin(mat0, mat1)
 
 rmat2c = FMul32x2(mat2, c)

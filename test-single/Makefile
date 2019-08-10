@@ -39,9 +39,9 @@ $(TESTSN):  bin/% : %.c $(DFG_HEADERS) $(HEADERS) bin
 	 $(CPP) $< $(LIB) $(CFLAGS) $(IFLAGS) -o $@ -DASIZE=16
 
 $(TESTS_SMALL): bin/%_36 : %.c  $(DFG_HEADERS) $(HEADERS) bin
-	 $(CPP) $< $(LIB) $(CFLAGS) $(IFLAGS) -o $@ -DASIZE=12
+	 $(CPP) $< $(LIB) $(CFLAGS) $(IFLAGS) -o $@ -DASIZE=36
 $(TESTS_MEDIUM): bin/%_128 : %.c  $(DFG_HEADERS)  $(HEADERS) bin
-	 $(CPP) $< $(LIB) $(CFLAGS) $(IFLAGS) -o $@ -DASIZE=500
+	 $(CPP) $< $(LIB) $(CFLAGS) $(IFLAGS) -o $@ -DASIZE=128
 $(TESTS_LARGE): bin/%_2048 : %.c  $(DFG_HEADERS)  $(HEADERS) bin
 	 $(CPP) $< $(LIB) $(CFLAGS) $(IFLAGS) -o $@ -DASIZE=2048
 
