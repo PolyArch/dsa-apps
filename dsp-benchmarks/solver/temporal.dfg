@@ -43,3 +43,20 @@ O2 = FSub32x2(VV2, TMP2)
 O3 = FSub32x2(VV3, TMP3)
 
 Output: O [4]
+
+----
+#pragma group temporal
+
+Input: IN [4]
+
+a0 = Add64(IN0, 2)
+a1 = Add64(IN1, 2)
+a2 = Add64(IN2, 2)
+a3 = Add64(IN3, 2)
+
+OUT0 = Mul64(a0, 2)
+OUT1 = Mul64(a1, 2)
+OUT2 = Mul64(a2, 2)
+OUT3 = Mul64(a3, 2)
+
+Output: OUT [4]

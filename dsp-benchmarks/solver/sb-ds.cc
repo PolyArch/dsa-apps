@@ -50,6 +50,9 @@ void solver(complex<float> *a, complex<float> *v) {
     SS_GARBAGE(P_temporal_O, last_pad);
 
     last_pad = pad;
+
+    SS_CONST(P_temporal_IN, 0, (N - i) + (4 - (N - i) % 4));
+    SS_GARBAGE(P_temporal_OUT, (N - i) + (4 - (N - i) % 4));
   }
   //SS_GARBAGE(P_temporal_Y_X_REC, 1);
   SS_WAIT_ALL();

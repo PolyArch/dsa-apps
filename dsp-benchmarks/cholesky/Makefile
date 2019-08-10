@@ -9,7 +9,7 @@ SCALE=$(N)
 
 MACROS=-D_N_=$(N)
 
-SOFTBRAINS = sb-origin sb-new sb-latency sb-access sb-mask sb-lmask sb-limited sb-idiom sb-ds
+SOFTBRAINS = sb-origin sb-new sb-latency sb-access sb-mask sb-lmask sb-limited sb-idiom sb-ds sb-ds-lat
 
 include ../common/Makefile.inc
 
@@ -25,5 +25,5 @@ sb-latency.o: %.o: %.cc multi2.dfg.h
 sb-new.o sb-mask.o sb-lmask.o sb-limited.o sb-idiom.o: %.o: %.cc multi2.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
-sb-ds.o: sb-ds.cc temporal.dfg.h
+sb-ds.o sb-ds-lat.o: %.o: %.cc temporal.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3

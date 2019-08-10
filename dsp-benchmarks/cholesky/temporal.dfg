@@ -51,7 +51,8 @@ Output: fin
 
 Input: IN
 
-OUT = IN
+i0 = Add64(IN, 1)
+
+OUT = Mul64(i0, 1)
 
 Output: OUT
-

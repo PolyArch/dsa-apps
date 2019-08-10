@@ -21,16 +21,18 @@ void gemm(int n, int m, int p, complex<float> *a, complex<float> *b, complex<flo
     SS_RECURRENCE(P_compute_O, P_compute_C, p * (m - 1));
     SS_SCR_PORT_STREAM(0    , 0, 8 * m * p, 1, P_compute_B);
 
-    SS_STRIDE(8, 8);
+    //SS_STRIDE(8, 8);
 
     complex<float> *_c = c + io * p;
     complex<float> *_a = a + io * m;
 
     SS_CONTEXT_OFFSET(255, p);
-    SS_DMA_WRITE_SIMP(P_compute_O, p, _c);
+    SS_DMA_WRITE(P_compute_O, 8, 8, p, _c);
+    //SS_DMA_WRITE_SIMP(P_compute_O, p, _c);
     SS_CONTEXT_OFFSET(255, m)
     SS_REPEAT_PORT(p / 4);
-    SS_DMA_READ_SIMP(_a, m, P_compute_A);
+    SS_DMA_READ(_a, 8, 8, m, P_compute_A);
+    //SS_DMA_READ_SIMP(_a, m, P_compute_A);
     SS_CONTEXT_OFFSET(255, 0);
   }
 

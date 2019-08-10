@@ -6,13 +6,13 @@ ifndef M
 M=37
 endif
 
-DFG = compute.dfg loader.dfg
+DFG = compute.dfg loader.dfg temporal.dfg
 
 DFG_HEADERS=$(DFG:.dfg=.h)
 
 SCALE = $(N) $(M)
 
-SOFTBRAINS = sb-new sb-origin sb-ideal sb-latency sb-limited
+SOFTBRAINS = sb-new sb-origin sb-ideal sb-latency sb-limited sb-ds
 
 MACROS=-D_N_=$(N) -D_M_=$(M)
 
@@ -27,3 +27,5 @@ include ../common/Makefile.inc
 sb-limited.o sb-origin.o sb-new.o sb-ideal.o sb-latency.o: %.o: %.cc compute.dfg.h loader.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
+sb-ds.o: %.o: %.cc temporal.dfg.h loader.dfg.h
+	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3

@@ -35,5 +35,5 @@ sb-origin.o sb-new.o sb-limited.o: %.o: %.cc compute.dfg.h loader.dfg.h
 sb-latency.o: %.o: %.cc compute.dfg.h loader.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
 
-sb-ds.o: sb-ds.cc temporal.dfg.h
+sb-ds.o: sb-ds.cc temporal.dfg.h loader.dfg.h
 	$(CC) $< -o $@ -c $(MACROS) $(IFLAGS) -O3
