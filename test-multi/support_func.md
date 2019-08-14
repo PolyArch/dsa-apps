@@ -73,6 +73,10 @@ Spu message entries declared here: mem/protocol/MI_example-msg.sm
 For broadcast, its fully pipelined, rate is limited by the memory bandwidth
 (just getting 1 byte/cycle?)
 
+# HACKS (need information of number of cores (machinetype_num, and for threads, pass through SS_GLOBAL_WAIT(N)
+
+* num_threads in ssim.cc
+* required for global barrier in src/sim/process.hh
 
 # Current limitations/Known bugs
 
