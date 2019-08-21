@@ -1,9 +1,6 @@
 #!/bin/bash
 export SBCONFIG=$SS/ss-scheduler/configs/revel-1x2.sbmodel
 
-#export LD_LIBRARY_PATH=~/ss-stack/ss_tools/lib
-
-
 > fail_list 
 > pass_list
 > lock
@@ -12,8 +9,6 @@ function run_test {
   test=$1
 
   BACKCGRA=1 LINEAR_SCR=1 timeout 10 gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=64kB --l1i_size=16kB  --caches  --cmd=$test 
-  # BACKCGRA=1 SUPRESS_STATS=1 timeout 10 gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=64kB --l1i_size=16kB  --caches  --cmd=$test 
-  # BACKCGRA=1 SUPRESS_STATS=1 timeout 10 gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=64kB --l1i_size=16kB --caches --ruby --num-cpus=16 --num-dirs=16 --network=simple --topology=Mesh_XY --mesh-rows=2 --cmd=$test
   
   ret_val=$?
   { 
@@ -38,10 +33,15 @@ export -f run_test
 
 if [ -z "$1" ]; then
   make clean
+
+  for i in *.dfg; do
+    echo "Scheduling DFG " $i.h
+    make $i.h
+  done
+
   make -j8
 
   echo "Test all the cases!"
-  #for i in `ls ind*.c | grep -v fix | grep -v unalign`; do
   for i in `ls *.c | grep -v "fix_" | grep -v unalign`; do
     for l in 36 128 2048; do
       test=bin/`basename $i .c`_$l

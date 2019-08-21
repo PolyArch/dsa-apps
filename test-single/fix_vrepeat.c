@@ -13,7 +13,7 @@ int main(int argc, char* argv[]) {
   for(int i=0; i<AWORDS; ++i) {
     repeat[i]=1;
     data_array[i]=i*2;
-    out[i]=i*2; known[i]=i*2;
+    known[i]=i*2;
   }
 
   SS_CONFIG(none_config,none_size);
