@@ -25,14 +25,9 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *tau) {
     SS_FILL_MODE(STRIDE_ZERO_FILL);
     SS_SCRATCH_READ(r_trans_spad + 8, 8 * (n - 1), P_temporal0_M);
     SS_SCRATCH_READ(r_trans_spad + 8, 8 * (n - 1), P_temporal0_V);
-    SS_CONST(P_temporal0_Coef, _one_in_bit, 1);
+    SS_CONST(P_temporal0_Coef, _one_in_bit, n12);
     SS_CONST(P_temporal0_reset, 2, n12 - 1);
     SS_CONST(P_temporal0_reset, 1, 1);
-
-    // debug (0)
-    //SS_GARBAGE(P_temporal0_O, 1);
-    //SS_WAIT_ALL();
-    //return;
 
     SS_RECURRENCE(P_temporal0_O, P_temporal0_NORM, 1);
     SS_SCRATCH_READ(r_trans_spad, 8, P_temporal0_HEAD);
@@ -48,17 +43,15 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *tau) {
     SS_SCR_PORT_STREAM(r_trans_spad + 8, 8, 8, n - 1, P_temporal0_V);
     SS_CONST(P_temporal0_reset, 1, n - 1);
 
-    //SS_REPEAT_PORT((n - 1) * n2);
-    SS_REPEAT_PORT(n - 1);
+    SS_REPEAT_PORT((n - 1) * n2);
     SS_RECURRENCE(P_temporal0_TAU1, P_temporal0_Coef, 1); //tau
-    //SS_GARBAGE(P_temporal0_TAU1, 1); // for debugging (1)
+    //SS_GARBAGE(P_temporal0_TAU1, 1); // for debugging
     
     //SS_CONST_SCR(w_spad, _one_in_bit, 1);
     SS_SCR_WRITE(P_temporal0_O, 8 * (n - 1), w_spad + 8);
 
     SS_WAIT_SCR_WR();
-    //SS_WAIT_ALL(); // for debug(1)
-    //return; // for debug(1)
+    //SS_WAIT_ALL();
 
     SS_SCR_PORT_STREAM(w_spad, 0, 8 * n, n - 1, P_temporal0_M);
     SS_SCR_PORT_STREAM(r_trans_spad, 8 * n, 8 * n, n - 1, P_temporal0_V);
@@ -75,22 +68,16 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *tau) {
     if (n - 1 == 1) {
       SS_DMA_WRITE(P_temporal0_R, 0, 8, 1, a + N * N - 1);
     } else {
-      SS_SCR_WRITE(P_temporal0_R, 8 * (n - 1) * (n - 2), r_trans_spad);
+      SS_SCR_WRITE(P_temporal0_R, 8 * (n - 1) * (n - 1), r_trans_spad);
     }
     SS_DMA_WRITE(P_temporal0_FIN, 8, 8, n - 1, a + i * N + i + 1);
     SS_GARBAGE(P_temporal0_R, (n - 1) * (n % 2));
 
     SS_WAIT_SCR_WR();
 
-    if (i == 0) {
-      SS_WAIT_ALL();
-      return;
-    }
-
     w_spad -= (n - 1) * 8;
   }
   SS_WAIT_ALL();
-  return;
 
   w_spad += 8;
   SS_CONFIG(temporal1_config, temporal1_size);

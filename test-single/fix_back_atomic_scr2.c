@@ -34,8 +34,8 @@ int main() {
     //SS_INDIRECT(P_IND_1, &x[0], N/2, P_add_offset_A);
     SS_DMA_READ(&x[0], 8, 8, N, P_add_offset_A);
 
-    SS_CONST(P_add_offset_const, 1, N/2);
-
+    SS_CONST(P_add_offset_const, 1, N / 2);
+    SS_CONFIG_ATOMIC_SCR_OP(T64, T64, T64);
     SS_ATOMIC_SCR_OP(P_add_offset_C, P_add_offset_D, 0, N, 0);
     //SS_WAIT_SCR_WR();
     //SS_DMA_WRITE(P_add_offset_C,8,8,N,&output[0]);
@@ -47,10 +47,10 @@ int main() {
 
   }
 
-    SS_WAIT_ALL();
+  SS_WAIT_ALL();
 
-    end_roi();
-    sb_stats();
+  end_roi();
+  sb_stats();
 
 
   //SS_WAIT_ALL();
