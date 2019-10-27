@@ -4,7 +4,7 @@ SBCONFIG=$(SS_TOOLS)/configs/spu_merge_test.sbmodel
 endif
 
 ifndef N
-N=144
+N=1 # put it equal to the vector width
 endif
 
 ifndef M
@@ -31,10 +31,10 @@ CFLAGS=$(OPT) -g -ggdb -gdwarf-3
 #--std=c++11 
 LFLAGS = -lm
 
-input_activations.data: gen_activations.py 
+input_activations.data: gen_activations.py # gen_activations.py 
 	python $< $(M) $(act_sp)
 
-input_weights.data: gen_weights.py 
+input_weights.data: gen_weights.py # gen_weights.py 
 	python $< $(N) $(M) $(syn_sp)
 
 cpu: cpu.cpp input_activations.data input_weights.data

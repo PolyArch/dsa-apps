@@ -4,7 +4,7 @@ SBCONFIG=$(SS_TOOLS)/configs/spu_merge_test.sbmodel
 endif
 
 ifndef N
-N=4
+N=64
 endif
 
 ifndef M

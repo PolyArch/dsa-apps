@@ -1,0 +1,31 @@
+Input16: wval0
+Input16: wind0
+Input16: aval
+Input16: aind
+
+# 0: match, 1,2: mismatch, 3: both end
+P0 = IndexMatch16(wind0,aind)
+
+# may need to keep a control table here (let it go if 0 or 3)
+# Oh, should this also has the backpressure thing on?
+temp = Keep16(wind0, 1, control=P0{1:d,2:d|b1,3:d})
+match_ind1 = temp
+match_ind2 = temp
+
+E0 = Mul16(wval0,aval)
+
+# Does this only receive less results? Yes!
+acc_ctrl = Keep16(P0, 1, control=P0{1:d,2:d})
+
+# E0 should have 1+matched outputs
+temp2 = Acc16(E0,0,control=acc_ctrl{0:d})
+
+out_val = temp2
+
+# done = Keep16(1,P0,control=P0{0:d,1:d,2:d})
+done = Keep16(temp2,1)
+ 
+Output16: out_val
+Output16: match_ind1
+Output16: match_ind2
+Output16: done

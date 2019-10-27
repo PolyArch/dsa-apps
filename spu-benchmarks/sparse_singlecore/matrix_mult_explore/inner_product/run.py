@@ -4,15 +4,16 @@ import subprocess
 
 cases = []
 # wgt_sp, n_sp
+cases.append((0.05,0.05))
 # cases.append((0.07,0.3))
 # cases.append((0.08,0.5))
 # cases.append((0.09,0.7))
 # cases.append((0.09,0.9))
-# cases.append((0.1,1))
+cases.append((0.1,1))
 # cases.append((0.67,0.3))
 # cases.append((0.80,0.5))
 # cases.append((0.86,0.7))
-cases.append((0.75,0.75))
+# cases.append((0.75,0.75))
 # cases.append((1,1))
 
 
