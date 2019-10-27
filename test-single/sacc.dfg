@@ -1,0 +1,8 @@
+Input: a
+Input: signal
+Input: b
+
+c = Acc64(a, signal);
+d = Mul64(c, b)
+
+Output: d

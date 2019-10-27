@@ -17,31 +17,28 @@ TESTS=$(TESTS_SMALL) $(TESTS_MEDIUM) $(TESTS_LARGE) $(TESTSN)
 all: bin $(TESTS) 
 
 CPP=riscv64-unknown-elf-g++
-#CPP=riscv64-unknown-linux-gnu-g++ 
 
 DFGS = $(wildcard *.dfg)
 DFG_HEADERS = $(DFGS:.dfg=.dfg.h)
 HEADERS = testing.h check.h
 IFLAGS = -I$(SS)/ss-tools/include/ss-intrin
-#${info $(DFG_HEADERS)}
 
 bin:
 	mkdir -p bin
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
-	$(RISCV)/bin/ss_sched -v -a sa $(SBCONFIG) $<
+	ss_sched -v -a sa $(SBCONFIG) $<
 
 OPT?=-O3
 CFLAGS=$(OPT) -g -ggdb -gdwarf-3 -static --std=c++11
-#--std=c++11 
 
 $(TESTSN):  bin/% : %.c $(DFG_HEADERS) $(HEADERS) bin
 	 $(CPP) $< $(LIB) $(CFLAGS) $(IFLAGS) -o $@ -DASIZE=16
 
 $(TESTS_SMALL): bin/%_36 : %.c  $(DFG_HEADERS) $(HEADERS) bin
-	 $(CPP) $< $(LIB) $(CFLAGS) $(IFLAGS) -o $@ -DASIZE=12
+	 $(CPP) $< $(LIB) $(CFLAGS) $(IFLAGS) -o $@ -DASIZE=36
 $(TESTS_MEDIUM): bin/%_128 : %.c  $(DFG_HEADERS)  $(HEADERS) bin
-	 $(CPP) $< $(LIB) $(CFLAGS) $(IFLAGS) -o $@ -DASIZE=500
+	 $(CPP) $< $(LIB) $(CFLAGS) $(IFLAGS) -o $@ -DASIZE=128
 $(TESTS_LARGE): bin/%_2048 : %.c  $(DFG_HEADERS)  $(HEADERS) bin
 	 $(CPP) $< $(LIB) $(CFLAGS) $(IFLAGS) -o $@ -DASIZE=2048
 

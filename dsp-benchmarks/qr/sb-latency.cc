@@ -68,7 +68,7 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *tau) {
     SS_DMA_READ(w, 0, 8 * n, n - 1, P_l_rdfg_M);
     if (i) {
       SS_SCR_PORT_STREAM(r_trans_spad, 8 * n, 8 * n, 1, P_l_rdfg_V);
-      SS_STRIDE(8 * n, 8 * n);
+      SS_SET_ITER(n);
       SS_RECURRENCE_PAD(P_l_rdfg_Out0, P_l_rdfg_V, n * (n - 2));
       SS_GARBAGE(P_l_rdfg_Out0, n);
       SS_FILL_MODE(STRIDE_ZERO_FILL);
@@ -102,7 +102,7 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *tau) {
       SS_CONTEXT(1 << (acc + 1));
         //if (i == 1) {
         SS_FILL_MODE(STRIDE_ZERO_FILL);
-        SS_STRIDE(8 * n, 8 * n);
+        SS_SET_ITER(n);
         SS_RECURRENCE_PAD(P_l_qdfg__Out0, P_l_qdfg_V, n * N);
         SS_DMA_READ(w, 0, 8 * n, N, P_l_qdfg_M);
         SS_CONST(P_l_qdfg_Coef, *((uint64_t*)(tau + i)), ((n - 1) / 2 + 1) * N);
@@ -110,9 +110,9 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *tau) {
         SS_REPEAT_PORT((n - 1) / 2 + 1);
         SS_RECURRENCE(P_l_qdfg_O, P_l_qdfg_A, N);
         SS_FILL_MODE(STRIDE_DISCARD_FILL);
-        SS_STRIDE(8 * n, 8 * n);
+        SS_SET_ITER(n);
         SS_RECURRENCE_PAD(P_l_qdfg__Out1, P_l_qdfg_C, n * N);
-        SS_STRIDE(8 * n, 8 * n);
+        SS_SET_ITER(n);
         SS_DMA_READ(w, 0, 8 * n, N, P_l_qdfg_B);
         SS_CONST(P_l_qdfg_Signal, 1, N);
         SS_DMA_WRITE(P_l_qdfg_Q, 8 * N, 16, N, q + i);
@@ -120,13 +120,13 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *tau) {
         //SS_GARBAGE(P_l_qdfg_Q, (n - 1) * N);
         //}
     } else {
-      SS_STRIDE(8 * (n - 1), 8 * (n - 1));
+      SS_SET_ITER(n - 1);
       SS_XFER_RIGHT_PAD(P_l_rdfg_R, P_l_qdfg_In, (n - 1) * (n - 1));
       //SS_SCR_WRITE(P_l_rdfg_R, 8 * (n - 1) * (n - 1), r_trans_spad);
 
       ++acc;
       SS_CONTEXT(1 << acc);
-      SS_STRIDE(8 * (n - 1), 8 * (n - 1));
+      SS_SET_ITER(n - 1);
       SS_XFER_RIGHT(P_l_qdfg_Out, P_l_rdfg_In, (n - 1) * (n - 1));
 
       if (!i) {
@@ -149,7 +149,7 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *tau) {
       } else {
         //if (i == 1) {
         SS_FILL_MODE(STRIDE_ZERO_FILL);
-        SS_STRIDE(8 * n, 8 * n);
+        SS_SET_ITER(n);
         SS_RECURRENCE_PAD(P_l_qdfg__Out0, P_l_qdfg_V, n * N);
         SS_DMA_READ(w, 0, 8 * n, N, P_l_qdfg_M);
         SS_CONST(P_l_qdfg_Coef, *((uint64_t*)(tau + i)), ((n - 1) / 2 + 1) * N);
@@ -157,9 +157,9 @@ void qr(complex<float> *a, complex<float> *q, complex<float> *tau) {
         SS_REPEAT_PORT((n - 1) / 2 + 1);
         SS_RECURRENCE(P_l_qdfg_O, P_l_qdfg_A, N);
         SS_FILL_MODE(STRIDE_DISCARD_FILL);
-        SS_STRIDE(8 * n, 8 * n);
+        SS_SET_ITER(n);
         SS_RECURRENCE_PAD(P_l_qdfg__Out1, P_l_qdfg_C, n * N);
-        SS_STRIDE(8 * n, 8 * n);
+        SS_SET_ITER(n);
         SS_DMA_READ(w, 0, 8 * n, N, P_l_qdfg_B);
         SS_2D_CONST(P_l_qdfg_Signal, 0, 1, 1, (n - 1) / 2, N);
         SS_DMA_WRITE(P_l_qdfg_FIN, 8 * N, 8, N, q + i);

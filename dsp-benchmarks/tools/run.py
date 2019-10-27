@@ -76,8 +76,9 @@ def run(sizes, template, softbrains, log = 'log'):
                 with open(log, 'a') as f:
                     res = ('%s %s %s ' % (env, sb, cycle)) + str(accel)
                     f.write(res + '\n')
-            except:
+            except Exception as e:
                 print('%s %s error occur!\n' % (env, sb))
+                print(e)
                 quit()
 
 
