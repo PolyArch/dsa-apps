@@ -1,5 +1,7 @@
-import imp
-output = imp.load_source('output', '../common/output.py')
+class output:
+    def print_complex_array(filename, array):
+        open(filename, 'w').writelines(['%f %f\n' % (i.real, i.imag) for i in array])
+
 
 def round(a):
     return a.real.astype('int16') + a.imag.astype('int16') * 1j

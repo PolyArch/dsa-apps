@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
-import sys, numpy, random, imp
+import sys, numpy, random
 from math import sin, cos, pi 
-output = imp.load_source('output', '../common/output.py')
+
+class output:
+    def print_complex_array(filename, array):
+        open(filename, 'w').writelines(['%f %f\n' % (i.real, i.imag) for i in array])
 
 n = int(sys.argv[1])
 m = int(sys.argv[2])
@@ -10,7 +13,7 @@ m = int(sys.argv[2])
 if not (m % 2):
     exit()
 
-numpy.set_printoptions(suppress = True, precision = 4., linewidth = 180, threshold = numpy.nan)
+numpy.set_printoptions(suppress = True, precision = 4., linewidth = 180)
 
 a = numpy.random.rand(n).astype('complex64') + 1j * numpy.random.rand(n).astype('complex64')
 b = numpy.random.rand(m // 2).astype('complex64') + 1j * numpy.random.rand(m // 2).astype('complex64')
