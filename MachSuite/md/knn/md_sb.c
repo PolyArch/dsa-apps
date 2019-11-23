@@ -7,7 +7,7 @@ In Proceedings of the 3rd Workshop on General-Purpose Computation on Graphics Pr
 
 #include "md.h"
 #include "md_sb.dfg.h"
-#include "../../../common/include/ss_insts.h"
+#include <ss-intrin/ss_insts.h>
 
 void md_kernel(TYPE force_x[nAtoms],
                TYPE force_y[nAtoms],
@@ -35,10 +35,15 @@ void md_kernel(TYPE force_x[nAtoms],
          i_y = position_y[i];
          i_z = position_z[i];
 
-         SS_DMA_READ(&NL[i*maxNeighbors],8,8,maxNeighbors,P_IND_TRIP0);
-         SS_INDIRECT(P_IND_TRIP0,&position_x[0],maxNeighbors,P_md_sb_jx);
-         SS_INDIRECT(P_IND_TRIP1,&position_y[0],maxNeighbors,P_md_sb_jy);
-         SS_INDIRECT(P_IND_TRIP2,&position_z[0],maxNeighbors,P_md_sb_jz);
+         SS_ADD_PORT(P_IND_1);
+         SS_ADD_PORT(P_IND_2);
+         SS_DMA_READ(&NL[i*maxNeighbors],8,8,maxNeighbors,P_IND_3);
+         SS_CONFIG_INDIRECT(T64, T64, 8);
+         SS_INDIRECT(P_IND_1,&position_x[0],maxNeighbors,P_md_sb_jx);
+         SS_CONFIG_INDIRECT(T64, T64, 8);
+         SS_INDIRECT(P_IND_2,&position_y[0],maxNeighbors,P_md_sb_jy);
+         SS_CONFIG_INDIRECT(T64, T64, 8);
+         SS_INDIRECT(P_IND_3,&position_z[0],maxNeighbors,P_md_sb_jz);
 
          //SS_DMA_READ(&NL[i*maxNeighbors],8,8,maxNeighbors,P_IND_1);
          //SS_INDIRECT64(P_IND_1,&position_x[0],maxNeighbors,P_md_sb_jx);

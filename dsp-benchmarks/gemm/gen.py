@@ -1,6 +1,9 @@
+class output:
+    def print_complex_array(filename, array):
+        open(filename, 'w').writelines(['%f %f\n' % (i.real, i.imag) for i in array])
+
 import sys, numpy, imp
 from math import sin, cos, pi 
-output = imp.load_source('output', '../common/output.py')
 
 n = int(sys.argv[1])
 m = int(sys.argv[2])

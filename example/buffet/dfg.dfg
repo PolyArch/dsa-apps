@@ -1,0 +1,22 @@
+Input: a [8]
+Input: b
+Input: c [8]
+
+d0 = Mul64(a0, b)
+d1 = Mul64(a1, b)
+d2 = Mul64(a2, b)
+d3 = Mul64(a3, b)
+d4 = Mul64(a4, b)
+d5 = Mul64(a5, b)
+d6 = Mul64(a6, b)
+d7 = Mul64(a7, b)
+o0 = Add64(c0, d0)
+o1 = Add64(c1, d1)
+o2 = Add64(c2, d2)
+o3 = Add64(c3, d3)
+o4 = Add64(c4, d4)
+o5 = Add64(c5, d5)
+o6 = Add64(c6, d6)
+o7 = Add64(c7, d7)
+
+Output: o [8]
