@@ -17,20 +17,23 @@ SB_SRCS=$(KERN_SB).c local_support.c ../../common/support.c
 SB_FILES=$(SB_SRCS) $(KERN).h ../../common/support.h
 
 SB_CPP=riscv64-unknown-elf-g++
-#SB_CONFIG=$(SS_TOOLS)/configs/diannao_simd64_half.sbmodel
-SB_CONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
+#SBCONFIG=$(SS_TOOLS)/configs/diannao_simd64_half.sbmodel
+SBCONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 
 DFGS=ellpack.dfg
 DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
-	$(SS_TOOLS)/bin/sb_sched $(SB_CONFIG) $<
+	$(SS_TOOLS)/bin/ss_sched $(SBCONFIG) $<
 
 $(KERN_SB): $(SB_FILES) ../../common/harness.c $(DFG_HEADERS) 
-		$(SB_CPP) $(CFLAGS) -I../../common -o $(KERN_SB) $(SB_SRCS) ../../common/harness.c -DSB
+	$(SB_CPP) $(CFLAGS) -I../../common -I$(SS_TOOLS)/include -o $(KERN_SB) $(SB_SRCS) ../../common/harness.c -lm -I ../../../common/include
 
-run_sb: $(KERN_SB) input.data check.data
-	SBCONFIG=$(SB_CONFIG) spike  --ic=128:4:64 --dc=128:4:64 --l2=1024:8:64  --extension=softbrain $(SS_TOOLS)/riscv64-unknown-elf/bin/pk  ./$(KERN_SB) input.data check.data
+sim.log: $(KERN_SB) input.data check.data
+	SBCONFIG=$(SBCONFIG) BACKCGRA=1 FU_FIFO_LEN=15 \
+	gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=MinorCPU \
+	--l1d_size=16kB --l1d_assoc=4 --l1i_size=8kB --l2_size=32kB --caches \
+	--cmd=./$(KERN_SB) --options="input.data check.data" | tee $@
 
 run_r5: $(KERN_R5) input.data check.data
 	SBCONFIG=$(SB_CONFIG) spike  --ic=128:4:64 --dc=128:4:64 --l2=1024:8:64  --extension=softbrain $(SS_TOOLS)/riscv64-unknown-elf/bin/pk ./$(KERN_R5) input.data check.data

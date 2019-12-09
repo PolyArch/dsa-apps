@@ -6,7 +6,7 @@ Hong, Oguntebi, Olukotun. "Efficient Parallel Graph Exploration on Multi-Core CP
 
 #include "bfs.h"
 #include "bfs_sb.dfg.h"
-#include "../../../common/include/ss_insts.h"
+#include <ss-intrin/ss_insts.h>
 
 
 void bfs(node_t nodes[N_NODES], edge_t edges[N_EDGES],
@@ -23,7 +23,6 @@ void bfs(node_t nodes[N_NODES], edge_t edges[N_EDGES],
   level_counts[0] = 1;
 
   SS_CONFIG(bfs_sb_config,bfs_sb_size);
-  SS_STRIDE(8,8);
 
   //first iteration;
   n = starting_node;
@@ -31,18 +30,20 @@ void bfs(node_t nodes[N_NODES], edge_t edges[N_EDGES],
   edge_index_t tmp_end = nodes[n].edge_end;
   uint64_t size = tmp_end-tmp_begin;
 
-  SS_DMA_READ_SIMP(&edges[tmp_begin].dst,size,P_IND_DOUB0);
-  SS_INDIRECT64(P_IND_DOUB0,&level[0],size,P_bfs_sb_L);
+  SS_ADD_PORT(P_IND_2);
+  SS_DMA_READ(&edges[tmp_begin].dst,8,8,size,P_IND_1);
+  SS_CONFIG_INDIRECT(T64, T64, 8);
+  SS_INDIRECT(P_IND_1,&level[0],size,P_bfs_sb_L);
 
   SS_CONST(P_bfs_sb_reset,0,size-1);
   SS_CONST(P_bfs_sb_reset,1,1); //RESET
 
   SS_CONST(P_bfs_sb_H,horizon,size);
 
-  SS_GARBAGE_SIMP(P_bfs_sb_CNT,size-1);
+  SS_GARBAGE(P_bfs_sb_CNT,size-1);
   SS_DMA_WRITE(P_bfs_sb_CNT,8,8,1,&cnt); //Get value of output
 
-  SS_INDIRECT64_WR(P_IND_DOUB1,&level[0],size,P_bfs_sb_NewL);
+  SS_INDIRECT_WR(P_IND_2,&level[0],size,P_bfs_sb_NewL);
 
   SS_WAIT_ALL();
 
@@ -66,14 +67,17 @@ void bfs(node_t nodes[N_NODES], edge_t edges[N_EDGES],
         //printf("node %ld is on horizon, ",n);
         //printf("with %lld edges \n",size);
 
-        SS_DMA_READ_SIMP(&edges[tmp_begin].dst,size,P_IND_DOUB0);
-        SS_INDIRECT64(P_IND_DOUB0,&level[0],size,P_bfs_sb_L);
+        SS_ADD_PORT(P_IND_2);
+        SS_DMA_READ(&edges[tmp_begin].dst,8,8,size,P_IND_1);
+        SS_CONFIG_INDIRECT(T64, T64, 8);
+        SS_INDIRECT(P_IND_1,&level[0],size,P_bfs_sb_L);
 
         SS_CONST(P_bfs_sb_reset,0,size);
         SS_CONST(P_bfs_sb_H,horizon,size);
-        SS_GARBAGE_SIMP(P_bfs_sb_CNT,size);
+        SS_GARBAGE(P_bfs_sb_CNT,size);
 
-        SS_INDIRECT64_WR(P_IND_DOUB1,&level[0],size,P_bfs_sb_NewL);
+        SS_CONFIG_INDIRECT(T64, T64, 8);
+        SS_INDIRECT_WR(P_IND_2,&level[0],size,P_bfs_sb_NewL);
 
         //if((total_size&1)==0) { //EVEN NUMBER
         //  SS_WAIT_ALL();

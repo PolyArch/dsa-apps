@@ -62,7 +62,7 @@ SB_CONFIG=$(SS_TOOLS)/configs/diannao_simd64.sbmodel
 
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
-	$(SS_TOOLS)/bin/sb_sched --max-iters=100000 --verbose $(SB_CONFIG) $< 
+	$(SS_TOOLS)/bin/ss_sched --max-iters=100000 --verbose $(SB_CONFIG) $< 
 
 #conv1  Nx=500, Ny=375, Kx=9,  Ky=9,  Ni=32,  No=48,  priv=False
 #conv2  Nx=200, Ny=200, Kx=18, Ky=18, Ni=8,   No=8,   priv=True 

@@ -2,4 +2,6 @@ Input: in
 
 out=Add16x4(in,0x0001000100010001);
 
+#pragma conc=5
+#pragma dest=in
 Output: out
