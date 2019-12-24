@@ -96,17 +96,23 @@ const int port_wi[4] = {P_eie_wind0,1,2,3};
 
 
 
-
+// calculating inner product of number of columns = vector width (multiple
+// columns could overlap variable sized columns)
 void mv_merged(long tid) {
  
   int ncol = EIE_WIDTH;
 
   int i = tid*ncol;
+  // writing 2-byte dot products
   SS_SCR_WRITE(P_eie_out_val, 2*ncol, i*2);
 
   // extra multiplications which are required at end
-  SS_DCONST(P_eie_aval, 0, 1, T16);
-  SS_DCONST(port_wv[0], 0, 1, T16);
+  // SS_DCONST(P_eie_aval, 0, 1, T16);
+  // SS_DCONST(port_wv[0], 0, 1, T16);
+
+  SS_CONST(P_eie_aval, 0, 1);
+  SS_CONST(port_wv[0], 0, 1);
+
   // int stride=0; int scr_offset = getLinearOffset(1,2);
 
   // TODO: reading sparse activations from memory/banked scratchpad?
@@ -115,7 +121,8 @@ void mv_merged(long tid) {
   SS_CONFIG_INDIRECT(T16, T16, 2);
   SS_INDIRECT(P_eie_match_ind1, &act_val[0], act_val.size(), P_eie_aval);
 
-  // for(int r=0; r<4; ++r) {
+  // access corresponding columns from the weight matrix (actiation is reused
+  // EIE_WIDTH multiple times)
   for(int r=0; r<EIE_WIDTH; ++r) {
     // SS_DMA_READ(&wgt_val[i+r][0], 2, 2, wgt_val[i+r].size(), port_wv[r]);
     SS_DMA_READ(&wgt_ind[i+r][0], 2, 2, wgt_ind[i+r].size(), port_wi[r]);
@@ -123,11 +130,13 @@ void mv_merged(long tid) {
     SS_INDIRECT(P_eie_match_ind2, &wgt_val[i+r][0], wgt_val[i+r].size(), port_wv[r]);
   }
  
-  // dconst converted this to 0 somehow
-  SS_DCONST(P_eie_aind, SENTINAL16-1, 1, T16);
+  // sentinel required for the lists to complete
+  // SS_DCONST(P_eie_aind, SENTINAL16-1, 1, T16);
+  SS_CONST(P_eie_aind, SENTINAL16-1, 1);
 
   for(int r=0; r<EIE_WIDTH; ++r) {
-    SS_DCONST(port_wi[r], SENTINAL16-1, 1, T16);
+    SS_CONST(port_wi[r], SENTINAL16-1, 1);
+    // SS_DCONST(port_wi[r], SENTINAL16-1, 1, T16);
   }
   uint16_t x;
   SS_RECV(P_eie_done, x);

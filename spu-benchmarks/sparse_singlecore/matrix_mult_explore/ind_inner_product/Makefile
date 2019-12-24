@@ -8,7 +8,7 @@ N=1 # put it equal to the vector width
 endif
 
 ifndef M
-M=4096
+M=128 #4096
 endif
 
 TESTS=main

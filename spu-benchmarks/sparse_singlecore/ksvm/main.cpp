@@ -9,7 +9,7 @@
 #include "ksvm.dfg.h"
 #include "duality_gap.dfg.h"
 #include "eta.dfg.h"
-#include "/home/vidushi/ss-stack/ss-workloads/common/include/sb_insts.h"
+#include "/home/vidushi/ss-stack/ss-tools/include/ss-intrin/ss_insts.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/net_util_func.h"
 #include "/home/vidushi/ss-stack/ss-scheduler/src/config/fixed_point.h"
@@ -134,10 +134,9 @@ void eta_calc(long tid, int i, int j, double &dp, double &norm1, double &norm2){
   SS_2D_CONST(P_eta_const1, 2, (data_ind[i].size())/2-1, 1, 1, 1);
   SS_2D_CONST(P_eta_const2, 2, (data_ind[i].size())/2-1, 1, 1, 1);
   
-  SS_STRIDE(8,8);
-  SS_DMA_WRITE_SIMP(P_eta_n1, 1, &norm1);
-  SS_DMA_WRITE_SIMP(P_eta_n2, 1, &norm2);
-  SS_DMA_WRITE_SIMP(P_eta_s, 1, &dp);
+  SS_DMA_WRITE(P_eta_n1, 8, 8, 1, &norm1);
+  SS_DMA_WRITE(P_eta_n2, 8, 8, 1, &norm2);
+  SS_DMA_WRITE(P_eta_s, 8, 8, 1, &dp);
   SS_WAIT_ALL();
 
   // cout << "Eta calc done\n";
@@ -156,13 +155,13 @@ void calc_duality_gap(long tid, double b, double &duality_gap){
   SS_CONST(P_duality_gap_b, b, 1);
   SS_2D_CONST(P_duality_gap_const, 2, num_inst-1, 1, 1, 1);
 
-  SS_STRIDE(8,8);
-  SS_DMA_WRITE_SIMP(P_duality_gap_dgap, 1, &duality_gap);
+  SS_DMA_WRITE(P_duality_gap_dgap, 8, 8, 1, &duality_gap);
   SS_WAIT_ALL();
   // cout << "Duality calc done\n";
 }
 
-void kernel_err_update(long tid, int i, int j, double diff1, double diff2, double y1, double y2){
+void kernel_err_update(long tid, int i, int j, double diff1, double diff2, double y1, double y2)
+{
   
   if(data_val[i].size()==0 || data_val[j].size()==0)  return;
 
@@ -402,7 +401,7 @@ int main(){
 
   // SS_CONFIG(eta_config, eta_size);
   // load_linear_scratch(0);
-  train(0);
+  // train(0);
   begin_roi();
   train(0);
   end_roi();

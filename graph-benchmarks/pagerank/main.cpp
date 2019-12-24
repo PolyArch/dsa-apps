@@ -58,29 +58,16 @@ vector<uint64_t> neighbor; // matrix non-zero values
 void mv(long tid) {
 
   begin_roi();
-  // 0..1676 (both included), 1677..3353
   int start_col = tid*NUM_VERT_PER_THREAD;
   int end_col = (tid+1)*NUM_VERT_PER_THREAD; // not sure if correct
-  // assert((offset[end_col]-offset[start_col])%4==0 && "number of edges belonging to a core should be divisible by vectorization width");
-  // cout << "Elements corresponding to this: " << (offset[end_col]-offset[start_col]) << endl;
 
-  // int E = offset[end_col] - offset[start_col];
-  
-  // okay, this is number of tuples created and sent to local/remote
-  // SS_CONFIG_ATOMIC_SCR_OP(T16, T16, T16);
-  // atomic update of the page rank of vertices (location may be remote)
-
-  // this is equal to the number of atomic update requests to be sent
-  // Rest is satisfied by serving the bank queues...
+  // this is equal to the number of atomic update requests to be sent = number of edges
   SS_CONFIG_ATOMIC_SCR_OP(T64, T64, T64);
   SS_ATOMIC_SCR_OP(P_pr64_addr, P_pr64_val, 0, offset[end_col]-offset[start_col], 0);  
  
-  // SS_DMA_READ(&pr64ev_vertex_data[start_col], 2, 2, end_col-start_col, P_pr64_pass1);
   // read the page ranks of the active vertices in the previous iteration
   SS_DMA_READ(&prev_vertex_data[start_col], 8, 8, end_col-start_col, P_pr64_pass1);
 
-  // It is not picking up from here
-  // Why is repeat flag required where there is vrepeat port?
   // reuse times is data-dependent (source vertex is reused degree times for all its destination vertices)
   SS_VREPEAT_PORT(P_pr64_row_size2);
   SS_RECURRENCE(P_pr64_pass2, P_pr64_prev_vert_pr, end_col-start_col);
@@ -89,20 +76,12 @@ void mv(long tid) {
   // SS_VREPEAT_PORT(P_pr_row_size3);
   // SS_CONST(P_pr_R, 0, V);
 
-  // last should be V+1-V, ... V-V-1,...1..0
-  
-  // SS_DCONST(P_pr_offset_list0,offset[start_col],1, T16);
   // this is to calculate the degree (offset[start_col+1]-offset[start_col])
   SS_CONST(P_pr64_offset_list0,offset[start_col],1);
   SS_ADD_PORT(P_pr64_offset_list0); // while adding port, it gives 0
   SS_DMA_READ(&offset[start_col+1], 8, 8, end_col-start_col-1, P_pr64_offset_list1);
   SS_CONST(P_pr64_offset_list1,offset[end_col],1);
-  // SS_DMA_READ(&offset[start_col+1], 2, 2, end_col-start_col-1, P_pr_offset_list1);
 
-
-  // edge weight can be calculated inside dfg
-  // SS_CONFIG_INDIRECT(T16,T16,2); // multiplier for offset
-  // SS_INDIRECT_2D(P_pr64_start_ind, &neighbor[0], end_col-start_col, 2, 2, P_pr64_row_size1, P_pr64_dest_id);
   // accessing the neighbor array (initial index depends on the vertex)
   SS_CONFIG_INDIRECT(T64,T64,8); // multiplier for offset
   SS_INDIRECT_2D(P_pr64_start_ind, &neighbor[0], end_col-start_col, 8, 8, P_pr64_row_size1, P_pr64_dest_id);
@@ -180,14 +159,10 @@ void *entry_point(void *threadid) {
   if(rc != 0 && rc != PTHREAD_BARRIER_SERIAL_THREAD)
   {
     printf("Could not wait on barrier\n");
-    // exit(-1);
   }
 
   mv(tid);
  
-  // pthread_barrier_wait(&barr2);
-  // cout << "Returned back with tid: " << tid << endl;
-
   return NULL;
 }
  
@@ -202,8 +177,7 @@ void fix_offset() {
     int start_col = i*NUM_VERT_PER_THREAD;
     int end_col = (i+1)*NUM_VERT_PER_THREAD;
 
-    cout << "start col: " << start_col << " end col: " << end_col << endl;
-    // it says seg fault in accessing this?
+    // cout << "start col: " << start_col << " end col: " << end_col << endl;
     int modulo = (offset[end_col]-offset[start_col])%VEC_WIDTH;
     cout << "thread id: " << i << " start_offset: " << offset[start_col] << " end_offset: " << offset[end_col] << endl;
     if(modulo!=0) {
@@ -225,11 +199,9 @@ int main() {
   /*for(int i=0; i<V+1; ++i) {
     cout << "Offset at i: " << i << " is: " << offset[i] << endl;
   }*/
+
+  // make sure that each set of vertices has edges divisible by 4 (vector width)
   fix_offset();
-  // m5_work_begin(0,0);
-  // exit(0);
-  // pad_both_at_end();
-  // print_neighbor();
 
   // Barrier initialization
   if(pthread_barrier_init(&barr, NULL, NUM_THREADS))
@@ -238,25 +210,10 @@ int main() {
     return -1;
   }
 
-  /*if(pthread_barrier_init(&barr2, NULL, NUM_THREADS))
-  {
-    printf("Could not create a barrier\n");
-    return -1;
-  }*/
-
-/*
-  if(pthread_barrier_init(&barr3, NULL, TOTAL_NUM_THREADS))
-  {
-    printf("Could not create a barrier\n");
-    return -1;
-  }*/
- 
-  int final_num_threads = NUM_THREADS;
-  pthread_t threads[final_num_threads];
+  pthread_t threads[NUM_THREADS];
   int rc;
   long t;
-  cout << "FINAL num threads: " << final_num_threads << endl;
-  for(t=0;t<final_num_threads;t++){
+  for(t=0;t<NUM_THREADS;t++){
     printf("In main: creating thread %ld\n", t);
     rc = pthread_create(&threads[t], NULL, entry_point, (void *)t);
     if (rc){
@@ -265,33 +222,11 @@ int main() {
     }
   }
 
-  for(int i = 0; i < final_num_threads; ++i) {
+  for(int i = 0; i < NUM_THREADS; ++i) {
     if(pthread_join(threads[i], NULL)) {
   	printf("Could not join thread %d\n", i);
       return 0;
     }
   }
-  // m5_work_end(0,0);
   return 0;
 }
-
-// different barrier
-// SS_REM_PORT(P_pr_barrier_o, 1, mask, P_pr_barrier_i);
-// cr_base_addr, stride, access_size, num_strides, val_por    t, scratch_type
-/*
-SS_CONST(P_pr_barrier_i, 1, 1);
-SS_REM_SCRATCH(0, 8, 8, 1, P_pr_barrier_o, 0);
-SS_WAIT_DF(NUM_THREADS-1,0);
-*/
-/*
-SS_WAIT_ALL(); 
-// FIXME: 2 problems here: 1) doesn't work -- packet to core 1 is lost (god knows may skip -- can see later -- 2 streams ne send kiya router ko to gadbad ho gayi jaane dete hn) 2) it's wrong
-pthread_barrier_wait(&barr3);
-int k=16; // should be 1
-SS_CONST(P_pr_barrier_i, 1, k);
-SS_REM_PORT(P_pr_barrier_o, k, mask, P_pr_barrier_i2);
-// SS_REM_PORT(P_pr_barrier_o, 1, mask, P_pr_barrier_i2);
-SS_SCR_WRITE(P_pr_barrier_o2, (NUM_THREADS-1)*8*k, 0); // this should be garbage though
-
-SS_WAIT_ALL(); 
-*/

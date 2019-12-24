@@ -6,10 +6,10 @@ cases = []
 # file, N, M
 # cases.append(("datasets/small_connect.train", 126, 1000))
 # cases.append(("datasets/small_higgs.train", 28, 2000))
-cases.append(("datasets/small_cifar.train", 3072, 50))
+# cases.append(("datasets/small_cifar.train", 3072, 50))
 # cases.append(("datasets/small_ltrc.train", 700, 1000))
 # cases.append(("datasets/small_mslr.train", 136, 1000))
-# cases.append(("datasets/very_small.data", 84, 10))
+cases.append(("datasets/very_small.data", 84, 10))
 # cases.append(("datasets/small_adult.data", 84, 100))
 # cases.append(("datasets/diabetes.data", 8, 768))
 # cases.append(("datasets/connect-4.data", 126, 67584))
