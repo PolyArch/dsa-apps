@@ -16,8 +16,8 @@ TESTC=$(TESTS:=.cpp)
 
 all: $(TESTS)
 
-# CPP=riscv64-unknown-elf-g++
-CPP=riscv64-unknown-linux-gnu-g++
+CPP=riscv64-unknown-elf-g++
+# CPP=riscv64-unknown-linux-gnu-g++
 MACROS= -DN=$(N) -DM=$(M) -Dact_sp=$(act_sp) -Dsyn_sp=$(syn_sp) 
 GCC=g++
 
@@ -27,7 +27,7 @@ DFGS=eie.dfg
 DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 
 OPT?=-O3
-CFLAGS=$(OPT) -g -ggdb -gdwarf-3 
+CFLAGS=$(OPT) -g -ggdb -gdwarf-3 -I$(SS_TOOLS)/include
 #--std=c++11 
 LFLAGS = -lm
 
@@ -47,6 +47,7 @@ $(TESTS): % :%.cpp $(DFG_HEADERS) input_activations.data input_weights.data
 	 $(CPP) $< $(LIB) $(CFLAGS) $(MACROS) -static -o $@ $(LFLAGS)
 
 run:
+	DSCDIVLD=1 SBCONFIG=$(SBCONFIG) \
 	BACKCGRA=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=2048kB --l1i_size=16kB --caches --cmd=$(TESTS)
 	
 cleandata:

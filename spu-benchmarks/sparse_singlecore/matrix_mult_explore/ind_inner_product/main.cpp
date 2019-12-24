@@ -9,10 +9,9 @@
 #include <cstring>
 #include <map>
 #include "eie.dfg.h"
-#include "/home/vidushi/ss-stack/riscv-opcodes/ss_insts.h"
-#include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
-#include "/home/vidushi/ss-stack/ss-scheduler/src/config/fixed_point.h"
-#include "/home/vidushi/ss-stack/ss-workloads/common/include/net_util_func.h"
+#include "ss-intrin/ss_insts.h"
+#include "../../../../common/include/sim_timing.h"
+#include "../../../../common/include/net_util_func.h"
 #include <inttypes.h>
 #define NUM_THREADS	4
 #define EIE_WIDTH 1
