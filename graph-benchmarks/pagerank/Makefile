@@ -1,44 +1,81 @@
 ifndef data_file
 data_file=\"datasets/rome99_csr\"
+# data_file=\"example.csv\"
+# data_file=\"gem5_rome99.txt\"
+# data_file=\"lj_short.txt\"
+# data_file=\"lj_larger.txt\"
+# data_file=\"fb_gem5.txt\"
+# data_file=\"flickr_gem5.txt\"
+# data_file=\"roadny_gem5.txt\"
+# data_file=\"col_gem5.txt\"
+# data_file=\"lj_gem5_16.txt\"
 endif
 
 ifndef csr_file
 # csr_file=\"datasets/bcspwr01.mtx\"
 csr_file=\"datasets/rome_99\"
+# csr_file=\"example.csv\"
+# csr_file=\"gem5_rome99.txt\"
+# csr_file=\"lj_short.txt\"
+# csr_file=\"lj_larger.txt\"
+# csr_file=\"fb_gem5.txt\"
+# csr_file=\"flickr_gem5.txt\"
+# csr_file=\"roadny_gem5.txt\"
+# csr_file=\"col_gem5.txt\"
+# data_file=\"lj_gem5_16.txt\"
 endif
 
 ifndef C
-C=4
+C=16
 endif
 
 ifndef V
 # V=39
 # V=3353
 V=3352
+# V=6328
+# V=12664
+# V=12624 # fb_gem5
+# V=205216 # flickr_gem5
+# V=66080 # roadny_gem5
+# V=108912 # col_gem5
+# V=6
+# V=633278
 endif
 
 ifndef E
 # E=85
-E=8859
+# E=8859
+E=9049
+# E=8852
+# E=8840
+# E=16236
+# E=34916
+# E=103240 # fb_gem5
+# E=7880940 # flickr_gem5
+# E=178476 # roadny_gem5
+# E=280628 # col_gem5
+# E=12
+# E=2843359
 endif
 
 include /home/vidushi/ss-stack/ss-workloads/spu-benchmarks/common/Makefile.inc
 
 MACROS = -DV=$(V) -DE=$(E) -Dcsr_file=$(csr_file) -DC=$(C) -Ddata_file=$(data_file)
 
-DFGS=pr.dfg
+DFGS=pr64.dfg # pr.dfg
 
 DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
-	ss_sched $(SBCONFIG) $<
+	ss_sched -v -a sa $(SBCONFIG) $<
 
 csr: make_unweighted.cpp
 	g++ -std=c++11 make_unweighted.cpp $(MACROS) -o csr
 	./csr
 
 $(TEST_OBJS): $(TESTC) $(DFG_HEADERS) # inst_id.data
-	 $(CC) -c $< $(CFLAGS) $(MACROS) -I. -static -o $(@)
+	 $(CC) -c $< $(LIB) $(CFLAGS) $(MACROS) -I. -static -o $(@)
 
 # targets is main and dependent on main.o
 $(TESTS): $(TEST_OBJS)
