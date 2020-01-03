@@ -12,8 +12,13 @@
 
 using std::complex;
 
-void cholesky(complex<float> *a, complex<float> *L) { int N = _N_;
-  SS_CONTEXT(255);
+#ifndef LANES
+#define LANES 8
+#endif
+
+void cholesky(complex<float> *a, complex<float> *L) {
+  int N = _N_;
+  SS_CONTEXT((1 << LANES) - 1);
   SS_CONFIG(multi2_config, multi2_size);
   {
     SS_CONTEXT(1);
@@ -43,7 +48,7 @@ void cholesky(complex<float> *a, complex<float> *L) { int N = _N_;
     SS_XFER_RIGHT(P_multi2_O, P_multi2_IN, padded);
     SS_XFER_RIGHT(P_multi2_O, P_multi2_Z, n * n / 2);
 
-    acc = (acc + 1) & 7;
+    acc = (acc + 1) % LANES;
     SS_CONTEXT(1 << acc);
 
     SS_SCR_WRITE(P_multi2_OUT, 8 * padded, addr);
@@ -71,7 +76,6 @@ void cholesky(complex<float> *a, complex<float> *L) { int N = _N_;
       addr ^= 512;
   }
 
-  SS_CONTEXT(255);
   SS_WAIT_ALL();
 }
 
