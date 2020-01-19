@@ -1,0 +1,18 @@
+1. Store in incoming edges format (undirected graph or no?)
+2. Declare vertex data data-structure
+3. extra storage for new adj matrix or copy from sampling in parallel? probably
+   need duplicate copies?
+4. datatype of indices? 4 bytes or 8? 4 I guess?
+5. how to distribute sampling among threads?
+6. decide about the fmap data-structure
+
+uint ka 0 mein bhi panga h
+scratch_size=1 MB (10+10 = 20 bits of addr required)
+num_threads=1 reading weird things
+TODO: is the value read correct?
+
+Comments:
+Pull
+1. Easier load balancing
+2. remote read of 256 elements
+3. should I put a flag for for all local?
