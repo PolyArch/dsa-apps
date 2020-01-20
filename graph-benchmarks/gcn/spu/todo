@@ -7,9 +7,12 @@
 6. decide about the fmap data-structure
 
 uint ka 0 mein bhi panga h
-scratch_size=1 MB (10+10 = 20 bits of addr required)
+scratch_size=1 MB (10+10 = 20 bits of addr required) -- send only offset in the
+new one
 num_threads=1 reading weird things
-TODO: is the value read correct?
+
+PACKETS ISSUED IN SAME CYCLE WILL REACH TOGETHER (SEE HOW TO MODEL NET BW
+    PROPERLY)
 
 Comments:
 Pull

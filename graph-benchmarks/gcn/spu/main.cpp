@@ -22,7 +22,7 @@ using namespace std;
 
 // #define NODES 19719
 #define rate 0.073
-#define FEAT_LEN 32 // 64 // 8 // 64
+#define FEAT_LEN 32 // 32 // 64 // 8 // 64
 #define output_fm (FEAT_LEN) // 128 // 16 // 3
 #define VEC_LEN 16
 
