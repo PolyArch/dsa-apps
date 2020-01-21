@@ -61,10 +61,21 @@ E=85
 # E=2843359
 endif
 
+ifndef SYNC
+SYNC=0
+endif
+
+ifndef AGG
+AGG=1
+endif
+
+ifndef MULT
+MULT=1
+endif
 
 include /home/vidushi/ss-stack/ss-workloads/spu-benchmarks/common/Makefile.inc
 
-MACROS = -DV=$(V) -DE=$(E) -Dcsr_file=$(csr_file) -DC=$(C) -Ddata_file=$(data_file)
+MACROS = -DV=$(V) -DE=$(E) -Dcsr_file=$(csr_file) -DC=$(C) -Ddata_file=$(data_file) -DSYNC=$(SYNC) -DAGG=$(AGG) -DMULT=$(MULT)
 
 DFGS=gcn.dfg
 
@@ -85,10 +96,10 @@ $(TESTS): $(TEST_OBJS)
 	 $(CPP) $(LIB) $(CFLAGS) $(MACROS) -static -o $(@) $< $(LFLAGS)
 
 run-debug:
-	BACKCGRA=1 LINEAR_SCR=1 NET_REQ=1 COMMAND_I=1 COMMAND_O=1 COMP=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=2048kB --l1i_size=16kB --caches --ruby --num-cpus=$(C) --num-dirs=$(C) --network=simple --topology=Mesh_XY --mesh-rows=$(C) --cmd=$(TESTS)
+	BACKCGRA=1 NET_REQ=1 COMMAND_I=1 COMMAND_O=1 COMP=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=2048kB --l1i_size=16kB --caches --ruby --num-cpus=$(C) --num-dirs=$(C) --network=simple --topology=Mesh_XY --mesh-rows=$(C) --cmd=$(TESTS)
 
 # run-classic:
 # 	BACKCGRA=1 LINEAR_SCR=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=2048kB --l1i_size=16kB --caches --num-cpus=$(C) --num-dirs=$(C) --cmd=$(TESTS)
 
 run:
-	BACKCGRA=1 LINEAR_SCR=1 DSCDIVLD=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=2048kB --l1i_size=16kB --caches --ruby --num-cpus=$(C) --num-dirs=$(C) --network=simple --topology=Mesh_XY --mesh-rows=$(C) --cmd=$(TESTS)
+	BACKCGRA=1 DSCDIVLD=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=2048kB --l1i_size=16kB --caches --ruby --num-cpus=$(C) --num-dirs=$(C) --network=simple --topology=Mesh_XY --mesh-rows=$(C) --cmd=$(TESTS)

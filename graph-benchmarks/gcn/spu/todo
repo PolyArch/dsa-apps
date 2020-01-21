@@ -19,3 +19,15 @@ Pull
 1. Easier load balancing
 2. remote read of 256 elements
 3. should I put a flag for for all local?
+4. vectorize the matrix-multiplication
+
+
+GIVING ERROR FOR HIGHER FEAT LEN (HIGHER NUM_THREADS GIVE ERROR)
+acc_ctrl has extra values?
+IT DOESN'T WAIT FOR DMA WRITE TO GET OVER...
+
+4. everything from scratch other than graph data-structure? memory bw underutilization (what to do for offset
+   array?)
+
+
+8 cores suddenly giving error again

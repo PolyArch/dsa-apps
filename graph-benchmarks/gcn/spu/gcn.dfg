@@ -2,29 +2,45 @@ Input32: feat[16]  # 80 64-byte inputs is correct
 Input32: offset_list0
 Input32: offset_list1
 Input32: acc_ctrl
-# Input32: factor # feat_len/vec_len
+Input32: agg_feat[8]
+Input32: weights[8]
+Input32: factor
+Input32: const
 
-# 16 vertices, 40 edges
-# per threads, 8 vertices, 28, and 12 edges
+
+# for inner product, we need reduction tree
+# for outer product, we can send this update to scratch
+M0 = Mul32(agg_feat0, weights0)
+M1 = Mul32(agg_feat1, weights1)
+M2 = Mul32(agg_feat2, weights2)
+M3 = Mul32(agg_feat3, weights3)
+M4 = Mul32(agg_feat4, weights4)
+M5 = Mul32(agg_feat5, weights5)
+M6 = Mul32(agg_feat6, weights6)
+M7 = Mul32(agg_feat7, weights7)
+
+A0 = Add32(M0, M1)
+A1 = Add32(M2, M3)
+A2 = Add32(M4, M5)
+A3 = Add32(M6, M7)
+
+A4 = Add32(A0, A1)
+A5 = Add32(A2, A3)
+
+A6 = Add32(A4, A5)
+
 row_size = Sub32(offset_list1, offset_list0)
 
-# TODO: this should be data-dependent constant
-
-# for each vertex
-# max_req_inst = Mul32(row_size, factor) # factor*degree
-# early_start = Sub32(max_req_inst, factor)
-# 
-# cur_inst = Acc32(1) #FIXME: series of numbers
-# acc_ctrl = ICmp32(cur_inst, early_start)
-
-# acc_ctrl = ICmpNE32(cur_inst, req_inst)
-# acc_ctrl should be 0 for factor-1 and then 1
+#What to do for row_size=0?
+check = ICmpNE32(row_size,0)
+first1 = Mul32(factor, Sub32(row_size,1))
+first = Select32(0, first1, check)
+last = Select32(0, factor, check)
 
 #acc_ctrl=2 when cur_inst=max_req_inst (TODO: leave for now)
 #acc_ctrl=1 when cur_inst>=early_start
 #0 otherwise
 
-# is this a problem of reset or invalid?
 # discard when all inputs not done, reset when last lot is being sent
 acc_sum0 = Acc32(feat0, control=acc_ctrl{0:d,2:r})
 acc_sum1 = Acc32(feat1, control=acc_ctrl{0:d,2:r})
@@ -58,7 +74,22 @@ alpha7 = acc_sum14 acc_sum15
 
 start_ind = offset_list0
 
+# can we send empty control list?
+running_sum = Acc32(1, control=const{0:r})
+
+Output32: running_sum
 Output32: start_ind
 Output32: row_size
-# Output32: acc_sum[8]
 Output: alpha[8]
+Output32: A6
+Output32: first
+Output32: last
+
+
+#########Multiplication dfg################
+#alpha is the vector (tiled outer product for maximum reuse?) -- no
+#intermediate storage required..
+#Input32: weight[8] # weight column
+#
+#s = Mul32(weight[0],alpha[0])
+#o = Acc32(s, ctrl)
