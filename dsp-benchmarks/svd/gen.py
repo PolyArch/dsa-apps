@@ -1,5 +1,7 @@
-import numpy, cmath, sys, imp
-output = imp.load_source('output', '../common/output.py')
+import numpy, cmath, sys
+class output:
+    def print_complex_array(filename, array):
+        open(filename, 'w').writelines(['%f %f\n' % (i.real, i.imag) for i in array])
 
 
 numpy.set_printoptions(precision = 4, suppress = True, threshold = 1000, linewidth = 150)

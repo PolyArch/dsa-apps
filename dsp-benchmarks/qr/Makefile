@@ -2,6 +2,10 @@ ifndef N
 N=12
 endif
 
+ifndef LANES
+LANES=8
+endif
+
 SOFTBRAINS = sb-origin sb-new sb-access sb-hetro sb-conc sb-latency sb-ds
 
 DFG = \
@@ -10,7 +14,7 @@ DFG = \
 
 SCALE=$(N)
 
-MACROS=-D_N_=$(N)
+MACROS=-D_N_=$(N) -DLANES=$(LANES)
 
 include ../common/Makefile.inc
 

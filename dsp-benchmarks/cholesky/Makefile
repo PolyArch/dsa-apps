@@ -3,11 +3,15 @@ ifndef N
 N=12
 endif
 
+ifndef LANES
+LANES=8
+endif
+
 DFG = compute.dfg writeback.dfg multi2.dfg temporal.dfg
 
 SCALE=$(N)
 
-MACROS=-D_N_=$(N)
+MACROS=-D_N_=$(N) -DLANES=$(LANES)
 
 SOFTBRAINS = sb-origin sb-new sb-latency sb-access sb-mask sb-lmask sb-limited sb-idiom sb-ds sb-ds-lat
 

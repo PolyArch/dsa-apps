@@ -26,7 +26,7 @@ int main() {
     return 1;
   }
 
-  read_n_float_complex(input_data, N * N, a);
+  //read_n_float_complex(input_data, N * N, a);
 
 #ifndef __x86_64__
   SS_CONFIG(loader_config, loader_size);

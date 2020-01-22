@@ -47,6 +47,7 @@ Output: FIN
 
 ----
 
+#pragma group temporal
 Input: _In [2]
 
 _Out00 = _In0
@@ -60,6 +61,7 @@ Output: _Out1 [2]
 
 ----
 
+#pragma group temporal
 Input: In [2]
 
 Out0 = In0

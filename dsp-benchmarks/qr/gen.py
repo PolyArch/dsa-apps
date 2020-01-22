@@ -1,5 +1,6 @@
-import imp
-output = imp.load_source('output', '../common/output.py')
+class output:
+    def print_complex_array(filename, array):
+        open(filename, 'w').writelines(['%f %f\n' % (i.real, i.imag) for i in array])
 
 # A quick POC (proof of concept) of Cholesky Decomposition in numpy.
 import numpy, cmath, sys

@@ -13,6 +13,10 @@ ifndef P
 P=64
 endif
 
+ifndef LANES
+LANES=8
+endif
+
 
 DFG = compute.dfg loader.dfg temporal.dfg
 
@@ -20,7 +24,7 @@ SOFTBRAINS = sb-origin sb-new sb-latency sb-limited sb-ds
 
 SCALE=$(N) $(M) $(P)
 
-MACROS=-D_N_=$(N) -D_M_=$(M) -D_P_=$(P)
+MACROS=-D_N_=$(N) -D_M_=$(M) -D_P_=$(P) -DLANES=$(LANES)
 
 ifdef LATENCY
 MACROS += -DLATENCY

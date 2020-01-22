@@ -68,7 +68,7 @@ $(LOGS): %.log: %.exe input.data ref.data
 	SBCONFIG=$(SBCONFIG) BACKCGRA=1 \
 	FU_FIFO_LEN=$(FIFO_DEPTH) \
 	gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=MinorCPU \
-	--l1d_size=2048kB --l1d_assoc=32 --l1i_size=16kB --l2_size=1024kB --caches --cmd=./$< \
+	--l1d_size=2048kB --l1d_assoc=32 --l1i_size=16kB --l2_size=1024kB --caches --cmd=./$<  2>&1 \
 	| tee $@
 	
 $(EXEC): %.exe: %.o main.cc
