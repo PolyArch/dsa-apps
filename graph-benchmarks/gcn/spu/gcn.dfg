@@ -27,7 +27,7 @@ A3 = Add32(M6, M7)
 A4 = Add32(A0, A1)
 A5 = Add32(A2, A3)
 
-A6 = Add32(A4, A5)
+A = Add32(A4, A5)
 
 row_size = Sub32(offset_list1, offset_list0)
 
@@ -59,9 +59,6 @@ acc_sum13 = Acc32(feat13, control=acc_ctrl{0:d,2:r})
 acc_sum14 = Acc32(feat14, control=acc_ctrl{0:d,2:r})
 acc_sum15 = Acc32(feat15, control=acc_ctrl{0:d,2:r})
 
-# 25*8 acc_sum items
-# 25*4 alpha items
-
 alpha0 = acc_sum0 acc_sum1
 alpha1 = acc_sum2 acc_sum3
 alpha2 = acc_sum4 acc_sum5
@@ -81,15 +78,6 @@ Output32: running_sum
 Output32: start_ind
 Output32: row_size
 Output: alpha[8]
-Output32: A6
+Output32: A
 Output32: first
 Output32: last
-
-
-#########Multiplication dfg################
-#alpha is the vector (tiled outer product for maximum reuse?) -- no
-#intermediate storage required..
-#Input32: weight[8] # weight column
-#
-#s = Mul32(weight[0],alpha[0])
-#o = Acc32(s, ctrl)

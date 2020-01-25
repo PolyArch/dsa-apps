@@ -13,6 +13,17 @@ num_threads=1 reading weird things
 
 PACKETS ISSUED IN SAME CYCLE WILL REACH TOGETHER (SEE HOW TO MODEL NET BW
     PROPERLY)
+1. Partitioning
+2. MM correctness
+3. feat_len=256
+4. gcn layers?
+5. preload?
+
+Should we do something for access same data multiple times? (but array is
+large) -- same stream (in that case, cpu stride would be 0 I guess?)
+
+Oh that cyclic thing...
+SS_SCR_PORT_STREAM(scr_addr,stride,acc_size,n_strides, port)
 
 Comments:
 Pull
@@ -20,6 +31,8 @@ Pull
 2. remote read of 256 elements
 3. should I put a flag for for all local?
 4. vectorize the matrix-multiplication
+5. See if any pattern in the destination, sampling should be on OOO and the
+   gem5 can read the sampled graph for now? (single layer)
 
 
 GIVING ERROR FOR HIGHER FEAT LEN (HIGHER NUM_THREADS GIVE ERROR)
@@ -31,3 +44,6 @@ IT DOESN'T WAIT FOR DMA WRITE TO GET OVER...
 
 
 8 cores suddenly giving error again
+
+dma_read of different threads from the same location error? NO SHOULD NOT BE...
+indirect scr from different ports error?
