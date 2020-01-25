@@ -10,10 +10,14 @@
 
 using std::complex;
 
-#ifdef LATENCY
+#ifndef LANES
 #define LANES 8
+#endif
+
+#ifdef LATENCY
+#define LANES_USED LANES
 #else
-#define LANES 1
+#define LANES_USED 1
 #endif
 
 #define N _N_
@@ -34,7 +38,7 @@ int main() {
 
   int m = M;
   int p = P;
-  for (int i = 0; i < LANES; ++i) {
+  for (int i = 0; i < LANES_USED; ++i) {
     SS_CONTEXT(1 << i);
     SS_CONFIG(loader_config, loader_size);
     SS_DMA_READ(b, 0, 8 * m * p, 1, P_loader_In);

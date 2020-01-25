@@ -14,6 +14,8 @@ using std::complex;
 
 #define N _N_
 
+complex<float> buffer[N * N];
+
 void cholesky(complex<float> *a, complex<float> *L) {
   SS_CONFIG(multi2_config, multi2_size);
   {
@@ -42,7 +44,8 @@ void cholesky(complex<float> *a, complex<float> *L) {
     SS_RECURRENCE(P_multi2_O, P_multi2_VAL, 1);
     SS_SCR_WRITE(P_multi2_O, padded * 8, addr);
 
-    SS_SCR_WRITE(P_multi2_O, n * n / 2 * 8, array);
+    //SS_SCR_WRITE(P_multi2_O, n * n / 2 * 8, array);
+    SS_DMA_WRITE(P_multi2_O, 0, n * n / 2 * 8, 1, buffer);
 
     SS_WAIT_SCR_WR();
 
@@ -57,7 +60,8 @@ void cholesky(complex<float> *a, complex<float> *L) {
     SS_FILL_MODE(STRIDE_ZERO_FILL);
     SS_SCR_PORT_STREAM_STRETCH(addr, 8, 8 * (n - 1), -8, (n - 1), P_multi2_B);
     SS_FILL_MODE(NO_FILL);
-    SS_SCR_PORT_STREAM(array, 0, n * n / 2 * 8, 1, P_multi2_Z);
+    //SS_SCR_PORT_STREAM(array, 0, n * n / 2 * 8, 1, P_multi2_Z);
+    SS_DMA_READ(buffer, 0, n * n / 2 * 8, 1, P_multi2_Z);
     SS_CONFIG_PORT_EXPLICIT((n - 1) * 4, -4);
     SS_SCR_PORT_STREAM(addr, 8, 8, n - 1, P_multi2_A);
 

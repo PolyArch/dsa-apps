@@ -6,6 +6,10 @@ ifndef M
 M=37
 endif
 
+ifndef LANES
+LANES=8
+endif
+
 DFG = compute.dfg loader.dfg temporal.dfg
 
 DFG_HEADERS=$(DFG:.dfg=.h)
@@ -14,7 +18,7 @@ SCALE = $(N) $(M)
 
 SOFTBRAINS = sb-new sb-origin sb-ideal sb-latency sb-limited sb-ds
 
-MACROS=-D_N_=$(N) -D_M_=$(M)
+MACROS=-D_N_=$(N) -D_M_=$(M) -DLANES=$(LANES)
 
 ifneq ($(N), 1024)
 MACROS += -DLATENCY

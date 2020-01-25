@@ -12,8 +12,13 @@
 
 using std::complex;
 
-void cholesky(complex<float> *a, complex<float> *L) { int N = _N_;
-  SS_CONTEXT(255);
+#ifndef LANES
+#define LANES 8
+#endif
+
+void cholesky(complex<float> *a, complex<float> *L) {
+  int N = _N_;
+  SS_CONTEXT((1 << LANES) - 1);
   SS_CONFIG(multi2_config, multi2_size);
   {
     SS_CONTEXT(1);
@@ -32,18 +37,23 @@ void cholesky(complex<float> *a, complex<float> *L) { int N = _N_;
     SS_DMA_READ_STRETCH(a + 1, 8, 8 * (N - 1), -8, N - 1, P_multi2_B);
     SS_FILL_MODE(NO_FILL);
   }
-  for (int i = 1, acc = 0, addr = 0; i < N; ++i) {
-    //int total = N - i - 1;
+
+  int i = 1, acc = 0;
+  {
+
     int n = N - i;
     int padded = (n - 1 + (n & 1));
-
-    SS_CONTEXT(1 << acc);
 
     SS_XFER_RIGHT(P_multi2_O, P_multi2_VAL, 1);
     SS_XFER_RIGHT(P_multi2_O, P_multi2_IN, padded);
     SS_XFER_RIGHT(P_multi2_O, P_multi2_Z, n * n / 2);
 
-    acc = (acc + 1) & 7;
+  }
+  for (int addr = 0; i < N - 1; ) {
+    int n = N - i;
+    int padded = (n - 1 + (n & 1));
+
+    acc = (acc + 1) % LANES;
     SS_CONTEXT(1 << acc);
 
     SS_SCR_WRITE(P_multi2_OUT, 8 * padded, addr);
@@ -63,15 +73,42 @@ void cholesky(complex<float> *a, complex<float> *L) { int N = _N_;
     SS_CONFIG_PORT_EXPLICIT((n - 1) * 4, -4);
     SS_SCR_PORT_STREAM(addr, 8, 8, n - 1, P_multi2_A);
 
-    //SS_GARBAGE(P_multi2_O, (1 + total) * total / 2);
-    //SS_WAIT_ALL();
-    //return;
+    {
+      ++i;
+      --n;
+      SS_XFER_RIGHT(P_multi2_O, P_multi2_VAL, 1);
+      int padded = (n - 1 + (n & 1));
+      SS_XFER_RIGHT(P_multi2_O, P_multi2_IN, padded);
+      SS_XFER_RIGHT(P_multi2_O, P_multi2_Z, n * n / 2);
+    }
+  }
+  {
+    int addr = 0;
+    //int total = N - i - 1;
+    int n = N - i;
+    int padded = (n - 1 + (n & 1));
 
-    if (acc == 0)
-      addr ^= 512;
+    acc = (acc + 1) % LANES;
+    SS_CONTEXT(1 << acc);
+
+    SS_SCR_WRITE(P_multi2_OUT, 8 * padded, addr);
+    SS_WAIT_SCR_WR();
+
+    SS_REPEAT_PORT(n - 1);
+    SS_RECURRENCE(P_multi2_invsqrt, P_multi2_DIV, 1);
+    SS_SCR_PORT_STREAM(addr, 8, 8, n - 1, P_multi2_VEC);
+    SS_DMA_WRITE(P_multi2_sqrt, 0, 8, 1, L + i * N + i);
+    SS_DMA_WRITE(P_multi2_fin, 8 * N, 8, n - 1, L + (i + 1) * N + i);
+
+    SS_REPEAT_PORT(n * n / 4);
+    SS_RECURRENCE(P_multi2_invpure, P_multi2_V, 1);
+    SS_FILL_MODE(STRIDE_ZERO_FILL);
+    SS_SCR_PORT_STREAM_STRETCH(addr, 8, 8 * (n - 1), -8, (n - 1), P_multi2_B);
+    SS_FILL_MODE(NO_FILL);
+    SS_CONFIG_PORT_EXPLICIT((n - 1) * 4, -4);
+    SS_SCR_PORT_STREAM(addr, 8, 8, n - 1, P_multi2_A);
+
   }
 
-  SS_CONTEXT(255);
   SS_WAIT_ALL();
 }
-

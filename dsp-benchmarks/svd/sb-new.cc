@@ -399,16 +399,15 @@ void implicit_iteration(complex<float> *d, complex<float> *f, complex<float> *v)
 
   int left = 0, right = _N_ - 1;
   while (left < right) {
-    //printf("%d %d\n", left, right);
     while (left < _N_ - 1 && fabs(f[left].real()) < eps && fabs(f[left].imag()) < eps)
       ++left;
     while (right >= 1 && fabs(f[right - 1].real()) < eps && fabs(f[right - 1].imag()) < eps)
       --right;
     if (right - left >= 1) {
-      //std::cout << left << " " << right << "\n";
       implicit_kernel(d + left, f + left, v + left * _N_, right - left + 1);
-      //for (int i = left; i < right; ++i) std::cout << f[i] << " "; std::cout << "\n";
-      //for (int i = left; i < right + 1; ++i) std::cout << d[i] << " "; std::cout << "\n";
+      std::cout << left << " " << right << "\n";
+      for (int i = left; i < right; ++i) std::cout << f[i] << " "; std::cout << "\n";
+      for (int i = left; i < right + 1; ++i) std::cout << d[i] << " "; std::cout << "\n";
     }
   }
 
