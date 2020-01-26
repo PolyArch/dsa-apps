@@ -32,7 +32,8 @@ C=16
 endif
 
 ifndef V
-V=39
+V=820878
+# V=39
 # V=3353
 # V=633278
 # V=3352
@@ -81,11 +82,28 @@ ifndef POSTLOAD
 POSTLOAD=0
 endif
 
+ifndef FULL_TRAINING
+FULL_TRAINING=0
+endif
+
+ifndef LADIES_SAMPLE
+LADIES_SAMPLE=128
+endif
+
+ifndef GCN_LAYERS
+GCN_LAYERS=1
+endif
+
+ifndef NUM_THREADS
+NUM_THREADS=8
+endif
+
+
 include /home/vidushi/ss-stack/ss-workloads/spu-benchmarks/common/Makefile.inc
 
-MACROS = -DV=$(V) -DE=$(E) -Dcsr_file=$(csr_file) -DC=$(C) -Ddata_file=$(data_file) -DSYNC=$(SYNC) -DAGG=$(AGG) -DMULT=$(MULT) -DPRELOAD=$(PRELOAD) -DPOSTLOAD=$(POSTLOAD)
+MACROS = -DV=$(V) -DE=$(E) -Dcsr_file=$(csr_file) -DC=$(C) -Ddata_file=$(data_file) -DSYNC=$(SYNC) -DAGG=$(AGG) -DMULT=$(MULT) -DPRELOAD=$(PRELOAD) -DPOSTLOAD=$(POSTLOAD) -DFULL_TRAINING=$(FULL_TRAINING) -DLADIES_SAMPLE=$(LADIES_SAMPLE) -DGCN_LAYERS=$(GCN_LAYERS) -DNUM_THREADS=$(NUM_THREADS)
 
-DFGS=gcn.dfg
+DFGS=gcn.dfg mult.dfg
 
 DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 
@@ -94,6 +112,12 @@ $(DFG_HEADERS): %.dfg.h: %.dfg
 
 csr: make_unweighted.cpp
 	g++ -std=c++11 make_unweighted.cpp $(MACROS) -o csr
+	./csr
+
+sampling: cpu.cpp
+	rm sampled_nodes.txt
+	rm adj_mat.txt
+	g++ -std=c++11 cpu.cpp $(MACROS) -o csr
 	./csr
 
 $(TEST_OBJS): $(TESTC) $(DFG_HEADERS) # inst_id.data
@@ -110,4 +134,4 @@ run-debug:
 # 	BACKCGRA=1 LINEAR_SCR=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=2048kB --l1i_size=16kB --caches --num-cpus=$(C) --num-dirs=$(C) --cmd=$(TESTS)
 
 run:
-	BACKCGRA=1 DSCDIVLD=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=2048kB --l1i_size=16kB --caches --ruby --num-cpus=$(C) --num-dirs=$(C) --network=simple --topology=Mesh_XY --mesh-rows=$(C) --cmd=$(TESTS)
+	BACKCGRA=1 DSCDIVLD=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=2048kB --l1i_size=16kB --caches --ruby --num-cpus=$(C) --num-dirs=$(C) --network=simple --topology=Mesh_XY --mesh-rows=$(C) --cmd=$(TESTS) --mem-size=4GB

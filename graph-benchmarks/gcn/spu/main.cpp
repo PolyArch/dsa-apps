@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <bitset>
 #include "gcn.dfg.h"
+#include "mult.dfg.h"
 #include "/home/vidushi/ss-stack/ss-tools/include/ss-intrin/ss_insts.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/sim_timing.h"
 #include "/home/vidushi/ss-stack/ss-workloads/common/include/net_util_func.h"
@@ -20,19 +21,21 @@
 
 using namespace std;
 
-// #define NODES 19719
+// local - 3648
+// remote - 12228 // 15285
+
+// #define NODES 1971
 #define rate 0.073
-#define FEAT_LEN 64
+#define FEAT_LEN 64 // 128 // 256 // 128 // 256 // 64 // 256 // 16 // 16 // 32 // 16 // 32 // 64 // 16 // 32 // 64 // 32 // 16 // 128 // 64
 #define VEC_LEN 16
 
-#define GCN_LAYERS 1 // 6 // 12
-#define LADIES_SAMPLE 32 // 36 // 32 // 16 // 256 // 16 // 64 // 128 // 512 // 256 // 512
+// #define LADIES_SAMPLE 128 // 32 // 36 // 32 // 16 // 256 // 16 // 64 // 128 // 512 // 256 // 512
 #define LADIES_EDGES 4096
 
 // this should be strictly less than C
-#define NUM_THREADS 4 // 8 // 4 // 2 // 8
+// #define NUM_THREADS 8 // 8 // 8 // 4 // 2 // 8
 #define NUM_VERT_PER_THREAD (LADIES_SAMPLE/NUM_THREADS)
-#define SCRATCH_SIZE 16384
+#define SCRATCH_SIZE 32768 // 16384
 #define FEAT_PART_SIZE (NUM_VERT_PER_THREAD*FEAT_LEN*4*2) // (SCRATCH_SIZE/2)
 #define SCRATCH_BITS 14 // (log2(SCRATCH_SIZE))
 #define WGT_CORE 0 // (NUM_THREADS/2)
@@ -51,9 +54,10 @@ struct edge_info {
 
 struct gcn_info {
   uint32_t tid;
-  uint32_t edge_list[E]; 
-  VTYPE wgt[E];
-  uint32_t vertex_ptr[V+1];
+  uint32_t feature_map[2][V][FEAT_LEN];
+  // uint32_t edge_list[E]; 
+  // VTYPE wgt[E];
+  // uint32_t vertex_ptr[V+1];
   // vector<uint32_t> sampled_edge_list[GCN_LAYERS];
   uint32_t sampled_edge_list[GCN_LAYERS][LADIES_EDGES];
   uint32_t sampled_offset[GCN_LAYERS][LADIES_SAMPLE+1];
@@ -63,33 +67,101 @@ struct gcn_info {
 
 const int factor = FEAT_LEN/VEC_LEN;
 
+uint32_t sampled_nodes[GCN_LAYERS+1][LADIES_SAMPLE];
+int wgt_rem_loc = WGT_CORE<<SCRATCH_BITS;
+uint64_t feat_active_core_mask=0;
+uint64_t wgt_active_core_mask=0;
+uint64_t broadcast_mask=0;
+
 // TODO: reuse weights matrix in a better way..
 void mm(int l, int cur_active_vert) {
+
+  // matrix1[a][l] and matrix2[l][l]
+  /*for(int i=0; i<a; ++i) {
+      for(int k=0; k<l; ++l) { // should be Tn
+          for(int j=0; j<l; j+=16) {
+             for(int jj=j; jj<16; ++jj) {
+          sum[i][k] += matrix1[i][jj]*matrix2[jj][k];
+        }
+      }
+    }
+  }*/
+
+  // TODO: in this case, it can load weights here
+
+
   static uint32_t feature_map[2][LADIES_SAMPLE][FEAT_LEN];
   VTYPE weights[GCN_LAYERS][FEAT_LEN][FEAT_LEN];
-  SS_DMA_WRITE(P_gcn_A, 4, 4, cur_active_vert*FEAT_LEN*factor*2, &feature_map[0][0][0]);
-  for(int k=0; k<cur_active_vert; ++k) {
-    SS_DMA_READ(&weights[l][0][0], 4, 4, FEAT_LEN*FEAT_LEN, P_gcn_weights);
-    // SS_SCR_PORT_STREAM(0, 4, 4, FEAT_LEN*FEAT_LEN, P_gcn_weights);
-    for(int l=0; l<FEAT_LEN; ++l) {
-      SS_SCR_PORT_STREAM(0, 4, 4, FEAT_LEN, P_gcn_agg_feat);
+  int num_tiles = FEAT_LEN/16;
+
+
+  SS_DMA_WRITE(P_mult_sum, 4, 4, cur_active_vert*FEAT_LEN, &feature_map[0][0][0]);
+  for(int k=0; k<cur_active_vert; ++k) { // dim of scr_port
+
+
+    // repeatedly access a vector for all columns of the weight matrix
+    SS_SCR_PORT_STREAM(k*FEAT_LEN*4, 0, 4*16*num_tiles, FEAT_LEN, P_mult_agg_feat);
+
+    for(int f=0; f<FEAT_LEN; ++f) { // dim of weights
+      // row ie. feat vector
+      // SS_SCR_PORT_STREAM(k*FEAT_LEN*4, 4, 4, 16*num_tiles, P_mult_agg_feat);
+      // column-major form (single column of weight)
+      // TODO: should we store single column of wgt in local core and reuse it?
+      SS_DMA_READ(&weights[l][f][0], 4, 4, 16*num_tiles, P_mult_weights);
+
+      // reduction from feat_len/16 to 1 (serialize or general?)
+      SS_RECURRENCE(P_mult_A, P_mult_red, num_tiles);
+      SS_2D_CONST(P_mult_const, 0, num_tiles-1, 1, 1, 1);
     }
   }
   SS_WAIT_ALL();
 }
 
+void mmtry2(long tid, uint32_t (&feature_map)[2][V][FEAT_LEN], int l, int cur_active_vert) {
 
-uint32_t sampled_nodes[GCN_LAYERS+1][LADIES_SAMPLE];
-int wgt_rem_loc = WGT_CORE<<SCRATCH_BITS;
-uint64_t feat_active_core_mask=0;
-uint64_t wgt_active_core_mask=0;
+  VTYPE weights[GCN_LAYERS][FEAT_LEN][FEAT_LEN];
+  int num_tiles = FEAT_LEN/16; // TODO: 1 or 2 doesn't work?
 
-void mv(long tid, uint32_t (&edge_list)[E], VTYPE (&wgt)[E], uint32_t (&vertex_ptr)[V+1], uint32_t (&sampled_edge_list)[GCN_LAYERS][LADIES_EDGES], uint32_t (&sampled_offset)[GCN_LAYERS][LADIES_SAMPLE+1]) {
+
+  SS_DMA_WRITE(P_mult_sum, 4, 4, cur_active_vert*FEAT_LEN, &feature_map[0][0][0]);
+  // reduction from feat_len/16 to 1 (serialize or general?)
+  SS_RECURRENCE(P_mult_A, P_mult_red, num_tiles*cur_active_vert*FEAT_LEN);
+  SS_2D_CONST(P_mult_const, 0, num_tiles-1, 1, 1, cur_active_vert*FEAT_LEN);
+
+  SS_SCR_PORT_STREAM(0, 0, 4*16*num_tiles*cur_active_vert, FEAT_LEN, P_mult_agg_feat);
+  for(int f=0; f<FEAT_LEN; ++f) { // dim of weights
+
+    // should be broadcast from memory to each core's scratchpad
+    // then wait on a broadcast?
+    if(tid==0) { // f%NUM_THREADS) {
+      SS_DMA_READ(&weights[l][f][0], 4, 4, FEAT_LEN, P_IND_1);
+      SS_REM_PORT(P_IND_1, FEAT_LEN*4, broadcast_mask, MEM_SCR_PORT);
+    }
+    SS_SCR_WRITE(MEM_SCR_PORT, FEAT_LEN*4, 0);
+    SS_WAIT_SCR_WR();
+    
+    // SS_DMA_SCRATCH_LOAD(&weights[l][f][0], 4, 4, FEAT_LEN, 0);
+    // SS_WAIT_SCR_WR();
+    
+    // column-major form (single column of weight)
+    SS_SCR_PORT_STREAM(0, 0, 4*16*num_tiles, cur_active_vert, P_mult_weights);
+  }
+  SS_WAIT_ALL();
+}
+
+// uint32_t feature_map[2][V][FEAT_LEN];
+
+
+void gcn(long tid, uint32_t (&feature_map)[2][V][FEAT_LEN], uint32_t (&sampled_edge_list)[GCN_LAYERS][LADIES_EDGES], uint32_t (&sampled_offset)[GCN_LAYERS][LADIES_SAMPLE+1]) {
+
+
+
+// void gcn(long tid, uint32_t (&edge_list)[E], VTYPE (&wgt)[E], uint32_t (&vertex_ptr)[V+1], uint32_t (&sampled_edge_list)[GCN_LAYERS][LADIES_EDGES], uint32_t (&sampled_offset)[GCN_LAYERS][LADIES_SAMPLE+1]) {
 
   // TODO: use the correct value of feature map
   // TODO: should be 1 after correct reduction
-  static uint32_t feature_map[2][LADIES_SAMPLE][FEAT_LEN][factor];
   // should be read from scratch..
+  // static uint32_t feature_map[2][V][FEAT_LEN];
   uint32_t weights[GCN_LAYERS][FEAT_LEN][FEAT_LEN];
   
   uint32_t start_col = tid*NUM_VERT_PER_THREAD;
@@ -105,7 +177,19 @@ void mv(long tid, uint32_t (&edge_list)[E], VTYPE (&wgt)[E], uint32_t (&vertex_p
   begin_roi();
   for(int b=0; b<NUM_BATCH; ++b) {
 
-    for(uint32_t l=0; l<GCN_LAYERS; ++l) {
+    // for(uint32_t l=0; l<GCN_LAYERS; ++l) {
+    for(uint32_t layer=0; layer<GCN_LAYERS; ++layer) {
+
+      // cout << "Starting computation at layer: " << layer << endl;
+
+      uint32_t l=layer; // 0; // layer;
+
+      // TODO: this should not be required, wgt matrix won't be in sparse format
+      cur_active_vert=NUM_VERT_PER_THREAD;
+      for(unsigned k=start_col; k<end_col; ++k) {
+        int degree = sampled_offset[0][k+1]-sampled_offset[0][k];
+        if(degree==0) --cur_active_vert;
+      }
 
 #if PRELOAD==1
 #if POSTLOAD==1
@@ -116,7 +200,7 @@ void mv(long tid, uint32_t (&edge_list)[E], VTYPE (&wgt)[E], uint32_t (&vertex_p
       SS_DMA_READ(&sampled_nodes[l][start_col], 4, 4, NUM_VERT_PER_THREAD, P_IND_2);
       SS_DCONST(P_IND_3, FEAT_LEN, NUM_VERT_PER_THREAD, T32);
       SS_CONFIG_INDIRECT(T32, T32, 4, 1); // push a value of 4 bytes to this port
-      SS_INDIRECT_2D(P_IND_2, &feature_map[0][0][0][0], NUM_VERT_PER_THREAD, 4, 4, P_IND_3, MEM_SCR_PORT);
+      SS_INDIRECT_2D(P_IND_2, &feature_map[0][0][0], NUM_VERT_PER_THREAD, 4, 4, P_IND_3, MEM_SCR_PORT);
       SS_SCR_WRITE(MEM_SCR_PORT, NUM_VERT_PER_THREAD*FEAT_LEN*4, 0);
 
       // TODO: get this to work?
@@ -158,50 +242,50 @@ void mv(long tid, uint32_t (&edge_list)[E], VTYPE (&wgt)[E], uint32_t (&vertex_p
       SS_INDIRECT_SCR(P_IND_1, 0, inc_edges, P_gcn_feat);
 
 #if MULT==0
-      SS_DMA_WRITE(P_gcn_alpha, 8, 8, cur_active_vert*FEAT_LEN/2, &feature_map[0][0][0]);
+      SS_DMA_WRITE(P_gcn_alpha, 8, 8, cur_active_vert*FEAT_LEN/2, &feature_map[0][0]);
 #endif
 #endif
-#if SYNC==1
+#if SYNC==1 && AGG==1
       SS_SCR_WRITE(P_gcn_alpha, FEAT_LEN*4*cur_active_vert, 0);
 #else
       // matrix-vector multiplication (active_vert*feat_len)
-#if MULT==1
+#if MULT==1 && SYNC==0
       // scatter data to memory, it should produce the correct number of values at A
 
       SS_2D_CONST(P_gcn_const, 1, FEAT_LEN-1, 0, 1, cur_active_vert);
-      for(int k=0; k<cur_active_vert; ++k) {
+      // 65536 + 4*128*128 -- it spans 4 cores
+      SS_CONFIG_MEM_MAP(SCRATCH_SIZE,wgt_active_core_mask,0);
+      SS_CONFIG_INDIRECT(T32, T32, 4, FEAT_LEN);
+      SS_INDIRECT_SCR(P_gcn_running_sum, wgt_rem_loc, FEAT_LEN*cur_active_vert, P_gcn_weights);
 
-        // 65536 + 4*128*128 -- it spans 4 cores
-        SS_CONFIG_MEM_MAP(SCRATCH_SIZE,wgt_active_core_mask,0);
-        SS_CONFIG_INDIRECT(T32, T32, 4, FEAT_LEN);
-        SS_INDIRECT_SCR(P_gcn_running_sum, wgt_rem_loc, FEAT_LEN, P_gcn_weights);
-
-        // TODO: reserved location in the current core (for vertex data, it
-        // should use only half of the location)
         // TODO: try buffet here? this is when we require fine-grained barrier, any better way?
-        // both recurrence and scratch write?
+      for(int k=0; k<cur_active_vert; ++k) {
 #if AGG==1
         // TODO: probably want to initiate in other core (for now, can
         // statically do this) -- doesn't need task-based support
-        // also fine-grained barrier? (TODO: can i use buffet here?)
         SS_SCR_WRITE(P_gcn_alpha, FEAT_LEN*4, 0);
         SS_WAIT_SCR_WR();
 #endif
         SS_SCR_PORT_STREAM(0, 0, 4*FEAT_LEN, FEAT_LEN, P_gcn_agg_feat);
       }
 
+#if MULT==1 && SYNC==0
+     SS_RECURRENCE(P_gcn_A, P_gcn_red, factor*cur_active_vert*FEAT_LEN);
+     SS_2D_CONST(P_gcn_const2, 0, factor-1, 1, 1, cur_active_vert*FEAT_LEN);
 #if POSTLOAD==1 
       // scatter to memory
       SS_DMA_READ(&sampled_nodes[l][start_col], 4, 4, cur_active_vert, P_IND_4);
-      SS_DCONST(P_IND_3, FEAT_LEN*2*factor, cur_active_vert, T32);
+      SS_DCONST(P_IND_3, FEAT_LEN, cur_active_vert, T32);
       SS_CONFIG_INDIRECT(T32, T32, 4, 1);
-      SS_INDIRECT_2D_WR(P_IND_4, &feature_map[0][start_col][0][0], cur_active_vert, 4, 4, P_IND_3, P_gcn_A);
+      SS_INDIRECT_2D_WR(P_IND_4, &feature_map[0][start_col][0], cur_active_vert, 4, 4, P_IND_3, P_gcn_sum);
  
       // SS_CONFIG_INDIRECT(T32, T32, 4, FEAT_LEN*factor*2);
       // SS_INDIRECT_WR(P_IND_4, &feature_map[0][start_col], cur_active_vert, P_gcn_A);
-
 #else
-      SS_DMA_WRITE(P_gcn_A, 4, 4, cur_active_vert*FEAT_LEN*factor*2, &feature_map[0][start_col][0][0]);
+     SS_DMA_WRITE(P_gcn_sum, 4, 4, cur_active_vert*FEAT_LEN, &feature_map[0][start_col][0]);
+#endif
+#else
+      // TODO: put here where to store feature vectors
 #endif
 
 
@@ -213,16 +297,21 @@ void mv(long tid, uint32_t (&edge_list)[E], VTYPE (&wgt)[E], uint32_t (&vertex_p
       // SS_ATOMIC_SCR_OP(P_gcn_col_id, P_gcn_mult, 0, agg, 0);
 
       // FIXME: does it wait for all prior insts to be completed or only ss?
+#if AGG==1 || MULT==1
       SS_WAIT_ALL();
       // TODO: add print of port-mismatch for this mask as well..
       SS_GLOBAL_WAIT(NUM_THREADS);
-#if SYNC==1
-      mm(l, cur_active_vert);
+#endif
+#if SYNC==1 && MULT==1
+      SS_CONFIG(mult_config, mult_size);
+      // SS_GLOBAL_WAIT(NUM_THREADS); // FIXME: was giving error for some reason..
+      // mm(l, cur_active_vert);
+      mmtry2(tid, feature_map, l, cur_active_vert);
       SS_GLOBAL_WAIT(NUM_THREADS);
 #endif
     }
 
-  
+#if 0 
   if(0) { // b>0) { // TODO: this will require to access the original graph
     static uint32_t sampled_nodes[LADIES_SAMPLE][GCN_LAYERS+1];
     vector<uint32_t> sampled_edge_list_next[GCN_LAYERS];
@@ -336,9 +425,53 @@ void mv(long tid, uint32_t (&edge_list)[E], VTYPE (&wgt)[E], uint32_t (&vertex_p
       }
       cout << "norm done\n";
     }
+#endif
   }
   end_roi();
   sb_stats();
+}
+
+void read_sampling_arrays(uint32_t (&sampled_offset)[GCN_LAYERS][LADIES_SAMPLE+1], uint32_t (&sampled_edge_list)[GCN_LAYERS][LADIES_EDGES]) {
+  char linetoread[5000];
+
+  cout << "Starting reading sampled nodes file\n";
+  FILE* node_map = fopen("sampled_nodes.txt", "r");
+  int l=0; 
+  while(fgets(linetoread, 5000, node_map) != NULL) {
+    std::string raw(linetoread);
+    std::istringstream iss(raw.c_str());
+    // cout << "line read: " << raw << endl;
+    string ignore;
+    int i=-1;
+    while (getline(iss, ignore, ' ')) {
+      sampled_nodes[l][++i] = atoi(ignore.c_str());
+    } 
+   ++l;
+  }
+  fclose(node_map);
+
+  cout << "Starting reading adj matrix file\n";
+  FILE* adj_new = fopen("adj_mat.txt", "r");
+
+  int row=0;
+  while(fgets(linetoread, 5000, adj_new) != NULL) {
+    std::string raw(linetoread);
+    std::istringstream iss(raw.c_str());
+    string ignore;
+    int i=-1;
+    l=row/2;
+    while (getline(iss, ignore, ' ')) {
+      if(row%2==0) { // vertex_ptr
+        sampled_offset[l][++i] = atoi(ignore.c_str());
+      } else { // edge list
+        sampled_edge_list[l][++i] = atoi(ignore.c_str());
+      }
+    } 
+    if(row%2==0) cout << "Total edges in layer l: " << l << " is: " << sampled_offset[l][LADIES_SAMPLE] << endl;
+    ++row;
+  }
+  fclose(node_map);
+  cout << "Done reading all files\n";
 }
 
 
@@ -368,10 +501,10 @@ void read_adjacency_matrix(uint32_t (&edge_list)[E], VTYPE (&wgt)[E],
     std::string raw(linetoread);
     std::istringstream iss(raw.c_str());
     uint32_t src, dst, x;
-    // iss >> src >> dst >> x;
-    iss >> src >> dst;
-    src = src-1;
-    dst = dst-1;
+    iss >> src >> dst >> x;
+    // iss >> src >> dst;
+    // src = src-1;
+    // dst = dst-1;
 
     // cout << "src: " << src << " dst: " << dst << " x: " << x << endl;
 
@@ -446,7 +579,8 @@ void *entry_point(void *info) {
   }
 
   // begin_roi();
-  mv(tid, ((struct gcn_info*)info)->edge_list, ((struct gcn_info*)info)->wgt, ((struct gcn_info*)info)->vertex_ptr, ((struct gcn_info*)info)->sampled_edge_list, ((struct gcn_info*)info)->sampled_offset);
+  gcn(tid, ((struct gcn_info*)info)->feature_map, ((struct gcn_info*)info)->sampled_edge_list, ((struct gcn_info*)info)->sampled_offset);
+  // gcn(tid, ((struct gcn_info*)info)->edge_list, ((struct gcn_info*)info)->wgt, ((struct gcn_info*)info)->vertex_ptr, ((struct gcn_info*)info)->sampled_edge_list, ((struct gcn_info*)info)->sampled_offset);
  
   // end_roi();
   // sb_stats();
@@ -560,7 +694,10 @@ void perform_sampling(uint32_t (&edge_list)[E], VTYPE (&wgt)[E],
       // cout << "Number of edges at layer: " << l << " is: " << e << endl;
       sampled_offset[l][LADIES_SAMPLE]=e;
     }
-    cout << "Done doing ladies sampling for first batch with edges: " << sampled_offset[0][LADIES_SAMPLE] << "\n";
+
+    for(int l=0; l<GCN_LAYERS; ++l) {
+      cout << "Done doing ladies sampling for first batch with edges: " << sampled_offset[l][LADIES_SAMPLE] << "\n";
+    }
     /*for(int k=0; k<=LADIES_SAMPLE; ++k) {
       cout << "offset at k: " << k << " is " << sampled_offset[0][k] << endl; 
     }
@@ -574,6 +711,7 @@ int main() {
   struct gcn_info *info = (struct gcn_info*)malloc(sizeof(struct gcn_info));
 
 
+#if FULL_TRAINING==1
   read_adjacency_matrix(info->edge_list, info->wgt, info->vertex_ptr);
 
   // TODO: add later
@@ -596,6 +734,12 @@ int main() {
       info->wgt[j]=1*1/(float)(sqrt(out_degree)*sqrt(out_degree_of_dest));
     }
   }
+#endif
+
+  for(int i=0; i<NUM_THREADS; ++i) {
+    addDest(broadcast_mask, i);
+  }
+
 
   for(int i=0; i<NUM_THREADS; ++i) {
     addDest(feat_active_core_mask, i);
@@ -613,11 +757,15 @@ int main() {
   int scratch_space = NUM_VERT_PER_THREAD*FEAT_LEN*4;
   assert(scratch_space<FEAT_PART_SIZE && "required scratch space is more than available partition, increase cores");
   assert(FEAT_LEN%VEC_LEN==0 && "feat_len should be a multiple of vec_len");
-  assert(FEAT_LEN%16==0 && "currently only support 64-byte multiple wide type");
+  assert(FEAT_LEN%16==0 && "currently only support 64-byte multiple wide type, also tile factor should be a multiple");
   assert(LADIES_SAMPLE%NUM_THREADS==0 && "Not sure otherwise how we distributed");
 
+#if FULL_TRAINING==1
   perform_sampling(info->edge_list, info->wgt, info->vertex_ptr, info->sampled_offset, info->sampled_edge_list);
   cout << "Sampling done\n";
+#else
+  read_sampling_arrays(info->sampled_offset, info->sampled_edge_list);
+#endif
   /*for(int k=0; k<LADIES_SAMPLE; ++k) {
     cout << "offset at k: " << k << " is: " << info->sampled_offset[0][k] << endl;
   }

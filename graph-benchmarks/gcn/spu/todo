@@ -14,7 +14,6 @@ num_threads=1 reading weird things
 PACKETS ISSUED IN SAME CYCLE WILL REACH TOGETHER (SEE HOW TO MODEL NET BW
     PROPERLY)
 1. Partitioning
-2. MM correctness
 3. feat_len=256
 4. gcn layers?
 5. preload?
@@ -28,11 +27,19 @@ SS_SCR_PORT_STREAM(scr_addr,stride,acc_size,n_strides, port)
 Comments:
 Pull
 1. Easier load balancing
-2. remote read of 256 elements
-3. should I put a flag for for all local?
-4. vectorize the matrix-multiplication
 5. See if any pattern in the destination, sampling should be on OOO and the
    gem5 can read the sampled graph for now? (single layer)
+6. outgoing or incoming graph?
+7. Looks like something is wrong with the special case in the
+   layer 1 (CHECKME: maybe some of the lot has 0 active nodes)
+8. CHECK STATS IF CORRECT
+9. Bottlenck for mv, is remote port coalesced?
+10. NUM_THREADS cannot be more than 8 because of the way global_wait is
+	implemented.
+
+
+10. RD-WR CONFLICTS ON FEATURE_MAP? (whole aggregation phase should be
+    completed earlier?)
 
 
 GIVING ERROR FOR HIGHER FEAT LEN (HIGHER NUM_THREADS GIVE ERROR)
