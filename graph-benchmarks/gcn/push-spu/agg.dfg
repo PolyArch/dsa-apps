@@ -1,0 +1,12 @@
+# Input32: feat[16]  # 80 64-byte inputs is correct
+Input32: offset_list0
+Input32: offset_list1
+
+row_size = Sub32(offset_list1, offset_list0)
+row_size1 = row_size # don't copy output
+row_size2 = row_size
+start_ind = offset_list0
+
+Output32: start_ind
+Output32: row_size1
+Output32: row_size2
