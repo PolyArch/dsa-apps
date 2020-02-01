@@ -1,12 +1,29 @@
 # Input32: feat[16]  # 80 64-byte inputs is correct
 Input32: offset_list0
 Input32: offset_list1
+Input32: scr_val1
+Input32: scr_val2
+
+Input32: dst_id_in
+Input32: feat_in
 
 row_size = Sub32(offset_list1, offset_list0)
 row_size1 = row_size # don't copy output
+# is_row_size_zero = ICmpNE32(row_size,0)
+# row_size2 = Keep32(row_size, control=is_row_size_zero{0:d})
 row_size2 = row_size
 start_ind = offset_list0
+
+# atomic execution (vectorize?)
+scr_out = Add32(scr_val1, scr_val2)
+
+dst_id_out = dst_id_in
+feat_out = feat_in
 
 Output32: start_ind
 Output32: row_size1
 Output32: row_size2
+Output32: scr_out
+
+Output32: dst_id_out
+Output32: feat_out

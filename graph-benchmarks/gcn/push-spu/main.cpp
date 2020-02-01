@@ -27,7 +27,7 @@ using namespace std;
 
 // #define NODES 1971
 #define rate 0.073
-#define FEAT_LEN 16 // 64 // 128 // 256 // 128 // 256 // 64 // 256 // 16 // 16 // 32 // 16 // 32 // 64 // 16 // 32 // 64 // 32 // 16 // 128 // 64
+#define FEAT_LEN 128 // 64 // 256 // 128 // 256 // 64 // 256 // 16 // 16 // 32 // 16 // 32 // 64 // 16 // 32 // 64 // 32 // 16 // 128 // 64
 #define VEC_LEN 16
 
 // #define LADIES_SAMPLE 128 // 32 // 36 // 32 // 16 // 256 // 16 // 64 // 128 // 512 // 256 // 512
@@ -160,6 +160,8 @@ void agg(long tid, uint32_t (&feature_map)[2][V][FEAT_LEN], uint32_t (&sampled_e
     int degree = sampled_offset[0][k+1]-sampled_offset[0][k];
     if(degree==0) --cur_active_vert;
   }
+
+  // ind_1 being written by 1 stream and consumed by another (is it allowed?)
   
   int l=0;
 
@@ -171,9 +173,12 @@ void agg(long tid, uint32_t (&feature_map)[2][V][FEAT_LEN], uint32_t (&sampled_e
   SS_DMA_READ(&sampled_offset[l][start_col+1], 4, 4, NUM_VERT_PER_THREAD-1, P_agg_offset_list1);
   SS_CONST(P_agg_offset_list1,sampled_offset[l][end_col],1);
 
+  // if row_size is 0, then we may not yet be sure that the previous sdinfo was
+  // last (should it be bytes waiting?)
   // accessing the dst_id (src, src+1, src+2)
   SS_CONFIG_INDIRECT(T32,T32,4,1); // multiplier for offset
-  SS_INDIRECT_2D(P_agg_start_ind, &sampled_edge_list[l][0], NUM_VERT_PER_THREAD, 4, 4, P_agg_row_size1, P_IND_1); // dest_id
+  SS_INDIRECT_2D(P_agg_start_ind, &sampled_edge_list[l][0], NUM_VERT_PER_THREAD, 4, 4, P_agg_row_size1, P_agg_dst_id_in); // dest_id
+  // SS_INDIRECT_2D(P_agg_start_ind, &sampled_edge_list[l][0], NUM_VERT_PER_THREAD, 4, 4, P_agg_row_size1, P_IND_1); // dest_id
 
 
   // SS_CONFIG_MEM_MAP(FEAT_PART_SIZE,feat_active_core_mask,0);
@@ -181,15 +186,19 @@ void agg(long tid, uint32_t (&feature_map)[2][V][FEAT_LEN], uint32_t (&sampled_e
   // SS_INDIRECT_SCR(P_IND_1, 0, inc_edges, P_gcn_feat);
   // TODO: from local scratch? (but no reuse, we can save this space) --
   // a point of comparison after we model the limited scratch size
-  // SS_DMA_READ(&feature_map[0][0][0], 4*FEAT_LEN, 4*FEAT_LEN, cur_active_vert, P_IND_2);
   
-  SS_DMA_READ(&feature_map[0][0][0], 4, 4, cur_active_vert*FEAT_LEN, P_IND_2); // this is not done... (16 chahiye tha, 8 pe hi stream khatam ho gayi?)
+  // problem: we are not consuming values from atomic scr unless we get
+  // sufficient addresses?
+  // SS_DMA_READ(&feature_map[0][0][0], 4, 4, cur_active_vert*FEAT_LEN, P_IND_2);
+  SS_DMA_READ(&feature_map[0][0][0], 4, 4, cur_active_vert*FEAT_LEN, P_agg_feat_in);
 
-  SS_CONFIG_ATOMIC_SCR_OP(T32, T32, T32, FEAT_LEN, P_agg_row_size2, 1); // row_size2 has cur_active_vertex elements (128 pooped, so issue in this last case??)
-  SS_ATOMIC_SCR_OP(P_IND_1, P_IND_2, 0, cur_active_vert, 0); // num_edges, cur_active_vertex*FEAT_LEN
+  SS_CONFIG_ATOMIC_SCR_OP(T32, T32, T32, FEAT_LEN, P_agg_row_size2, 1);
+  SS_ATOMIC_SCR_OP(P_agg_dst_id_out, P_agg_feat_out, 0, NUM_VERT_PER_THREAD, 0); // num_edges, NUM_VERT_PER_THREAD*FEAT_LEN
+  // SS_ATOMIC_SCR_OP(P_IND_1, P_IND_2, 0, NUM_VERT_PER_THREAD, 0); // num_edges, NUM_VERT_PER_THREAD*FEAT_LEN
   SS_WAIT_ALL();
   SS_GLOBAL_WAIT(NUM_THREADS);
   end_roi();
+  sb_stats();
 
 }
 
@@ -601,6 +610,7 @@ void *entry_point(void *info) {
   SS_CONFIG(gcn_config, gcn_size);
 #else
   SS_CONFIG(agg_config, agg_size);
+  SS_ATOMIC_DFG_CONFIG(P_agg_scr_val1, P_agg_scr_val2, P_agg_scr_out);
 #endif
   SS_GLOBAL_WAIT(NUM_THREADS);
 
