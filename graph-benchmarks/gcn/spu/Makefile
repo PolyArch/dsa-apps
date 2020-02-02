@@ -87,7 +87,7 @@ FULL_TRAINING=0
 endif
 
 ifndef LADIES_SAMPLE
-LADIES_SAMPLE=128
+LADIES_SAMPLE=256 # 128
 endif
 
 ifndef GCN_LAYERS
@@ -115,8 +115,8 @@ csr: make_unweighted.cpp
 	./csr
 
 sampling: cpu.cpp
-	rm sampled_nodes.txt
-	rm adj_mat.txt
+	# rm sampled_nodes.txt
+	# rm adj_mat.txt
 	g++ -std=c++11 cpu.cpp $(MACROS) -o csr
 	./csr
 

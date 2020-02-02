@@ -87,7 +87,7 @@ FULL_TRAINING=0
 endif
 
 ifndef LADIES_SAMPLE
-LADIES_SAMPLE=128
+LADIES_SAMPLE=256 #128
 endif
 
 ifndef GCN_LAYERS
@@ -103,7 +103,7 @@ include /home/vidushi/ss-stack/ss-workloads/spu-benchmarks/common/Makefile.inc
 
 MACROS = -DV=$(V) -DE=$(E) -Dcsr_file=$(csr_file) -DC=$(C) -Ddata_file=$(data_file) -DSYNC=$(SYNC) -DAGG=$(AGG) -DMULT=$(MULT) -DPRELOAD=$(PRELOAD) -DPOSTLOAD=$(POSTLOAD) -DFULL_TRAINING=$(FULL_TRAINING) -DLADIES_SAMPLE=$(LADIES_SAMPLE) -DGCN_LAYERS=$(GCN_LAYERS) -DNUM_THREADS=$(NUM_THREADS)
 
-DFGS=gcn.dfg agg.dfg mult.dfg
+DFGS=agg.dfg mult.dfg gcn.dfg
 
 DFG_HEADERS=$(DFGS:.dfg=.dfg.h)
 

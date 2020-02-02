@@ -1,29 +1,50 @@
-# Input32: feat[16]  # 80 64-byte inputs is correct
 Input32: offset_list0
 Input32: offset_list1
-Input32: scr_val1
-Input32: scr_val2
+Input32: scr_addr_in[16]
+Input32: scr_val_in[16]
 
 Input32: dst_id_in
 Input32: feat_in
 
 row_size = Sub32(offset_list1, offset_list0)
-row_size1 = row_size # don't copy output
-# is_row_size_zero = ICmpNE32(row_size,0)
-# row_size2 = Keep32(row_size, control=is_row_size_zero{0:d})
+row_size1 = row_size
 row_size2 = row_size
 start_ind = offset_list0
 
 # atomic execution (vectorize?)
-scr_out = Add32(scr_val1, scr_val2)
+real_out0 = Add32(scr_addr_in0, scr_val_in0)
+real_out1 = Add32(scr_addr_in1, scr_val_in1)
+real_out2 = Add32(scr_addr_in2, scr_val_in2)
+real_out3 = Add32(scr_addr_in3, scr_val_in3)
+real_out4 = Add32(scr_addr_in4, scr_val_in4)
+real_out5 = Add32(scr_addr_in5, scr_val_in5)
+real_out6 = Add32(scr_addr_in6, scr_val_in6)
+real_out7 = Add32(scr_addr_in7, scr_val_in7)
+real_out8 = Add32(scr_addr_in8, scr_val_in8)
+real_out9 = Add32(scr_addr_in9, scr_val_in9)
+real_out10 = Add32(scr_addr_in10, scr_val_in10)
+real_out11 = Add32(scr_addr_in11, scr_val_in11)
+real_out12 = Add32(scr_addr_in12, scr_val_in12)
+real_out13 = Add32(scr_addr_in13, scr_val_in13)
+real_out14 = Add32(scr_addr_in14, scr_val_in14)
+real_out15 = Add32(scr_addr_in15, scr_val_in15)
 
 dst_id_out = dst_id_in
 feat_out = feat_in
 
+scr_out0 = real_out0 real_out1
+scr_out1 = real_out2 real_out3
+scr_out2 = real_out4 real_out5
+scr_out3 = real_out6 real_out7
+scr_out4 = real_out8 real_out9
+scr_out5 = real_out10 real_out11
+scr_out6 = real_out12 real_out13
+scr_out7 = real_out14 real_out15
+
+# Output32: scr_out[16]
+Output: scr_out[8]
 Output32: start_ind
 Output32: row_size1
 Output32: row_size2
-Output32: scr_out
-
 Output32: dst_id_out
 Output32: feat_out

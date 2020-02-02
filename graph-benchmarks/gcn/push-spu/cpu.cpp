@@ -70,20 +70,36 @@ void convert_push_to_pull(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
   for(int i=0; i<NODES; ++i) {
     vertex_ptr[i+1]=adj_list[i].size();
     for(unsigned j=0; j<adj_list[i].size(); ++j) {
-      int edge_id = j+vertex_ptr[i];
-      assert(edge_id<EDGES);
-      edge_list[edge_id] = adj_list[i][j];
+      edge_list[j+vertex_ptr[i]] = adj_list[i][j];
     }
   }
-  for(int i=0; i<NODES; ++i) adj_list[i].clear();
+  /*
+  int pull_edge_list[EDGES];
+  int pull_vertex_ptr[NODES+1];
+
+  int in_degree[NODES] = {0};
+  for(int i=0; i<NODES; ++i) {
+    for(int j=vertex_ptr[i]; j<vertex_ptr[i+1]; ++j) {
+      in_degree[edge_list[j]]++;
+    }
+  }
+
+  pull_vertex_ptr[0]=0;
+  for(int i=0; i<=NODES; ++i) {
+    pull_vertex_ptr[i] = pull_vertex_ptr[i-1]+in_degree[i-1];
+  }
+  */
+
+
 }
+
 
 void read_adjacency_matrix(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
                            int (&vertex_ptr)[NODES+1]) {
 
   cout << "start reading graph input file!\n";
   
- FILE* graph_file = fopen("../../pagerank/datasets/flickr_csr", "r");
+ FILE* graph_file = fopen("../../pagerank/datasets/flickr_cvc", "r");
  // FILE* graph_file = fopen("datasets/pubmed_und_csr", "r");
  // FILE* graph_file = fopen("datasets/citeseer_und_csr.txt", "r");
  // FILE* graph_file = fopen("/home/vidushi/graphsim/datasets/undirected/cit-Patents.mtx", "r");
@@ -95,7 +111,8 @@ void read_adjacency_matrix(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
     std::string raw(linetoread);
     std::istringstream iss(raw.c_str());
     int src, dst, x;
-    iss >> src >> dst >> x;
+    iss >> src >> dst; //  >> x;
+
     adj_list[dst].push_back(src);
   }
   fclose(graph_file);
@@ -105,6 +122,87 @@ void read_adjacency_matrix(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
       cout << "vertex_ptr: " << vertex_ptr[i] << endl;
   }*/
 }
+
+/*
+void read_adjacency_matrix(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
+                           VTYPE (&vertex_ptr)[NODES+1]) {
+
+  cout << "start reading graph input file!\n";
+  
+ // FILE* graph_file = fopen("../../pagerank/datasets/flickr_cvc", "r");
+ // FILE* graph_file = fopen("datasets/pubmed_und_csr", "r");
+ // FILE* graph_file = fopen("datasets/citeseer_und_csr.txt", "r");
+ FILE* graph_file = fopen("/home/vidushi/graphsim/datasets/undirected/cit-Patents.mtx", "r");
+
+  char linetoread[5000];
+
+  vertex_ptr[0]=0;
+  int prev_offset=0;
+  int e=-1, prev_v=0; // indices start from 1
+  bool ignore=false;
+  while(fgets(linetoread, 5000, graph_file) != NULL) {
+    std::string raw(linetoread);
+    std::istringstream iss(raw.c_str());
+    int src, dst, x;
+    iss >> src >> dst; //  >> x;
+
+    adj_list[dst].push_back(src);
+
+    // cout << "src: " << src << " dst: " << dst << " x: " << x << endl;
+
+    int degree = e-vertex_ptr[prev_v];
+#if LADIES_GCN==0
+    ignore = (degree==SAMPLE_SIZE);
+#endif
+
+    if(!ignore) {
+      edge_list[++e]=dst;
+      wgt[e]=1; // x;
+      // cout << "Current edge: " << e << " with dst: " << dst << " and src: " << src << " prev_v: " << prev_v << endl;
+    }
+
+    if(src!=prev_v) {
+      // assert(degree<=SAMPLE_SIZE);
+      // cout << "Current node degree: " << degree << endl;
+#if LADIES_GCN==0
+      degree++;
+      if(degree<SAMPLE_SIZE) {
+        // replicate some EDGES
+        for(int a=0; a<(SAMPLE_SIZE-degree);++a) {
+            edge_list[++e] = edge_list[a];
+        }
+      }
+#endif
+      vertex_ptr[prev_v+1]=e;
+      // cout << (prev_v+1) << " OFFSET: " << e << endl;
+      int k=prev_v+1;
+      while(vertex_ptr[--k]==0 && k>0) {
+        vertex_ptr[k]=prev_offset;
+      }
+      prev_offset=e;
+      prev_v=src;
+      // cout << "index: " << (src) << " value: " << e << endl;
+    }
+    // cout << _neighbor[e].wgt << " " << _neighbor[e].dst_id << " " << _offset[prev_v-1] << endl;
+
+
+    // SAMPLING
+#if LADIES_GCN==0
+    if(prev_v==NODES) {
+      cout << "break from the file reading phase because required NODES are done\n";
+      break;
+    }
+#endif
+  }
+  vertex_ptr[NODES] = EDGES;
+  int k=NODES;
+  while(vertex_ptr[--k]==0 && k>0) { // offset[0] should be 0
+    vertex_ptr[k]=prev_offset;
+  }
+  fclose(graph_file);
+  cout << "Done reading graph file!\n";
+  
+}*/
 
 // considering it to be dense (classes~100?)
 void fill_input_fm(int (&feature_map)[NODES][features][2]) {
@@ -145,7 +243,6 @@ void perform_sampling(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
     cout << "Node selected: " << sampled_nodes[k][GCN_LAYERS] << endl;
   }*/
 
-  vector<int> sampled_adj_list[GCN_LAYERS][LADIES_SAMPLE];
   for(int l=GCN_LAYERS-1; l>=0; --l) {
 
     float prob[NODES] = {0};
@@ -233,14 +330,13 @@ void perform_sampling(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
           for(int k=vertex_ptr[ind]; k<vertex_ptr[ind+1]; ++k) {
             if(edge_list[k]==sampled_nodes[j][l]) {
               val = interm[j]*wgt[k];
-              sampled_adj_list[l][j].push_back(i);
               sampled_edge_list[l].push_back(j); // this doesn't allow parallelization
               ++e;
             }
           }
         }
       }
-      cout << "Number of edges at layer: " << l << " is: " << e << endl;
+      // cout << "Number of edges at layer: " << l << " is: " << e << endl;
       sampled_vertex_ptr[l][LADIES_SAMPLE]=e;
     }
 
@@ -260,17 +356,6 @@ void perform_sampling(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
   // TODO: for pull implementation, this should store the pull version of the
   // graph
   // ADJ MATRIX
-  for(int l=0; l<GCN_LAYERS; ++l) {
-    sampled_vertex_ptr[l][0]=0;
-    for(i=0; i<LADIES_SAMPLE; ++i) {
-      sampled_vertex_ptr[l][i+1] = sampled_adj_list[l][i].size() + sampled_vertex_ptr[l][i];
-      // cout << "sampled ptr: " << sampled_vertex_ptr[l][i+1] << endl;
-      for(unsigned k=0; k<sampled_adj_list[l][i].size(); ++k) {
-        int edge_ind = k + sampled_vertex_ptr[l][i];
-        sampled_edge_list[l][edge_ind] = sampled_adj_list[l][i][k];
-      }
-    }
-  }
   ofstream adj_new("adj_mat.txt");
   if(adj_new.is_open()) {
     for(int l=0; l<GCN_LAYERS; ++l) {
@@ -287,7 +372,6 @@ void perform_sampling(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
     }
   }
   adj_new.close();
-  /*
   int in_degree[LADIES_SAMPLE];
   for(int l=0; l<GCN_LAYERS; ++l) {
     for(i=0; i<LADIES_SAMPLE; ++i) in_degree[i]=0;
@@ -306,12 +390,8 @@ void perform_sampling(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
       cout << "out degree node k: " << i  << " " << (sampled_vertex_ptr[l][i+1]-sampled_vertex_ptr[l][i]) << endl;
     }
   }
-  */
 
 
-  for(int l=0; l<GCN_LAYERS; ++l) {
-    for(i=0; i<LADIES_SAMPLE; ++i) sampled_adj_list[l][i].clear();
-  }
 }
 
 int main() {
