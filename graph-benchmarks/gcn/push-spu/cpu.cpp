@@ -33,7 +33,8 @@ using namespace std;
 
 // flickr
 #define NODES  820878 //3327  //
-#define EDGES  9837214 // 4731 // 19674428 //  // 19674428 // 9837214
+#define EDGES  9837214
+// #define EDGES  (9837214*2) // 4731 // 19674428 //  // 19674428 // 9837214
 
 // pubmed
 // #define NODES  19719 //3327  //
@@ -99,7 +100,7 @@ void read_adjacency_matrix(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
 
   cout << "start reading graph input file!\n";
   
- FILE* graph_file = fopen("../../pagerank/datasets/flickr_cvc", "r");
+ FILE* graph_file = fopen("../../pagerank/datasets/flickr_csr", "r");
  // FILE* graph_file = fopen("datasets/pubmed_und_csr", "r");
  // FILE* graph_file = fopen("datasets/citeseer_und_csr.txt", "r");
  // FILE* graph_file = fopen("/home/vidushi/graphsim/datasets/undirected/cit-Patents.mtx", "r");
@@ -111,9 +112,10 @@ void read_adjacency_matrix(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
     std::string raw(linetoread);
     std::istringstream iss(raw.c_str());
     int src, dst, x;
-    iss >> src >> dst; //  >> x;
+    iss >> src >> dst >> x;
 
-    adj_list[dst].push_back(src);
+    // adj_list[dst].push_back(src);
+    adj_list[src].push_back(dst);
   }
   fclose(graph_file);
   cout << "Done reading graph file!\n";
@@ -225,7 +227,7 @@ void fill_weights(VTYPE (&weights)[GCN_LAYERS][features][output_fm]) {
 }
 
 
-int sampled_nodes[LADIES_SAMPLE][GCN_LAYERS+1];
+int sampled_nodes[GCN_LAYERS+1][LADIES_SAMPLE];
 
 void perform_sampling(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
         int (&sampled_vertex_ptr)[GCN_LAYERS][LADIES_SAMPLE+1],
@@ -235,8 +237,10 @@ void perform_sampling(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
   int i,j;
 
   // random selected nodes are higher probability to low degree?
+  // should be unique nodes
   for(i=0; i<LADIES_SAMPLE; ++i) {
-    sampled_nodes[i][GCN_LAYERS] = rand()%NODES;
+    srand(i);
+    sampled_nodes[GCN_LAYERS][i] = rand()%NODES;
   }
 
   /*for(int k=0; k<LADIES_SAMPLE; ++k) {
@@ -250,21 +254,39 @@ void perform_sampling(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
     for(i=0; i<NODES; ++i) prob[i]=0;
     // Q.P (256xV)
 
+    // Should prioritize based on incoming degree
+    // TODO: check outgoing edges of ind and find their incoming degree
+    /*for(i=0; i<NODES; ++i) {
+      for(j=vertex_ptr[i]; j<vertex_ptr[i+1]; ++j) {
+        for(int k=0; k<LADIES_SAMPLE; ++k) {
+          if(edge_list[j]==sampled_nodes[l+1][k]) {  // if this src is in sampled nodes
+            prob[i] += 1;
+            break;
+          }
+        }
+      }
+    }*/
+
+    // This can have maximum value of 256
     for(i=0; i<LADIES_SAMPLE; ++i) { // reuse on the graph
-      int ind = sampled_nodes[i][l+1];
+      int ind = sampled_nodes[l+1][i];
+      // prob[i] = vertex_ptr[ind+1]-vertex_ptr[ind];
       for(j=vertex_ptr[ind]; j<vertex_ptr[ind+1]; ++j) {
         prob[edge_list[j]] += 1; // pow(wgt[j]*1,2);
+
+        cout << "i: " << i << " j: " << j << " dst: " << edge_list[j] << " and new prob: " << prob[edge_list[j]] << endl;
       }
     }
 
-    /*for(i=0; i<NODES; ++i) {
+    for(i=0; i<NODES; ++i) {
       if(prob[i]!=0)
       cout << "i: " << i << " prob: " << prob[i] << endl;
-    }*/
+      assert(prob[i]<=LADIES_SAMPLE);
+    }
 
      // frobeneous norm = trace(A*A)
-     int fnorm = sqrt(EDGES/2); // assuming undirected graph with 1 side edges=E
-     for(i=0; i<NODES; ++i) prob[i]/=(float)fnorm;
+     // int fnorm = sqrt(EDGES/2); // assuming undirected graph with 1 side edges=E
+     // for(i=0; i<NODES; ++i) prob[i]/=(float)fnorm;
 
      // int num_non_zero_values=0,
      int non_zero_index=-1;
@@ -286,7 +308,7 @@ void perform_sampling(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
         // cout << "Cumulative probability for node i: " << i << " " << prob[i] << endl;
       }
 
-      // cout << "Number of candidates: " << non_zero_index << endl;
+      cout << "Number of candidates: " << non_zero_index << endl;
       float range = prob[non_zero_index]-prob[0];
       // cout << "start: " << prob[0] << " range: " << range << endl;
 
@@ -295,6 +317,7 @@ void perform_sampling(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
       int a, mid; float x;
 
       for(i=0; i<LADIES_SAMPLE; ++i) {
+        srand(i);
         a = rand()%100;
         x = (a/(float)100)*range;
         x += prob[0];
@@ -308,27 +331,27 @@ void perform_sampling(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
           if(prob[mid]>x) bend = mid-1;
           else bstart = mid+1;
         }
-        sampled_nodes[i][l] = candidate_vid[mid];
+        sampled_nodes[l][i] = candidate_vid[mid];
       }
 
       /*for(int k=0; k<LADIES_SAMPLE; ++k) {
-        cout << "Node selected2: " << sampled_nodes[k][l] << endl;
+        cout << "Node selected: " << sampled_nodes[l][k] << endl;
       }*/
       // layer-dependent laplacian matrix
       float interm[LADIES_SAMPLE];
 
       for(i=0; i<LADIES_SAMPLE; ++i) {
-        interm[i] = prob[sampled_nodes[i][l]];
+        interm[i] = prob[sampled_nodes[l][i]];
       }
 
       int e=0, ind;
       for(i=0; i<LADIES_SAMPLE; ++i) { // first row of Q.P
-        ind = sampled_nodes[i][l+1];
+        ind = sampled_nodes[l+1][i];
         sampled_vertex_ptr[l][i] = e;
         for(j=0; j<LADIES_SAMPLE; ++j) {
           int val=0;
           for(int k=vertex_ptr[ind]; k<vertex_ptr[ind+1]; ++k) {
-            if(edge_list[k]==sampled_nodes[j][l]) {
+            if(edge_list[k]==sampled_nodes[l][j]) {
               val = interm[j]*wgt[k];
               sampled_edge_list[l].push_back(j); // this doesn't allow parallelization
               ++e;
@@ -336,7 +359,7 @@ void perform_sampling(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
           }
         }
       }
-      // cout << "Number of edges at layer: " << l << " is: " << e << endl;
+      cout << "Number of edges at layer: " << l << " is: " << e << endl;
       sampled_vertex_ptr[l][LADIES_SAMPLE]=e;
     }
 
@@ -391,6 +414,9 @@ void perform_sampling(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
     }
   }
 
+#if LOAD_BALANCE==1
+   preprocess_ld_balance(sampled_vertex_ptr[0]);
+#endif
 
 }
 

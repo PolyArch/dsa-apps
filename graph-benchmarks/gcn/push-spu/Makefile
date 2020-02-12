@@ -87,7 +87,7 @@ FULL_TRAINING=0
 endif
 
 ifndef LADIES_SAMPLE
-LADIES_SAMPLE=256 #128
+LADIES_SAMPLE=256
 endif
 
 ifndef GCN_LAYERS
@@ -98,10 +98,14 @@ ifndef NUM_THREADS
 NUM_THREADS=8
 endif
 
+ifndef LOAD_BALANCE
+LOAD_BALANCE=0
+endif
+
 
 include /home/vidushi/ss-stack/ss-workloads/spu-benchmarks/common/Makefile.inc
 
-MACROS = -DV=$(V) -DE=$(E) -Dcsr_file=$(csr_file) -DC=$(C) -Ddata_file=$(data_file) -DSYNC=$(SYNC) -DAGG=$(AGG) -DMULT=$(MULT) -DPRELOAD=$(PRELOAD) -DPOSTLOAD=$(POSTLOAD) -DFULL_TRAINING=$(FULL_TRAINING) -DLADIES_SAMPLE=$(LADIES_SAMPLE) -DGCN_LAYERS=$(GCN_LAYERS) -DNUM_THREADS=$(NUM_THREADS)
+MACROS = -DV=$(V) -DE=$(E) -Dcsr_file=$(csr_file) -DC=$(C) -Ddata_file=$(data_file) -DSYNC=$(SYNC) -DAGG=$(AGG) -DMULT=$(MULT) -DPRELOAD=$(PRELOAD) -DPOSTLOAD=$(POSTLOAD) -DFULL_TRAINING=$(FULL_TRAINING) -DLADIES_SAMPLE=$(LADIES_SAMPLE) -DGCN_LAYERS=$(GCN_LAYERS) -DNUM_THREADS=$(NUM_THREADS) -DLOAD_BALANCE=$(LOAD_BALANCE)
 
 DFGS=agg.dfg mult.dfg gcn.dfg
 
@@ -115,8 +119,8 @@ csr: make_unweighted.cpp
 	./csr
 
 sampling: cpu.cpp
-	rm sampled_nodes.txt
-	rm adj_mat.txt
+	# rm sampled_nodes.txt
+	# rm adj_mat.txt
 	g++ -std=c++11 cpu.cpp $(MACROS) -o csr
 	./csr
 
@@ -134,4 +138,4 @@ run-debug:
 # 	BACKCGRA=1 LINEAR_SCR=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=2048kB --l1i_size=16kB --caches --num-cpus=$(C) --num-dirs=$(C) --cmd=$(TESTS)
 
 run:
-	BACKCGRA=1 DSCDIVLD=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=2048kB --l1i_size=16kB --caches --ruby --num-cpus=$(C) --num-dirs=$(C) --network=simple --topology=Mesh_XY --mesh-rows=$(C) --cmd=$(TESTS) --mem-size=4GB
+	BACKCGRA=1 DSCDIVLD=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1i_size=16kB --ruby --num-cpus=$(C) --num-dirs=$(C) --network=simple --topology=Mesh_XY --mesh-rows=2 --cmd=$(TESTS) --mem-size=4GB

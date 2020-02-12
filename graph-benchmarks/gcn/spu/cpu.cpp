@@ -96,7 +96,8 @@ void read_adjacency_matrix(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
     std::istringstream iss(raw.c_str());
     int src, dst, x;
     iss >> src >> dst >> x;
-    adj_list[dst].push_back(src);
+    adj_list[src].push_back(dst);
+    // adj_list[dst].push_back(src);
   }
   fclose(graph_file);
   cout << "Done reading graph file!\n";
@@ -138,6 +139,7 @@ void perform_sampling(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
 
   // random selected nodes are higher probability to low degree?
   for(i=0; i<LADIES_SAMPLE; ++i) {
+    srand(i);
     sampled_nodes[i][GCN_LAYERS] = rand()%NODES;
   }
 
@@ -166,8 +168,8 @@ void perform_sampling(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
     }*/
 
      // frobeneous norm = trace(A*A)
-     int fnorm = sqrt(EDGES/2); // assuming undirected graph with 1 side edges=E
-     for(i=0; i<NODES; ++i) prob[i]/=(float)fnorm;
+     // int fnorm = sqrt(EDGES/2); // assuming undirected graph with 1 side edges=E
+     // for(i=0; i<NODES; ++i) prob[i]/=(float)fnorm;
 
      // int num_non_zero_values=0,
      int non_zero_index=-1;
@@ -198,6 +200,7 @@ void perform_sampling(int (&edge_list)[EDGES], VTYPE (&wgt)[EDGES],
       int a, mid; float x;
 
       for(i=0; i<LADIES_SAMPLE; ++i) {
+        srand(i);
         a = rand()%100;
         x = (a/(float)100)*range;
         x += prob[0];

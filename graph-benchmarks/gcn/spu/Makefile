@@ -98,10 +98,14 @@ ifndef NUM_THREADS
 NUM_THREADS=8
 endif
 
+ifndef LOAD_BALANCE
+LOAD_BALANCE=0
+endif
+
 
 include /home/vidushi/ss-stack/ss-workloads/spu-benchmarks/common/Makefile.inc
 
-MACROS = -DV=$(V) -DE=$(E) -Dcsr_file=$(csr_file) -DC=$(C) -Ddata_file=$(data_file) -DSYNC=$(SYNC) -DAGG=$(AGG) -DMULT=$(MULT) -DPRELOAD=$(PRELOAD) -DPOSTLOAD=$(POSTLOAD) -DFULL_TRAINING=$(FULL_TRAINING) -DLADIES_SAMPLE=$(LADIES_SAMPLE) -DGCN_LAYERS=$(GCN_LAYERS) -DNUM_THREADS=$(NUM_THREADS)
+MACROS = -DV=$(V) -DE=$(E) -Dcsr_file=$(csr_file) -DC=$(C) -Ddata_file=$(data_file) -DSYNC=$(SYNC) -DAGG=$(AGG) -DMULT=$(MULT) -DPRELOAD=$(PRELOAD) -DPOSTLOAD=$(POSTLOAD) -DFULL_TRAINING=$(FULL_TRAINING) -DLADIES_SAMPLE=$(LADIES_SAMPLE) -DGCN_LAYERS=$(GCN_LAYERS) -DNUM_THREADS=$(NUM_THREADS) -DLOAD_BALANCE=$(LOAD_BALANCE)
 
 DFGS=gcn.dfg mult.dfg
 
@@ -128,10 +132,12 @@ $(TESTS): $(TEST_OBJS)
 	 $(CPP) $(LIB) $(CFLAGS) $(MACROS) -static -o $(@) $< $(LFLAGS)
 
 run-debug:
-	BACKCGRA=1 NET_REQ=1 COMMAND_I=1 COMMAND_O=1 COMP=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=2048kB --l1i_size=16kB --caches --ruby --num-cpus=$(C) --num-dirs=$(C) --network=simple --topology=Mesh_XY --mesh-rows=$(C) --cmd=$(TESTS)
+	BACKCGRA=1 NET_REQ=1 COMMAND_I=1 COMMAND_O=1 COMP=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1i_size=16kB --ruby --num-cpus=$(C) --num-dirs=$(C) --network=simple --topology=Mesh_XY --mesh-rows=$(C/2) --cmd=$(TESTS) --mem-size=4GB
+	# BACKCGRA=1 NET_REQ=1 COMMAND_I=1 COMMAND_O=1 COMP=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=2048kB --l1i_size=16kB --caches --ruby --num-cpus=$(C) --num-dirs=$(C) --network=simple --topology=Mesh_XY --mesh-rows=$(C) --cmd=$(TESTS)
 
 # run-classic:
 # 	BACKCGRA=1 LINEAR_SCR=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=2048kB --l1i_size=16kB --caches --num-cpus=$(C) --num-dirs=$(C) --cmd=$(TESTS)
 
 run:
-	BACKCGRA=1 DSCDIVLD=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=2048kB --l1i_size=16kB --caches --ruby --num-cpus=$(C) --num-dirs=$(C) --network=simple --topology=Mesh_XY --mesh-rows=$(C) --cmd=$(TESTS) --mem-size=4GB
+	BACKCGRA=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1i_size=16kB --ruby --num-cpus=$(C) --num-dirs=$(C) --network=simple --topology=Mesh_XY --mesh-rows=2 --cmd=$(TESTS) --mem-size=4GB
+	# BACKCGRA=1 DSCDIVLD=1 gem5.opt $(SS_STACK)/gem5/configs/example/se.py --cpu-type=MinorCPU --l1d_size=2048kB --l1i_size=16kB --caches --ruby --num-cpus=$(C) --num-dirs=$(C) --network=simple --topology=Mesh_XY --mesh-rows=$(C/2) --cmd=$(TESTS) --mem-size=4GB
