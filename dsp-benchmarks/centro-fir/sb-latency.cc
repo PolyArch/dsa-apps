@@ -15,8 +15,14 @@ using std::complex;
 
 complex<float> _zero(0, 0);
 
+#ifndef LANES
+#define LANES 8
+#endif
+
+#define FULL_MASK ((1 << LANES) - 1)
+
 void filter(int n, int m, complex<float> *a, complex<float> *b, complex<float> *c, complex<float> *) {
-  SS_CONTEXT(255);
+  SS_CONTEXT(FULL_MASK);
   SS_CONFIG(compute_config, compute_size);
   //SS_DMA_SCRATCH_LOAD(a, 8, 8, n, 0);
   //SS_WAIT_SCR_WR();
@@ -27,7 +33,7 @@ void filter(int n, int m, complex<float> *a, complex<float> *b, complex<float> *
   int _res_size = res_size - resudo;
   int acc = 0;
 
-  for (int io = 0; io < _res_size; io += block, (++acc) &= 7) {
+  for (int io = 0; io < _res_size; io += block, (++acc) %= LANES) {
     SS_CONTEXT(1 << acc);
     int len = block;
     int pad = get_pad(len, VEC);

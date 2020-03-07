@@ -1,0 +1,142 @@
+Input32: offset_list0
+Input32: offset_list1
+Input32: weights[16]
+Input32: const
+Input32: aggfeat[16]
+Input32: new_const
+
+Input32: scr_addr_in[16]
+Input32: scr_val_in[16]
+
+Input32: dst_id_in
+Input32: feat_in
+
+
+row_size = Sub32(offset_list1, offset_list0)
+row_size1 = row_size
+row_size2 = row_size
+start_ind = offset_list0
+
+out = Select32(scr_addr_in0, 1, 1)
+inst = Acc32(out)
+cnt = Sub32(inst,1) # FIXME: Should never be 63..
+flag = ICmpEQ32(And32(cnt, 3),0) # true if equal to 0 ie. a multiple of 4
+# flag = CheckMult(cnt, 4) # 4 is the number of instances
+
+# should_do_mult1 = Keep32(ICmpEQ32(new_nodes_left, 0), flag)
+new_nodes_left = Sub32(scr_addr_in0, 1)
+should_do_mult1 = ICmpEQ32(new_nodes_left, 0, control=flag{0:d})
+
+# any output is repeated 4 times (bp at out = 1,2,3, not 4 don't)
+# flag2 = ICmpEQ32(And32(inst,3),0) # 1 if a multiple of 4
+# flag2 = CheckMult(inst, 4) 
+# should_do_mult = Keep32(should_do_mult1, 1, control=flag2{0:b1})
+trigger = Keep32(1, should_do_mult1)
+
+agg_feat0 = Add32(scr_addr_in0, scr_val_in0)
+agg_feat1 = Add32(scr_addr_in1, scr_val_in1)
+agg_feat2 = Add32(scr_addr_in2, scr_val_in2)
+agg_feat3 = Add32(scr_addr_in3, scr_val_in3)
+agg_feat4 = Add32(scr_addr_in4, scr_val_in4)
+agg_feat5 = Add32(scr_addr_in5, scr_val_in5)
+agg_feat6 = Add32(scr_addr_in6, scr_val_in6)
+agg_feat7 = Add32(scr_addr_in7, scr_val_in7)
+agg_feat8 = Add32(scr_addr_in8, scr_val_in8)
+agg_feat9 = Add32(scr_addr_in9, scr_val_in9)
+agg_feat10 = Add32(scr_addr_in10, scr_val_in10)
+agg_feat11 = Add32(scr_addr_in11, scr_val_in11)
+agg_feat12 = Add32(scr_addr_in12, scr_val_in12)
+agg_feat13 = Add32(scr_addr_in13, scr_val_in13)
+agg_feat14 = Add32(scr_addr_in14, scr_val_in14)
+agg_feat15 = Add32(scr_addr_in15, scr_val_in15)
+
+# if flag is true, it should nodes_left which has an output
+# otherwise chose real_out0
+agg2_feat0 = Select32(agg_feat0, new_nodes_left, flag)
+
+# after atomic update (served in reverse order)
+scr_out0 = agg_feat1 agg2_feat0 
+scr_out1 = agg_feat3 agg_feat2 
+scr_out2 = agg_feat5 agg_feat4 
+scr_out3 = agg_feat7 agg_feat6 
+scr_out4 = agg_feat9 agg_feat8 
+scr_out5 = agg_feat11 agg_feat10 
+scr_out6 = agg_feat13 agg_feat12 
+scr_out7 = agg_feat15 agg_feat14 
+
+# for inner product, we need reduction tree
+# for outer product, we can send this update to scratch
+# M0 = Mul32(agg2_feat0, weights0, control=should_do_mult{0:d|b2})
+# M1 = Mul32(agg_feat1, weights1, control=should_do_mult{0:d|b2})
+# M2 = Mul32(agg_feat2, weights2, control=should_do_mult{0:d|b2})
+# M3 = Mul32(agg_feat3, weights3, control=should_do_mult{0:d|b2})
+# M4 = Mul32(agg_feat4, weights4, control=should_do_mult{0:d|b2})
+# M5 = Mul32(agg_feat5, weights5, control=should_do_mult{0:d|b2})
+# M6 = Mul32(agg_feat6, weights6, control=should_do_mult{0:d|b2})
+# M7 = Mul32(agg_feat7, weights7, control=should_do_mult{0:d|b2})
+# 
+# M8 = Mul32(agg_feat8, weights8, control=should_do_mult{0:d|b2})
+# M9 = Mul32(agg_feat9, weights9, control=should_do_mult{0:d|b2})
+# M10 = Mul32(agg_feat10, weights10, control=should_do_mult{0:d|b2})
+# M11 = Mul32(agg_feat11, weights11, control=should_do_mult{0:d|b2})
+# M12 = Mul32(agg_feat12, weights12, control=should_do_mult{0:d|b2})
+# M13 = Mul32(agg_feat13, weights13, control=should_do_mult{0:d|b2})
+# M14 = Mul32(agg_feat14, weights14, control=should_do_mult{0:d|b2})
+# M15 = Mul32(agg_feat15, weights15, control=should_do_mult{0:d|b2})
+
+
+M0 = Mul32(aggfeat0, weights0)
+M1 = Mul32(aggfeat1, weights1)
+M2 = Mul32(aggfeat2, weights2)
+M3 = Mul32(aggfeat3, weights3)
+M4 = Mul32(aggfeat4, weights4)
+M5 = Mul32(aggfeat5, weights5)
+M6 = Mul32(aggfeat6, weights6)
+M7 = Mul32(aggfeat7, weights7)
+
+M8 = Mul32(aggfeat8, weights8)
+M9 = Mul32(aggfeat9, weights9)
+M10 = Mul32(aggfeat10, weights10)
+M11 = Mul32(aggfeat11, weights11)
+M12 = Mul32(aggfeat12, weights12)
+M13 = Mul32(aggfeat13, weights13)
+M14 = Mul32(aggfeat14, weights14)
+M15 = Mul32(aggfeat15, weights15)
+
+A0 = Add32(M0, M1)
+A1 = Add32(M2, M3)
+A2 = Add32(M4, M5)
+A3 = Add32(M6, M7)
+A4 = Add32(M8, M9) 
+A5 = Add32(M10, M11) 
+A6 = Add32(M12, M13) 
+A7 = Add32(M14, M15) 
+
+A8 = Add32(A0, A1)
+A9 = Add32(A2, A3)
+A10 = Add32(A4, A5)
+A11 = Add32(A6, A7)
+
+A12 = Add32(A8, A9)
+A13 = Add32(A10, A11)
+
+A = Add32(A12, A13)
+dst_id_out = dst_id_in
+feat_out = feat_in
+
+running_sum = Acc32(1, control=const{0:r})
+# sum = Acc32(red, control=const2{0:d,1:r})
+
+sum = Acc32(A, control=new_const{0:d, 1:r})
+
+Output32: trigger
+
+Output32: running_sum
+Output32: sum
+Output32: start_ind
+Output32: row_size1
+Output32: row_size2
+
+Output: scr_out[8]
+Output32: dst_id_out
+Output32: feat_out

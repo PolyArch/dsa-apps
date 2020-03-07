@@ -15,10 +15,14 @@ using std::complex;
 
 complex<float> a[_N_], b[_M_], c[_N_], cc[_N_], w[_N_ + _M_];
 
-#ifdef LATENCY
+#ifndef LANES
 #define LANES 8
+#endif
+
+#ifdef LATENCY
+#define LANES_USED LANES
 #else
-#define LANES 1
+#define LANES_USED 1
 #endif
 
 int main() {
@@ -31,7 +35,7 @@ int main() {
   read_n_float_complex(input_data, _N_, a);
   read_n_float_complex(input_data, _M_, b);
 
-  for (int i = 0; i < LANES; ++i) {
+  for (int i = 0; i < LANES_USED; ++i) {
     SS_CONTEXT(1 << i);
     SS_CONFIG(loader_config, loader_size);
     SS_DMA_READ(a, 0, 8 * _N_, 1, P_loader_In);

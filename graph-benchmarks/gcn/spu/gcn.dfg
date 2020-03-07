@@ -1,0 +1,117 @@
+Input32: feat[16]  # 80 64-byte inputs is correct
+Input32: offset_list0
+Input32: offset_list1
+Input32: acc_ctrl
+Input32: agg_feat[16]
+Input32: weights[16]
+Input32: factor
+Input32: const
+Input32: const2
+Input32: red
+
+
+# for inner product, we need reduction tree
+# for outer product, we can send this update to scratch
+M0 = Mul32(agg_feat0, weights0)
+M1 = Mul32(agg_feat1, weights1)
+M2 = Mul32(agg_feat2, weights2)
+M3 = Mul32(agg_feat3, weights3)
+M4 = Mul32(agg_feat4, weights4)
+M5 = Mul32(agg_feat5, weights5)
+M6 = Mul32(agg_feat6, weights6)
+M7 = Mul32(agg_feat7, weights7)
+
+M8 = Mul32(agg_feat8, weights8)
+M9 = Mul32(agg_feat9, weights9)
+M10 = Mul32(agg_feat10, weights10)
+M11 = Mul32(agg_feat11, weights11)
+M12 = Mul32(agg_feat12, weights12)
+M13 = Mul32(agg_feat13, weights13)
+M14 = Mul32(agg_feat14, weights14)
+M15 = Mul32(agg_feat15, weights15)
+
+A0 = Add32(M0, M1)
+A1 = Add32(M2, M3)
+A2 = Add32(M4, M5)
+A3 = Add32(M6, M7)
+A4 = Add32(M8, M9) 
+A5 = Add32(M10, M11) 
+A6 = Add32(M12, M13) 
+A7 = Add32(M14, M15) 
+
+A8 = Add32(A0, A1)
+A9 = Add32(A2, A3)
+A10 = Add32(A4, A5)
+A11 = Add32(A6, A7)
+
+A12 = Add32(A8, A9)
+A13 = Add32(A10, A11)
+
+A = Add32(A12, A13)
+
+row_size = Sub32(offset_list1, offset_list0)
+
+#What to do for row_size=0?
+check = ICmpNE32(row_size,0)
+first1 = Mul32(factor, Sub32(row_size,1))
+first = Select32(0, first1, check)
+last = Select32(0, factor, check)
+
+#acc_ctrl=2 when cur_inst=max_req_inst (TODO: leave for now)
+#acc_ctrl=1 when cur_inst>=early_start
+#0 otherwise
+
+# discard when all inputs not done, reset when last lot is being sent
+acc_sum0 = Acc32(feat0, control=acc_ctrl{0:d,2:r})
+acc_sum1 = Acc32(feat1, control=acc_ctrl{0:d,2:r})
+acc_sum2 = Acc32(feat2, control=acc_ctrl{0:d,2:r})
+acc_sum3 = Acc32(feat3, control=acc_ctrl{0:d,2:r})
+acc_sum4 = Acc32(feat4, control=acc_ctrl{0:d,2:r})
+acc_sum5 = Acc32(feat5, control=acc_ctrl{0:d,2:r})
+acc_sum6 = Acc32(feat6, control=acc_ctrl{0:d,2:r})
+acc_sum7 = Acc32(feat7, control=acc_ctrl{0:d,2:r})
+acc_sum8 = Acc32(feat8, control=acc_ctrl{0:d,2:r})
+acc_sum9 = Acc32(feat9, control=acc_ctrl{0:d,2:r})
+acc_sum10 = Acc32(feat10, control=acc_ctrl{0:d,2:r})
+acc_sum11 = Acc32(feat11, control=acc_ctrl{0:d,2:r})
+acc_sum12 = Acc32(feat12, control=acc_ctrl{0:d,2:r})
+acc_sum13 = Acc32(feat13, control=acc_ctrl{0:d,2:r})
+acc_sum14 = Acc32(feat14, control=acc_ctrl{0:d,2:r})
+acc_sum15 = Acc32(feat15, control=acc_ctrl{0:d,2:r})
+
+# 25*8 acc_sum items
+# 25*4 alpha items
+
+alpha0 = acc_sum0 acc_sum1
+alpha1 = acc_sum2 acc_sum3
+alpha2 = acc_sum4 acc_sum5
+alpha3 = acc_sum6 acc_sum7
+alpha4 = acc_sum8 acc_sum9
+alpha5 = acc_sum10 acc_sum11
+alpha6 = acc_sum12 acc_sum13
+alpha7 = acc_sum14 acc_sum15
+
+
+start_ind = offset_list0
+
+# can we send empty control list?
+running_sum = Acc32(1, control=const{0:r})
+sum = Acc32(red, control=const2{0:d,1:r})
+
+Output32: running_sum
+Output32: sum
+Output32: start_ind
+Output32: row_size
+Output: alpha[8]
+Output32: A
+Output32: first
+Output32: last
+
+
+#########Multiplication dfg################
+#alpha is the vector (tiled outer product for maximum reuse?) -- no
+#intermediate storage required..
+#Input32: weight[8] # weight column
+#
+#s = Mul32(weight[0],alpha[0])
+#o = Acc32(s, ctrl)

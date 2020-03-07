@@ -1,0 +1,56 @@
+1. Store in incoming edges format (undirected graph or no?)
+2. Declare vertex data data-structure
+3. extra storage for new adj matrix or copy from sampling in parallel? probably
+   need duplicate copies?
+4. datatype of indices? 4 bytes or 8? 4 I guess?
+5. how to distribute sampling among threads?
+6. decide about the fmap data-structure
+
+uint ka 0 mein bhi panga h
+scratch_size=1 MB (10+10 = 20 bits of addr required) -- send only offset in the
+new one
+num_threads=1 reading weird things
+
+PACKETS ISSUED IN SAME CYCLE WILL REACH TOGETHER (SEE HOW TO MODEL NET BW
+    PROPERLY)
+1. Partitioning
+3. feat_len=256
+4. gcn layers?
+5. preload?
+
+Should we do something for access same data multiple times? (but array is
+large) -- same stream (in that case, cpu stride would be 0 I guess?)
+
+Oh that cyclic thing...
+SS_SCR_PORT_STREAM(scr_addr,stride,acc_size,n_strides, port)
+
+Comments:
+Pull
+1. Easier load balancing
+5. See if any pattern in the destination, sampling should be on OOO and the
+   gem5 can read the sampled graph for now? (single layer)
+6. outgoing or incoming graph?
+7. Looks like something is wrong with the special case in the
+   layer 1 (CHECKME: maybe some of the lot has 0 active nodes)
+8. CHECK STATS IF CORRECT
+9. Bottlenck for mv, is remote port coalesced?
+10. NUM_THREADS cannot be more than 8 because of the way global_wait is
+	implemented.
+
+
+10. RD-WR CONFLICTS ON FEATURE_MAP? (whole aggregation phase should be
+    completed earlier?)
+
+
+GIVING ERROR FOR HIGHER FEAT LEN (HIGHER NUM_THREADS GIVE ERROR)
+acc_ctrl has extra values?
+IT DOESN'T WAIT FOR DMA WRITE TO GET OVER...
+
+4. everything from scratch other than graph data-structure? memory bw underutilization (what to do for offset
+   array?)
+
+
+8 cores suddenly giving error again
+
+dma_read of different threads from the same location error? NO SHOULD NOT BE...
+indirect scr from different ports error?
