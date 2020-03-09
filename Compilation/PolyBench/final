@@ -1,0 +1,17 @@
+----------------- IMPROVED OBJ! --------------------
+0: dfgs/_Z13kernel_gemverddPdS_S_S_S_S_S_S_S__dfg_3.dfg/8.dfg
+1: dfgs/_Z13kernel_gemverddPdS_S_S_S_S_S_S_S__dfg_2.dfg/8.dfg
+2: dfgs/_Z10kernel_2mmPddS_S_S_S__dfg_1.dfg/8.dfg
+3: dfgs/_ZL10kernel_3mmPdS_S_S_S_S_S__dfg_0.dfg/8.dfg
+4: dfgs/_ZL10kernel_3mmPdS_S_S_S_S_S__dfg_2.dfg/8.dfg
+5: dfgs/_Z11kernel_bicgPdS_S_S_S__dfg_0.dfg/4.dfg
+6: dfgs/_Z10kernel_mvtPdS_S_S_S__dfg_0.dfg/8.dfg
+7: dfgs/_Z11kernel_ataxPdS_S_S__dfg_0.dfg/1.dfg                                    
+8: dfgs/_Z13kernel_gemverddPdS_S_S_S_S_S_S_S__dfg_0.dfg/8.dfg
+9: dfgs/_Z14kernel_gesummvddPdS_S_S_S__dfg_0.dfg/8.dfg
+10: dfgs/_Z13kernel_gemverddPdS_S_S_S_S_S_S_S__dfg_1.dfg/8.dfg
+11: dfgs/_Z10kernel_2mmPddS_S_S_S__dfg_0.dfg/8.dfg
+12: dfgs/_ZL11kernel_gemmPdS_S_S_S__dfg_0.dfg/1-2.dfg
+13: dfgs/_ZL10kernel_3mmPdS_S_S_S_S_S__dfg_1.dfg/8.dfg
+14: dfgs/_ZL11kernel_gemmPdS_S_S_S__dfg_1.dfg/2-8.dfg
+15: dfgs/_Z10kernel_2mmPddS_S_S_S__dfg_2.dfg/8.dfg
