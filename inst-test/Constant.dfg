@@ -1,7 +1,0 @@
-InputVec: in [0,1]
-
-out0=Add16x4(in0,0x000A000A000A000A)
-out1=Add16x4(0x000A000A000A000A,in1)
-
-OutputVec: out [0,1]
-

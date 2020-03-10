@@ -1,7 +1,0 @@
-Input: A
-
-High = DupHigh32(A)
-Low = DupLow32(A)
-
-Output: High
-Output: Low

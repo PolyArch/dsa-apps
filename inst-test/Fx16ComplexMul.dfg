@@ -1,8 +1,0 @@
-Input: A
-Input: B
-
-REAL = FxMul16x4(A, B)
-IMAG = FxMulX16x4(A, B)
-O = FxSubAdd16x4(REAL, IMAG)
-
-Output: O
