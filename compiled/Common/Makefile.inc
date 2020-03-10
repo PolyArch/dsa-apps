@@ -37,7 +37,7 @@ endif
 
 ss-%.bc: %.bc
 	SBCONFIG=$(SBCONFIG) \
-	opt $(DEBUG_FLAG) -load $(SS)/dsa-pass/build/libStreamSpecialize.so -stream-specialize $< -o $@
+	opt $(DEBUG_FLAG) -load $(SS)/dsa-transformation/build/libStreamSpecialize.so -stream-specialize $< -o $@
 
 opt-%.bc: %.bc
 	$(PREFIX)/opt -O3 < $< > $@
