@@ -1,17 +1,18 @@
 .PRECIOUS: %.bc
 
+VERSION := 10.1.0
 RV_ROOT = $(SS_TOOLS)/riscv64-unknown-elf
 MARCH = rv64imac
 ABI = lp64
-INCLUDE = -I$(SS_TOOLS)/include \
-	  -I$(SS)/ss-workloads/common/include \
-	  -I$(RV_ROOT)/include/c++/8.1.0/ \
-	  -I$(RV_ROOT)/include/c++/8.1.0/riscv64-unknown-elf/$(ARCH)/$(ABI)/ \
-	  -I$(RV_ROOT)/include/c++/8.1.0/riscv64-unknown-elf/
+INCLUDE = -I$(SS_TOOLS)/include -I$(SS)/dsa-apps/common/include \
+					-I$(RV_ROOT)/include/c++/$(VERSION)/ \
+	  			-I$(RV_ROOT)/include/c++/$(VERSION)/riscv64-unknown-elf/$(ARCH)/$(ABI)/ \
+	  			-I$(RV_ROOT)/include/c++/$(VERSION)/riscv64-unknown-elf/
+
 
 ifndef SBCONFIG
 $(warning SBCONFIG is undefined, using default)
-SBCONFIG=$(SS)"/ss-scheduler/configs/revel-1x1.sbmodel"
+SBCONFIG=$(SS)"/spatial-scheduler/configs/revel-1x1.sbmodel"
 endif
 
 ifdef DEBUG_SS
@@ -22,7 +23,8 @@ DEBUG_FLAG=
 CLANG_DEBUG_FLAG=
 endif
 
-SS_OPTS = $(CLANG_DEBUG_FLAG) -O2 -fno-inline -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -stream-specialize -emit-llvm -c -std=c++11
+SS_OPTS = $(CLANG_DEBUG_FLAG) -O2 -fno-inline -fno-vectorize -fno-slp-vectorize \
+					-fno-unroll-loops -stream-specialize -emit-llvm -c -std=c++11
 OMP_OPTS = $(CLANG_DEBUG_FLAG) -O0 -fno-inline -fno-vectorize -fno-slp-vectorize -fno-unroll-loops -fopenmp -emit-llvm -c -std=c++11
 EMU_OPTS = $(CLANG_DEBUG_FLAG) -O3 -std=c++11
 
@@ -37,7 +39,7 @@ endif
 
 ss-%.bc: %.bc
 	SBCONFIG=$(SBCONFIG) \
-	opt $(DEBUG_FLAG) -load $(SS)/dsa-transformation/build/libStreamSpecialize.so -stream-specialize $< -o $@
+	opt $(DEBUG_FLAG) -load $(SS_TOOLS)/lib/libStreamSpecialize.so -stream-specialize $< -o $@ -debug
 
 opt-%.bc: %.bc
 	$(PREFIX)/opt -O3 < $< > $@

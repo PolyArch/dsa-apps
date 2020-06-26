@@ -9,7 +9,7 @@ export L1ISIZE=16kB
 export L2SIZE=2048kB
 
 if [ -z "$SBCONFIG" ]; then
-export SBCONFIG="$SS/ss-scheduler/configs/revel-1x1.sbmodel"
+export SBCONFIG="$SS/spatial-scheduler/configs/revel-1x1.sbmodel"
 fi
 
 if [ -z $1 ]; then
@@ -29,13 +29,13 @@ if [ -z $1 ]; then
       continue
     fi
 
-    FU_FIFO_LEN=15 gem5.opt $SS/gem5/configs/example/se.py \
+    FU_FIFO_LEN=15 gem5.opt $SS/dsa-gem5/configs/example/se.py \
       --cpu-type=MinorCPU --l1d_size=$L1DSIZE --l1d_assoc=$L1DASOC \
       --l1i_size=$L1ISIZE --l2_size=$L2SIZE --caches \
       --ruby --num-cpus=8 --num-dirs=8 --network=simple \
       --topology=Mesh_XY --mesh-rows=2 \
       --cmd=./$out
-  
+
     if [ $? -eq 0 ]; then
       echo OK!
     else
@@ -57,7 +57,7 @@ else
 
   make clean
   timeout 120 make $1
-  FU_FIFO_LEN=15 gem5.opt $SS/gem5/configs/example/se.py \
+  FU_FIFO_LEN=15 gem5.opt $SS/dsa-gem5/configs/example/se.py \
     --cpu-type=MinorCPU --l1d_size=$L1DSIZE --l1d_assoc=$L1DASOC \
     --l1i_size=$L1ISIZE --l2_size=$L2SIZE --caches \
     --ruby --num-cpus=8 --num-dirs=8 --network=simple \
