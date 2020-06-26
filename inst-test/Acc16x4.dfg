@@ -1,7 +1,0 @@
-Input: in
-Input: reset
-
-out=Acc16x4(in,reset)
-
-Output: out
-

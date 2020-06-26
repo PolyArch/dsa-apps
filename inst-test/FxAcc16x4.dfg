@@ -1,6 +1,0 @@
-Input: A
-Input: reset
-
-B = FxAcc16x4(A, reset)
-
-Output: B
