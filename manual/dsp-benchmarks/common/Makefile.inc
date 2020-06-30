@@ -1,6 +1,6 @@
 ifndef SBCONFIG
 $(warning SBCONFIG is undefined, using default)
-SBCONFIG=$(SS)"/ss-scheduler/configs/revel-1x1.sbmodel"
+SBCONFIG=$(SS)"/spatial-scheduler/configs/revel-1x1.sbmodel"
 endif
 
 ifndef OMP_NUM_THREADS
@@ -20,9 +20,9 @@ PYTHON = env python3
 DFG_HEADERS = $(DFG:.dfg=.dfg.h)
 
 $(DFG_HEADERS): %.dfg.h: %.dfg
-	$(SS_TOOLS)/bin/ss_sched -a sa --max-iters 20000 -d $(FIFO_DEPTH) --verbose $(SBCONFIG) $< 
+	ss_sched -a sa --max-iters 20000 -d $(FIFO_DEPTH) --verbose $(SBCONFIG) $< 
 
-IFLAGS=-I../../common/include -I../../../ss-tools/include -I../common/ -I$(SS_TOOLS)/include/ss-intrin
+IFLAGS=-I$(SS)/dsa-apps/common/include -I$(SS_TOOLS)/include -I$(SS_TOOLS)/include/ss-intrin -I../common/
 INTELI=-I/opt/intel/include -I/opt/intel/mkl/include/
 #CFLAGS=-O3 -std=c++17
 CFLAGS=-Ofast -std=c++17
@@ -61,13 +61,13 @@ mkl.exe: mkl.cc
 
 ooo.log: optimized.exe input.data ref.data
 	SBCONFIG=$(SBCONFIG) \
-	gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=detailed --l1d_size=64kB --l1i_size=16kB --l2_size=1024kB --caches --l2cache --cmd=./$< \
+	gem5.opt $(SS)/dsa-gem5/configs/example/se.py --cpu-type=detailed --l1d_size=64kB --l1i_size=16kB --l2_size=1024kB --caches --l2cache --cmd=./$< \
 	| tee $@
 
 $(LOGS): %.log: %.exe input.data ref.data
 	SBCONFIG=$(SBCONFIG) BACKCGRA=1 \
 	FU_FIFO_LEN=$(FIFO_DEPTH) \
-	gem5.opt ~/ss-stack/gem5/configs/example/se.py --cpu-type=MinorCPU \
+	gem5.opt $(SS)/dsa-gem5/configs/example/se.py --cpu-type=MinorCPU \
 	--l1d_size=2048kB --l1d_assoc=32 --l1i_size=16kB --l2_size=1024kB --caches --cmd=./$<  2>&1 \
 	| tee $@
 	
