@@ -39,7 +39,7 @@ endif
 
 ss-%.bc: %.bc
 	SBCONFIG=$(SBCONFIG) \
-	opt $(DEBUG_FLAG) -load $(SS_TOOLS)/lib/libStreamSpecialize.so -stream-specialize $< -o $@ -debug
+	opt $(DEBUG_FLAG) -load $(SS_TOOLS)/lib/libStreamSpecialize.so -stream-specialize $< -o $@
 
 opt-%.bc: %.bc
 	$(PREFIX)/opt -O3 < $< > $@
