@@ -48,8 +48,8 @@ void qr_q(double *a, double *q, double *tau) {
       #pragma ss dfg temporal
       {
         double normx_ = sqrt(normx);
-        double norm0 = 1. / sqrt(temp * temp);
-        double s = -temp * norm0;
+        double norm0 = -1. / sqrt(temp * temp);
+        double s = temp * norm0;
         out0 = s * normx_;
         u1 = 1.0f / (temp - s * normx_);
         out1 = s / u1 / normx_;
