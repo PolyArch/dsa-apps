@@ -1,4 +1,3 @@
-
 ifdef N
 MACROS = -DN=$(N)
 endif
@@ -26,5 +25,17 @@ endif
 ifdef U5
 MACROS += -DU5=$(U5)
 endif
+
+IND ?= 1
+
+ifeq ($(IND), 0)
+MACROS += -DNIND
+endif
+
+ifdef DTYPE
+MACROS += -DDTYPE=$(DTYPE)
+endif
+
+MACROS += -DGEM5
 
 include ../Common/Makefile.inc

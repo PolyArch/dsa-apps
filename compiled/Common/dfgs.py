@@ -10,13 +10,15 @@ def run_spec(spec: dict):
     shutil.rmtree('dfgs', ignore_errors=True)
     os.makedirs('dfgs')
 
-    for cc in all_files('.cc'):
-        to_enum = spec.get(cc, [['U', 1, 2, 4, 8]])
-        no_ext = cc[:-3]
+    for cc in all_files('.c'):
+        if cc not in spec.keys():
+            continue
+        to_enum = spec.get(cc, [['U', 1, 2, 4]])
+        no_ext = cc[:-2]
         if isinstance(to_enum, int):
             n = to_enum
             if n == 1:
-                unroll_factors = [1, 2, 4, 8]
+                unroll_factors = [1, 2, 4]
             elif n == 2:
                 unroll_factors = [1, 2, 4]
             elif n <= 4:
@@ -32,7 +34,7 @@ def run_spec(spec: dict):
         def dfs(space, point, signature):
             if not space:
                 subprocess.check_output(['make', 'clean'])
-                subprocess.check_output(f'{point} EXTRACT=1 make ss-{no_ext}.bc', shell=True)
+                subprocess.check_output(f'{point} EXTRACT=1 BITSTREAM=1 COMPAT_ADG=0 GEM5=0 COUNT=1 TEMPORAL_FALLBACK=1 make ss-{no_ext}.ll', shell=True)
                 new_name = '-'.join(map(str, signature)) + '.dfg'
                 for i in all_files('.dfg'):
                     try:
