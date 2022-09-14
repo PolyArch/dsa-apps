@@ -76,7 +76,7 @@ $(RAW_LL): %.ll: %.c
 .PRECIOUS: $(XFORM_LL)
 $(XFORM_LL): ss-%.ll: %.ll
 	SBCONFIG=$(SBCONFIG) \
-	opt -load $(SS)/llvm-project/build/lib/DSAPass.so -stream-specialize $(DEBUG_FLAG) $< -o $@ -S
+	opt -load $(SS)/dsa-llvm-project/build/lib/DSAPass.so -stream-specialize $(DEBUG_FLAG) $< -o $@ -S
 
 
 .PRECIOUS: $(ASM)

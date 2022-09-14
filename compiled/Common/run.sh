@@ -50,7 +50,7 @@ if [ -z $1 ]; then
       continue
     fi
 
-    FU_FIFO_LEN=15 ${GEM5} $SS/gem5/configs/example/se.py \
+    FU_FIFO_LEN=15 ${GEM5} $SS/dsa-gem5/configs/example/se.py \
       --cpu-type=MinorCPU --l1d_size=$L1DSIZE --l1d_assoc=$L1DASOC \
       --l1i_size=$L1ISIZE --l2_size=$L2SIZE --caches --l2cache \
       --num-cpus=8 --cpu-clock=1GHz  --sys-clock=1GHz \
@@ -84,7 +84,7 @@ else
 
   timeout 120 make $1
 
-  FU_FIFO_LEN=15 ${GEM5} $SS/gem5/configs/example/se.py \
+  FU_FIFO_LEN=15 ${GEM5} $SS/dsa-gem5/configs/example/se.py \
     --cpu-type=MinorCPU --l1d_size=$L1DSIZE --l1d_assoc=$L1DASOC \
     --l1i_size=$L1ISIZE --caches \
     --l2_size=$L2SIZE --l2cache  \
