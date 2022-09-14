@@ -32,10 +32,8 @@ void work(int64_t span, TYPE real[N], TYPE img[N], TYPE real_twid[N], TYPE img_t
 
         // int64_t rootindex = i * stride;
 
-        TYPE real_w = real_twid[i];
-        TYPE img_w = img_twid[i];
-        temp = real_w * real_odd - img_w * img_odd;
-        img[odd] = real_w * img_odd + img_w * real_odd;
+        temp = real_twid[i] * real_odd - img_twid[i] * img_odd;
+        img[odd] = real_twid[i] * img_odd + img_twid[i] * real_odd;
         real[odd] = temp;
         img[even] = img_even;
         real[even] = real_even;
@@ -113,12 +111,12 @@ void fft(TYPE real[N], TYPE img[N], TYPE real_twid[N/2], TYPE img_twid[N/2]){
   int64_t twid_carry = 0;
 
 
-  for(span = N >> 1; span >= 4; span >>= 1){
+  for(span = N >> 1; span >= 2; span >>= 1){
     work(span, real, img, real_twid + twid_carry, img_twid + twid_carry);
     twid_carry += span;
   }
 
-  work2(real, img);
+  // work2(real, img);
   work1(real, img);
 
 }

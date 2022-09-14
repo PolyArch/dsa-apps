@@ -19,16 +19,14 @@ void ellpack(TYPE *__restrict nzval, int64_t *__restrict cols,
     arrayhint(cols, N * L * sizeof(TYPE), 0);
     arrayhint(vec, N * sizeof(TYPE), 1 - 1.0 / N);
     arrayhint(out, N * sizeof(TYPE), 0.75);
-// #ifdef NIND
-//    TYPE *spad = vec;
-// #else
+
     TYPE spad[N];
     #pragma ss stream
     #pragma ss dfg dedicated unroll(4)
     for (int i = 0; i < N; ++i) {
       spad[i] = vec[i];
     }
-// #endif
+
     #pragma ss stream
     for (int i = 0; i < N; ++i) {
       TYPE sum = 0.0;
