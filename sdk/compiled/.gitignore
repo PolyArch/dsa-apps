@@ -1,0 +1,13 @@
+*.log
+*.s
+*.dfg
+*.ll
+*.dfg.h
+*.out
+.sched/*
+m5out/*
+gams/*
+sched/*
+stats/*
+verif/*
+viz/*

@@ -1,8 +1,0 @@
-*.log
-*.dfg.h
-m5out/*
-gams/*
-sched/*
-stats/*
-verif/*
-viz/*

@@ -1,6 +1,0 @@
-Input: in
-Input: reset
-
-out0,out1 = Acc16to32x4(in, control=reset{0:d,1:r} )
-
-Output: out[2]

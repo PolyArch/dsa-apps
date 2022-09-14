@@ -1,0 +1,26 @@
+#pragma group unroll 4
+# [MemPort]: DFG0 Entry0
+# Inst:   %12 = load i64, i64* %arrayidx13, align 8, !tbaa !8
+#pragma cmd=1.000000e+00
+#pragma repeat=0.000000e+00
+Input64: sub0_v0_0_[4]
+# [MemPort]: DFG0 Entry1
+# Inst:   %11 = load i64, i64* %arrayidx, align 8, !tbaa !8
+#pragma cmd=1.000000e+00
+#pragma repeat=0.000000e+00
+Input64: sub0_v1_0_[4]
+# [ComputeBody]: DFG0 Entry2
+# Inst:   %add14 = add nsw i64 %12, %11
+sub0_v2_0_0 = Add64(sub0_v0_0_0, sub0_v1_0_0)
+sub0_v2_0_1 = Add64(sub0_v0_0_1, sub0_v1_0_1)
+sub0_v2_0_2 = Add64(sub0_v0_0_2, sub0_v1_0_2)
+sub0_v2_0_3 = Add64(sub0_v0_0_3, sub0_v1_0_3)
+# [PortMem]: DFG0 Entry3
+# Inst:   store i64 %add14, i64* %arrayidx17, align 8, !tbaa !8
+#pragma cmd=1
+#pragma repeat=0
+sub0_v3_0 = sub0_v2_0_0
+sub0_v3_1 = sub0_v2_0_1
+sub0_v3_2 = sub0_v2_0_2
+sub0_v3_3 = sub0_v2_0_3
+Output64: sub0_v3_[4]

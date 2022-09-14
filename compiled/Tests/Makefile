@@ -7,3 +7,7 @@ endif
 ifdef U
   MACROS += -DU=$(U)
 endif
+
+ifdef TYPE
+  MACROS += -DTYPE=$(TYPE)
+endif
