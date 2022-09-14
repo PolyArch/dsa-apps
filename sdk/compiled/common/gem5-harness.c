@@ -1,7 +1,7 @@
 // Test Driver
 
-#include "timing.h"
-#include "interface.h"
+#include "./timing.h"
+#include "./interface.h"
 
 int main() {
   int64_t ref = 0;

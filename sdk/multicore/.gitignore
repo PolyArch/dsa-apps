@@ -1,13 +1,13 @@
 *.log
-*.s
 *.dfg
-*.ll
 *.dfg.h
+*.dfg.bit.h
 *.out
-.sched/*
+*.ll
+*.s
 m5out/*
 gams/*
-sched/*
+.sched/*
 stats/*
 verif/*
 viz/*

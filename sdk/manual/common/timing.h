@@ -6,8 +6,6 @@
 #include <stdlib.h>
 #include <sys/time.h>
 
-#include "rocc.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

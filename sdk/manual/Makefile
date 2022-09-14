@@ -28,3 +28,10 @@ CC = riscv64-unknown-linux-gnu-g++
 
 clean:
 	rm -rf *.dfg.h *.dfg.bits.h *.out m5out sched stats verif viz *.riscv *.o
+
+ultraclean: clean
+	rm -rf verif
+	rm -rf viz
+	rm -rf m5out
+	rm -rf stats
+	rm -rf gams

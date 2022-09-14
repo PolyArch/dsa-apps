@@ -22,7 +22,7 @@ int main() {
   INSTANTIATE_1D_STREAM(/*start-addr=*/ a,
                         /*stride=*/ (uint64_t) 1,
                         /*n1d=*/ (uint64_t) N,
-                        /*port=*/ P_compute_A,
+                        /*port=*/ P_add_A,
                         /*padding=*/ DP_NoPadding,
                         /*action=*/ DSA_Access,
                         /*operation=*/ DMO_Read,
@@ -32,7 +32,7 @@ int main() {
   INSTANTIATE_1D_STREAM(/*start-addr=*/ b,
                         /*stride=*/ (uint64_t) 1,
                         /*n1d=*/ (uint64_t) N,
-                        /*port=*/ P_compute_A,
+                        /*port=*/ P_add_B,
                         /*padding=*/ DP_NoPadding,
                         /*action=*/ DSA_Access,
                         /*operation=*/ DMO_Read,
@@ -42,7 +42,7 @@ int main() {
   INSTANTIATE_1D_STREAM(/*start-addr=*/ c,
                         /*stride=*/ (uint64_t) 1,
                         /*n1d=*/ (uint64_t) N,
-                        /*port=*/ P_compute_A,
+                        /*port=*/ P_add_C,
                         /*padding=*/ DP_NoPadding,
                         /*action=*/ DSA_Access,
                         /*operation=*/ DMO_Write,
@@ -51,7 +51,7 @@ int main() {
                         /*ctype=*/ 0);
   SS_WAIT_ALL();
   end_roi();
-  ss_stats();
+  sb_stats();
 
 
   for (int i = 0; i < N; ++i) {

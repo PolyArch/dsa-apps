@@ -12,6 +12,9 @@ fi
 if [ -z $L2SIZE ]; then
   export L2SIZE=512kB
 fi
+if [ -z $NUM_CORES ]; then
+  export NUM_CORES=4
+fi
 
 export L1ISIZE=16kB
 
