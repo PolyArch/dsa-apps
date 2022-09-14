@@ -1,0 +1,8 @@
+verif/*
+viz/*
+.sched/*
+*.dfg.h
+*.dfg.bits.h
+*.riscv
+*.out
+

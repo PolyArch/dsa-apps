@@ -88,7 +88,7 @@ else
     --cpu-type=MinorCPU --l1d_size=$L1DSIZE --l1d_assoc=$L1DASOC \
     --l1i_size=$L1ISIZE --caches \
     --l2_size=$L2SIZE --l2cache  \
-    --num-cpus=$NUM_CORES --cpu-clock=0.09GHz  --sys-clock=1GHz \
+    --num-cpus=$NUM_CORES --cpu-clock=1GHz  --sys-clock=1GHz \
     --mem-type="DDR4_2400_16x4" \
     --cmd=./$1 --options=${OPTIONS}
 
