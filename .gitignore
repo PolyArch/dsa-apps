@@ -10,6 +10,9 @@ verif/
 stats/
 m5out/
 bin/
+dfgs/
+
+dfgs.list
 
 *.pyc
 *.dot
