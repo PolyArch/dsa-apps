@@ -16,3 +16,5 @@
 */FailList
 */dfgs/*
 */dfgs.list
+__pycache__
+dfgs
