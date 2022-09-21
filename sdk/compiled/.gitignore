@@ -4,6 +4,7 @@
 *.ll
 *.dfg.h
 *.out
+*.o
 .sched/*
 m5out/*
 gams/*
@@ -11,3 +12,4 @@ sched/*
 stats/*
 verif/*
 viz/*
+.extracted-llvm-flags

@@ -16,5 +16,7 @@
 */FailList
 */dfgs/*
 */dfgs.list
-__pycache__
-dfgs
+*/.extracted-llvm-flags
+__pycache__/*
+dfgs/*
+

@@ -5,4 +5,5 @@ viz/*
 *.dfg.bits.h
 *.riscv
 *.out
+*.o
 
