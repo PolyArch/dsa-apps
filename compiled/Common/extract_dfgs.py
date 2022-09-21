@@ -43,12 +43,12 @@ def create_dfglist():
     dfg_files = glob.glob('dfgs/*/*.dfg')
     dfg_files.sort()
     with open('dfgs.list', 'w') as f:
-        prev_file = dfg_files[0]
+        prev_file = ''
         for dfg_file in dfg_files:
-            if prev_file.split('_')[0] != dfg_file.split('_')[0]:
-                f.write('---' + os.linesep)
+            if prev_file != dfg_file.split('_')[0]:
+                f.write('%%' + os.linesep)
             f.write(dfg_file + os.linesep)
-            prev_file = dfg_file
+            prev_file = dfg_file.split('_')[0]
 
 setup()
 
