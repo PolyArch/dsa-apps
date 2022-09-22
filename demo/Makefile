@@ -4,7 +4,7 @@ RV_ROOT = $(RISCV)/sysroot/usr
 MARCH = rv64imac
 ABI = lp64
 INCLUDE = -I$(SS_TOOLS)/include -I$(SS)/ss-workloads/common/include
-SBCONFIG ?= $(SS)/chipyard/generators/dsagen2/adg/Mesh7x5-Full64-FixFloatSIMD-Full7I5O.json
+SBCONFIG ?= $(SS)/chipyard/generators/dsagen2/adg/Mesh7x5-Simple64-Full7I5O.json
 DEBUG_FLAG = 
 CLANG_DEBUG_FLAG=
 
