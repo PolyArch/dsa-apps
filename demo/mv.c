@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "common/test.h"
 #include "common/timing.h"
+#include "common/spatial_intrin.h"
 
 #ifdef LONG_TEST
 #define N 128
@@ -17,6 +18,9 @@ struct Arguments {
 void mv(int64_t *a, int64_t *b, int64_t *c) {
 #pragma ss config
   {
+    arrayhint(a, /*array-size*/N * N * sizeof(int64_t), /*analyzed-reuse*/-1);
+    arrayhint(b, /*array-size*/N * sizeof(int64_t),     /*analyzed-reuse*/-1);
+    arrayhint(c, /*array-size*/N * sizeof(int64_t),     /*analyzed-reuse*/-1);
 #pragma ss stream
     for (int i = 0; i < N; ++i) {
       int64_t v = 0;
