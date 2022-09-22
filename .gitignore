@@ -4,15 +4,23 @@
 *.log
 *.o
 *.dfg.h
+*.linux
+sa
 
 viz/
 verif/
 stats/
 m5out/
 bin/
-dfgs/
-
-dfgs.list
+sched/
 
 *.pyc
 *.dot
+debug*
+*.json
+main
+*txt
+
+*xilinx-dse*
+*work-dir*
+dump.rdb
