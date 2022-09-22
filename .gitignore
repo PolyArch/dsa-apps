@@ -4,6 +4,7 @@
 *.log
 *.o
 *.dfg.h
+.extracted-llvm-flags
 
 viz/
 verif/
