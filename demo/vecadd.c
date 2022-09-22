@@ -29,7 +29,7 @@ void vecadd(TYPE *a, TYPE *b, TYPE *c) {
   #pragma ss config
   {
     #pragma ss stream
-    #pragma ss dfg dedicated unroll(4)
+    #pragma ss dfg dedicated unroll(2)
     for (int i = 0; i < N; ++i) {
       c[i] = a[i] + b[i];
     }

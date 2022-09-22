@@ -4,12 +4,24 @@
 *.log
 *.o
 *.dfg.h
+.extracted-llvm-flags
+*.linux
+sa
 
 viz/
 verif/
 stats/
 m5out/
 bin/
+sched/
 
 *.pyc
 *.dot
+debug*
+*.json
+main
+*txt
+
+*xilinx-dse*
+*work-dir*
+dump.rdb

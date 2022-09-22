@@ -27,7 +27,7 @@ CC = riscv64-unknown-linux-gnu-g++
 	  ../Common/crt.S chipyard-harness.o -static
 
 clean:
-	rm -rf *.dfg.h *.dfg.bits.h *.out m5out sched stats verif viz *.riscv *.o
+	rm -rf *.dfg.h *.dfg.bits.h *.out m5out sched stats verif viz *.riscv *.o .extracted-llvm-flags
 
 ultraclean: clean
 	rm -rf verif
