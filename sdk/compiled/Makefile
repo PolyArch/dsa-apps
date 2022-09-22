@@ -100,7 +100,7 @@ clean-dsa:
 	rm -f *.dfg *.dfg.h
 
 clean: clean-dsa
-	rm -rf *.bc *.ll *.o *.out *.s *.dfg *.dfg.h *.bits.h *.log *.riscv sched
+	rm -rf *.bc *.ll *.o *.out *.s *.dfg *.dfg.h *.bits.h *.log *.riscv sched .extracted-llvm-flags
 	rm -rf .sched
 	rm -rf viz verif
 	rm -f ../Common/*.o
