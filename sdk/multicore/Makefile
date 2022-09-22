@@ -42,7 +42,6 @@ MACROS += -DFAKE=1
 endif
 
 ifdef NUM_CORES
-# MACROS += -DNUM_CORES=1
 MACROS += -DNUM_CORES=$(NUM_CORES)
 endif
 

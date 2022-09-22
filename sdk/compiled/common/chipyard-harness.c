@@ -157,10 +157,8 @@ void __attribute__((weak)) thread_entry(int cid, int nc)
   while (cid != 0);
 }
 
-#ifndef NUM_CORES
-
-#include "../Common/timing.h"
-#include "../Common/interface.h"
+#include "./timing.h"
+#include "./interface.h"
 
 int main() {
   uint64_t cpu, icache, dsa = 0;
@@ -193,19 +191,6 @@ int main() {
     return 1;
   }
 }
-
-#else
-
-#include "../Common/multicore.h"
-
-int __attribute__((weak)) main(int argc, char** argv)
-{
-  // single-threaded programs override this function.
-  printstr("Implement main(), foo!\n");
-  return -1;
-}
-
-#endif
 
 static void init_tls()
 {
