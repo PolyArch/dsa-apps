@@ -24,7 +24,7 @@ void mv(int64_t *a, int64_t *b, int64_t *c) {
 #pragma ss stream
     for (int i = 0; i < N; ++i) {
       int64_t v = 0;
-#pragma ss dfg dedicated unroll(2)
+#pragma ss dfg dedicated unroll(1)
       for (int j = 0; j < N; ++j) {
 	v += a[i * N + j] * b[j];
       }
