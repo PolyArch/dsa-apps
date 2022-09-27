@@ -121,5 +121,7 @@ ultraclean: clean
 	rm -rf m5out
 	rm -rf stats
 	rm -rf gams
+	rm -rf dfgs
+	rm -f dfgs.list
 
 
