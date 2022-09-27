@@ -85,7 +85,7 @@ enum dsa_stat {
 static __inline__ uint64_t get_stat(enum dsa_stat stat) {
   uint64_t statValue = 0;
   // 2 and 6 means a custom2 1 rd 1 rs RISC-V command
-  // ROCC_INSTRUCTION_DS(2, statValue, stat, 6);
+  ROCC_INSTRUCTION_DS(2, statValue, stat, 6);
   return statValue;
 }
 

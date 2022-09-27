@@ -157,46 +157,7 @@ void __attribute__((weak)) thread_entry(int cid, int nc)
   while (cid != 0);
 }
 
-#ifndef NUM_CORES
-
-#include "../Common/timing.h"
-#include "../Common/interface.h"
-
-int main() {
-  uint64_t cpu, icache, dsa = 0;
-  struct Arguments *args = init_data();
-  printf("[single-core] initialization finished\n");
-  begin_roi();
-  run_reference(args);
-  cpu = end_roi();
-  printf("[single-core] cpu pass finished, %lu cycles passed! \n", cpu);
-  // 1st run
-  clear_roi();
-  begin_roi();
-  run_accelerator(args, 1);
-  icache = end_roi();
-  printf("[single-core] warm i-cache finished, %lu cycles passed! \n", icache);
-  // 2nd run
-  clear_roi();
-  begin_roi();
-  run_accelerator(args, 0);
-  dsa = end_roi();
-  sb_stats();
-  // sanity check
-  printf("[single-core] accelerator finished ...\n");
-  if(sanity_check(args)){
-    printf("[single-core] sanity check passed successfully! \n");
-    printf("csv, %lu, %lu, %lu\n", cpu, icache, dsa);
-    return 0;
-  }else{
-    printf("[single-core] sanity check did not pass!\n");
-    return 1;
-  }
-}
-
-#else
-
-#include "../Common/multicore.h"
+#include "./multicore.h"
 
 int __attribute__((weak)) main(int argc, char** argv)
 {
@@ -204,8 +165,6 @@ int __attribute__((weak)) main(int argc, char** argv)
   printstr("Implement main(), foo!\n");
   return -1;
 }
-
-#endif
 
 static void init_tls()
 {

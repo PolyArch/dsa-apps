@@ -16,7 +16,7 @@ fi
 export L1ISIZE=16kB
 
 if [ -z "$SBCONFIG" ]; then
-  export SBCONFIG=${SS}/chipyard/generators/dsagen2/adg/Mesh7x5-Full64-FixFloatSIMD-Full7I5O.json
+  export SBCONFIG=${SS}/chipyard/generators/dsagen2/adg/Mesh7x5-Simple64-Full7I5O.json
 fi
 
 if [ -z "$DEBUG_SS" ]; then

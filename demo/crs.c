@@ -8,7 +8,7 @@ http://www.cs.berkeley.edu/~mhoemmen/matrix-seminar/slides/UCB_sparse_tutorial_1
 
 #include "common/test.h"
 #include "common/timing.h"
-#include "common/spatial_inrin.h"
+#include "common/spatial_intrin.h"
 
 #ifndef N
 #define N 496
@@ -31,6 +31,12 @@ void spmv(TYPE *__restrict val, int64_t *__restrict n, int64_t *begin,
           int64_t total) {
   #pragma ss config
   {
+    arrayhint(val,   /*array-size*/N * N * sizeof(TYPE), /*annotated-reuse*/0);
+    arrayhint(vec,   /*array-size*/N * sizeof(TYPE),     /*annotated-reuse*/(double)(N - 1) / N);
+    arrayhint(n,     /*array-size*/N * sizeof(TYPE),     /*annotated-reuse*/0);
+    arrayhint(col,   /*array-size*/N * N * sizeof(TYPE), /*analyzed-reuse*/-1);
+    arrayhint(out,   /*array-size*/N * sizeof(TYPE),     /*analyzed-reuse*/-1);
+    arrayhint(begin, /*array-size*/N * sizeof(TYPE),     /*analyzed-reuse*/-1);
     TYPE spad[N];
     #pragma ss stream
     #pragma ss dfg dedicated

@@ -93,7 +93,7 @@ $(CHIPYARD_EXEC): %.riscv: %.o common/chipyard-harness.c
 	          -std=gnu99 -O3 -ffast-math -fno-common -fno-builtin-printf \
 	          -fno-tree-loop-distribute-patterns -DCHIPYARD $(MACROS)
 	riscv64-unknown-elf-gcc $< chipyard-harness.o common/crt.S -o $@ -nostdlib \
-	          -nostartfiles -fno-zero-initialized-in-bss -lm -lgcc -T../Common/htif.ld $(MACROS)
+	          -nostartfiles -fno-zero-initialized-in-bss -lm -lgcc -T./common/htif.ld $(MACROS)
 
 clean-dsa:
 	rm -f ss-*.*
@@ -103,7 +103,7 @@ clean: clean-dsa
 	rm -rf *.bc *.ll *.o *.out *.s *.dfg *.dfg.h *.bits.h *.log *.riscv sched .extracted-llvm-flags
 	rm -rf .sched
 	rm -rf viz verif
-	rm -f ../Common/*.o
+	rm -f ./common/*.o
 	rm -f *.opt
 
 fake:
